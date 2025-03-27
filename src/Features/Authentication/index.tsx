@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ButtonSubmit, InputsContainer, LoginContainer, Logo, MainContainer, Title } from "./styles"
+import { ButtonSubmit, ClickableText, InputsContainer, LoginContainer, Logo, MainContainer, Title } from "./styles"
 import { FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
 import { ButtonDefault } from "../../landingPage/components/ButtonDefault";
@@ -7,6 +7,8 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { useNavigate } from "react-router";
 import { login } from "../../services/apis/routes/auth.service";
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import LogoConsultarHorizontal from '../../assets/images/logo-consultar-horizontal.svg';
+
 
 export const Authentication = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -55,7 +57,7 @@ export const Authentication = () => {
     return (
         <MainContainer>
             <LoginContainer>
-                <Logo></Logo>
+                <Logo src={LogoConsultarHorizontal} alt="Logo Consultar" />
                 <Title>Faça seu login</Title>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <InputsContainer>
@@ -128,6 +130,8 @@ export const Authentication = () => {
                                 </FormHelperText>
                             )}
                         </FormControl>
+
+                        <ClickableText color="--branding-default-blue" onClick={() => { navigate('/recuperar-senha') }}>Esqueci minha senha</ClickableText>
                     </InputsContainer>
                     <ButtonSubmit>
                         <ButtonDefault
