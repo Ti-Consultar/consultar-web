@@ -6,6 +6,7 @@ import { ButtonDefault } from "../../../landingPage/components/ButtonDefault";
 import { setNewPassword } from "../../../services/apis/routes/auth.service";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { PulseLoading } from "../../../components/pulse-loading";
 
 export const ForgotPassword = () => {
     const [newPasswordError, setNewPasswordError] = useState<string | null>(null);
@@ -21,8 +22,10 @@ export const ForgotPassword = () => {
     } = useForm<EmailFormInput>();
 
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
 
     const onSubmit = async (data: EmailFormInput) => {
+        setLoading(true);
         try {
             const response = await setNewPassword(data.email);
             if (!response.success) {
@@ -41,60 +44,65 @@ export const ForgotPassword = () => {
             } else {
                 setNewPasswordError('Ocorreu um erro, tente novamente mais tarde.');
             }
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <MainContainer>
-            <LoginContainer>
-                <Logo src={LogoConsultarHorizontal} alt="Logo Consultar" />
-                <Title>Digite seu e-mail</Title>
-                <SubTitle>Esse é o e-mail que você usa para fazer login.</SubTitle>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <InputsContainer>
-                        <FormControl variant="outlined">
-                            <InputLabel htmlFor="component-outlined">Email</InputLabel>
-                            <Controller
-                                name="email"
-                                control={control}
-                                defaultValue=""
-                                rules={{
-                                    required: 'Email é obrigatório',
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                                        message: 'Informe um email válido',
-                                    },
-                                }}
-                                render={({ field }) => (
-                                    <OutlinedInput
-                                        {...field}
-                                        id="component-outlined"
-                                        label="Email"
-                                    />
+        <>
+            {loading && <PulseLoading size={100} />}
+            <MainContainer>
+                <LoginContainer>
+                    <Logo src={LogoConsultarHorizontal} alt="Logo Consultar" />
+                    <Title>Digite seu e-mail</Title>
+                    <SubTitle>Esse é o e-mail que você usa para fazer login.</SubTitle>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <InputsContainer>
+                            <FormControl variant="outlined">
+                                <InputLabel htmlFor="component-outlined">Email</InputLabel>
+                                <Controller
+                                    name="email"
+                                    control={control}
+                                    defaultValue=""
+                                    rules={{
+                                        required: 'Email é obrigatório',
+                                        pattern: {
+                                            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                            message: 'Informe um email válido',
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <OutlinedInput
+                                            {...field}
+                                            id="component-outlined"
+                                            label="Email"
+                                        />
+                                    )}
+                                />
+                                {errors.email && (
+                                    <FormHelperText sx={{ ml: 0 }}>
+                                        {errors.email.message?.toString()}
+                                    </FormHelperText>
                                 )}
+                                {newPasswordError && (
+                                    <FormHelperText sx={{ ml: 0 }} error={true}>
+                                        {newPasswordError}
+                                    </FormHelperText>
+                                )}
+                            </FormControl>
+                        </InputsContainer>
+                        <ButtonSubmit>
+                            <ButtonDefault
+                                backgroundColor="branding-default-blue"
+                                color="neutral-50"
+                                text="Próximo"
                             />
-                            {errors.email && (
-                                <FormHelperText sx={{ ml: 0 }}>
-                                    {errors.email.message?.toString()}
-                                </FormHelperText>
-                            )}
-                            {newPasswordError && (
-                                <FormHelperText sx={{ ml: 0 }} error={true}>
-                                    {newPasswordError}
-                                </FormHelperText>
-                            )}
-                        </FormControl>
-                    </InputsContainer>
-                    <ButtonSubmit>
-                        <ButtonDefault
-                            backgroundColor="branding-default-blue"
-                            color="neutral-50"
-                            text="Próximo"
-                        />
-                    </ButtonSubmit>
-                    <InfoText>Em caso de dúvidas, entre em contato com o suporte.</InfoText>
-                </form>
-            </LoginContainer>
-        </MainContainer>
+                        </ButtonSubmit>
+                        <InfoText>Em caso de dúvidas, entre em contato com o suporte.</InfoText>
+                    </form>
+                </LoginContainer>
+            </MainContainer>
+        </>
     )
 }

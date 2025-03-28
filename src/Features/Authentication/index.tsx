@@ -8,11 +8,13 @@ import { useNavigate } from "react-router";
 import { login } from "../../services/apis/routes/auth.service";
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import LogoConsultarHorizontal from '../../assets/images/logo-consultar-horizontal.svg';
+import { PulseLoading } from "../../components/pulse-loading";
 
 
 export const Authentication = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [loginError, setLoginError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
@@ -37,11 +39,17 @@ export const Authentication = () => {
 
 
     const onSubmit = async (data: LoginFormInputs) => {
+        setLoading(true);
         try {
-            await login(data.email, data.password);
+            const response = await login(data.email, data.password);
 
-            setLoginError(null);
-            navigate('/inicio');
+            if (!response.token) {
+                setLoginError('Email ou senha incorretos');
+                return;
+            } else {
+                setLoginError(null);
+                navigate('/home');
+            }
         } catch (error: unknown) {
             if (
                 error instanceof Error &&
@@ -51,10 +59,14 @@ export const Authentication = () => {
             } else {
                 setLoginError('Ocorreu um erro ao tentar fazer login');
             }
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
+        <>
+        {loading && <PulseLoading size={100} />}
         <MainContainer>
             <LoginContainer>
                 <Logo src={LogoConsultarHorizontal} alt="Logo Consultar" />
@@ -71,7 +83,7 @@ export const Authentication = () => {
                                     required: 'Email é obrigatório',
                                     pattern: {
                                         value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                                        message: 'Informe um email inválido',
+                                        message: 'Informe um email válido',
                                     },
                                 }}
                                 render={({ field }) => (
@@ -144,5 +156,6 @@ export const Authentication = () => {
                 </form>
             </LoginContainer>
         </MainContainer>
+        </>
     )
 }
