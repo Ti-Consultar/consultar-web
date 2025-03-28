@@ -1,9 +1,9 @@
-import { MainContainer } from "./styles"
+import { MainContainer } from "../../landingPage/styles"
 
-export const MainHome = () => {
+export const MrpHome = () => {
     return (
         <MainContainer>
-            Teste
+            Autenticado
         </MainContainer>
     )
 }
