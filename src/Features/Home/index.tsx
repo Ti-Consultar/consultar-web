@@ -1,9 +1,8 @@
-import { MainContainer } from "../../landingPage/styles"
+import { AppLayout } from "../../components/AppLayout"
 
 export const MrpHome = () => {
     return (
-        <MainContainer>
-            Autenticado
-        </MainContainer>
+        <AppLayout children="">
+        </AppLayout>
     )
 }
