@@ -1,23 +1,32 @@
-import { useState } from 'react';
-import { Sidebar } from './Sidebar';
-import { ContentContainer, MainContainer } from './styles';
-import { SidebarContainer } from './Sidebar/styles';
+import React, { useState } from "react";
+import {
+  ContentContainer,
+  DrawerContainer,
+  HeaderContainer,
+  MainContainer,
+} from "./styles";
+import { Sidebar } from "./Sidebar";
+import { Header } from "./Header";
+import { Content } from "./Content";
 
-interface AppLayoutProps {
-    children: React.ReactNode;
+interface MainTemplateProps {
+  children: React.ReactNode;
 }
 
-export const AppLayout = ({ children }: AppLayoutProps) => {
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+export const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-    return (
-        <MainContainer>
-            <SidebarContainer>
-                <Sidebar isOpen={isDrawerOpen} setIsOpen={setIsDrawerOpen}></Sidebar>
-            </SidebarContainer>
-            <ContentContainer>
-                {children}
-            </ContentContainer>
-        </MainContainer>
-    )
-}
+  return (
+    <MainContainer>
+      <DrawerContainer>
+        <Sidebar isOpen={isDrawerOpen} setIsOpen={setIsDrawerOpen} />
+      </DrawerContainer>
+      <HeaderContainer>
+        <Header isDrawerOpen={isDrawerOpen} />
+      </HeaderContainer>
+      <ContentContainer>
+        <Content isOpen={isDrawerOpen}>{children}</Content>
+      </ContentContainer>
+    </MainContainer>
+  );
+};

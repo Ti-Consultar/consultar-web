@@ -11,6 +11,8 @@ export const SidebarContainer = styled.div<MainTemplateStyledProps>`
   max-height: 100vh;
   transition: width 0.3s;
   width: ${({ isOpen }) => (isOpen ? '200px' : '82px')};
+  transition: width 0.3s ease;
+  
 `;
 
 export const Header = styled.div`

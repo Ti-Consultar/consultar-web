@@ -1,5 +1,10 @@
 import styled from 'styled-components';
 
+interface MainTemplateStyledProps {
+  isOpen?: boolean;
+}
+
+
 export const MainContainer = styled.div`
   display: grid;
   grid-template-areas:
@@ -18,7 +23,7 @@ export const HeaderContainer = styled.div`
   grid-area: header;
 `;
 
-export const ContentContainer = styled.div`
+export const ContentContainer = styled.div<MainTemplateStyledProps>`
   grid-area: content;
   background-color: var(--neutral-50);
   overflow-x: auto;
