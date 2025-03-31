@@ -6,7 +6,7 @@ import { ButtonDefault } from "../../../landingPage/components/ButtonDefault";
 import { setNewPassword } from "../../../services/apis/routes/auth.service";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { PulseLoading } from "../../../components/pulse-loading";
+import { PulseLoading } from "../../../components/PulseLoading";
 
 export const ForgotPassword = () => {
     const [newPasswordError, setNewPasswordError] = useState<string | null>(null);

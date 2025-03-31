@@ -8,7 +8,7 @@ import { useNavigate } from "react-router";
 import { login } from "../../services/apis/routes/auth.service";
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import LogoConsultarHorizontal from '../../assets/images/logo-consultar-horizontal.svg';
-import { PulseLoading } from "../../components/pulse-loading";
+import { PulseLoading } from "../../components/PulseLoading";
 
 
 export const Authentication = () => {
