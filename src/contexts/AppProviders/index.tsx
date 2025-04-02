@@ -7,6 +7,6 @@ interface AppProvidersProps {
 
 export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
-    <MainProvider>{children}</MainProvider>
+      <MainProvider>{children}</MainProvider>
   );
 };

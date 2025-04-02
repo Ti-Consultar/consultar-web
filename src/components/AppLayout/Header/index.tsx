@@ -1,19 +1,11 @@
 import { useMainContext } from "../../../contexts/mainContext";
 import { BreadcrumbsContainer, BreadcrumbsItem, MainContainer } from "./styles";
-import { useEffect } from "react";
 
-interface HeaderProps {
-    isDrawerOpen: boolean;
-}
-
-export const Header = ({ isDrawerOpen }: HeaderProps) => {
-    useEffect(() => {
-        console.log("isDrawerOpen mudou:", isDrawerOpen);
-      }, [isDrawerOpen]);
+export const Header = () => {
 
     const { navSelected } = useMainContext();
     return (
-        <MainContainer isDrawerOpen={isDrawerOpen}>
+        <MainContainer>
             <BreadcrumbsContainer>
                 <BreadcrumbsItem breadcrumbActive={true}>
                     {navSelected}/
