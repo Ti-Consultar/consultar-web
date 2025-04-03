@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 interface MainTemplateStyledProps {
-  isOpen?: boolean;
+  isDrawerOpen?: boolean;
 }
 
 
@@ -14,6 +14,13 @@ export const MainContainer = styled.div`
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
 `;
+
+export const ContentWrapper = styled.div<MainTemplateStyledProps>`
+  @media (max-width: 1200px) {
+    transition: opacity 0.3s ease;
+    opacity: ${(props) => (props.isDrawerOpen ? 0.2 : 1)};
+  }
+`
 
 export const DrawerContainer = styled.div`
   grid-area: drawer;

@@ -1,32 +1,36 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ContentContainer,
   DrawerContainer,
   HeaderContainer,
   MainContainer,
+  ContentWrapper
 } from "./styles";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { Content } from "./Content";
+import { useDrawer } from "../../contexts/SidebarProvider";
 
 interface MainTemplateProps {
   children: React.ReactNode;
 }
 
 export const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const { isDrawerOpen } = useDrawer();
 
   return (
     <MainContainer>
       <DrawerContainer>
-        <Sidebar isOpen={isDrawerOpen} setIsOpen={setIsDrawerOpen} />
+        <Sidebar />
       </DrawerContainer>
-      <HeaderContainer>
-        <Header isDrawerOpen={isDrawerOpen} />
-      </HeaderContainer>
-      <ContentContainer>
-        <Content isOpen={isDrawerOpen}>{children}</Content>
-      </ContentContainer>
+      <ContentWrapper isDrawerOpen={isDrawerOpen}>
+        <HeaderContainer>
+          <Header />
+        </HeaderContainer>
+        <ContentContainer>
+          <Content isOpen={false}>{children}</Content>
+        </ContentContainer>
+      </ContentWrapper>
     </MainContainer>
   );
 };

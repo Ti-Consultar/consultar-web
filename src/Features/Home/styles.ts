@@ -10,12 +10,36 @@ export const MainContainer = styled.div`
 
 export const Title = styled.h1`
   color: var(--branding-default-blue);
-  font-size: 24px;
+  font-size: 32px;
   font-weight: var(--fontWeightBold);
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 
   span {
     font-weight: var(--fontWeightRegular);
+  }
+
+  @media (max-width: 1195px) {
+    font-size: 24px;
+  }
+`;
+
+export const ButtonTittle = styled.h1`
+  color: var(--neutral-white);
+  font-size: 18px;
+  font-weight: var(--fontWeightMedium);
+`;  
+
+export const SubTitle = styled.h1`
+  color: var(--neutral-800);
+  font-size: 20px;
+  font-weight: var(--fontWeightRegular);
+
+  span {
+    font-weight: var(--fontWeightRegular);
+  }
+
+    @media (max-width: 1195px) {
+    font-size: 18px;
   }
 `;
 

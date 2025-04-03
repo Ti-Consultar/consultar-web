@@ -8,7 +8,6 @@ interface MainTemplateStyledProps {
 export const SidebarContainer = styled.div<MainTemplateStyledProps>`
   background-color: #333;
   background: var(--neutral-white);
-  max-height: 100vh;
   transition: width 0.3s;
   width: ${({ isOpen }) => (isOpen ? '200px' : '82px')};
   transition: width 0.3s ease;
@@ -144,6 +143,7 @@ export const Icon = styled.div<MainTemplateStyledProps>`
 `;
 
 export const Title = styled.span<MainTemplateStyledProps>`
+  text-align: left;
   color: ${({ selected }) =>
     selected ? 'var(--neutral-white)' : 'var(--neutral-black)'};
   display: ${({ isOpen }) => (isOpen ? 'inline' : 'none')};

@@ -6,10 +6,8 @@ import DataSaverOffOutlinedIcon from '@mui/icons-material/DataSaverOffOutlined';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import FeedOutlinedIcon from '@mui/icons-material/FeedOutlined';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
-import ShowChartOutlinedIcon from '@mui/icons-material/ShowChartOutlined';
 import CompareArrowsOutlinedIcon from '@mui/icons-material/CompareArrowsOutlined';
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
-import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 
 import { useEffect, useState } from "react";
@@ -19,6 +17,7 @@ import { useMainContext } from "../../../contexts/mainContext";
 import Cookies from "js-cookie";
 import { jwtDecode } from 'jwt-decode';
 import { Menu, MenuItem } from "@mui/material";
+import { useDrawer } from "../../../contexts/SidebarProvider";
 
 export interface Company {
     uuid: string;
@@ -78,25 +77,11 @@ const drawerListData = [
         path: '/inserir-balancos',
         icon: <AttachMoneyOutlinedIcon fontSize="medium" />,
     },
-    {
-        title: 'Inserir Demonstração do Resultado do Exercício',
-        path: '/inserir-demonstracao-de-resultados',
-        icon: <ShowChartOutlinedIcon fontSize="medium" />,
-    },
-    {
-        title: 'Plano de Ação',
-        path: '/plano-de-acao',
-        icon: <AccountTreeOutlinedIcon fontSize="medium" />,
-    },
 ];
 
-interface DrawerProps {
-    isOpen: boolean;
-    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export const Sidebar = ({ isOpen, setIsOpen }: DrawerProps) => {
+export const Sidebar = () => {
     const [userData, setUserData] = useState<UserData | null | undefined>();
+    const { isDrawerOpen, toggleDrawer } = useDrawer();
 
     const [menuState, setMenuState] = useState<{
         anchorEl: HTMLElement | null;
@@ -114,17 +99,20 @@ export const Sidebar = ({ isOpen, setIsOpen }: DrawerProps) => {
         setMenuState({ anchorEl: event.currentTarget, menuType: 'perfil' });
     };
 
+    const handleClose = () => {
+        setMenuState({ anchorEl: null, menuType: null });
+    };
+
     const handleLogout = () => {
         Cookies.remove('token');
-        localStorage.removeItem('token'); 
-    
+        localStorage.removeItem('token');
+
         setMenuState({ anchorEl: null, menuType: null });
-    
+
         navigate('/login');
     };
 
     const navigate = useNavigate();
-
 
     useEffect(() => {
         const token = Cookies.get('token');
@@ -142,12 +130,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: DrawerProps) => {
     }, []);
 
     return (
-        <SidebarContainer isOpen={isOpen}>
+        <SidebarContainer isOpen={isDrawerOpen}>
             <Header>
                 <img src={logoConsultar} alt="Logo Consultar" />{' '}
             </Header>
 
-            <ButtonDrawer onClick={() => { setIsOpen(!isOpen) }} isOpen={isOpen}>
+            <ButtonDrawer onClick={() => { toggleDrawer() }} isOpen={isDrawerOpen}>
                 <ArrowForwardIosIcon fontSize="small" sx={{ color: 'white' }} />{' '}
             </ButtonDrawer>
 
@@ -159,17 +147,17 @@ export const Sidebar = ({ isOpen, setIsOpen }: DrawerProps) => {
                                 key={item.title}
                                 onClick={() => handleNavSelected(item.title, item.path)}
                                 selected={navSelected === item.title}
-                                isOpen={isOpen}
+                                isOpen={isDrawerOpen}
                             >
                                 <Icon
-                                    isOpen={isOpen}
+                                    isOpen={isDrawerOpen}
                                     selected={navSelected === item.title}
                                     className="item-icon"
                                 >
                                     {item.icon}
                                 </Icon>
                                 <Title
-                                    isOpen={isOpen}
+                                    isOpen={isDrawerOpen}
                                     className="item-title"
                                     selected={navSelected === item.title}
                                 >
@@ -180,37 +168,36 @@ export const Sidebar = ({ isOpen, setIsOpen }: DrawerProps) => {
                     })}
                 </div>
 
+                <Menu
+                    id="basic-menu"
+                    anchorEl={
+                        menuState.menuType === 'perfil' ? menuState.anchorEl : null
+                    }
+                    open={menuState.menuType === 'perfil'}
+                    onClose={handleClose}
+                    MenuListProps={{
+                        'aria-labelledby': 'basic-button',
+                    }}
+                >
+                    <MenuItem>Minha conta</MenuItem>
+                    <MenuItem onClick={handleLogout}>Sair</MenuItem>
+                </Menu>
                 <div className="items-footer">
                     <div className="line-divisor"></div>
                     {userData && (
                         <>
-                            <ProfileItem isOpen={isOpen} onClick={handleOpenPerfil}>
+                            <ProfileItem isOpen={isDrawerOpen} onClick={handleOpenPerfil}>
                                 <div className="icon-perfil">
                                     <p>{userData.unique_name[0].toUpperCase()} </p>
                                 </div>
 
-                                <Title isOpen={isOpen} className="item-title">
+                                <Title isOpen={isDrawerOpen} className="item-title">
                                     {userData.unique_name}
                                 </Title>
                             </ProfileItem>
                         </>
                     )}
                 </div>
-
-                <Menu
-                id="basic-menu"
-                anchorEl={
-                  menuState.menuType === 'perfil' ? menuState.anchorEl : null
-                }
-                open={menuState.menuType === 'perfil'}
-                onClose={handleLogout}
-                MenuListProps={{
-                  'aria-labelledby': 'basic-button',
-                }}
-              >
-                <MenuItem>Minha conta</MenuItem>
-                <MenuItem onClick={handleLogout}>Sair</MenuItem>
-              </Menu>
             </ListNavItem>
         </SidebarContainer>
     )

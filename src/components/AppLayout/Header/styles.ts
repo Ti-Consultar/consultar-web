@@ -6,15 +6,15 @@ interface HeaderPropsStyle {
 }
 
 export const MainContainer = styled.div<HeaderPropsStyle>`
+  display: flex;
   align-items: center;
   background-color: var(--neutral-50);
   border-bottom: 1px solid var(--neutral-200);
   color: white;
-  display: flex;
   height: 56px;
   justify-content: space-between;
   padding: 14px 28px;
-  max-height: 60px;
+  max-height: fit-content;
   transition: margin-left 0.3s;
   margin-left: ${({ isDrawerOpen }) => (isDrawerOpen ? "0" : "0")};
     @media (max-width: 1200px) {
