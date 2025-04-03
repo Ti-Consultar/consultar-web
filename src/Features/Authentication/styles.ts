@@ -20,6 +20,16 @@ export const LoginContainer = styled.div`
 
   padding: 48px 72px;
   width: 540px;
+
+  @media (max-width: 720px) {
+    margin: 2rem;
+    padding: 32px 48px;
+  }
+`;
+
+export const ClickableText = styled.p`
+  cursor: pointer;
+  color: var(${(props) => props.color || "black"});
 `;
 
 export const Logo = styled.img`
@@ -34,6 +44,36 @@ export const Title = styled.h2`
   line-height: 32px;
   margin-bottom: 32px;
   text-align: center;
+
+    @media (max-width: 720px) {
+      font-size: 24px;
+  }
+`;
+
+export const SubTitle = styled.h3`
+  color: var(--text-gray);
+  font-size: 20px;
+  font-weight: var(--fontWeightMedium);
+  line-height: 20px;
+  margin-bottom: 32px;
+  text-align: center;
+
+    @media (max-width: 720px) {
+      font-size: 18px;
+  }
+`;
+
+export const InfoText = styled.p`
+  color: var(--branding-default-blue);
+  font-size: 18px;
+  font-weight: var(--fontWeightRegular);
+  line-height: 20px;
+  margin-top: 32px;
+  text-align: center;
+
+    @media (max-width: 720px) {
+      font-size: 16px;
+  }
 `;
 
 export const InputsContainer = styled.div`

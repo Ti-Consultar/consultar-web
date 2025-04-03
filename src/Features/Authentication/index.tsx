@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ButtonSubmit, InputsContainer, LoginContainer, Logo, MainContainer, Title } from "./styles"
+import { ButtonSubmit, ClickableText, InputsContainer, LoginContainer, Logo, MainContainer, Title } from "./styles"
 import { FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
 import { ButtonDefault } from "../../landingPage/components/ButtonDefault";
@@ -7,10 +7,14 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { useNavigate } from "react-router";
 import { login } from "../../services/apis/routes/auth.service";
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import LogoConsultarHorizontal from '../../assets/images/logo-consultar-horizontal.svg';
+import { PulseLoading } from "../../components/PulseLoading";
+
 
 export const Authentication = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [loginError, setLoginError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
@@ -35,11 +39,17 @@ export const Authentication = () => {
 
 
     const onSubmit = async (data: LoginFormInputs) => {
+        setLoading(true);
         try {
-            await login(data.email, data.password);
+            const response = await login(data.email, data.password);
 
-            setLoginError(null);
-            navigate('/inicio');
+            if (!response.token) {
+                setLoginError('Email ou senha incorretos');
+                return;
+            } else {
+                setLoginError(null);
+                navigate('/home');
+            }
         } catch (error: unknown) {
             if (
                 error instanceof Error &&
@@ -49,13 +59,17 @@ export const Authentication = () => {
             } else {
                 setLoginError('Ocorreu um erro ao tentar fazer login');
             }
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
+        <>
+        {loading && <PulseLoading size={100} />}
         <MainContainer>
             <LoginContainer>
-                <Logo></Logo>
+                <Logo src={LogoConsultarHorizontal} alt="Logo Consultar" />
                 <Title>Faça seu login</Title>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <InputsContainer>
@@ -69,7 +83,7 @@ export const Authentication = () => {
                                     required: 'Email é obrigatório',
                                     pattern: {
                                         value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                                        message: 'Informe um email inválido',
+                                        message: 'Informe um email válido',
                                     },
                                 }}
                                 render={({ field }) => (
@@ -128,6 +142,8 @@ export const Authentication = () => {
                                 </FormHelperText>
                             )}
                         </FormControl>
+
+                        <ClickableText color="--branding-default-blue" onClick={() => { navigate('/recuperar-senha') }}>Esqueci minha senha</ClickableText>
                     </InputsContainer>
                     <ButtonSubmit>
                         <ButtonDefault
@@ -140,5 +156,6 @@ export const Authentication = () => {
                 </form>
             </LoginContainer>
         </MainContainer>
+        </>
     )
 }
