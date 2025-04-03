@@ -38,7 +38,7 @@ export const getCompanies = async () => {
 
     try {
       const response = await axiosInstanceWithToken.get(
-        `${URL}/api/Company/companies/user/${userId}`
+        `${URL}/api/Company/user/${userId}`
       );
   
       return response.data;

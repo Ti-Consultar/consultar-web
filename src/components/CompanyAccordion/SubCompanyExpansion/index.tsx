@@ -1,15 +1,17 @@
 import { SubCompaniesContainer, SubCompanyContainer, Text } from "./styles";
 
 interface SubCompanyProps {
-    subCompany: string;
+    subCompanies: any[];
 }
 
-export const SubCompany = ({ subCompany }: SubCompanyProps) => {
+export const SubCompany = ({ subCompanies }: SubCompanyProps) => {
     return (
         <SubCompaniesContainer>
-            <SubCompanyContainer key={subCompany}>
-                <Text>{subCompany}</Text>
-            </SubCompanyContainer>
+            {subCompanies?.map(subCompany => (
+                <SubCompanyContainer key={subCompany.subCompanyId}>
+                    <Text>{subCompany.subCompanyName}</Text>
+                </SubCompanyContainer>
+            ))}
         </SubCompaniesContainer>
     );
 }

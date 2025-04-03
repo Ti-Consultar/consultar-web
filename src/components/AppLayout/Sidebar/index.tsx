@@ -6,10 +6,8 @@ import DataSaverOffOutlinedIcon from '@mui/icons-material/DataSaverOffOutlined';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import FeedOutlinedIcon from '@mui/icons-material/FeedOutlined';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
-import ShowChartOutlinedIcon from '@mui/icons-material/ShowChartOutlined';
 import CompareArrowsOutlinedIcon from '@mui/icons-material/CompareArrowsOutlined';
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
-import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 
 import { useEffect, useState } from "react";
@@ -81,12 +79,7 @@ const drawerListData = [
     },
 ];
 
-interface DrawerProps {
-    isOpen: boolean;
-    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export const Sidebar = ({ isOpen }: DrawerProps) => {
+export const Sidebar = () => {
     const [userData, setUserData] = useState<UserData | null | undefined>();
     const { isDrawerOpen, toggleDrawer } = useDrawer();
 
@@ -108,7 +101,7 @@ export const Sidebar = ({ isOpen }: DrawerProps) => {
 
     const handleClose = () => {
         setMenuState({ anchorEl: null, menuType: null });
-      };
+    };
 
     const handleLogout = () => {
         Cookies.remove('token');
@@ -120,7 +113,6 @@ export const Sidebar = ({ isOpen }: DrawerProps) => {
     };
 
     const navigate = useNavigate();
-
 
     useEffect(() => {
         const token = Cookies.get('token');

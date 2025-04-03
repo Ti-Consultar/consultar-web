@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ContentContainer,
   DrawerContainer,
@@ -16,12 +16,12 @@ interface MainTemplateProps {
 }
 
 export const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
-    const { isDrawerOpen, toggleDrawer } = useDrawer();
+    const { isDrawerOpen } = useDrawer();
 
   return (
     <MainContainer>
       <DrawerContainer>
-        <Sidebar isOpen={isDrawerOpen} setIsOpen={toggleDrawer} />
+        <Sidebar />
       </DrawerContainer>
       <ContentWrapper isDrawerOpen={isDrawerOpen}>
         <HeaderContainer>

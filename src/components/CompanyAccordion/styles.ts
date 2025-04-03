@@ -16,9 +16,10 @@ export const MainContainer = styled.div`
   cursor: pointer;
   justify-content: space-between;
   background-color: var(--branding-default-blue);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.11);
 
   @media (max-width: 1195px) {
-    margin: 12px 6px;
+    margin: 12px 6px 0px;
   }
 `;
 
@@ -60,6 +61,10 @@ export const CompanyButton = styled.button`
   &:active {
     transform: scale(0.98); 
   }
+`;
+
+export const SubCompanyContainer = styled.button`
+  transition: 0.4s;
 `;
 
 export const Title = styled.h1`

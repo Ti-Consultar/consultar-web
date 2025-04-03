@@ -30,7 +30,7 @@ export const ButtonTittle = styled.h1`
 `;  
 
 export const SubTitle = styled.h1`
-  color: var(--text-gray);
+  color: var(--neutral-800);
   font-size: 20px;
   font-weight: var(--fontWeightRegular);
 

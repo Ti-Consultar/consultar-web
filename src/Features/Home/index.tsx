@@ -6,6 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import { CompanyAccordion } from "../../components/CompanyAccordion";
 import { getCompanies } from "../../services/apis/routes/companies.service";
 import { useCompany } from "../../contexts/CompanyProvider";
+import { useNavigate } from "react-router";
 
 interface UserData {
     exp: number;
@@ -26,18 +27,18 @@ interface Company {
     };
 }
 
-interface Props {
-    companies: Company[];
-    name: string;
+interface CompaniesResponse {
     userId: number;
-    isExpanded: boolean;
+    name: string;
+    companies: Company[];
 }
 
 export const MrpHome = () => {
-    const [userData, setUserData] = useState<UserData | null | undefined>();
-    const [companyList, setCompanyList] = useState<Props>();
+    const [userData, setUserData] = useState<UserData | null>(null);
+    const [companyList, setCompanyList] = useState<CompaniesResponse | null>(null);
     const [, setError] = useState<string | null>(null);
     const { setCompanyId } = useCompany();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const token = Cookies.get('token');
@@ -47,19 +48,24 @@ export const MrpHome = () => {
                 const dataDecoded: UserData = jwtDecode(token);
                 setUserData(dataDecoded);
             } catch (error) {
-                console.error('Erro ao decodificar o token:', error);
+                navigate('/')
             }
         } else {
-            console.log('Couldn\'t find token');
+            navigate('/')
         }
     }, []);
 
     useEffect(() => {
         const fetchCompanies = async () => {
             try {
-                const data = await getCompanies();
-                setCompanyList(data.data);
-                setCompanyId(data.data.companyId)
+                const response = await getCompanies();
+                const data = response.data;
+
+                setCompanyList(data);
+
+                if (data.companies.length > 0) {
+                    setCompanyId(data.companies[0].companyId);
+                }
             } catch (error: unknown) {
                 if (
                     error instanceof Error &&
@@ -77,18 +83,15 @@ export const MrpHome = () => {
 
     return (
         <MainTemplate>
-            {' '}
             <MainContainer>
                 <Title>
-                    Bem-vindo, <span>{userData?.unique_name}</span>{' '}
+                    Bem-vindo, <span>{userData?.unique_name}</span>
                 </Title>
-                <SubTitle>
-                    Acesse e administre suas empresas abaixo:
-                </SubTitle>
-            </MainContainer>{' '}
+                <SubTitle>Acesse e administre suas empresas abaixo:</SubTitle>
+            </MainContainer>
             {companyList?.companies.map(company => (
                 <CompanyAccordion key={company.companyId} company={company} />
             ))}
         </MainTemplate>
-    )
-}
+    );
+};

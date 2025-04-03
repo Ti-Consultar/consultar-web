@@ -37,16 +37,20 @@ export const CompanyAccordion = ({ hasSubCompanies, company }: CompanyAccordionP
                         </ButtonTittle>
                     </CompanyButton>
                         : null}
-                    {Array.isArray(company.subCompanies) && company.subCompanies.length > 0 ? <Button isExpanded={isExpanded}>
-                        <KeyboardArrowDownIcon fontSize='large' sx={{ color: isExpanded ? "#6296e9" : "#fff" }}></KeyboardArrowDownIcon>
-                    </Button>
-                        : null
+                    {
+                        Array.isArray(company.subCompanies) && company.subCompanies.length > 0 ?
+                            <Button isExpanded={isExpanded}>
+                                <KeyboardArrowDownIcon fontSize='large' sx={{ color: isExpanded ? "#6296e9" : "#fff" }}></KeyboardArrowDownIcon>
+                            </Button>
+                            : null
                     }
                 </ContentContainer>
             </MainContainer>
-            {company?.subCompanies.map(company => (
-                <SubCompany key={company.SubCompanyId} subCompany={company} />
-            ))}
+            {
+                Array.isArray(company.subCompanies) && company.subCompanies.length > 0 && isExpanded ?
+                    <SubCompany subCompanies={company.subCompanies} />
+                    : null
+            }
         </>
     );
 }
