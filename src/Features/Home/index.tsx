@@ -7,6 +7,8 @@ import { CompanyAccordion } from "../../components/CompanyAccordion";
 import { getCompanies } from "../../services/apis/routes/companies.service";
 import { useCompany } from "../../contexts/CompanyProvider";
 import { useNavigate } from "react-router";
+import { useLoading } from "../../contexts/LoadingProvider";
+
 
 interface UserData {
     exp: number;
@@ -39,6 +41,7 @@ export const MrpHome = () => {
     const [, setError] = useState<string | null>(null);
     const { setCompanyId } = useCompany();
     const navigate = useNavigate();
+    const { setLoading } = useLoading();
 
     useEffect(() => {
         const token = Cookies.get('token');
@@ -49,6 +52,7 @@ export const MrpHome = () => {
                 setUserData(dataDecoded);
             } catch (error) {
                 navigate('/')
+                console.log(error)
             }
         } else {
             navigate('/')
@@ -57,6 +61,7 @@ export const MrpHome = () => {
 
     useEffect(() => {
         const fetchCompanies = async () => {
+            setLoading(true, 'Carregando suas empresas');
             try {
                 const response = await getCompanies();
                 const data = response.data;
@@ -75,6 +80,8 @@ export const MrpHome = () => {
                 } else {
                     setError('Ocorreu um erro ao tentar fazer login');
                 }
+            } finally {
+                setLoading(false);
             }
         };
 
