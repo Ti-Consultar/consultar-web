@@ -1,6 +1,6 @@
 import { ButtonContainer, ButtonStyle } from "./styles";
 
-interface ButtonProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'tertiary';
     text: string;
 }

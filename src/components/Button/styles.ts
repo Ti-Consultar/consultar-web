@@ -3,9 +3,7 @@ import styled from "styled-components";
 export const ButtonContainer = styled.div`
     display: flex;
     align-items: center;
-    width: 100%;
     height: 100%;
-    margin: 12px;
 `;
 
 export const ButtonStyle = styled.button<{ variant?: 'primary' | 'secondary' | 'tertiary' }>`
