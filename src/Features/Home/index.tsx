@@ -8,6 +8,7 @@ import { getCompanies } from "../../services/apis/routes/companies.service";
 import { useCompany } from "../../contexts/CompanyProvider";
 import { useNavigate } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
+import { Button } from "../../components/Button";
 
 
 interface UserData {
@@ -92,9 +93,10 @@ export const MrpHome = () => {
         <MainTemplate>
             <MainContainer>
                 <Title>
-                    Bem-vindo, <span>{userData?.unique_name}</span>
+                    Bem-vindo, <span>{userData?.unique_name}</span>.
                 </Title>
                 <SubTitle>Acesse e administre suas empresas abaixo:</SubTitle>
+                <Button text="Criar Grupo" variant="primary" />
             </MainContainer>
             {companyList?.companies.map(company => (
                 <CompanyAccordion key={company.companyId} company={company} />
