@@ -4,6 +4,7 @@ import { Authentication } from '../../Features/Authentication';
 import { ForgotPassword } from '../../Features/Authentication/forgot-password';
 import { PasswordSent } from '../../Features/Authentication/forgot-password/password-sent';
 import { MrpHome } from '../../Features/Home';
+import { CompanyDashboard } from '../../Features/CompanyDashboard';
 
 export const AppRoutes = () => {
     return (
@@ -17,6 +18,7 @@ export const AppRoutes = () => {
                 <Route path="/recuperar-senha/senha-enviada" element={<PasswordSent />} />
 
                 <Route path="/home" element={<MrpHome />} />
+                <Route path={`/empresa`} element={<CompanyDashboard />} />
             </Routes>
         </>
     )

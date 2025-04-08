@@ -32,9 +32,12 @@ const getUserIdFromCookie = (): string | null => {
   }
 };
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms)); //Somente para fins de mocking
+
 export const getCompanies = async () => {
     const userId  = getUserIdFromCookie();
     if (!userId) throw new Error("UserId não encontrado no cookie.");
+    await delay(1500); //to-do: Remover quando o backend estiver pronto
 
     try {
       const response = await axiosInstanceWithToken.get(
