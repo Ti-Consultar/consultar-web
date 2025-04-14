@@ -1,6 +1,7 @@
 import { Box, IconButton, Modal, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Button } from "../Button";
+import { ToastContainer, toast } from "react-toastify";
 
 interface ModalCustomProps {
   open: boolean;
@@ -9,6 +10,7 @@ interface ModalCustomProps {
   title?: string;
   children: React.ReactNode;
   width?: number | string;
+  hasSaveCancel?: boolean;
 }
 
 const style = (width: number | string = 400) => ({
@@ -29,10 +31,11 @@ export const ModalCustom = ({
   title,
   children,
   width = "auto",
+  hasSaveCancel = true,
   onSubmit,
 }: ModalCustomProps) => {
   return (
-    <Modal open={open} onClose={onClose} hideBackdrop={false}>
+    <Modal open={open} onClose={onClose} disableEnforceFocus disableAutoFocus>
       <Box sx={style(width)}>
         <Box
           alignContent={"space-between"}
@@ -52,10 +55,12 @@ export const ModalCustom = ({
           </Box>
         </Box>
         {children}
-        <Box sx={{ display: "flex", mt: 4, justifyContent: "space-between" }}>
-          <Button text="Cancelar" variant="secondary" onSubmit={onClose} />
-          <Button text="Salvar" onSubmit={onSubmit} />
-        </Box>
+        {hasSaveCancel ? (
+          <Box sx={{ display: "flex", mt: 4, justifyContent: "space-between" }}>
+            <Button text="Cancelar" variant="secondary" />
+            <Button text="Salvar" onClick={onSubmit} />
+          </Box>
+        ) : null}
       </Box>
     </Modal>
   );

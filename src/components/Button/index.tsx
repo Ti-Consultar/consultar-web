@@ -2,6 +2,7 @@ import { ButtonContainer, ButtonStyle } from "./styles";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'tertiary';
+    disabled?: boolean;
     text: string;
 }
 

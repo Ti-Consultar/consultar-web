@@ -9,7 +9,9 @@ import { useCompany } from "../../contexts/CompanyProvider";
 import { useNavigate } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { Button } from "../../components/Button";
-import { ModalCustom } from "../../components/Modal";
+import { GroupForm } from "../GroupForm";
+import { toast } from "react-toastify";
+import { getAllGroups } from "../../services/apis/routes/groups.service";
 
 interface UserData {
   exp: number;
@@ -43,9 +45,9 @@ export const MrpHome = () => {
   );
   const [, setError] = useState<string | null>(null);
   const { setCompanyId } = useCompany();
-  const navigate = useNavigate();
   const { setLoading } = useLoading();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -82,7 +84,7 @@ export const MrpHome = () => {
         ) {
           setError(error.message);
         } else {
-          setError("Ocorreu um erro ao tentar fazer login");
+          toast.error("Erro ao buscar os dados da empresa.");
         }
       } finally {
         setLoading(false);
@@ -92,6 +94,38 @@ export const MrpHome = () => {
     fetchCompanies();
   }, []);
 
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      setLoading(true, "Carregando grupos empresariais...");
+      try {
+        const response = await getAllGroups();
+        const data = response;
+        console.log("Grupos empresariais:", data.data);
+      } catch (error: unknown) {
+        if (
+          error instanceof Error &&
+          (error as { response?: { status?: number } }).response?.status === 401
+        ) {
+          setError(error.message);
+        } else {
+          toast.error("Erro ao buscar os grupos.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
+
+  const handleGroupSaved = () => {
+    setOpen(false);
+    toast.dismiss(); // Fecha todos antes de abrir outro
+    setTimeout(() => {
+      toast.success("Grupo criado com sucesso!");
+    }, 500);
+  };
+
   return (
     <MainTemplate>
       <MainContainer>
@@ -99,15 +133,16 @@ export const MrpHome = () => {
           Bem-vindo, <span>{userData?.unique_name}</span>.
         </Title>
         <SubTitle>Acesse e administre suas empresas abaixo:</SubTitle>
-        <Button text="Criar Grupo" variant="primary" onClick={() => setOpen(true)}/>
-        <ModalCustom
-          open={open}
+        <Button
+          text="Criar Grupo"
+          variant="primary"
+          onClick={() => setOpen(true)}
+        />
+        <GroupForm
+          isOpen={open}
           onClose={() => setOpen(false)}
-          title="Cadastro de Grupo"
-          width={600}
-        >
-          <p>Conteúdo do modal vai aqui!</p>
-        </ModalCustom>
+          onSuccess={handleGroupSaved}
+        />
       </MainContainer>
       {companyList?.companies.map((company) => (
         <CompanyAccordion key={company.companyId} company={company} />
