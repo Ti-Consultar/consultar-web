@@ -1,4 +1,5 @@
 import { createGlobalStyle } from "styled-components";
+import 'react-toastify/dist/ReactToastify.css';
 
 export const GlobalStyle = createGlobalStyle`
  :root {
@@ -38,6 +39,12 @@ export const GlobalStyle = createGlobalStyle`
     --fontWeightSemiBold: 600;
     --fontWeightBold: 700;
     --fontWeightExtraBold: 800;
+
+    --button-primary: #3A5F9B;
+    --button-primary-hover:rgb(31, 63, 114);
+    --button-secondary: #EAEAEC;
+    --button-secondary-hover: #cecece;
+    --button-tertiary: #e2e2e2;
   }
 
   * {

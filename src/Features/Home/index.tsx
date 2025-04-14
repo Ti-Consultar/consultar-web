@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { MainTemplate } from "../../components/AppLayout"
-import { MainContainer, SubTitle, Title } from "./styles"
+import { MainTemplate } from "../../components/AppLayout";
+import { MainContainer, SubTitle, Title } from "./styles";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { CompanyAccordion } from "../../components/CompanyAccordion";
@@ -8,97 +8,145 @@ import { getCompanies } from "../../services/apis/routes/companies.service";
 import { useCompany } from "../../contexts/CompanyProvider";
 import { useNavigate } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
-
+import { Button } from "../../components/Button";
+import { GroupForm } from "../GroupForm";
+import { toast } from "react-toastify";
+import { getAllGroups } from "../../services/apis/routes/groups.service";
 
 interface UserData {
-    exp: number;
-    iat: number;
-    ip: string;
-    role: string;
-    unique_name: string;
+  exp: number;
+  iat: number;
+  ip: string;
+  role: string;
+  unique_name: string;
 }
 
 interface Company {
-    companyId: number;
-    companyName: string;
-    dateCreate: string;
-    subCompanies: any[];
-    permission: {
-        id: number;
-        name: string;
-    };
+  companyId: number;
+  companyName: string;
+  dateCreate: string;
+  subCompanies: any[];
+  permission: {
+    id: number;
+    name: string;
+  };
 }
 
 interface CompaniesResponse {
-    userId: number;
-    name: string;
-    companies: Company[];
+  userId: number;
+  name: string;
+  companies: Company[];
 }
 
 export const MrpHome = () => {
-    const [userData, setUserData] = useState<UserData | null>(null);
-    const [companyList, setCompanyList] = useState<CompaniesResponse | null>(null);
-    const [, setError] = useState<string | null>(null);
-    const { setCompanyId } = useCompany();
-    const navigate = useNavigate();
-    const { setLoading } = useLoading();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [companyList, setCompanyList] = useState<CompaniesResponse | null>(
+    null
+  );
+  const [, setError] = useState<string | null>(null);
+  const { setCompanyId } = useCompany();
+  const { setLoading } = useLoading();
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const token = Cookies.get('token');
+  useEffect(() => {
+    const token = Cookies.get("token");
 
-        if (token) {
-            try {
-                const dataDecoded: UserData = jwtDecode(token);
-                setUserData(dataDecoded);
-            } catch (error) {
-                navigate('/')
-                console.log(error)
-            }
-        } else {
-            navigate('/')
+    if (token) {
+      try {
+        const dataDecoded: UserData = jwtDecode(token);
+        setUserData(dataDecoded);
+      } catch (error) {
+        navigate("/");
+        console.log(error);
+      }
+    } else {
+      navigate("/");
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      setLoading(true, "Carregando suas empresas");
+      try {
+        const response = await getCompanies();
+        const data = response.data;
+
+        setCompanyList(data);
+
+        if (data.companies.length > 0) {
+          setCompanyId(data.companies[0].companyId);
         }
-    }, []);
+      } catch (error: unknown) {
+        if (
+          error instanceof Error &&
+          (error as { response?: { status?: number } }).response?.status === 401
+        ) {
+          setError(error.message);
+        } else {
+          toast.error("Erro ao buscar os dados da empresa.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    useEffect(() => {
-        const fetchCompanies = async () => {
-            setLoading(true, 'Carregando suas empresas');
-            try {
-                const response = await getCompanies();
-                const data = response.data;
+    fetchCompanies();
+  }, []);
 
-                setCompanyList(data);
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      setLoading(true, "Carregando grupos empresariais...");
+      try {
+        const response = await getAllGroups();
+        const data = response;
+        console.log("Grupos empresariais:", data.data);
+      } catch (error: unknown) {
+        if (
+          error instanceof Error &&
+          (error as { response?: { status?: number } }).response?.status === 401
+        ) {
+          setError(error.message);
+        } else {
+          toast.error("Erro ao buscar os grupos.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-                if (data.companies.length > 0) {
-                    setCompanyId(data.companies[0].companyId);
-                }
-            } catch (error: unknown) {
-                if (
-                    error instanceof Error &&
-                    (error as { response?: { status?: number } }).response?.status === 401
-                ) {
-                    setError(error.message);
-                } else {
-                    setError('Ocorreu um erro ao tentar fazer login');
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
+    fetchCompanies();
+  }, []);
 
-        fetchCompanies();
-    }, []);
+  const handleGroupSaved = () => {
+    setOpen(false);
+    toast.dismiss(); // Fecha todos antes de abrir outro
+    setTimeout(() => {
+      toast.success("Grupo criado com sucesso!");
+    }, 500);
+  };
 
-    return (
-        <MainTemplate>
-            <MainContainer>
-                <Title>
-                    Bem-vindo, <span>{userData?.unique_name}</span>
-                </Title>
-                <SubTitle>Acesse e administre suas empresas abaixo:</SubTitle>
-            </MainContainer>
-            {companyList?.companies.map(company => (
-                <CompanyAccordion key={company.companyId} company={company} />
-            ))}
-        </MainTemplate>
-    );
+  return (
+    <MainTemplate>
+      <MainContainer>
+        <Title>
+          Bem-vindo, <span>{userData?.unique_name}</span>.
+        </Title>
+        <SubTitle>Acesse e administre suas empresas abaixo:</SubTitle>
+        <Button
+          text="Criar Grupo"
+          variant="primary"
+          onClick={() => setOpen(true)}
+        />
+        <GroupForm
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          onSuccess={handleGroupSaved}
+        />
+      </MainContainer>
+      {companyList?.companies.map((company) => (
+        <CompanyAccordion key={company.companyId} company={company} />
+      ))}
+    </MainTemplate>
+  );
 };
