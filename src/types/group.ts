@@ -15,5 +15,6 @@ export type BusinessEntity = {
 export type GroupFormData = {
   name: string;
   userId: number;
+  groupId?: number;
   businessEntity: BusinessEntity;
 }

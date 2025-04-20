@@ -1,17 +1,31 @@
 import { useEffect, useState } from "react";
 import { MainTemplate } from "../../components/AppLayout";
-import { MainContainer, SubTitle, Title } from "./styles";
+import {
+  CardsContainer,
+  EmptyStateContainer,
+  MainContainer,
+  NoItems,
+  SubTitle,
+  Title,
+} from "./styles";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import { CompanyAccordion } from "../../components/CompanyAccordion";
-import { getCompanies } from "../../services/apis/routes/companies.service";
-import { useCompany } from "../../contexts/CompanyProvider";
 import { useNavigate } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { Button } from "../../components/Button";
 import { GroupForm } from "../GroupForm";
 import { toast } from "react-toastify";
-import { getAllGroups } from "../../services/apis/routes/groups.service";
+import {
+  deleteGroup,
+  getGroupById,
+  getGroupsByUserId,
+} from "../../services/apis/routes/groups.service";
+import { GroupCard } from "../../components/Card";
+import { Alert, Typography } from "@mui/material";
+import { useAuth } from "../../utils/hooks/useAuth";
+import { GroupFormData } from "../../types/group";
+import ApartmentIcon from "@mui/icons-material/Apartment";
+import { AlertModal } from "../../components/AlertModal";
 
 interface UserData {
   exp: number;
@@ -19,35 +33,43 @@ interface UserData {
   ip: string;
   role: string;
   unique_name: string;
+  userId: string;
 }
 
-interface Company {
-  companyId: number;
-  companyName: string;
-  dateCreate: string;
-  subCompanies: any[];
-  permission: {
-    id: number;
-    name: string;
-  };
+interface businessEntity {
+  nomeFantasia: string;
+  razaoSocial: string;
+  cnpj: string;
+  logradouro: string;
+  numero: string;
+  bairro: string;
+  municipio: string;
+  uf: string;
+  cep: string;
+  telefone: string;
+  email: string;
 }
 
-interface CompaniesResponse {
+interface GroupsResponse {
+  groupId: number;
   userId: number;
-  name: string;
-  companies: Company[];
+  groupName: string;
+  businessEntity: businessEntity;
 }
+
+type Mode = "create" | "edit";
 
 export const MrpHome = () => {
+  const userId = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [companyList, setCompanyList] = useState<CompaniesResponse | null>(
-    null
-  );
+  const [groupList, setGroupList] = useState<GroupsResponse[]>([]);
+  const [editingGroup, setEditingGroup] = useState<GroupFormData>();
   const [, setError] = useState<string | null>(null);
-  const { setCompanyId } = useCompany();
   const { setLoading } = useLoading();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -58,72 +80,87 @@ export const MrpHome = () => {
         setUserData(dataDecoded);
       } catch (error) {
         navigate("/");
-        console.log(error);
       }
     } else {
       navigate("/");
     }
   }, []);
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      setLoading(true, "Carregando suas empresas");
-      try {
-        const response = await getCompanies();
-        const data = response.data;
-
-        setCompanyList(data);
-
-        if (data.companies.length > 0) {
-          setCompanyId(data.companies[0].companyId);
-        }
-      } catch (error: unknown) {
-        if (
-          error instanceof Error &&
-          (error as { response?: { status?: number } }).response?.status === 401
-        ) {
-          setError(error.message);
-        } else {
-          toast.error("Erro ao buscar os dados da empresa.");
-        }
-      } finally {
-        setLoading(false);
+  const fetchGroups = async () => {
+    setLoading(true, "Carregando grupos empresariais...");
+    try {
+      const response = await getGroupsByUserId(Number(userData?.userId));
+      const data = response.data;
+      setGroupList(data);
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        (error as { response?: { status?: number } }).response?.status === 401
+      ) {
+        setError(error.message);
+      } else {
+        toast.error("Erro ao buscar os grupos.");
       }
-    };
-
-    fetchCompanies();
-  }, []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCompanies = async () => {
-      setLoading(true, "Carregando grupos empresariais...");
-      try {
-        const response = await getAllGroups();
-        const data = response;
-        console.log("Grupos empresariais:", data.data);
-      } catch (error: unknown) {
-        if (
-          error instanceof Error &&
-          (error as { response?: { status?: number } }).response?.status === 401
-        ) {
-          setError(error.message);
-        } else {
-          toast.error("Erro ao buscar os grupos.");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (userData?.userId) {
+      fetchGroups();
+    }
+  }, [userData]);
 
-    fetchCompanies();
-  }, []);
-
-  const handleGroupSaved = () => {
+  const handleGroupSaved = (mode: Mode = "create") => {
     setOpen(false);
-    toast.dismiss(); // Fecha todos antes de abrir outro
+    toast.dismiss();
+
     setTimeout(() => {
-      toast.success("Grupo criado com sucesso!");
+      const message =
+        mode === "edit"
+          ? "Grupo atualizado com sucesso!"
+          : "Grupo criado com sucesso!";
+
+      toast.success(message);
     }, 500);
+
+    fetchGroups();
+    setEditingGroup(undefined);
+  };
+
+  const handleDeleteGroup = async (id: number, userId: number) => {
+    setLoading(true, 'Deletando Grupo');
+    setError("");
+
+    try {
+      await deleteGroup(id, userId);
+      toast.success("Grupo deletado com sucesso!");
+      fetchGroups();
+    } catch {
+      toast.error("Erro ao deletar grupo");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = async (id: number, userId: number) => {
+    try {
+      setOpen(true);
+
+      const data = await getGroupById(userId, id);
+      setEditingGroup(data.data);
+    } catch (error) {
+      toast.error("Erro ao buscar grupo para edição.");
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedGroupId !== null && userId?.userId) {
+      await handleDeleteGroup(selectedGroupId, Number(userId.userId));
+      setSelectedGroupId(null);
+    }
+    setOpenDialog(false);
   };
 
   return (
@@ -141,12 +178,78 @@ export const MrpHome = () => {
         <GroupForm
           isOpen={open}
           onClose={() => setOpen(false)}
-          onSuccess={handleGroupSaved}
+          onSuccess={() =>
+            handleGroupSaved(editingGroup?.groupId ? "edit" : "create")
+          }
+          defaultValues={editingGroup}
+        />
+        <AlertModal
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          onConfirm={() => {
+            handleConfirmDelete();
+            setOpen(false);
+          }}
+          title="Excluir Grupo"
+          message={
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "column",
+                width: '100%',
+                gap: '10px'
+              }}
+            >
+              <span>
+                Tem certeza que deseja deletar este grupo?
+              </span>
+              <Alert color="warning" severity="info">
+                Esta ação também irá deletar todas as empresas atreladas a ela.
+              </Alert>
+            </div>
+          }
+          type="warning"
         />
       </MainContainer>
-      {companyList?.companies.map((company) => (
-        <CompanyAccordion key={company.companyId} company={company} />
-      ))}
+      {Array.isArray(groupList) && groupList.length > 0 ? (
+        <CardsContainer container spacing={2}>
+          {groupList?.map((group) => (
+            <GroupCard
+              key={group.groupId}
+              fantasyName={
+                group.businessEntity?.nomeFantasia || group.groupName
+              }
+              corporateName={group.businessEntity.razaoSocial}
+              onEdit={() => handleEdit(Number(userId?.userId), group.groupId)}
+              onDelete={() => {
+                setOpenDialog(true);
+                setSelectedGroupId(group.groupId);
+              }}
+            />
+          ))}
+        </CardsContainer>
+      ) : (
+        <>
+          <EmptyStateContainer>
+            <NoItems>
+              <ApartmentIcon color="action" fontSize="large"></ApartmentIcon>
+            </NoItems>
+            <Typography variant="h5" fontWeight="bold" textAlign={"center"}>
+              Nenhum grupo encontrado.
+            </Typography>
+            <Typography
+              variant="h6"
+              fontWeight="medium"
+              color="#888888"
+              textAlign={"center"}
+            >
+              Não encontramos nenhum grupo atrelado ao seu usuário.
+            </Typography>
+          </EmptyStateContainer>
+        </>
+      )}
     </MainTemplate>
   );
 };
