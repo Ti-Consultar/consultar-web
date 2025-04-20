@@ -1,3 +1,4 @@
+import { Grid2 } from "@mui/material";
 import styled from "styled-components";
 
 export const MainContainer = styled.div`
@@ -7,6 +8,30 @@ export const MainContainer = styled.div`
     padding: 24px;
   }
 `;
+
+export const EmptyStateContainer = styled.div`
+  padding: 24px 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  @media (max-width: 1195px) {
+    padding: 24px;
+  }
+`;
+
+export const NoItems = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background-color: #f5f5f5;
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 2px;
+`
 
 export const Title = styled.h1`
   color: var(--branding-default-blue);
@@ -72,3 +97,7 @@ export const BoxContent = styled.div`
     font-weight: var(--fontWeightBold);
   }
 `;
+
+export const CardsContainer = styled(Grid2)({
+  margin: '0 0.5rem 0 0.5rem'
+});

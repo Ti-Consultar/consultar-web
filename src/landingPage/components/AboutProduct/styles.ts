@@ -37,11 +37,10 @@ export const Subtitle = styled.p`
 
 export const CardsContainer = styled.div`
   display: flex;
-  gap: 24px;
   margin-bottom: 36px;
+  flex-direction: row;
 
   @media (max-width: 1180px) {
-    flex-direction: column;
     padding: 16px;
     width: 100%;
   }

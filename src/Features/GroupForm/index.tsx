@@ -9,7 +9,10 @@ import {
   useTheme,
 } from "@mui/material";
 import { ModalCustom } from "../../components/Modal";
-import { saveGroup } from "../../services/apis/routes/groups.service";
+import {
+  saveGroup,
+  updateGroup,
+} from "../../services/apis/routes/groups.service";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { useEffect, useState } from "react";
 import { Button } from "../../components/Button";
@@ -26,37 +29,51 @@ interface GroupFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  defaultValues?: GroupFormData;
 }
 
-export const GroupForm = ({ onClose, isOpen, onSuccess }: GroupFormProps) => {
+export const GroupForm = ({
+  onClose,
+  isOpen,
+  onSuccess,
+  defaultValues,
+}: GroupFormProps) => {
   const userData = useAuth();
   const { setLoading } = useLoading();
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
 
-  const steps = ["Dados cadastrais", "Endereço", "Contatos"];
   const theme = useTheme();
+  const steps = ["Dados cadastrais", "Endereço", "Contatos"];
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [activeStep, setActiveStep] = useState(0);
 
-  const [formData, setFormData] = useState<GroupFormData>({
-    name: "",
-    userId: 0,
-    businessEntity: {
-      nomeFantasia: "",
-      razaoSocial: "",
-      cnpj: "",
-      logradouro: "",
-      numero: "",
-      bairro: "",
-      municipio: "",
-      uf: "",
-      cep: "",
-      telefone: "",
-      email: "",
-    },
-  });
+  const [formData, setFormData] = useState<GroupFormData>(
+    defaultValues || {
+      name: "",
+      userId: 0,
+      businessEntity: {
+        nomeFantasia: "",
+        razaoSocial: "",
+        cnpj: "",
+        logradouro: "",
+        numero: "",
+        bairro: "",
+        municipio: "",
+        uf: "",
+        cep: "",
+        telefone: "",
+        email: "",
+      },
+    }
+  );
+
+  useEffect(() => {
+    if (defaultValues) {
+      setFormData(defaultValues);
+    }
+  }, [defaultValues]);
 
   const handleNext = () => {
     const currentErrors: { [key: string]: boolean } = {};
@@ -78,19 +95,8 @@ export const GroupForm = ({ onClose, isOpen, onSuccess }: GroupFormProps) => {
     }
 
     setErrors({ ...currentErrors });
-    console.log(errors);
 
     if (Object.keys(currentErrors).length > 0) return;
-
-    if (activeStep === steps.length - 1) {
-      const payload = {
-        ...b,
-        cnpj: b.cnpj.replace(/\D/g, ""),
-        cep: b.cep.replace(/\D/g, ""),
-        telefone: b.telefone.replace(/\D/g, ""),
-      };
-      console.log("Dados enviados:", payload);
-    }
     setActiveStep((prev) => prev + 1);
   };
 
@@ -129,6 +135,7 @@ export const GroupForm = ({ onClose, isOpen, onSuccess }: GroupFormProps) => {
     const rawCnpj = formData.businessEntity.cnpj.replace(/\D/g, "");
 
     if (rawCnpj.length !== 14) return;
+    if (formData.userId) return;
 
     const timeout = setTimeout(() => {
       setLoading(true, "Buscando dados da empresa");
@@ -205,7 +212,7 @@ export const GroupForm = ({ onClose, isOpen, onSuccess }: GroupFormProps) => {
           toast.error("Erro ao buscar o endereço. Verifique o CEP.");
         })
         .finally(() => {
-          setLoading(false); // Finaliza o loading independente do resultado
+          setLoading(false);
         });
     }, 500);
 
@@ -221,17 +228,20 @@ export const GroupForm = ({ onClose, isOpen, onSuccess }: GroupFormProps) => {
       return;
     }
 
-    setLoading(true, "Salvando seus dados...");
-    try {
-      const response = await saveGroup(data);
+    setLoading(
+      true,
+      data.groupId ? "Atualizando grupo..." : "Salvando grupo..."
+    );
 
-      // 💡 aqui fazemos a verificação com base na resposta "mascarada"
+    try {
+      const response = formData.groupId
+        ? await updateGroup(formData.groupId, data.userId, data)
+        : await saveGroup(data);
       if (
         response.success &&
         typeof response.data === "string" &&
         response.data.includes("Já existe um cadastro com este CNPJ")
       ) {
-        // marca o campo como inválido
         setErrors((prev) => ({ ...prev, cnpj: true }));
         toast.warning("Já existe um cadastro com este CNPJ.");
         return;
@@ -337,6 +347,7 @@ export const GroupForm = ({ onClose, isOpen, onSuccess }: GroupFormProps) => {
                   onChange={handleChange}
                   error={Boolean(errors["cnpj"])}
                   helperText={errors["cnpj"] ? "Campo obrigatório" : ""}
+                  disabled={!!formData.userId}
                 />
               </Box>
               <Box sx={{ flex: 1 }}>
