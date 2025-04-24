@@ -1,5 +1,5 @@
 import { createGlobalStyle } from "styled-components";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 export const GlobalStyle = createGlobalStyle`
  :root {
@@ -55,6 +55,7 @@ export const GlobalStyle = createGlobalStyle`
   }
   
   html {
+    overflow: hidden;
     @media (max-width: 1080px) {
       font-size: 93.75%; 
     }

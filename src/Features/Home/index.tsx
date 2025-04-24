@@ -163,6 +163,11 @@ export const MrpHome = () => {
     setOpenDialog(false);
   };
 
+  const handleCardClick = (groupId: number) => {
+    console.log(groupId, 'clicou')
+    navigate(`/grupo/${groupId}/empresas`);
+  };
+
   return (
     <MainTemplate>
       <MainContainer>
@@ -223,6 +228,7 @@ export const MrpHome = () => {
               }
               corporateName={group.businessEntity.razaoSocial}
               onEdit={() => handleEdit(Number(userId?.userId), group.groupId)}
+              onClick={() => handleCardClick(group.groupId)}
               onDelete={() => {
                 setOpenDialog(true);
                 setSelectedGroupId(group.groupId);

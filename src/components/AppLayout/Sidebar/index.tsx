@@ -2,13 +2,15 @@ import { SidebarContainer, Header, ButtonDrawer, ListNavItem, NavItem, Icon, Tit
 
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import logoConsultar from '../../../../src/assets/icons/logo-consultar.svg';
-import DataSaverOffOutlinedIcon from '@mui/icons-material/DataSaverOffOutlined';
-import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
-import FeedOutlinedIcon from '@mui/icons-material/FeedOutlined';
-import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
-import CompareArrowsOutlinedIcon from '@mui/icons-material/CompareArrowsOutlined';
-import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
+import logoConsultarHorizontal from '../../../../src/assets/icons/logo_horizontal 1.svg';
+// import DataSaverOffOutlinedIcon from '@mui/icons-material/DataSaverOffOutlined';
+// import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
+// import FeedOutlinedIcon from '@mui/icons-material/FeedOutlined';
+// import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
+// import CompareArrowsOutlinedIcon from '@mui/icons-material/CompareArrowsOutlined';
+// import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -43,40 +45,40 @@ interface UserData {
 
 const drawerListData = [
     {
-        title: 'Home',
-        path: '/inicio',
+        title: 'Início',
+        path: '/home',
         icon: <HomeOutlinedIcon fontSize="medium" />,
     },
-    {
-        title: 'Base Orçamentária',
-        path: '/base-orcamentaria',
-        icon: <CompareArrowsOutlinedIcon fontSize="medium" />,
-    },
-    {
-        title: 'Contas',
-        path: '/contas',
-        icon: <BarChartOutlinedIcon fontSize="medium" />,
-    },
-    {
-        title: 'Balancetes',
-        path: '/balancetes',
-        icon: <FeedOutlinedIcon fontSize="medium" />,
-    },
-    {
-        title: 'Dashboard',
-        path: '/dashboard',
-        icon: <DataSaverOffOutlinedIcon fontSize="medium" />,
-    },
-    {
-        title: 'Relatórios',
-        path: '/relatorios',
-        icon: <FileOpenOutlinedIcon fontSize="medium" />,
-    },
-    {
-        title: 'Inserir Balanços',
-        path: '/inserir-balancos',
-        icon: <AttachMoneyOutlinedIcon fontSize="medium" />,
-    },
+    // {
+    //     title: 'Base Orçamentária',
+    //     path: '/base-orcamentaria',
+    //     icon: <CompareArrowsOutlinedIcon fontSize="medium" />,
+    // },
+    // {
+    //     title: 'Contas',
+    //     path: '/contas',
+    //     icon: <BarChartOutlinedIcon fontSize="medium" />,
+    // },
+    // {
+    //     title: 'Balancetes',
+    //     path: '/balancetes',
+    //     icon: <FeedOutlinedIcon fontSize="medium" />,
+    // },
+    // {
+    //     title: 'Dashboard',
+    //     path: '/dashboard',
+    //     icon: <DataSaverOffOutlinedIcon fontSize="medium" />,
+    // },
+    // {
+    //     title: 'Relatórios',
+    //     path: '/relatorios',
+    //     icon: <FileOpenOutlinedIcon fontSize="medium" />,
+    // },
+    // {
+    //     title: 'Inserir Balanços',
+    //     path: '/inserir-balancos',
+    //     icon: <AttachMoneyOutlinedIcon fontSize="medium" />,
+    // },
 ];
 
 export const Sidebar = () => {
@@ -132,11 +134,11 @@ export const Sidebar = () => {
     return (
         <SidebarContainer isOpen={isDrawerOpen}>
             <Header>
-                <img src={logoConsultar} alt="Logo Consultar" />{' '}
+                {isDrawerOpen ? <img src={logoConsultarHorizontal} style={{width: '160px'}} alt="Logo Consultar" /> : <img src={logoConsultar} alt="Logo Consultar" />}
             </Header>
 
             <ButtonDrawer onClick={() => { toggleDrawer() }} isOpen={isDrawerOpen}>
-                <ArrowForwardIosIcon fontSize="small" sx={{ color: 'white' }} />{' '}
+                <ChevronRightRoundedIcon fontSize="small" sx={{ color: 'black' }} />{' '}
             </ButtonDrawer>
 
             <ListNavItem>
@@ -188,7 +190,7 @@ export const Sidebar = () => {
                         <>
                             <ProfileItem isOpen={isDrawerOpen} onClick={handleOpenPerfil}>
                                 <div className="icon-perfil">
-                                    <p>{userData.unique_name[0].toUpperCase()} </p>
+                                    <p>{`${userData.unique_name[0].toUpperCase()}${userData.unique_name[1].toUpperCase()}`}</p>
                                 </div>
 
                                 <Title isOpen={isDrawerOpen} className="item-title">
