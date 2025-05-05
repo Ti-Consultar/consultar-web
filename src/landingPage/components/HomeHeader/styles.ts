@@ -1,9 +1,10 @@
-import styled from 'styled-components';
-import homeBackgroundImg from '../../../assets/images/graphic-background.png';
+import styled from "styled-components";
+import homeBackgroundImg from "../../../assets/images/background-image.png";
 
 export const MainContainer = styled.div`
+  position: relative;
+  z-index: 1; /* agora isso será respeitado */
   align-items: center;
-  background-image: url(${homeBackgroundImg});
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -11,7 +12,6 @@ export const MainContainer = styled.div`
   flex-direction: column;
   height: 609px;
   margin: 0 auto;
-  padding: 24px 0;
   width: 100%;
 
   @media (max-width: 1180px) {
@@ -19,15 +19,40 @@ export const MainContainer = styled.div`
   }
 `;
 
+export const BluredBackground = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100vh;
+`;
+
+export const BlurLayer = styled.div`
+  background-image: url(${homeBackgroundImg});
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  filter: blur(80px);
+  z-index: 0;
+  background-size: cover;
+`;
+
+export const Background = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  filter: blur(16px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+`;
+
 export const TopBar = styled.div`
   align-items: center;
-  background-color: var(--neutral-50);
   display: flex;
   justify-content: space-between;
-  border-radius: 360px;
   margin: 0 auto 16px;
   padding: 16px 24px;
-  width: 1128px;
+  width: 100%;
 
   @media (max-width: 1180px) {
     border-radius: 0;
@@ -56,7 +81,7 @@ export const TextContent = styled.div`
   max-width: 738px;
 
   h2 {
-    color: var(--neutral-white);
+    color: var(--neutral-800);
     font-size: 56px;
     font-weight: var(--fontWeightBold);
     line-height: 67.2px;
@@ -64,7 +89,7 @@ export const TextContent = styled.div`
   }
 
   p {
-    color: var(--neutral-white);
+    color: var(--neutral-500);
     font-size: 18px;
     font-weight: var(--fontWeightRegular);
     line-height: 27px;

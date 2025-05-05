@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 interface MainTemplateStyledProps {
   isOpen?: boolean;
@@ -9,9 +9,10 @@ export const SidebarContainer = styled.div<MainTemplateStyledProps>`
   background-color: #333;
   background: var(--neutral-white);
   transition: width 0.3s;
-  width: ${({ isOpen }) => (isOpen ? '200px' : '82px')};
+  width: ${({ isOpen }) => (isOpen ? "200px" : "82px")};
   transition: width 0.3s ease;
-  
+  border-right: 1px solid var(--neutral-200);
+  height: 100%;
 `;
 
 export const Header = styled.div`
@@ -20,7 +21,7 @@ export const Header = styled.div`
   padding: 24px 0;
 
   img {
-    width: 44px;
+    width: 45px;
   }
 `;
 
@@ -28,8 +29,8 @@ export const ListNavItem = styled.div<MainTemplateStyledProps>`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  max-height: 100vh;
-  padding: 0 8px;
+  height: 90%;
+  padding: 0 10px;
 
   .items-footer {
     margin-bottom: 24px;
@@ -45,11 +46,11 @@ export const ListNavItem = styled.div<MainTemplateStyledProps>`
 export const NavItem = styled.div<MainTemplateStyledProps>`
   align-items: center;
   background-color: ${({ selected }) =>
-    selected && 'var(--branding-default-blue)'};
-  border-radius: 8px;
+    selected && "var(--branding-default-blue)"};
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
-  justify-content: ${({ isOpen }) => !isOpen && 'center'};
+  justify-content: ${({ isOpen }) => !isOpen && "center"};
   margin: 8px 0;
   padding: 8px;
   text-decoration: none;
@@ -67,11 +68,11 @@ export const NavItem = styled.div<MainTemplateStyledProps>`
   .icon-perfil {
     align-items: center;
     background-color: var(--branding-default-blue);
-    border-radius: 8px;
+    border-radius: 80px;
     display: flex;
     height: 45px;
     justify-content: center;
-    margin-right: ${(props) => (props.isOpen ? '16px' : '0')};
+    margin-right: ${(props) => (props.isOpen ? "16px" : "0")};
     width: 45px;
 
     p {
@@ -85,10 +86,10 @@ export const ProfileItem = styled.button<MainTemplateStyledProps>`
   align-items: center;
   background-color: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 80px;
   cursor: pointer;
   display: flex;
-  justify-content: ${({ isOpen }) => !isOpen && 'center'};
+  justify-content: ${({ isOpen }) => !isOpen && "center"};
   margin: 8px 0;
   padding: 8px;
   text-decoration: none;
@@ -104,12 +105,12 @@ export const ProfileItem = styled.button<MainTemplateStyledProps>`
   .icon-perfil,
   .icon-company {
     align-items: center;
-    background-color: var(--branding-default-blue);
-    border-radius: 8px;
+    background-color: var(--neutral-800);
+    border-radius: 80px;
     display: flex;
     height: 45px;
     justify-content: center;
-    margin-right: ${(props) => (props.isOpen ? '16px' : '0')};
+    margin-right: ${(props) => (props.isOpen ? "16px" : "0")};
     width: 45px;
 
     p {
@@ -134,34 +135,34 @@ export const Icon = styled.div<MainTemplateStyledProps>`
   align-items: center;
   border-radius: 8px;
   color: ${({ selected }) =>
-    selected ? 'var(--neutral-white)' : 'var(--neutral-black)'};
+    selected ? "var(--neutral-white)" : "var(--neutral-black)"};
   display: flex;
   font-size: 24px;
   justify-content: center;
   padding: 8px;
-  margin-right: ${(props) => (props.isOpen ? '16px' : '0')};
+  margin-right: ${(props) => (props.isOpen ? "16px" : "0")};
 `;
 
 export const Title = styled.span<MainTemplateStyledProps>`
   text-align: left;
   color: ${({ selected }) =>
-    selected ? 'var(--neutral-white)' : 'var(--neutral-black)'};
-  display: ${({ isOpen }) => (isOpen ? 'inline' : 'none')};
+    selected ? "var(--neutral-white)" : "var(--neutral-black)"};
+  display: ${({ isOpen }) => (isOpen ? "inline" : "none")};
 `;
 
 export const ButtonDrawer = styled.button<MainTemplateStyledProps>`
   align-items: center;
-  background-color: var(--branding-default-blue);
-  border-radius: 8px;
+  background-color: var(--neutral-200);
+  border-radius: 15px;
   border: none;
   cursor: pointer;
   display: flex;
   justify-content: center;
-  margin-left: ${({ isOpen }) => (isOpen ? '186px' : '68px')};
-  margin-top: -24px;
+  margin-left: ${({ isOpen }) => (isOpen ? "186px" : "68px")};
+  margin-top: -60px;
   padding: 4px;
   position: absolute;
-  transform: ${({ isOpen }) => (isOpen ? 'rotate(180deg)' : 'rotate(0deg)')};
+  transform: ${({ isOpen }) => (isOpen ? "rotate(180deg)" : "rotate(0deg)")};
   transition: filter 0.2s, transform 0.3s, margin 0.3s;
 
   &:hover {

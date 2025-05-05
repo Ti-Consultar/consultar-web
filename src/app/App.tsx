@@ -1,7 +1,6 @@
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import { AppRoutes } from "./routes/routes";
 import 'react-toastify/dist/ReactToastify.css';
-import { Button } from "../components/Button";
 
 function App() {
   return (

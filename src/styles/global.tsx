@@ -1,5 +1,5 @@
 import { createGlobalStyle } from "styled-components";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 export const GlobalStyle = createGlobalStyle`
  :root {
@@ -17,7 +17,7 @@ export const GlobalStyle = createGlobalStyle`
     --status-warning-500: #FDB022;
 
     --status-error-100: #FEE4E2;
-    --status-error-950: #912018;
+    --status-error-950: #fc0f0f;
 
     --text-black: #000000;
     --text-gray: #757575;
@@ -26,12 +26,14 @@ export const GlobalStyle = createGlobalStyle`
 
     --neutral-black: #000000;
     --neutral-white: #FFFFFF;
-    --neutral-50: #FAFAFA;
+    --neutral-50: #F6F8FA;
     --neutral-100: #F9F9F9;
+    --neutral-150: #efefef;
     --neutral-200: #E4E7EC;
     --neutral-300: #D0D5DD;
     --neutral-400: #98A2B3;
     --neutral-500: #667085;
+    --neutral-700: #1a1d23;
     --neutral-800: #1D2939;
 
     --fontWeightRegular: 400;

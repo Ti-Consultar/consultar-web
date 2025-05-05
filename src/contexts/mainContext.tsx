@@ -11,7 +11,7 @@ const MainContext = createContext<MainProviderType | undefined>(undefined);
 export const MainProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [navSelected, setNavSelected] = useState('Home');
+  const [navSelected, setNavSelected] = useState('Início');
   const [company, setCompany] = useState<string>('');
 
   return (

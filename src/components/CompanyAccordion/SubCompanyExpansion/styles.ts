@@ -8,7 +8,6 @@ export const SubCompaniesContainer = styled.div`
   padding: 10px;
   border-radius: 0px 0px 8px 8px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.11);
-  overflow: hidden;
   transition: all 0.35s;
 
   @media (max-width: 1195px) {

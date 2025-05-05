@@ -31,10 +31,10 @@ export const NoItems = styled.div`
   width: 64px;
   height: 64px;
   margin-bottom: 2px;
-`
+`;
 
 export const Title = styled.h1`
-  color: var(--branding-default-blue);
+  color: var(--neutral-800);
   font-size: 32px;
   font-weight: var(--fontWeightBold);
   margin-bottom: 12px;
@@ -52,11 +52,11 @@ export const ButtonTittle = styled.h1`
   color: var(--neutral-white);
   font-size: 18px;
   font-weight: var(--fontWeightMedium);
-`;  
+`;
 
 export const SubTitle = styled.h1`
   margin-bottom: 18px;
-  color: var(--neutral-800);
+  color: var(--neutral-500);
   font-size: 20px;
   font-weight: var(--fontWeightRegular);
 
@@ -64,7 +64,7 @@ export const SubTitle = styled.h1`
     font-weight: var(--fontWeightRegular);
   }
 
-    @media (max-width: 1195px) {
+  @media (max-width: 1195px) {
     font-size: 18px;
   }
 `;
@@ -99,5 +99,9 @@ export const BoxContent = styled.div`
 `;
 
 export const CardsContainer = styled(Grid2)({
-  margin: '0 0.5rem 0 0.5rem'
+  marginLeft: "50px",
+
+  "@media (max-width: 1195px)": {
+    margin: "0 0.5rem 0 0.5rem",
+  },
 });

@@ -6,16 +6,18 @@ export const StyledCard = styled(Card)(() => ({
   maxWidth: 320,
   minWidth: 250,
   padding: "20px",
-  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
   borderRadius: "10px",
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
-  cursor : "pointer",
-  '&:hover': {
-    backgroundColor: '#f2f2f2',
-    transform: 'scale(1.03)', 
-    transition: 'transform 0.3s, box-shadow 0.3s ease-in-out', 
+  cursor: "pointer",
+  position: "relative",
+  "&:hover": {
+    backgroundColor: "var(--neutral-150)",
+    transition: "transform 0.3s, box-shadow 0.3s ease-in-out",
+  },
+  "&:hover .card-actions": {
+    opacity: 1,
   },
 }));
 
@@ -29,4 +31,23 @@ export const StyledAvatar = styled(Avatar)(() => ({
   backgroundColor: "#f2f2f2",
   width: 48,
   height: 48,
+}));
+
+export const CardActionsBox = styled(Box)(() => ({
+  position: "absolute",
+  top: 10,
+  right: 10,
+  opacity: 0,
+  transition: "opacity 0.3s ease-in-out",
+  display: "flex",
+  gap: 4,
+  zIndex: 1,
+
+  ".MuiCard-root:hover &": {
+    opacity: 1,
+  },
+
+  "@media (max-width: 600px)": {
+    opacity: 1,
+  },
 }));

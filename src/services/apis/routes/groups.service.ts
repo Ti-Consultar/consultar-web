@@ -42,8 +42,8 @@ export const saveGroup = async (data: GroupFormData) => {
 
 export const deleteGroup = async (id: number, userId: number) => {
   try {
-    const response = await axiosIntanceWithoutToken.delete(
-      `${URL}/api/Group/user/${userId}/group/${id}`
+    const response = await axiosIntanceWithoutToken.patch(
+      `${URL}/api/Group/user/${userId}/group/${id}/delete`
     );
     return response.data;
   } catch (error) {

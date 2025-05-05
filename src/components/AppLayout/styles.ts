@@ -13,6 +13,8 @@ export const MainContainer = styled.div`
 
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
+  overflow: hidden;
+  height: 100vh;
 `;
 
 export const ContentWrapper = styled.div<MainTemplateStyledProps>`

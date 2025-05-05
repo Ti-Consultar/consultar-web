@@ -1,31 +1,22 @@
 import styled from "styled-components";
 
 export const Loader = styled.div`
-  width: 50px;
-  aspect-ratio: 1;
-  display: grid;
-  animation: l14 4s infinite;
-  margin-bottom: 10px;
+  width: 60px;
+  margin: 25px;
+  aspect-ratio: 2;
+  --_g: no-repeat radial-gradient(circle closest-side,#000 90%,#0000);
+  background: 
+    var(--_g) 0%   50%,
+    var(--_g) 50%  50%,
+    var(--_g) 100% 50%;
+  background-size: calc(100%/3) 50%;
+  animation: l3 1s infinite linear;
 
-  &::before,
-  &::after {    
-    content: "";
-    grid-area: 1/1;
-    border: 8px solid;
-    border-radius: 50%;
-    border-color: #94191D #94191D #0000 #0000;
-    mix-blend-mode: darken;
-    animation: l14 1s infinite linear;
-  }
-
-  &::after {
-    border-color: #0000 #0000 #3A5F9B #3A5F9B;
-    animation-direction: reverse;
-  }
-
-  @keyframes l14 { 
-    100% { transform: rotate(1turn); }
-  }
+@keyframes l3 {
+    20%{background-position:0%   0%, 50%  50%,100%  50%}
+    40%{background-position:0% 100%, 50%   0%,100%  50%}
+    60%{background-position:0%  50%, 50% 100%,100%   0%}
+    80%{background-position:0%  50%, 50%  50%,100% 100%}
 `;
 
 export const LoadingContainer = styled.div`
@@ -33,19 +24,20 @@ export const LoadingContainer = styled.div`
   align-items: center;
   display: flex;
   justify-content: center;
-  position: fixed; 
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.16);
-  z-index: 9999; 
+  z-index: 9999;
 `;
 
 export const Text = styled.span`
   color: var(--neutral-800);
   font-size: 16px;
-`
+  margin-bottom: 10px;
+`;
 
 export const LoadingContentContainer = styled.div`
   display: flex;
@@ -54,5 +46,5 @@ export const LoadingContentContainer = styled.div`
   flex-direction: column;
   background-color: #fff;
   border-radius: 10px;
-  padding: 15px
-`
+  padding: 15px;
+`;

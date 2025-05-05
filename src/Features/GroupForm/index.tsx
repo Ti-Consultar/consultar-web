@@ -3,16 +3,10 @@ import {
   Step,
   StepLabel,
   Stepper,
-  TextField,
-  Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import { ModalCustom } from "../../components/Modal";
-import {
-  saveGroup,
-  updateGroup,
-} from "../../services/apis/routes/groups.service";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { useEffect, useState } from "react";
 import { Button } from "../../components/Button";
@@ -24,23 +18,28 @@ import {
 } from "../../services/apis/routes/consults.service";
 import { toast } from "react-toastify";
 import { useAuth } from "../../utils/hooks/useAuth";
+import { GroupFormSteps } from "./StepContent";
 
 interface GroupFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onSubmit: (formData: GroupFormData) => Promise<void>;
   defaultValues?: GroupFormData;
+  externalActiveStep?: number;
+  title?: string;
 }
 
-export const GroupForm = ({
+export const CompanyForm = ({
   onClose,
   isOpen,
-  onSuccess,
   defaultValues,
+  onSubmit,
+  externalActiveStep,
+  title
 }: GroupFormProps) => {
   const userData = useAuth();
   const { setLoading } = useLoading();
-  const [, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
 
   const theme = useTheme();
@@ -74,6 +73,12 @@ export const GroupForm = ({
       setFormData(defaultValues);
     }
   }, [defaultValues]);
+
+  useEffect(() => {
+    if (externalActiveStep !== undefined) {
+      setActiveStep(externalActiveStep);
+    }
+  }, [externalActiveStep]);
 
   const handleNext = () => {
     const currentErrors: { [key: string]: boolean } = {};
@@ -219,54 +224,6 @@ export const GroupForm = ({
     return () => clearTimeout(timeout);
   }, [formData.businessEntity.cep]);
 
-  const onSubmit = async (data: GroupFormData) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValidEmail = emailRegex.test(data.businessEntity.email);
-
-    if (!isValidEmail) {
-      setErrors((prev) => ({ ...prev, email: true }));
-      return;
-    }
-
-    setLoading(
-      true,
-      data.groupId ? "Atualizando grupo..." : "Salvando grupo..."
-    );
-
-    try {
-      const response = formData.groupId
-        ? await updateGroup(formData.groupId, data.userId, data)
-        : await saveGroup(data);
-      if (
-        response.success &&
-        typeof response.data === "string" &&
-        response.data.includes("Já existe um cadastro com este CNPJ")
-      ) {
-        setErrors((prev) => ({ ...prev, cnpj: true }));
-        toast.warning("Já existe um cadastro com este CNPJ.");
-        return;
-      }
-
-      if (!response.success) {
-        setError("Um erro ocorreu ao tentar salvar o Grupo");
-        return;
-      }
-
-      setError(null);
-      onSuccess?.();
-      setActiveStep(0);
-    } catch (error: unknown) {
-      if (
-        error instanceof Error &&
-        (error as { response?: { status?: number } }).response?.status === 401
-      ) {
-        toast.error("Erro ao salvar os dados da empresa.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // aplica ações após o envio do formulário;
   const handleSubmit = () => {
     if (!userData) return;
@@ -331,177 +288,11 @@ export const GroupForm = ({
     onClose();
   };
 
-  const renderStepContent = () => {
-    switch (activeStep) {
-      case 0:
-        return (
-          <Box sx={{ display: "flex", gap: 2, flexDirection: "column" }}>
-            <Typography sx={{ mt: 2, mb: 1 }}>Dados da Empresa</Typography>
-            <Box sx={{ display: "flex", gap: 2, flexDirection: "row" }}>
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  label="CNPJ"
-                  name="cnpj"
-                  value={formData.businessEntity.cnpj}
-                  onChange={handleChange}
-                  error={Boolean(errors["cnpj"])}
-                  helperText={errors["cnpj"] ? "Campo obrigatório" : ""}
-                  disabled={!!formData.userId}
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  label="Razão Social"
-                  name="razaoSocial"
-                  value={formData.businessEntity.razaoSocial}
-                  onChange={handleChange}
-                  error={Boolean(errors.razaoSocial)}
-                  helperText={errors.razaoSocial ? "Campo obrigatório" : ""}
-                  disabled
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  label="Nome Fantasia"
-                  name="nomeFantasia"
-                  value={formData.businessEntity.nomeFantasia}
-                  onChange={handleChange}
-                  error={Boolean(errors.nomeFantasia)}
-                  helperText={errors.nomeFantasia ? "Campo obrigatório" : ""}
-                />
-              </Box>
-            </Box>
-          </Box>
-        );
-      case 1:
-        return (
-          <Box sx={{ display: "flex", gap: 2, flexDirection: "column" }}>
-            <Typography sx={{ mt: 2, mb: 1 }}>Endereço Comercial</Typography>
-            <Box sx={{ display: "flex", gap: 2, flexDirection: "row" }}>
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  label="CEP"
-                  name="cep"
-                  value={formData.businessEntity.cep}
-                  onChange={handleChange}
-                  error={errors.cep}
-                  helperText={errors.cep && "Campo obrigatório"}
-                  required
-                />
-              </Box>
-              <Box sx={{ flex: 4 }}>
-                <TextField
-                  fullWidth
-                  label="Endereço"
-                  name="logradouro"
-                  value={formData.businessEntity.logradouro}
-                  onChange={handleChange}
-                  error={errors.logradouro}
-                  helperText={errors.logradouro && "Campo obrigatório"}
-                  required
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  label="numero"
-                  name="numero"
-                  value={formData.businessEntity.numero}
-                  onChange={handleChange}
-                  error={errors.numero}
-                  helperText={errors.numero && "Campo obrigatório"}
-                  required
-                />
-              </Box>
-            </Box>
-            <Box sx={{ display: "flex", gap: 2, flexDirection: "row" }}>
-              <Box sx={{ flex: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Bairro"
-                  name="bairro"
-                  value={formData.businessEntity.bairro}
-                  onChange={handleChange}
-                  error={errors.bairro}
-                  helperText={errors.bairro && "Campo obrigatório"}
-                  required
-                />
-              </Box>
-              <Box sx={{ flex: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Município"
-                  name="municipio"
-                  value={formData.businessEntity.municipio}
-                  onChange={handleChange}
-                  error={errors.municipio}
-                  helperText={errors.municipio && "Campo obrigatório"}
-                  required
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  label="UF"
-                  name="uf"
-                  value={formData.businessEntity.uf}
-                  onChange={handleChange}
-                  error={errors.uf}
-                  helperText={errors.uf && "Campo obrigatório"}
-                  required
-                />
-              </Box>
-            </Box>
-          </Box>
-        );
-      case 2:
-        return (
-          <Box sx={{ display: "flex", gap: 2, flexDirection: "column" }}>
-            <Typography sx={{ mt: 2, mb: 1 }}>
-              Informações de Contato
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2, flexDirection: "row" }}>
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  label="E-mail"
-                  name="email"
-                  value={formData.businessEntity.email}
-                  onChange={handleChange}
-                  error={errors.email}
-                  helperText={errors.email && "Campo obrigatório"}
-                  required
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  label="DDD + Telefone"
-                  name="telefone"
-                  value={formData.businessEntity.telefone}
-                  onChange={handleChange}
-                  error={errors.telefone}
-                  helperText={errors.telefone && "Campo obrigatório"}
-                  required
-                />
-              </Box>
-            </Box>
-          </Box>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <ModalCustom
       open={isOpen}
       onClose={handleCancel}
-      title="Cadastro de Grupo Empresarial"
+      title={title}
       width={"95%"}
       onSubmit={handleSubmit}
       hasSaveCancel={false}
@@ -518,7 +309,14 @@ export const GroupForm = ({
           ))}
         </Stepper>
 
-        <Box sx={{ mt: 3 }}>{renderStepContent()}</Box>
+        <Box sx={{ mt: 3 }}>
+          <GroupFormSteps
+            activeStep={activeStep}
+            formData={formData}
+            errors={errors}
+            handleChange={handleChange}
+          />
+        </Box>
 
         <Box
           sx={{ mt: 4, display: "flex", gap: 1, justifyContent: "flex-end" }}
