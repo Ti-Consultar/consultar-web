@@ -5,11 +5,11 @@ import {
   DialogActions,
   Button,
   Typography,
-  Box
-} from '@mui/material';
-import { Warning, Error, Info, CheckCircle } from '@mui/icons-material';
+  Box,
+} from "@mui/material";
+import { Warning, Error, Info, CheckCircle } from "@mui/icons-material";
 
-type AlertType = 'info' | 'warning' | 'error' | 'success';
+type AlertType = "info" | "warning" | "error" | "success";
 
 interface AlertModalProps {
   open: boolean;
@@ -34,11 +34,11 @@ export const AlertModal = ({
   open,
   onClose,
   onConfirm,
-  title = 'Atenção',
+  title = "Atenção",
   message,
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
-  type = 'info',
+  confirmText = "Confirmar",
+  cancelText = "Cancelar",
+  type = "info",
   showCancel = true,
 }: AlertModalProps) => {
   return (
@@ -52,13 +52,27 @@ export const AlertModal = ({
       <DialogContent>
         <Typography>{message}</Typography>
       </DialogContent>
-      <DialogActions sx={{padding: '12px'}}>
+      <DialogActions sx={{ padding: "12px" }}>
         {showCancel && (
-          <Button onClick={onClose} color="inherit">
+          <Button
+            color="inherit"
+            variant="text"
+            onClick={onClose}
+            sx={{
+              textTransform: "none",
+            }}
+          >
             {cancelText}
           </Button>
         )}
-        <Button onClick={onConfirm} sx={{backgroundColor: '#94191D'}} variant="contained">
+        <Button
+          color="warning"
+          onClick={onConfirm}
+          sx={{
+            textTransform: "none",
+          }}
+          variant="contained"
+        >
           {confirmText}
         </Button>
       </DialogActions>

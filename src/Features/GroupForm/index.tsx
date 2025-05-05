@@ -3,16 +3,10 @@ import {
   Step,
   StepLabel,
   Stepper,
-  TextField,
-  Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import { ModalCustom } from "../../components/Modal";
-import {
-  saveGroup,
-  updateGroup,
-} from "../../services/apis/routes/groups.service";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { useEffect, useState } from "react";
 import { Button } from "../../components/Button";
@@ -30,18 +24,22 @@ interface GroupFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onSubmit: (formData: GroupFormData) => Promise<void>;
   defaultValues?: GroupFormData;
+  externalActiveStep?: number;
+  title?: string;
 }
 
-export const GroupForm = ({
+export const CompanyForm = ({
   onClose,
   isOpen,
-  onSuccess,
   defaultValues,
+  onSubmit,
+  externalActiveStep,
+  title
 }: GroupFormProps) => {
   const userData = useAuth();
   const { setLoading } = useLoading();
-  const [, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
 
   const theme = useTheme();
@@ -75,6 +73,12 @@ export const GroupForm = ({
       setFormData(defaultValues);
     }
   }, [defaultValues]);
+
+  useEffect(() => {
+    if (externalActiveStep !== undefined) {
+      setActiveStep(externalActiveStep);
+    }
+  }, [externalActiveStep]);
 
   const handleNext = () => {
     const currentErrors: { [key: string]: boolean } = {};
@@ -220,54 +224,6 @@ export const GroupForm = ({
     return () => clearTimeout(timeout);
   }, [formData.businessEntity.cep]);
 
-  const onSubmit = async (data: GroupFormData) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValidEmail = emailRegex.test(data.businessEntity.email);
-
-    if (!isValidEmail) {
-      setErrors((prev) => ({ ...prev, email: true }));
-      return;
-    }
-
-    setLoading(
-      true,
-      data.groupId ? "Atualizando grupo..." : "Salvando grupo..."
-    );
-
-    try {
-      const response = formData.groupId
-        ? await updateGroup(formData.groupId, data.userId, data)
-        : await saveGroup(data);
-      if (
-        response.success &&
-        typeof response.data === "string" &&
-        response.data.includes("Já existe um cadastro com este CNPJ")
-      ) {
-        setErrors((prev) => ({ ...prev, cnpj: true }));
-        toast.warning("Já existe um cadastro com este CNPJ.");
-        return;
-      }
-
-      if (!response.success) {
-        setError("Um erro ocorreu ao tentar salvar o Grupo");
-        return;
-      }
-
-      setError(null);
-      onSuccess?.();
-      setActiveStep(0);
-    } catch (error: unknown) {
-      if (
-        error instanceof Error &&
-        (error as { response?: { status?: number } }).response?.status === 401
-      ) {
-        toast.error("Erro ao salvar os dados da empresa.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // aplica ações após o envio do formulário;
   const handleSubmit = () => {
     if (!userData) return;
@@ -336,7 +292,7 @@ export const GroupForm = ({
     <ModalCustom
       open={isOpen}
       onClose={handleCancel}
-      title="Cadastro de Grupo Empresarial"
+      title={title}
       width={"95%"}
       onSubmit={handleSubmit}
       hasSaveCancel={false}

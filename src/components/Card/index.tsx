@@ -1,9 +1,4 @@
-import {
-  CardContent,
-  IconButton,
-  Typography,
-  Box,
-} from "@mui/material";
+import { CardContent, IconButton, Typography, Box } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Header, StyledAvatar, StyledCard, CardActionsBox } from "./styles";
@@ -21,14 +16,19 @@ export const GroupCard = ({
   corporateName,
   onEdit,
   onDelete,
-  onClick
+  onClick,
 }: GroupCardProps) => {
   return (
-    <StyledCard onClick={onClick} sx={{ borderRadius: '12px' }}>
+    <StyledCard onClick={onClick} sx={{ borderRadius: "8px" }}>
       <Header>
-        <StyledAvatar>{(fantasyName || '').slice(0, 2).toUpperCase()}</StyledAvatar>
+        <StyledAvatar>
+          {(fantasyName || "").slice(0, 2).toUpperCase()}
+        </StyledAvatar>
 
-        <CardActionsBox className="card-actions" onClick={(e) => e.stopPropagation()}>
+        <CardActionsBox
+          className="card-actions"
+          onClick={(e) => e.stopPropagation()}
+        >
           <IconButton onClick={onEdit} size="small" color="primary">
             <EditIcon fontSize="small" />
           </IconButton>
@@ -39,7 +39,12 @@ export const GroupCard = ({
       </Header>
 
       <CardContent sx={{ padding: 0, marginTop: 2 }}>
-        <Typography variant="body2" color="text.secondary" fontSize="14px" noWrap>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          fontSize="14px"
+          noWrap
+        >
           {corporateName}
         </Typography>
         <Typography variant="h6" fontWeight="bold" fontSize="25px" noWrap>

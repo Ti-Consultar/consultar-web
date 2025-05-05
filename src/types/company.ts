@@ -6,8 +6,10 @@ export type Permission = {
 };
 
 export type Company = {
+  groupId: number;
   companyId: number;
   companyName: string;
+  userId: number;
   dateCreate: string;
   businessEntity: BusinessEntity;
   subCompanies: Company[];

@@ -6,19 +6,17 @@ export const StyledCard = styled(Card)(() => ({
   maxWidth: 320,
   minWidth: 250,
   padding: "20px",
-  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
   borderRadius: "10px",
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
   cursor: "pointer",
-  position: "relative", // importante para o posicionamento absoluto funcionar
-  '&:hover': {
-    backgroundColor: '#f2f2f2',
-    transform: 'scale(1.02)',
-    transition: 'transform 0.3s, box-shadow 0.3s ease-in-out',
+  position: "relative",
+  "&:hover": {
+    backgroundColor: "var(--neutral-150)",
+    transition: "transform 0.3s, box-shadow 0.3s ease-in-out",
   },
-  '&:hover .card-actions': {
+  "&:hover .card-actions": {
     opacity: 1,
   },
 }));
@@ -45,13 +43,11 @@ export const CardActionsBox = styled(Box)(() => ({
   gap: 4,
   zIndex: 1,
 
-  // Quando o card for hover, mostra os botões
-  '.MuiCard-root:hover &': {
+  ".MuiCard-root:hover &": {
     opacity: 1,
   },
 
-  // No mobile (largura até 600px), os botões estão sempre visíveis
-  '@media (max-width: 600px)': {
+  "@media (max-width: 600px)": {
     opacity: 1,
   },
 }));

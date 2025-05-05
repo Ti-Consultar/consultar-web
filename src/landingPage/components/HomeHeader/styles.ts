@@ -21,7 +21,6 @@ export const MainContainer = styled.div`
 
 export const BluredBackground = styled.div`
   position: relative;
-  overflow: hidden;
   width: 100%;
   height: 100vh;
 `;

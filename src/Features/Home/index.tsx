@@ -13,15 +13,17 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { Button } from "../../components/Button";
-import { GroupForm } from "../GroupForm";
+import { CompanyForm } from "../GroupForm";
 import { toast } from "react-toastify";
 import {
   deleteGroup,
   getGroupById,
   getGroupsByUserId,
+  saveGroup,
+  updateGroup,
 } from "../../services/apis/routes/groups.service";
 import { GroupCard } from "../../components/Card";
-import { Alert, Typography } from "@mui/material";
+import { Alert, Typography, useMediaQuery } from "@mui/material";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { GroupFormData } from "../../types/group";
 import ApartmentIcon from "@mui/icons-material/Apartment";
@@ -57,8 +59,6 @@ interface GroupsResponse {
   businessEntity: businessEntity;
 }
 
-type Mode = "create" | "edit";
-
 export const MrpHome = () => {
   const userId = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -70,6 +70,8 @@ export const MrpHome = () => {
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
+  const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -112,25 +114,69 @@ export const MrpHome = () => {
     }
   }, [userData]);
 
-  const handleGroupSaved = (mode: Mode = "create") => {
-    setOpen(false);
-    toast.dismiss();
+  const onSubmit = async (data: GroupFormData) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValidEmail = emailRegex.test(data.businessEntity.email);
 
-    setTimeout(() => {
-      const message =
-        mode === "edit"
+    if (!isValidEmail) {
+      setErrors((prev) => ({ ...prev, email: true }));
+      return;
+    }
+
+    setLoading(
+      true,
+      editingGroup?.groupId ? "Atualizando grupo..." : "Salvando grupo..."
+    );
+
+    try {
+      const response = editingGroup?.groupId
+        ? await updateGroup(editingGroup.groupId, data.userId, data)
+        : await saveGroup(data);
+
+      if (
+        response.success &&
+        typeof response.data === "string" &&
+        response.data.includes("Já existe um cadastro com este CNPJ")
+      ) {
+        setErrors((prev) => ({ ...prev, cnpj: true }));
+        toast.warning("Já existe um cadastro com este CNPJ.");
+        return;
+      }
+
+      if (!response.success) {
+        setError("Um erro ocorreu ao tentar salvar o Grupo");
+        return;
+      }
+
+      setError(null);
+      setActiveStep(0);
+      setOpen(false);
+      toast.dismiss();
+
+      setTimeout(() => {
+        const message = editingGroup?.groupId
           ? "Grupo atualizado com sucesso!"
           : "Grupo criado com sucesso!";
 
-      toast.success(message);
-    }, 500);
+        toast.success(message);
+      }, 500);
 
-    fetchGroups();
-    setEditingGroup(undefined);
+      fetchGroups();
+      setEditingGroup(undefined);
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        (error as { response?: { status?: number } }).response?.status === 401
+      ) {
+        toast.error("Erro ao salvar os dados da empresa.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteGroup = async (id: number, userId: number) => {
-    setLoading(true, 'Deletando Grupo');
+    setLoading(true, "Deletando Grupo");
     setError("");
 
     try {
@@ -164,7 +210,6 @@ export const MrpHome = () => {
   };
 
   const handleCardClick = (groupId: number) => {
-    console.log(groupId, 'clicou')
     navigate(`/grupo/${groupId}/empresas`);
   };
 
@@ -180,13 +225,13 @@ export const MrpHome = () => {
           variant="primary"
           onClick={() => setOpen(true)}
         />
-        <GroupForm
+        <CompanyForm
+          onSubmit={onSubmit}
+          externalActiveStep={activeStep}
           isOpen={open}
           onClose={() => setOpen(false)}
-          onSuccess={() =>
-            handleGroupSaved(editingGroup?.groupId ? "edit" : "create")
-          }
           defaultValues={editingGroup}
+          title="Adicionar Grupo Empresarial"
         />
         <AlertModal
           open={openDialog}
@@ -203,13 +248,11 @@ export const MrpHome = () => {
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
-                width: '100%',
-                gap: '10px'
+                width: "100%",
+                gap: "10px",
               }}
             >
-              <span>
-                Tem certeza que deseja deletar este grupo?
-              </span>
+              <span>Tem certeza que deseja deletar este grupo?</span>
               <Alert color="warning" severity="info">
                 Esta ação também irá deletar todas as empresas atreladas a ela.
               </Alert>
