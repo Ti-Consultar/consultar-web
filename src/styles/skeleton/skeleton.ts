@@ -19,7 +19,7 @@ export const DivSkeleton = styled.div<DivSkeletonProps>`
   width: ${({ width }) => width || '100%'};
   height: ${({ height }) => height || '20px'};
   border-radius: ${({ borderRadius }) => borderRadius || '4px'};
-  margin: 20px;
+  margin-bottom: 1rem;
   background: linear-gradient(
     90deg,
     #f0f0f0 25%,

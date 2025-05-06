@@ -1,20 +1,21 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 interface MainTemplateStyledProps {
   isDrawerOpen?: boolean;
 }
 
-
 export const MainContainer = styled.div`
   display: grid;
   grid-template-areas:
-    'drawer header'
-    'drawer content';
+    "drawer header"
+    "drawer content";
 
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
   overflow: hidden;
-  height: 100vh;
+  @media (max-width: 767px) {
+    height: 100vh;
+  }
 `;
 
 export const ContentWrapper = styled.div<MainTemplateStyledProps>`
@@ -22,7 +23,7 @@ export const ContentWrapper = styled.div<MainTemplateStyledProps>`
     transition: opacity 0.3s ease;
     opacity: ${(props) => (props.isDrawerOpen ? 0.2 : 1)};
   }
-`
+`;
 
 export const DrawerContainer = styled.div`
   grid-area: drawer;

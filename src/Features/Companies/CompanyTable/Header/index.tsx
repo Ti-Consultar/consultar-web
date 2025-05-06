@@ -12,10 +12,10 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
-import GetAppRoundedIcon from "@mui/icons-material/GetAppRounded";
-import DomainDisabledIcon from "@mui/icons-material/DomainDisabled";
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import React, { useState } from "react";
-import { DeletedCompaniesModal } from "../../DeletedCompaniesModal";
+import { InactiveCompaniesModal } from "../../InactiveCompaniesModal";
 import { getDeletedCompanies } from "../../../../services/apis/routes/companies.service";
 import { useAuth } from "../../../../utils/hooks/useAuth";
 import { useParams } from "react-router";
@@ -152,7 +152,7 @@ export const TableToolbar = ({
               variant="outlined"
               color="warning"
               onClick={handleOpenModal}
-              startIcon={<DomainDisabledIcon />}
+              startIcon={<Inventory2OutlinedIcon />}
               fullWidth
               sx={{
                 textTransform: "none",
@@ -164,7 +164,7 @@ export const TableToolbar = ({
 
           <Button
             variant="outlined"
-            startIcon={<GetAppRoundedIcon />}
+            startIcon={<FileDownloadOutlinedIcon />}
             onClick={handleClick}
             fullWidth
             sx={{
@@ -176,10 +176,10 @@ export const TableToolbar = ({
             Exportar
           </Button>
 
-          <DeletedCompaniesModal
+          <InactiveCompaniesModal
             open={modalOpen}
             onClose={() => setModalOpen(false)}
-            deletedCompanies={deletedCompanies}
+            inactiveCompanies={deletedCompanies}
             onReactivate={onReactivate}
           />
 

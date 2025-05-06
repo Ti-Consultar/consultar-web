@@ -2,7 +2,6 @@ import styled from "styled-components";
 
 export const MainContainer = styled.div`
   max-height: 100vh;
-  overflow: auto;
   margin: 1rem;
   @media (min-width: 768px) and (max-width: 1023px) {
     width: 85%;

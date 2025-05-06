@@ -11,22 +11,28 @@ import WorkspacesRoundedIcon from "@mui/icons-material/WorkspacesRounded";
 import LocalPhoneRoundedIcon from "@mui/icons-material/LocalPhoneRounded";
 import DraftsRoundedIcon from "@mui/icons-material/DraftsRounded";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import DeleteIcon from '@mui/icons-material/Delete';
-import CreateIcon from '@mui/icons-material/Create';
+import DeleteIcon from "@mui/icons-material/Delete";
+import CreateIcon from "@mui/icons-material/Create";
 import { useState } from "react";
 
 type InfoCardProps = {
   title?: string;
   phones: string;
   email: string;
+  onDeleteFromHeader?: () => void;
+  onEditFromHeader?: () => void;
 };
 
-export const InfoCard = ({ title, phones, email }: InfoCardProps) => {
+export const InfoCard = ({
+  title,
+  phones,
+  email,
+  onDeleteFromHeader,
+  onEditFromHeader,
+}: InfoCardProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const handleMenuOpen = (
-    event: React.MouseEvent<HTMLElement>,
-  ) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -91,12 +97,15 @@ export const InfoCard = ({ title, phones, email }: InfoCardProps) => {
             },
           }}
         >
-          <MenuItem onClick={() => {}}>
-            <CreateIcon sx={{ mr: 1 }} />
+          <MenuItem onClick={onEditFromHeader}>
+            <CreateIcon sx={{ mr: 1, fontSize: "18px" }} />
             Editar Grupo
           </MenuItem>
-          <MenuItem onClick={() => {}} sx={{ color: "var(--status-error-950)" }}>
-          <DeleteIcon sx={{ mr: 1 }} />
+          <MenuItem
+            onClick={onDeleteFromHeader}
+            sx={{ color: "var(--status-error-950)" }}
+          >
+            <DeleteIcon sx={{ mr: 1, fontSize: "18px" }} />
             Excluir Grupo
           </MenuItem>
         </Menu>

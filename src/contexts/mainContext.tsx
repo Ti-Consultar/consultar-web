@@ -5,7 +5,15 @@ interface MainProviderType {
   setNavSelected: (navSelected: string) => void;
   company: string;
   setCompany: (company: string) => void;
+  breadcrumbs: BreadcrumbItem[];
+  setBreadcrumbs: (breadcrumbs: BreadcrumbItem[]) => void;
 }
+
+interface BreadcrumbItem {
+  label: string;
+  path?: string;
+}
+
 const MainContext = createContext<MainProviderType | undefined>(undefined);
 
 export const MainProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -13,10 +21,18 @@ export const MainProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [navSelected, setNavSelected] = useState('Início');
   const [company, setCompany] = useState<string>('');
+  const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
 
   return (
     <MainContext.Provider
-      value={{ navSelected, setNavSelected, company, setCompany }}
+      value={{
+        navSelected,
+        setNavSelected,
+        company,
+        setCompany,
+        breadcrumbs,
+        setBreadcrumbs,
+      }}
     >
       {children}
     </MainContext.Provider>

@@ -66,7 +66,6 @@ export const getCompanies = async (groupId: number) => {
 };
 
 export const getDeletedCompanies = async (userId: number, groupId: number) => {
-
   try {
     const response = await axiosIntanceWithoutToken.get(
       `${URL}/api/Company/user/${userId}/group/${groupId}/deleted`
@@ -90,11 +89,42 @@ export const saveCompany = async (data: GroupFormData) => {
   }
 };
 
-export const restoreCompanies = async (userId: number, groupId: number, data: number[]) => {
+export const updateCompany = async (data: GroupFormData, id: number) => {
+  try {
+    const response = await axiosIntanceWithoutToken.put(
+      `${URL}/api/Company/update/id/${id}`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const restoreCompanies = async (
+  userId: number,
+  groupId: number,
+  data: number[]
+) => {
   try {
     const response = await axiosIntanceWithoutToken.patch(
       `${URL}/api/Company/user/${userId}/group/${groupId}/companies/restore`,
       data
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getCompanyById = async (
+  id: number,
+  userId: number,
+  groupId: number
+) => {
+  try {
+    const response = await axiosIntanceWithoutToken.get(
+      `${URL}/api/Company/${id}/user/${userId}/group/${groupId}`
     );
     return response.data;
   } catch (error) {

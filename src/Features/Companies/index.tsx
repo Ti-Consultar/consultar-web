@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import {
   deleteCompany,
   getCompanies,
+  getCompanyById,
   restoreCompanies,
   saveCompany,
+  updateCompany,
 } from "../../services/apis/routes/companies.service";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { toast } from "react-toastify";
@@ -20,7 +22,8 @@ import { GroupFormData } from "../../types/group";
 import { formatPhoneNumberSymbolized } from "../../utils/formatters";
 import { CompanyForm } from "../GroupForm";
 import { useMediaQuery } from "@mui/material";
-import { MobileTableView } from "./MobileTableView";
+import { MobileTableView } from "./CompanyTable/MobileTableView";
+import { useMainContext } from "../../contexts/mainContext";
 
 type Companies = {
   groupName: string;
@@ -41,7 +44,13 @@ export const Companies = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [editingCompany, setEditingCompany] = useState<GroupFormData>();
   const [deletedCompanies, setDeletedCompanies] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState<number>();
   const isMobile = useMediaQuery("(max-width: 600px)");
+  const { setBreadcrumbs } = useMainContext();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Grupos", path: "/home" }, { label: "Empresas" }]);
+  }, []);
 
   const fetchAllData = async () => {
     try {
@@ -65,6 +74,21 @@ export const Companies = () => {
     }
   }, [userData, groupId]);
 
+  const handleEdit = async (company: Company) => {
+    try {
+      setOpen(true);
+      const data = await getCompanyById(
+        company.companyId,
+        Number(userData?.userId),
+        Number(groupId)
+      );
+      setCompanyId(company.companyId);
+      setEditingCompany(data.data);
+    } catch (error) {
+      toast.error("Erro ao buscar grupo para edição.");
+    }
+  };
+
   const onSubmit = async (data: GroupFormData) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isValidEmail = emailRegex.test(data.businessEntity.email);
@@ -82,7 +106,9 @@ export const Companies = () => {
         groupId: groupData.groupId,
       };
 
-      const response = await saveCompany(updatedData);
+      const response = companyId
+        ? await updateCompany(updatedData, companyId)
+        : await saveCompany(data);
 
       if (
         response.success &&
@@ -106,7 +132,7 @@ export const Companies = () => {
 
       setTimeout(() => {
         const message = editingCompany?.groupId
-          ? "Grupo atualizado com sucesso!"
+          ? "Empresa atualizada com sucesso!"
           : "Empresa criada com sucesso!";
 
         toast.success(message);
@@ -121,6 +147,7 @@ export const Companies = () => {
         toast.error("Erro ao salvar os dados da empresa.");
       }
     } finally {
+      setEditingCompany(undefined);
       fetchAllData();
       setLoading(false);
     }
@@ -186,13 +213,13 @@ export const Companies = () => {
         <MainContainer>
           {isMobile ? (
             <>
-              <DivSkeleton width="95%" height="100px" />
-              <DivSkeleton width="95%" height="600px" />
+              <DivSkeleton width="100%" height="100px" />
+              <DivSkeleton width="100%" height="600px" />
             </>
           ) : (
             <>
-              <DivSkeleton width="95%" height="120px" />
-              <DivSkeleton width="95%" height="400px" />
+              <DivSkeleton width="100%" height="120px" />
+              <DivSkeleton width="100%" height="400px" />
             </>
           )}
         </MainContainer>
@@ -205,11 +232,12 @@ export const Companies = () => {
       <MainContainer>
         <HeaderContainer>
           <CompanyForm
+            onSubmit={onSubmit}
             isOpen={open}
             onClose={() => setOpen(false)}
-            onSuccess={() => {}}
             title="Adicionar empresa"
-            onSubmit={onSubmit}
+            defaultValues={editingCompany}
+            externalActiveStep={activeStep}
           />
           <InfoCard
             title={companiesData.groupName}
@@ -225,7 +253,7 @@ export const Companies = () => {
             onMoreClick={() => {}}
             onAddClick={() => setOpen(true)}
             onAddCompany={() => setOpen(true)}
-            onEdit={() => {}}
+            onEdit={handleEdit}
             onDelete={handleDeleteCompany}
             onReactivate={handleReactivate}
             fileName={groupData.businessEntity.razaoSocial}
@@ -234,12 +262,13 @@ export const Companies = () => {
         ) : (
           <CompanyTable
             onDelete={handleDeleteCompany}
-            onEdit={() => {}}
+            onEdit={handleEdit}
             onOpen={() => {}}
             fileName={groupData.businessEntity.razaoSocial}
             companies={companiesData.companies}
             onReactivate={handleReactivate}
             onAddCompany={() => setOpen(true)}
+            onExport={() => {}}
           />
         )}
       </MainContainer>

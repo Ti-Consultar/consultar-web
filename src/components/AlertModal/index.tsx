@@ -7,7 +7,8 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { Warning, Error, Info, CheckCircle } from "@mui/icons-material";
+import { Error, Info, CheckCircle } from "@mui/icons-material";
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 
 type AlertType = "info" | "warning" | "error" | "success";
 
@@ -25,7 +26,7 @@ interface AlertModalProps {
 
 const iconMap = {
   info: <Info color="info" fontSize="large" />,
-  warning: <Warning color="warning" fontSize="large" />,
+  warning: <WarningAmberRoundedIcon color="warning" fontSize="large" />,
   error: <Error color="error" fontSize="large" />,
   success: <CheckCircle color="success" fontSize="large" />,
 };
@@ -68,6 +69,7 @@ export const AlertModal = ({
         <Button
           color="warning"
           onClick={onConfirm}
+          disableElevation
           sx={{
             textTransform: "none",
           }}

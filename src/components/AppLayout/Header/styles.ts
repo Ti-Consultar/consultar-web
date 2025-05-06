@@ -8,7 +8,7 @@ interface HeaderPropsStyle {
 export const MainContainer = styled.div<HeaderPropsStyle>`
   display: flex;
   align-items: center;
-  background-color: var(--neutral-50);
+  background-color: var(--neutral-white);
   border-bottom: 1px solid var(--neutral-200);
   color: white;
   height: 56px;
@@ -29,10 +29,12 @@ export const BreadcrumbsContainer = styled.div`
   p {
     color: var(--neutral-400);
   }
+  text-decoration: none;
 `;
 
 export const BreadcrumbsItem = styled.a<HeaderPropsStyle>`
   color: ${({ breadcrumbActive }) => breadcrumbActive ? "var(--branding-dark-blue)" : "var(--neutral-400)"};
+  font-wheight: ${({ breadcrumbActive }) => breadcrumbActive ? "var(--fontWeightSemiBold)" : "var(--fontWeightRegular)"};
   cursor: pointer;
   text-decoration: none;
 `;

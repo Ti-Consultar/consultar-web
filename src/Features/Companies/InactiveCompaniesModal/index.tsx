@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Modal,
-  Box,
   Typography,
   Button,
   Table,
@@ -22,30 +21,30 @@ import InboxIcon from "@mui/icons-material/Inbox";
 import SearchIcon from "@mui/icons-material/Search";
 import { EmptyStateBox, ModalBox, SearchInput } from "./styles";
 
-interface DeletedCompany {
+interface InactiveCompany {
   id: number;
   nome: string;
   cnpj: string;
 }
 
-interface DeletedCompaniesModalProps {
+interface InactiveCompaniesModalProps {
   open: boolean;
   onClose: () => void;
   onReactivate: (selectedIds: number[]) => void;
-  deletedCompanies: DeletedCompany[];
+  inactiveCompanies: InactiveCompany[];
 }
 
 type Order = "asc" | "desc";
 
-export const DeletedCompaniesModal: React.FC<DeletedCompaniesModalProps> = ({
+export const InactiveCompaniesModal: React.FC<InactiveCompaniesModalProps> = ({
   open,
   onClose,
   onReactivate,
-  deletedCompanies,
+  inactiveCompanies,
 }) => {
   const [selected, setSelected] = useState<number[]>([]);
   const [order, setOrder] = useState<Order>("asc");
-  const [orderBy, setOrderBy] = useState<keyof DeletedCompany>("nome");
+  const [orderBy, setOrderBy] = useState<keyof InactiveCompany>("nome");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,7 +65,7 @@ export const DeletedCompaniesModal: React.FC<DeletedCompaniesModalProps> = ({
     onClose();
   };
 
-  const filteredRows = deletedCompanies.filter((company) => {
+  const filteredRows = inactiveCompanies.filter((company) => {
     const search = searchTerm.toLowerCase();
     return (
       company.nome.toLowerCase().includes(search) ||
@@ -74,7 +73,7 @@ export const DeletedCompaniesModal: React.FC<DeletedCompaniesModalProps> = ({
     );
   });
 
-  const handleRequestSort = (property: keyof DeletedCompany) => {
+  const handleRequestSort = (property: keyof InactiveCompany) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
@@ -91,7 +90,7 @@ export const DeletedCompaniesModal: React.FC<DeletedCompaniesModalProps> = ({
     setPage(0);
   };
 
-  const sortRows = (array: DeletedCompany[]) => {
+  const sortRows = (array: InactiveCompany[]) => {
     const value = (v: string | number) => v?.toString().toLowerCase() || "";
     return array.slice().sort((a, b) => {
       const valueA = value(a[orderBy]);
@@ -177,7 +176,7 @@ export const DeletedCompaniesModal: React.FC<DeletedCompaniesModalProps> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {deletedCompanies.length === 0 ? (
+              {inactiveCompanies.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3}>
                     <EmptyStateBox>

@@ -23,11 +23,12 @@ import {
   updateGroup,
 } from "../../services/apis/routes/groups.service";
 import { GroupCard } from "../../components/Card";
-import { Alert, Typography, useMediaQuery } from "@mui/material";
+import { Alert, Typography } from "@mui/material";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { GroupFormData } from "../../types/group";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import { AlertModal } from "../../components/AlertModal";
+import { useMainContext } from "../../contexts/mainContext";
 
 interface UserData {
   exp: number;
@@ -70,8 +71,15 @@ export const MrpHome = () => {
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
+  const [, setErrors] = useState<{ [key: string]: boolean }>({});
   const [activeStep, setActiveStep] = useState(0);
+  const { setBreadcrumbs } = useMainContext();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Grupos", path: "/home" }
+    ]);
+  }, []);
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -193,7 +201,6 @@ export const MrpHome = () => {
   const handleEdit = async (id: number, userId: number) => {
     try {
       setOpen(true);
-
       const data = await getGroupById(userId, id);
       setEditingGroup(data.data);
     } catch (error) {

@@ -21,15 +21,15 @@ import {
   formatPhoneNumberSymbolized,
 } from "../../../utils/formatters";
 import InboxIcon from "@mui/icons-material/Inbox";
+import { AlertModal } from "../../../components/AlertModal";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { TableToolbar } from "./Header";
+
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { unparse } from "papaparse";
-import { AlertModal } from "../../../components/AlertModal";
+import ModeEditOutlinedIcon from "@mui/icons-material/ModeEditOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import { useTableUtils } from "../../../utils/hooks/useTableUtils";
 
 type CompanyTableProps = {
   companies: Company[];
@@ -38,12 +38,8 @@ type CompanyTableProps = {
   onEdit: (company: Company) => void;
   onReactivate: (selectedIds: number[]) => Promise<void>;
   onDelete: (company: Company) => void;
+  onExport: (format: string) => void;
   fileName?: string;
-};
-
-type Column<DataType> = {
-  label: string;
-  accessor: (item: DataType) => any;
 };
 
 export const CompanyTable = ({
@@ -53,17 +49,26 @@ export const CompanyTable = ({
   onOpen,
   onEdit,
   onDelete,
-  onReactivate
+  onReactivate,
 }: CompanyTableProps) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [orderBy, setOrderBy] = useState<string>("");
-  const [orderDirection, setOrderDirection] = useState<"asc" | "desc">("asc");
-  const [searchTerm, setSearchTerm] = useState("");
+  const {
+    page,
+    rowsPerPage,
+    searchTerm,
+    orderBy,
+    orderDirection,
+    paginatedItems: paginatedCompanies,
+    filteredItems: filteredCompanies,
+    setPage,
+    setRowsPerPage,
+    setSearchTerm,
+    handleSort,
+  } = useTableUtils(companies, (company) => company.companyName);
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [open, setOpen] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const { exportPDF, exportCSV } = useExportUtils(`${fileName}-empresas`);
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -79,33 +84,6 @@ export const CompanyTable = ({
   const handleRowClick = (companyId: number) => {
     //navigate(`/empresas/${companyId}`);
   };
-
-  const handleSort = (property: string) => {
-    const isAsc = orderBy === property && orderDirection === "asc";
-    setOrderBy(property);
-    setOrderDirection(isAsc ? "desc" : "asc");
-  };
-
-  const getValueByPath = (obj: any, path: string) =>
-    path.split(".").reduce((acc, part) => acc?.[part], obj) ?? "";
-
-  const filteredCompanies = companies.filter((company) =>
-    company.companyName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const sortedCompanies = [...filteredCompanies].sort((a, b) => {
-    if (!orderBy) return 0;
-    const aValue = getValueByPath(a, orderBy);
-    const bValue = getValueByPath(b, orderBy);
-    return orderDirection === "asc"
-      ? aValue.toString().localeCompare(bValue.toString())
-      : bValue.toString().localeCompare(aValue.toString());
-  });
-
-  const paginatedCompanies = sortedCompanies.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -132,46 +110,10 @@ export const CompanyTable = ({
 
   const handleDelete = async () => {
     if (selectedCompany) {
-      await onDelete(selectedCompany); // <-- aguarda a exclusão
+      onDelete(selectedCompany);
     }
     handleMenuClose();
     setOpenDialog(false);
-  };
-
-  const exportPDF = (data: any[], columns: any[]) => {
-    const doc = new jsPDF();
-
-    const head = [columns.map((col) => col.label)];
-    const body = data.map((item) => columns.map((col) => col.accessor(item)));
-
-    autoTable(doc, {
-      head,
-      body,
-    });
-
-    doc.save(`${fileName}-empresas.pdf`);
-  };
-
-  const exportCSV = <DataType,>(
-    data: DataType[],
-    columns: Column<DataType>[]
-  ) => {
-    const csvData = data.map((item) => {
-      const row: Record<string, any> = {};
-      columns.forEach((col) => {
-        row[col.label] = col.accessor(item);
-      });
-      return row;
-    });
-
-    const csv = unparse(csvData, { delimiter: ";" });
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `${fileName}-empresas.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const handleExport = (format: string) => {
@@ -372,23 +314,21 @@ export const CompanyTable = ({
         }}
       >
         <MenuItem onClick={handleOpen} sx={{ display: "flex", gap: 1 }}>
-          <OpenInNewRoundedIcon color="action" sx={{ fontSize: "18px" }} />
+          <OpenInNewRoundedIcon sx={{ fontSize: "18px" }} />
           Abrir
         </MenuItem>
         <MenuItem onClick={handleEdit} sx={{ display: "flex", gap: 1 }}>
-          <EditRoundedIcon
-            sx={{ fontSize: "18px", color: "var(--branding-default-blue)" }}
-          />
+          <ModeEditOutlinedIcon sx={{ fontSize: "18px" }} />
           Editar
         </MenuItem>
         <MenuItem
           onClick={() => setOpenDialog(true)}
           sx={{ display: "flex", gap: 1 }}
         >
-          <DeleteRoundedIcon
-            sx={{ fontSize: "18px", color: "var(--status-error-950)" }}
+          <Inventory2OutlinedIcon
+            sx={{ fontSize: "18px" }}
           />
-          Excluir
+          Inativar
         </MenuItem>
       </Menu>
       <AlertModal
@@ -396,9 +336,11 @@ export const CompanyTable = ({
         onClose={() => setOpenDialog(false)}
         onConfirm={() => {
           handleDelete();
-          setOpen(false);
+          setOpenDialog(false);
         }}
-        title="Excluir Empresa"
+        title="Deseja inativar esta empresa?"
+        confirmText="Sim, inativar"
+        cancelText="Não, manter empresa"
         message={
           <div
             style={{
@@ -410,9 +352,14 @@ export const CompanyTable = ({
               gap: "10px",
             }}
           >
-            <span>Tem certeza que deseja deletar esta empresa?</span>
-            <Alert color="warning" severity="info">
-              Esta ação também irá deletar todas as filiais atreladas a ela.
+            <span style={{ textAlign: "center", fontWeight: "bold" }}>
+              {selectedCompany?.companyName}{" "}
+            </span>
+            <span style={{ textAlign: "center" }}>
+              Você também irá inativar todas as filiais dessa empresa.
+            </span>
+            <Alert color="info" severity="info">
+              Você pode reverter essa ação na aba de empresas inativas.
             </Alert>
           </div>
         }
