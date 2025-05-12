@@ -30,17 +30,21 @@ import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import ModeEditOutlinedIcon from "@mui/icons-material/ModeEditOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { useTableUtils } from "../../../utils/hooks/useTableUtils";
+import { useNavigate, useParams } from "react-router";
+import { InactiveCompany } from "../InactiveCompaniesModal";
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
-type CompanyTableProps = {
+interface CompanyTableProps {
   companies: Company[];
   onAddCompany: () => void;
   onOpen: (company: Company) => void;
-  onEdit: (company: Company) => void;
+  onEdit: (company: any) => void;
   onReactivate: (selectedIds: number[]) => Promise<void>;
   onDelete: (company: Company) => void;
-  onExport: (format: string) => void;
   fileName?: string;
-};
+  companyType?: "Empresas" | "Filiais";
+  deletedCompanies: InactiveCompany[];
+}
 
 export const CompanyTable = ({
   fileName,
@@ -50,6 +54,8 @@ export const CompanyTable = ({
   onEdit,
   onDelete,
   onReactivate,
+  deletedCompanies,
+  companyType = "Empresas",
 }: CompanyTableProps) => {
   const {
     page,
@@ -65,10 +71,13 @@ export const CompanyTable = ({
     handleSort,
   } = useTableUtils(companies, (company) => company.companyName);
 
+  const { exportPDF, exportCSV } = useExportUtils(`${fileName}-empresas`);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const { exportPDF, exportCSV } = useExportUtils(`${fileName}-empresas`);
+  const { groupId } = useParams();
+
+  const navigate = useNavigate();
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -82,7 +91,7 @@ export const CompanyTable = ({
   };
 
   const handleRowClick = (companyId: number) => {
-    //navigate(`/empresas/${companyId}`);
+    navigate(`/grupo/${Number(groupId)}/empresas/${companyId}/filiais`);
   };
 
   const handleMenuOpen = (
@@ -126,7 +135,7 @@ export const CompanyTable = ({
           else return "";
         },
       },
-      { label: "Nome Fantasia", accessor: (row: any) => row.companyName },
+      { label: "Empresa", accessor: (row: any) => row.companyName || row.name },
       {
         label: "Localidade",
         accessor: (row: any) =>
@@ -158,7 +167,8 @@ export const CompanyTable = ({
   return (
     <TableContainer component={Paper}>
       <TableToolbar
-        title="Empresas"
+        deletedCompanies={deletedCompanies}
+        title={companyType}
         searchValue={searchTerm}
         onSearchChange={(value) => {
           setSearchTerm(value);
@@ -267,7 +277,7 @@ export const CompanyTable = ({
                 <TableCell>
                   {formatCNPJ(company.businessEntity?.cnpj)}
                 </TableCell>
-                <TableCell>{company.companyName}</TableCell>
+                <TableCell>{company.businessEntity.nomeFantasia || company.businessEntity.razaoSocial}</TableCell>
                 <TableCell>{`${company.businessEntity?.municipio}, ${company.businessEntity?.uf}`}</TableCell>
                 <TableCell>{company.businessEntity?.email}</TableCell>
                 <TableCell>
@@ -277,7 +287,10 @@ export const CompanyTable = ({
                 </TableCell>
                 <TableCell>
                   <MoreHorizIcon
-                    onClick={(event: any) => handleMenuOpen(event, company)}
+                    onClick={(event: any) => {
+                      event.stopPropagation();
+                      handleMenuOpen(event, company);
+                    }}
                     style={{ cursor: "pointer" }}
                   />
                 </TableCell>
@@ -325,10 +338,14 @@ export const CompanyTable = ({
           onClick={() => setOpenDialog(true)}
           sx={{ display: "flex", gap: 1 }}
         >
-          <Inventory2OutlinedIcon
-            sx={{ fontSize: "18px" }}
-          />
+          <Inventory2OutlinedIcon sx={{ fontSize: "18px" }} />
           Inativar
+        </MenuItem>
+        <MenuItem
+          sx={{ display: "flex", gap: 1, color: 'var(--status-error-950)' }}
+        >
+          <CloseRoundedIcon sx={{ fontSize: "18px" }} />
+          Sair
         </MenuItem>
       </Menu>
       <AlertModal

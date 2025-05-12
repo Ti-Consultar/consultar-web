@@ -12,13 +12,13 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
-import React, { useState } from "react";
-import { InactiveCompaniesModal } from "../../InactiveCompaniesModal";
-import { getDeletedCompanies } from "../../../../services/apis/routes/companies.service";
-import { useAuth } from "../../../../utils/hooks/useAuth";
-import { useParams } from "react-router";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import React, { useEffect, useState } from "react";
+import {
+  InactiveCompaniesModal,
+  InactiveCompany,
+} from "../../InactiveCompaniesModal";
 
 interface TableToolbarProps {
   title: string;
@@ -27,6 +27,7 @@ interface TableToolbarProps {
   onAddClick: () => void;
   onExport: (format: string) => void;
   onReactivate: (selectedIds: number[]) => Promise<void>;
+  deletedCompanies?: InactiveCompany[];
 }
 
 export const TableToolbar = ({
@@ -36,37 +37,15 @@ export const TableToolbar = ({
   onAddClick,
   onExport,
   onReactivate,
+  deletedCompanies,
 }: TableToolbarProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [deletedCompanies, setDeletedCompanies] = useState<any[]>([]);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const userData = useAuth();
-  const { groupId } = useParams();
-
-  const fetchDeletedCompanies = async () => {
-    try {
-      if (!userData?.userId || !groupId) return;
-      const response = await getDeletedCompanies(
-        Number(userData.userId),
-        Number(groupId)
-      );
-      const formatted = response.data.companies.map((item: any) => ({
-        id: item.companyId,
-        nome: item.businessEntity.nomeFantasia || item.companyName,
-        cnpj: item.businessEntity.cnpj,
-      }));
-      setDeletedCompanies(formatted);
-    } catch (error) {
-      console.error("Erro ao buscar empresas inativas", error);
-    }
-  };
-
   const handleOpenModal = () => {
-    fetchDeletedCompanies();
     setModalOpen(true);
   };
 
@@ -78,6 +57,10 @@ export const TableToolbar = ({
     setAnchorEl(null);
     onExport(format);
   };
+
+  useEffect(() => {
+    console.log(deletedCompanies)
+  }, [deletedCompanies])
 
   return (
     <Box
@@ -176,13 +159,14 @@ export const TableToolbar = ({
             Exportar
           </Button>
 
-          <InactiveCompaniesModal
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-            inactiveCompanies={deletedCompanies}
-            onReactivate={onReactivate}
-          />
-
+          {deletedCompanies && (
+            <InactiveCompaniesModal
+              open={modalOpen}
+              onClose={() => setModalOpen(false)}
+              inactiveCompanies={deletedCompanies}
+              onReactivate={onReactivate}
+            />
+          )}
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}

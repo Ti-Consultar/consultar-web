@@ -1,0 +1,300 @@
+import { DivSkeleton } from "../../../styles/skeleton/skeleton";
+import { MainTemplate } from "../../../components/AppLayout";
+import { CompanyForm } from "../../GroupForm";
+import { InfoCard } from "../InfoCard";
+import { HeaderContainer, MainContainer } from "../styles";
+import {
+  deleteSubCompany,
+  getBranches,
+  getDeletedSubCompanies,
+  getSubCompanyById,
+  restoreSubCompanies,
+  saveSubCompany,
+  updateSubCompany,
+} from "../../../services/apis/routes/subcompanies.service";
+import { useAuth } from "../../../utils/hooks/useAuth";
+import { useParams } from "react-router";
+import { getCompanyById } from "../../../services/apis/routes/companies.service";
+import { MobileTableView } from "../CompanyTable/MobileTableView";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { toast } from "react-toastify";
+import { useMediaQuery } from "@mui/material";
+import { useMainContext } from "../../../contexts/mainContext";
+import { CompanyTable } from "../CompanyTable";
+import { useEffect, useState } from "react";
+import { GroupFormData } from "../../../types/group";
+import { SubCompanyEntity } from "../../../types/subCompany";
+
+export const Branches = () => {
+  const userData = useAuth();
+  const isMobile = useMediaQuery("(max-width: 600px)");
+  const { setLoading } = useLoading();
+  const { groupId, companyId } = useParams();
+  const [subCompanies, setSubCompanies] = useState<any>({} as any);
+  const [, setErrors] = useState<{ [key: string]: boolean }>({});
+  const [company, setCompany] = useState<any>({} as any);
+  const { breadcrumbs, setBreadcrumbs } = useMainContext();
+  const [editingCompany, setEditingCompany] = useState<GroupFormData>();
+  const [activeStep, setActiveStep] = useState(0);
+  const [subCompanyId, setSubCompanyId] = useState<number>(0);
+  const [deletedSubCompanies, setDeletedSubCompanies] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+      const [companyResponse, subCompaniesResponse] = await Promise.all([
+        getCompanyById(
+          Number(companyId),
+          Number(userData?.userId),
+          Number(groupId)
+        ),
+        getBranches(Number(companyId), Number(userData?.userId)),
+      ]);
+
+      setCompany(companyResponse.data);
+      setSubCompanies(subCompaniesResponse.data);
+    } catch (error) {
+      toast.error("Erro ao buscar os dados.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDeletedCompanies = async (skip: number, take: number) => {
+    try {
+      if (!userData?.userId || !groupId) return;
+      const response = await getDeletedSubCompanies(
+        Number(userData.userId),
+        Number(companyId),
+        skip,
+        take
+      );
+      const formatted = response.data.subCompanies.map((item: any) => ({
+        id: item.id,
+        nome: item.businessEntity.nomeFantasia || item.companyName,
+        cnpj: item.businessEntity.cnpj,
+      }));
+      setDeletedSubCompanies(formatted);
+    } catch (error) {
+      toast.error("Erro ao buscar empresas inativas");
+    }
+  };
+
+  const handleEdit = async (company: SubCompanyEntity) => {
+    try {
+      setOpen(true);
+      const data = await getSubCompanyById(
+        company.id,
+        Number(userData?.userId),
+        company.companyId
+      );
+      setSubCompanyId(company.id);
+      setEditingCompany(data.data);
+    } catch (error) {
+      toast.error("Erro ao buscar grupo para edição.");
+    }
+  };
+
+  const onSubmit = async (data: GroupFormData) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValidEmail = emailRegex.test(data.businessEntity.email);
+
+    if (!isValidEmail) {
+      setErrors((prev) => ({ ...prev, email: true }));
+      return;
+    }
+
+    setLoading(true, "Salvando empresa...");
+
+    try {
+      const updatedData = {
+        ...data,
+        companyId: Number(companyId),
+      };
+
+      const response = subCompanyId
+        ? await updateSubCompany(updatedData, subCompanyId)
+        : await saveSubCompany(updatedData);
+
+      if (
+        response.success &&
+        typeof response.data === "string" &&
+        response.data.includes("Já existe um cadastro com este CNPJ")
+      ) {
+        setErrors((prev) => ({ ...prev, cnpj: true }));
+        toast.warning("Já existe um cadastro com este CNPJ.");
+        return;
+      }
+
+      if (!response.success) {
+        toast.error("Um erro ocorreu ao tentar salvar a filial");
+        return;
+      }
+
+      setActiveStep(0);
+      setOpen(false);
+      toast.dismiss();
+
+      setTimeout(() => {
+        const message = editingCompany?.groupId
+          ? "Filial atualizada com sucesso!"
+          : "Filial criada com sucesso!";
+
+        toast.success(message);
+      }, 500);
+
+      setEditingCompany(undefined);
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        (error as { response?: { status?: number } }).response?.status === 401
+      ) {
+        toast.error("Erro ao salvar os dados da empresa.");
+      }
+    } finally {
+      setEditingCompany(undefined);
+      fetchAllData();
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (company?.name) {
+      setBreadcrumbs([
+        ...breadcrumbs,
+        { label: company.name, path: `/grupo/${groupId}/empresas` },
+      ]);
+    }
+  }, [company]);
+
+  useEffect(() => {
+    if (userData && companyId) {
+      fetchAllData();
+      fetchDeletedCompanies(1, 50);
+    }
+  }, [userData, companyId]);
+
+  const handleDeleteBranch = async (subCompany: any) => {
+    try {
+      setLoading(true, "Excluindo empresa...");
+
+      const response = await deleteSubCompany(
+        subCompany.id,
+        Number(userData?.userId),
+        Number(companyId)
+      );
+
+      if (!response.success) {
+        toast.error("Um erro ocorreu ao tentar excluir a empresa");
+        return;
+      }
+
+      toast.success("Empresa excluída com sucesso!");
+      fetchAllData();
+      fetchDeletedCompanies(1, 50);
+      setSubCompanies((prev: any) =>
+        prev
+          ? {
+              ...prev,
+              subCompanies: prev.subCompanies.filter(
+                (c: any) => c.id !== subCompany.id
+              ),
+            }
+          : null
+      );
+    } catch (error) {
+      toast.error("Erro ao excluir a empresa.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReactivate = async (selectedIds: number[]) => {
+    try {
+      setLoading(true, "Reativando empresas...");
+      await restoreSubCompanies(
+        Number(userData?.userId),
+        Number(companyId),
+        selectedIds
+      );
+      const updated = deletedSubCompanies.filter(
+        (c) => !selectedIds.includes(c.id)
+      );
+      setDeletedSubCompanies(updated);
+      toast.success("Empresas reativadas com sucesso!");
+      fetchDeletedCompanies(1, 50);
+      fetchAllData();
+    } catch (error) {
+      toast.error("Erro ao reativar empresas");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!subCompanies) {
+    return (
+      <MainTemplate>
+        <MainContainer>
+          {isMobile ? (
+            <>
+              <DivSkeleton width="100%" height="100px" />
+              <DivSkeleton width="100%" height="600px" />
+            </>
+          ) : (
+            <>
+              <DivSkeleton width="100%" height="120px" />
+              <DivSkeleton width="100%" height="400px" />
+            </>
+          )}
+        </MainContainer>
+      </MainTemplate>
+    );
+  }
+
+  return (
+    <MainTemplate>
+      <MainContainer>
+        <HeaderContainer>
+          <CompanyForm
+            onSubmit={onSubmit}
+            isOpen={open}
+            onClose={() => setOpen(false)}
+            title="Adicionar empresa"
+            defaultValues={editingCompany}
+          />
+          <InfoCard
+            title={company.name}
+            email={company.businessEntity?.email}
+            phones={company.businessEntity?.telefone}
+          />
+        </HeaderContainer>
+        {isMobile ? (
+          <MobileTableView
+            companies={subCompanies.subCompanies}
+            onMoreClick={() => {}}
+            onAddClick={() => setOpen(true)}
+            onAddCompany={() => setOpen(true)}
+            onEdit={handleEdit}
+            onDelete={handleDeleteBranch}
+            onReactivate={handleReactivate}
+            fileName={company.name}
+            onOpen={() => setOpen(true)}
+          ></MobileTableView>
+        ) : (
+          <CompanyTable
+            companies={subCompanies.subCompanies}
+            deletedCompanies={deletedSubCompanies}
+            companyType="Filiais"
+            onEdit={handleEdit}
+            onOpen={() => setOpen(true)}
+            fileName={company.name}
+            onDelete={handleDeleteBranch}
+            onReactivate={handleReactivate}
+            onAddCompany={() => setOpen(true)}
+          />
+        )}
+      </MainContainer>
+    </MainTemplate>
+  );
+};

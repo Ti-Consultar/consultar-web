@@ -5,6 +5,7 @@ import {
   deleteCompany,
   getCompanies,
   getCompanyById,
+  getDeletedCompanies,
   restoreCompanies,
   saveCompany,
   updateCompany,
@@ -33,13 +34,13 @@ type Companies = {
 export const Companies = () => {
   const { groupId } = useParams();
   const [companiesData, setCompaniesData] = useState<Companies | null>(null);
-  const [groupData, setGroupData] = useState<GroupFormData>(
-    {} as GroupFormData
+  const [groupData, setGroupData] = useState<any>(
+    {} as any
   );
   const { setLoading } = useLoading();
   const userData = useAuth();
   const [open, setOpen] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
+  const [, setErrors] = useState<{ [key: string]: boolean }>({});
   const [, setError] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [editingCompany, setEditingCompany] = useState<GroupFormData>();
@@ -47,10 +48,6 @@ export const Companies = () => {
   const [companyId, setCompanyId] = useState<number>();
   const isMobile = useMediaQuery("(max-width: 600px)");
   const { setBreadcrumbs } = useMainContext();
-
-  useEffect(() => {
-    setBreadcrumbs([{ label: "Grupos", path: "/home" }, { label: "Empresas" }]);
-  }, []);
 
   const fetchAllData = async () => {
     try {
@@ -69,8 +66,36 @@ export const Companies = () => {
   };
 
   useEffect(() => {
+    if (groupData?.name) {
+      setBreadcrumbs([
+        { label: "Grupos", path: "/home" },
+        { label: groupData.name },
+      ]);
+    }
+  }, [groupData]);
+
+  const fetchDeletedCompanies = async () => {
+    try {
+      if (!userData?.userId || !groupId) return;
+      const response = await getDeletedCompanies(
+        Number(userData.userId),
+        Number(groupId)
+      );
+      const formatted = response.data.companies.map((item: any) => ({
+        id: item.companyId,
+        nome: item.businessEntity.nomeFantasia || item.companyName,
+        cnpj: item.businessEntity.cnpj,
+      }));
+      setDeletedCompanies(formatted);
+    } catch (error) {
+      console.error("Erro ao buscar empresas inativas", error);
+    }
+  };
+
+  useEffect(() => {
     if (userData && groupId) {
       fetchAllData();
+      fetchDeletedCompanies();
     }
   }, [userData, groupId]);
 
@@ -104,11 +129,12 @@ export const Companies = () => {
       const updatedData = {
         ...data,
         groupId: groupData.groupId,
+        userId: Number(userData?.userId)
       };
 
       const response = companyId
         ? await updateCompany(updatedData, companyId)
-        : await saveCompany(data);
+        : await saveCompany(updatedData);
 
       if (
         response.success &&
@@ -166,6 +192,7 @@ export const Companies = () => {
       );
       setDeletedCompanies(updated);
       toast.success("Empresas reativadas com sucesso!");
+      fetchDeletedCompanies();
       fetchAllData();
     } catch (error) {
       toast.error("Erro ao reativar empresas");
@@ -190,6 +217,7 @@ export const Companies = () => {
       }
 
       toast.success("Empresa excluída com sucesso!");
+      fetchDeletedCompanies();
       setCompaniesData((prev) =>
         prev
           ? {
@@ -261,6 +289,7 @@ export const Companies = () => {
           ></MobileTableView>
         ) : (
           <CompanyTable
+            deletedCompanies={deletedCompanies}
             onDelete={handleDeleteCompany}
             onEdit={handleEdit}
             onOpen={() => {}}
@@ -268,7 +297,6 @@ export const Companies = () => {
             companies={companiesData.companies}
             onReactivate={handleReactivate}
             onAddCompany={() => setOpen(true)}
-            onExport={() => {}}
           />
         )}
       </MainContainer>

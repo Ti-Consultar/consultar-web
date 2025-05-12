@@ -1,5 +1,5 @@
 import { useMainContext } from "../../../contexts/mainContext";
-import { BreadcrumbsContainer, BreadcrumbsItem, MainContainer } from "./styles";
+import { BreadcrumbsContainer, BreadcrumbsItem, BreadcrumbsItems, MainContainer } from "./styles";
 
 export const Header = () => {
     const { breadcrumbs } = useMainContext();
@@ -10,17 +10,17 @@ export const Header = () => {
           {breadcrumbs.map((item, index) => {
             const isLast = index === breadcrumbs.length - 1;
             return (
-              <BreadcrumbsItem
+              <BreadcrumbsItems
                 key={item.label}
                 breadcrumbActive={isLast}
               >
                 {item.path && !isLast ? (
-                  <a href={item.path}>{item.label}</a>
+                  <BreadcrumbsItem href={item.path}>{item.label}</BreadcrumbsItem>
                 ) : (
                   item.label
                 )}
                 {!isLast && " / "}
-              </BreadcrumbsItem>
+              </BreadcrumbsItems>
             );
           })}
         </BreadcrumbsContainer>

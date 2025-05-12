@@ -72,7 +72,7 @@ export const InfoCard = ({
           <Typography variant="body2">{email}</Typography>
         </Box>
       </CardContent>
-      <CardContent>
+      {/* <CardContent>
         <IconButton
           onClick={handleMenuOpen}
           sx={{
@@ -82,6 +82,7 @@ export const InfoCard = ({
         >
           <ArrowDropDownIcon></ArrowDropDownIcon>
         </IconButton>
+        Reativar menu ao adicionar funcionalidades
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
@@ -109,7 +110,7 @@ export const InfoCard = ({
             Excluir Grupo
           </MenuItem>
         </Menu>
-      </CardContent>
+      </CardContent> */}
     </Card>
   );
 };
