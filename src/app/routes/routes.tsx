@@ -6,6 +6,7 @@ import { PasswordSent } from '../../Features/Authentication/forgot-password/pass
 import { MrpHome } from '../../Features/Home';
 import { Companies } from '../../Features/Companies';
 import { Branches } from '../../Features/Companies/Branches';
+import { SubCompanies } from '../../Features/SubCompanies';
 
 export const AppRoutes = () => {
     return (
@@ -21,6 +22,7 @@ export const AppRoutes = () => {
                 <Route path="/home" element={<MrpHome />} />
                 <Route path={`/grupo/:groupId/empresas`} element={<Companies />} />
                 <Route path={`/grupo/:groupId/empresas/:companyId/filiais`} element={<Branches />} />
+                <Route path={`/grupo/:groupId/empresas/:companyId/filiais/:subCompanyId`} element={<SubCompanies />} />
             </Routes>
         </>
     )

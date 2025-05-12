@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { MainTemplate } from "../../components/AppLayout";
 import { useEffect, useState } from "react";
 import {
@@ -25,6 +25,7 @@ import { CompanyForm } from "../GroupForm";
 import { useMediaQuery } from "@mui/material";
 import { MobileTableView } from "./CompanyTable/MobileTableView";
 import { useMainContext } from "../../contexts/mainContext";
+import { unlinkFromCompany } from "../../services/apis/routes/invitation.service";
 
 type Companies = {
   groupName: string;
@@ -34,9 +35,7 @@ type Companies = {
 export const Companies = () => {
   const { groupId } = useParams();
   const [companiesData, setCompaniesData] = useState<Companies | null>(null);
-  const [groupData, setGroupData] = useState<any>(
-    {} as any
-  );
+  const [groupData, setGroupData] = useState<any>({} as any);
   const { setLoading } = useLoading();
   const userData = useAuth();
   const [open, setOpen] = useState(false);
@@ -48,6 +47,7 @@ export const Companies = () => {
   const [companyId, setCompanyId] = useState<number>();
   const isMobile = useMediaQuery("(max-width: 600px)");
   const { setBreadcrumbs } = useMainContext();
+  const navigate = useNavigate();
 
   const fetchAllData = async () => {
     try {
@@ -129,7 +129,7 @@ export const Companies = () => {
       const updatedData = {
         ...data,
         groupId: groupData.groupId,
-        userId: Number(userData?.userId)
+        userId: Number(userData?.userId),
       };
 
       const response = companyId
@@ -175,6 +175,41 @@ export const Companies = () => {
     } finally {
       setEditingCompany(undefined);
       fetchAllData();
+      setLoading(false);
+    }
+  };
+
+  const handleUnlinkBranch = async (company: any) => {
+    try {
+      setLoading(true, "Excluindo empresa...");
+
+      const response = await unlinkFromCompany(
+        Number(userData?.userId),
+        Number(groupId),
+        company.companyId
+      );
+
+      if (!response.success) {
+        toast.error("Um erro ocorreu ao tentar excluir a empresa");
+        return;
+      }
+
+      toast.success("Desvinculado com sucesso.");
+      fetchAllData();
+      fetchDeletedCompanies();
+      setCompaniesData((prev: any) =>
+        prev
+          ? {
+              ...prev,
+              companies: prev.companies.filter(
+                (c: any) => c.companyId !== company.companyId
+              ),
+            }
+          : null
+      );
+    } catch (error) {
+      toast.error("Erro ao excluir a empresa.");
+    } finally {
       setLoading(false);
     }
   };
@@ -235,6 +270,10 @@ export const Companies = () => {
     }
   };
 
+  const handleRowClick = (companyId: number) => {
+    navigate(`/grupo/${Number(groupId)}/empresas/${companyId}/filiais`);
+  };
+
   if (!companiesData) {
     return (
       <MainTemplate>
@@ -289,6 +328,8 @@ export const Companies = () => {
           ></MobileTableView>
         ) : (
           <CompanyTable
+            onRowClick={handleRowClick}
+            onUnlink={handleUnlinkBranch}
             deletedCompanies={deletedCompanies}
             onDelete={handleDeleteCompany}
             onEdit={handleEdit}

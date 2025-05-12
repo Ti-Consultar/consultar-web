@@ -194,7 +194,6 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
                 onClick={() => {
                   if (selectedCompany) {
                     handleRowClick(selectedCompany.companyId);
-                    console.log(selectedCompany, "no botão");
                   }
                 }}
               >

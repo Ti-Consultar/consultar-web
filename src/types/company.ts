@@ -7,6 +7,7 @@ export type Permission = {
 
 export type Company = {
   groupId: number;
+  id: number;
   companyId: number;
   companyName: string;
   userId: number;

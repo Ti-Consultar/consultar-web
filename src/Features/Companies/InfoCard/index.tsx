@@ -3,17 +3,16 @@ import {
   CardContent,
   Typography,
   Box,
-  IconButton,
-  Menu,
-  MenuItem,
+  // IconButton,
+  // Menu,
+  // MenuItem,
 } from "@mui/material";
 import WorkspacesRoundedIcon from "@mui/icons-material/WorkspacesRounded";
 import LocalPhoneRoundedIcon from "@mui/icons-material/LocalPhoneRounded";
 import DraftsRoundedIcon from "@mui/icons-material/DraftsRounded";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CreateIcon from "@mui/icons-material/Create";
-import { useState } from "react";
+// import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+// import DeleteIcon from "@mui/icons-material/Delete";
+// import CreateIcon from "@mui/icons-material/Create";
 
 type InfoCardProps = {
   title?: string;
@@ -23,18 +22,12 @@ type InfoCardProps = {
   onEditFromHeader?: () => void;
 };
 
-export const InfoCard = ({
-  title,
-  phones,
-  email,
-  onDeleteFromHeader,
-  onEditFromHeader,
-}: InfoCardProps) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+export const InfoCard = ({ title, phones, email }: InfoCardProps) => {
+  //const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  // const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+  //   setAnchorEl(event.currentTarget);
+  // };
 
   return (
     <Card

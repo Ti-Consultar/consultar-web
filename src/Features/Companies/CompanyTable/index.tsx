@@ -14,7 +14,7 @@ import {
   MenuItem,
   Alert,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Company } from "../../../types/company";
 import {
   formatCNPJ,
@@ -32,7 +32,7 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { useTableUtils } from "../../../utils/hooks/useTableUtils";
 import { useNavigate, useParams } from "react-router";
 import { InactiveCompany } from "../InactiveCompaniesModal";
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 interface CompanyTableProps {
   companies: Company[];
@@ -44,6 +44,9 @@ interface CompanyTableProps {
   fileName?: string;
   companyType?: "Empresas" | "Filiais";
   deletedCompanies: InactiveCompany[];
+  handleRowClick?: () => void;
+  onUnlink: (company: any) => void;
+  onRowClick: (companyId: number) => void;
 }
 
 export const CompanyTable = ({
@@ -56,6 +59,8 @@ export const CompanyTable = ({
   onReactivate,
   deletedCompanies,
   companyType = "Empresas",
+  onUnlink,
+  onRowClick,
 }: CompanyTableProps) => {
   const {
     page,
@@ -75,14 +80,12 @@ export const CompanyTable = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const { groupId } = useParams();
-
-  const navigate = useNavigate();
+  const [openUnlinkDialog, setOpenUnlinkDialog] = useState(false);
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
-
+  
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -91,7 +94,7 @@ export const CompanyTable = ({
   };
 
   const handleRowClick = (companyId: number) => {
-    navigate(`/grupo/${Number(groupId)}/empresas/${companyId}/filiais`);
+    onRowClick(companyId);
   };
 
   const handleMenuOpen = (
@@ -120,6 +123,14 @@ export const CompanyTable = ({
   const handleDelete = async () => {
     if (selectedCompany) {
       onDelete(selectedCompany);
+    }
+    handleMenuClose();
+    setOpenDialog(false);
+  };
+
+  const handleUnlink = async () => {
+    if (selectedCompany) {
+      onUnlink(selectedCompany);
     }
     handleMenuClose();
     setOpenDialog(false);
@@ -246,7 +257,6 @@ export const CompanyTable = ({
                 Telefone
               </TableSortLabel>
             </TableCell>
-            <TableCell></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -271,13 +281,16 @@ export const CompanyTable = ({
               <TableRow
                 key={company.companyId}
                 hover
-                onClick={() => handleRowClick(company.companyId)}
+                onClick={() => handleRowClick(company.id || company.companyId)}
                 style={{ cursor: "pointer" }}
               >
                 <TableCell>
                   {formatCNPJ(company.businessEntity?.cnpj)}
                 </TableCell>
-                <TableCell>{company.businessEntity.nomeFantasia || company.businessEntity.razaoSocial}</TableCell>
+                <TableCell>
+                  {company.businessEntity.nomeFantasia ||
+                    company.businessEntity.razaoSocial}
+                </TableCell>
                 <TableCell>{`${company.businessEntity?.municipio}, ${company.businessEntity?.uf}`}</TableCell>
                 <TableCell>{company.businessEntity?.email}</TableCell>
                 <TableCell>
@@ -342,12 +355,14 @@ export const CompanyTable = ({
           Inativar
         </MenuItem>
         <MenuItem
-          sx={{ display: "flex", gap: 1, color: 'var(--status-error-950)' }}
+          sx={{ display: "flex", gap: 1, color: "var(--status-error-950)" }}
+          onClick={() => setOpenUnlinkDialog(true)}
         >
           <CloseRoundedIcon sx={{ fontSize: "18px" }} />
           Sair
         </MenuItem>
       </Menu>
+      {/* Deletar Empresa */}
       <AlertModal
         open={openDialog}
         onClose={() => setOpenDialog(false)}
@@ -377,6 +392,42 @@ export const CompanyTable = ({
             </span>
             <Alert color="info" severity="info">
               Você pode reverter essa ação na aba de empresas inativas.
+            </Alert>
+          </div>
+        }
+        type="warning"
+      />
+
+      {/* Sair da Empresa */}
+      <AlertModal
+        open={openUnlinkDialog}
+        onClose={() => setOpenUnlinkDialog(false)}
+        onConfirm={() => {
+          handleUnlink();
+          setOpenUnlinkDialog(false);
+        }}
+        title="Deseja sair desta empresa?"
+        confirmText="Sim, sair"
+        cancelText="Cancelar"
+        message={
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "column",
+              width: "100%",
+              gap: "10px",
+            }}
+          >
+            <span style={{ textAlign: "center", fontWeight: "bold" }}>
+              {selectedCompany?.companyName}{" "}
+            </span>
+            <span style={{ textAlign: "center" }}>
+              Tem certeza que deseja sair dessa empresa?
+            </span>
+            <Alert color="warning" severity="warning">
+              Saindo, você estará se desvinculando da empresa.
             </Alert>
           </div>
         }

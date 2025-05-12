@@ -58,10 +58,6 @@ export const TableToolbar = ({
     onExport(format);
   };
 
-  useEffect(() => {
-    console.log(deletedCompanies)
-  }, [deletedCompanies])
-
   return (
     <Box
       px={2}

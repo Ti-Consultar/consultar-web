@@ -13,7 +13,7 @@ import {
   updateSubCompany,
 } from "../../../services/apis/routes/subcompanies.service";
 import { useAuth } from "../../../utils/hooks/useAuth";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { getCompanyById } from "../../../services/apis/routes/companies.service";
 import { MobileTableView } from "../CompanyTable/MobileTableView";
 import { useLoading } from "../../../contexts/LoadingProvider";
@@ -24,6 +24,7 @@ import { CompanyTable } from "../CompanyTable";
 import { useEffect, useState } from "react";
 import { GroupFormData } from "../../../types/group";
 import { SubCompanyEntity } from "../../../types/subCompany";
+import { unlinkFromCompany } from "../../../services/apis/routes/invitation.service";
 
 export const Branches = () => {
   const userData = useAuth();
@@ -39,6 +40,7 @@ export const Branches = () => {
   const [subCompanyId, setSubCompanyId] = useState<number>(0);
   const [deletedSubCompanies, setDeletedSubCompanies] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const fetchAllData = async () => {
     try {
@@ -210,6 +212,42 @@ export const Branches = () => {
     }
   };
 
+  const handleUnlinkBranch = async (subCompany: any) => {
+    try {
+      setLoading(true, "Excluindo empresa...");
+
+      const response = await unlinkFromCompany(
+        Number(userData?.userId),
+        Number(groupId),
+        Number(companyId),
+        subCompany.id
+      );
+
+      if (!response.success) {
+        toast.error("Um erro ocorreu ao tentar excluir a empresa");
+        return;
+      }
+
+      toast.success("Desvinculado com sucesso.");
+      fetchAllData();
+      fetchDeletedCompanies(1, 50);
+      setSubCompanies((prev: any) =>
+        prev
+          ? {
+              ...prev,
+              subCompanies: prev.subCompanies.filter(
+                (c: any) => c.id !== subCompany.id
+              ),
+            }
+          : null
+      );
+    } catch (error) {
+      toast.error("Erro ao excluir a empresa.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleReactivate = async (selectedIds: number[]) => {
     try {
       setLoading(true, "Reativando empresas...");
@@ -230,6 +268,10 @@ export const Branches = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRowClick = (id: number) => {
+    navigate(`/grupo/${Number(groupId)}/empresas/${companyId}/filiais/${id}`);
   };
 
   if (!subCompanies) {
@@ -283,6 +325,8 @@ export const Branches = () => {
           ></MobileTableView>
         ) : (
           <CompanyTable
+            onRowClick={handleRowClick}
+            onUnlink={handleUnlinkBranch}
             companies={subCompanies.subCompanies}
             deletedCompanies={deletedSubCompanies}
             companyType="Filiais"
