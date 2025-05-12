@@ -26,13 +26,14 @@ import { AlertModal } from "../../../../components/AlertModal";
 import { useTableUtils } from "../../../../utils/hooks/useTableUtils";
 import { useExportUtils } from "../../../../utils/hooks/useExportUtils";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import { useNavigate, useParams } from "react-router";
 
 interface MobileTableViewProps {
   companies: Company[];
   onAddClick: () => void;
   onAddCompany: () => void;
   onOpen: (company: Company) => void;
-  onEdit: (company: Company) => void;
+  onEdit: (company: any) => void;
   onReactivate: (selectedIds: number[]) => Promise<void>;
   onDelete: (company: Company) => void;
   onMoreClick: (event: React.MouseEvent<HTMLElement>) => void;
@@ -51,10 +52,12 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const { exportPDF, exportCSV } = useExportUtils(`${fileName}-empresas`);
+  const { groupId } = useParams();
   const { searchTerm, setSearchTerm, setPage, filteredItems } = useTableUtils(
     companies,
     (company) => company.companyName
   );
+  const navigate = useNavigate();
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -119,6 +122,10 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
     }
   };
 
+  const handleRowClick = (companyId: number) => {
+    navigate(`/grupo/${Number(groupId)}/empresas/${companyId}/filiais`);
+  };
+
   return (
     <Box sx={{ gridArea: "content" }}>
       <TableToolbar
@@ -149,7 +156,10 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
               sx={{ flex: 1, p: 0 }}
             >
               <Stack>
-                <Typography fontWeight={600}>{company.companyName}</Typography>
+                <Typography fontWeight={600}>
+                  {company.businessEntity.nomeFantasia ||
+                    company.businessEntity.razaoSocial}
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {formatCNPJ(company.businessEntity.cnpj)}
                 </Typography>
@@ -157,7 +167,9 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
             </AccordionSummary>
 
             <IconButton
-              onClick={(event: any) => handleMenuOpen(event, company)}
+              onClick={(event: any) => {
+                handleMenuOpen(event, company);
+              }}
               sx={{ alignSelf: "center" }}
             >
               <MoreVertIcon />
@@ -177,10 +189,16 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
                 },
               }}
             >
-              <MenuItem sx={{ display: "flex", gap: 1 }}>
-                <OpenInNewRoundedIcon
-                  sx={{ fontSize: "18px" }}
-                />
+              <MenuItem
+                sx={{ display: "flex", gap: 1 }}
+                onClick={() => {
+                  if (selectedCompany) {
+                    handleRowClick(selectedCompany.companyId);
+                    console.log(selectedCompany, "no botão");
+                  }
+                }}
+              >
+                <OpenInNewRoundedIcon sx={{ fontSize: "18px" }} />
                 Abrir
               </MenuItem>
               <MenuItem

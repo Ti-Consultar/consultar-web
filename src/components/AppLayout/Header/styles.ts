@@ -32,9 +32,12 @@ export const BreadcrumbsContainer = styled.div`
   text-decoration: none;
 `;
 
+export const BreadcrumbsItems = styled.div<HeaderPropsStyle>`
+  color: ${({ breadcrumbActive }) => breadcrumbActive ? "var(--branding-dark-blue)" : "var(--neutral-400)"};
+`;
+
 export const BreadcrumbsItem = styled.a<HeaderPropsStyle>`
   color: ${({ breadcrumbActive }) => breadcrumbActive ? "var(--branding-dark-blue)" : "var(--neutral-400)"};
-  font-wheight: ${({ breadcrumbActive }) => breadcrumbActive ? "var(--fontWeightSemiBold)" : "var(--fontWeightRegular)"};
   cursor: pointer;
   text-decoration: none;
 `;

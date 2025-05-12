@@ -2,7 +2,10 @@ import { useState, useMemo } from "react";
 
 type OrderDirection = "asc" | "desc";
 
-export const useTableUtils = <T>(items: T[], getSearchValue: (item: T) => string) => {
+export const useTableUtils = <T>(
+  items: T[],
+  getSearchValue: (item: T) => string
+) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [orderBy, setOrderBy] = useState<string>("");
@@ -16,12 +19,15 @@ export const useTableUtils = <T>(items: T[], getSearchValue: (item: T) => string
   };
 
   const getValueByPath = (obj: any, path: string) =>
-    path.split(".").reduce((acc, part) => acc?.[part], obj) ?? "";
+     path.split(".").reduce((acc, part) => acc?.[part], obj) ?? "";
 
   const filteredItems = useMemo(() => {
-    return items.filter((item) =>
-      getSearchValue(item).toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return (items || []).filter((item) => {
+      const searchValue = getSearchValue(item);
+      return searchTerm && searchTerm !== "" 
+        ? searchValue && searchValue.toLowerCase().includes(searchTerm.toLowerCase())
+        : true; // Mostra todos os itens se searchTerm estiver vazio
+    });
   }, [items, searchTerm, getSearchValue]);
 
   const sortedItems = useMemo(() => {
@@ -36,7 +42,10 @@ export const useTableUtils = <T>(items: T[], getSearchValue: (item: T) => string
   }, [filteredItems, orderBy, orderDirection]);
 
   const paginatedItems = useMemo(() => {
-    return sortedItems.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    return sortedItems.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage
+    );
   }, [sortedItems, page, rowsPerPage]);
 
   return {

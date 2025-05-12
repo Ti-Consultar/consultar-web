@@ -21,7 +21,7 @@ import InboxIcon from "@mui/icons-material/Inbox";
 import SearchIcon from "@mui/icons-material/Search";
 import { EmptyStateBox, ModalBox, SearchInput } from "./styles";
 
-interface InactiveCompany {
+export interface InactiveCompany {
   id: number;
   nome: string;
   cnpj: string;
@@ -65,12 +65,13 @@ export const InactiveCompaniesModal: React.FC<InactiveCompaniesModalProps> = ({
     onClose();
   };
 
-  const filteredRows = inactiveCompanies.filter((company) => {
-    const search = searchTerm.toLowerCase();
-    return (
-      company.nome.toLowerCase().includes(search) ||
-      company.cnpj.toLowerCase().includes(search)
-    );
+  const filteredRows = (inactiveCompanies || []).filter((company) => {
+    const search = searchTerm?.toLowerCase() || "";
+  
+    const nome = company.nome?.toLowerCase() || "";
+    const cnpj = company.cnpj?.toLowerCase() || "";
+  
+    return nome.includes(search) || cnpj.includes(search);
   });
 
   const handleRequestSort = (property: keyof InactiveCompany) => {
@@ -200,7 +201,7 @@ export const InactiveCompaniesModal: React.FC<InactiveCompaniesModalProps> = ({
                     <TableCell padding="checkbox">
                       <Checkbox
                         checked={selected.includes(company.id)}
-                        onChange={() => handleSelect(company.id)}
+                        onChange={() => {handleSelect(company.id)}}
                       />
                     </TableCell>
                     <TableCell>{company.nome}</TableCell>
