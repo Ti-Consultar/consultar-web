@@ -26,6 +26,8 @@ import { useMediaQuery } from "@mui/material";
 import { MobileTableView } from "./CompanyTable/MobileTableView";
 import { useMainContext } from "../../contexts/mainContext";
 import { unlinkFromCompany } from "../../services/apis/routes/invitation.service";
+import { getBreadcrumb } from "../../services/apis/routes/breadcrumb.service";
+import { BreadcrumbItem } from "../../types/breadcrumb";
 
 type Companies = {
   groupName: string;
@@ -66,13 +68,32 @@ export const Companies = () => {
   };
 
   useEffect(() => {
-    if (groupData?.name) {
-      setBreadcrumbs([
-        { label: "Grupos", path: "/home" },
-        { label: groupData.name },
-      ]);
-    }
-  }, [groupData]);
+    const fetch = async () => {
+      if (groupId) {
+        const items = await getBreadcrumb({
+          id: Number(groupId),
+          type: "group",
+        });
+
+        const modifiedItems = items.map((item: BreadcrumbItem) => {
+          let modifiedLink = item.link;
+
+          if (item.type === "company") {
+            modifiedLink = `/grupos/${item.id}/empresas`; 
+          }
+
+          return {
+            ...item,
+            link: modifiedLink,
+          };
+        });
+
+        setBreadcrumbs([{ name: "Grupos", link: "/grupos" }, ...modifiedItems]);
+      }
+    };
+
+    fetch();
+  }, [companyId]);
 
   const fetchDeletedCompanies = async () => {
     try {
@@ -271,7 +292,7 @@ export const Companies = () => {
   };
 
   const handleRowClick = (companyId: number) => {
-    navigate(`/grupo/${Number(groupId)}/empresas/${companyId}/filiais`);
+    navigate(`/grupos/${Number(groupId)}/empresas/${companyId}/filiais`);
   };
 
   if (!companiesData) {

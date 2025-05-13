@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { BreadcrumbItem } from '../types/breadcrumb';
 
 interface MainProviderType {
   navSelected: string;
@@ -7,11 +8,6 @@ interface MainProviderType {
   setCompany: (company: string) => void;
   breadcrumbs: BreadcrumbItem[];
   setBreadcrumbs: (breadcrumbs: BreadcrumbItem[]) => void;
-}
-
-interface BreadcrumbItem {
-  label: string;
-  path?: string;
 }
 
 const MainContext = createContext<MainProviderType | undefined>(undefined);

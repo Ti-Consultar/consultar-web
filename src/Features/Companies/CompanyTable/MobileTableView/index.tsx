@@ -123,7 +123,7 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   };
 
   const handleRowClick = (companyId: number) => {
-    navigate(`/grupo/${Number(groupId)}/empresas/${companyId}/filiais`);
+    navigate(`/grupos/${Number(groupId)}/empresas/${companyId}/filiais`);
   };
 
   return (
