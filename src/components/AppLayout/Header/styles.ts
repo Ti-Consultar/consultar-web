@@ -33,6 +33,8 @@ export const BreadcrumbsContainer = styled.div`
 `;
 
 export const BreadcrumbsItems = styled.div<HeaderPropsStyle>`
+  display: flex;
+  align-items: center;
   color: ${({ breadcrumbActive }) => breadcrumbActive ? "var(--branding-dark-blue)" : "var(--neutral-400)"};
 `;
 

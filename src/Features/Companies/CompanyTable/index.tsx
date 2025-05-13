@@ -257,6 +257,7 @@ export const CompanyTable = ({
                 Telefone
               </TableSortLabel>
             </TableCell>
+            <TableCell></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -339,10 +340,6 @@ export const CompanyTable = ({
           },
         }}
       >
-        <MenuItem onClick={handleOpen} sx={{ display: "flex", gap: 1 }}>
-          <OpenInNewRoundedIcon sx={{ fontSize: "18px" }} />
-          Abrir
-        </MenuItem>
         <MenuItem onClick={handleEdit} sx={{ display: "flex", gap: 1 }}>
           <ModeEditOutlinedIcon sx={{ fontSize: "18px" }} />
           Editar

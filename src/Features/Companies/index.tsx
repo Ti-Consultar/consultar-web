@@ -338,14 +338,13 @@ export const Companies = () => {
         {isMobile ? (
           <MobileTableView
             companies={companiesData.companies}
-            onMoreClick={() => {}}
             onAddClick={() => setOpen(true)}
             onAddCompany={() => setOpen(true)}
             onEdit={handleEdit}
             onDelete={handleDeleteCompany}
             onReactivate={handleReactivate}
             fileName={groupData.businessEntity.razaoSocial}
-            onOpen={() => {}}
+            onRowClick={handleRowClick}
           ></MobileTableView>
         ) : (
           <CompanyTable
