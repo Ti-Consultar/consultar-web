@@ -335,14 +335,13 @@ export const Branches = () => {
         {isMobile ? (
           <MobileTableView
             companies={subCompanies.subCompanies}
-            onMoreClick={() => {}}
             onAddClick={() => setOpen(true)}
             onAddCompany={() => setOpen(true)}
             onEdit={handleEdit}
             onDelete={handleDeleteBranch}
             onReactivate={handleReactivate}
             fileName={company.name}
-            onOpen={() => setOpen(true)}
+            onRowClick={handleRowClick}
           ></MobileTableView>
         ) : (
           <CompanyTable

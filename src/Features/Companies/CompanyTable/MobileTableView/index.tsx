@@ -32,11 +32,10 @@ interface MobileTableViewProps {
   companies: Company[];
   onAddClick: () => void;
   onAddCompany: () => void;
-  onOpen: (company: Company) => void;
   onEdit: (company: any) => void;
   onReactivate: (selectedIds: number[]) => Promise<void>;
   onDelete: (company: Company) => void;
-  onMoreClick: (event: React.MouseEvent<HTMLElement>) => void;
+  onRowClick: (companyId: number) => void;
   fileName?: string;
 }
 
@@ -46,6 +45,7 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   onEdit,
   onDelete,
   onReactivate,
+  onRowClick,
   fileName,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -123,7 +123,7 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   };
 
   const handleRowClick = (companyId: number) => {
-    navigate(`/grupos/${Number(groupId)}/empresas/${companyId}/filiais`);
+    onRowClick(companyId);
   };
 
   return (
@@ -193,7 +193,7 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
                 sx={{ display: "flex", gap: 1 }}
                 onClick={() => {
                   if (selectedCompany) {
-                    handleRowClick(selectedCompany.companyId);
+                    handleRowClick(selectedCompany.id);
                   }
                 }}
               >
