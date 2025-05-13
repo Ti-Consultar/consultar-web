@@ -19,10 +19,10 @@ export const AppRoutes = () => {
                 <Route path="/recuperar-senha" element={<ForgotPassword />} />
                 <Route path="/recuperar-senha/senha-enviada" element={<PasswordSent />} />
 
-                <Route path="/home" element={<MrpHome />} />
-                <Route path={`/grupo/:groupId/empresas`} element={<Companies />} />
-                <Route path={`/grupo/:groupId/empresas/:companyId/filiais`} element={<Branches />} />
-                <Route path={`/grupo/:groupId/empresas/:companyId/filiais/:subCompanyId`} element={<SubCompanies />} />
+                <Route path="/grupos" element={<MrpHome />} />
+                <Route path={`/grupos/:groupId/empresas`} element={<Companies />} />
+                <Route path={`/grupos/:groupId/empresas/:companyId/filiais`} element={<Branches />} />
+                <Route path={`/grupos/:groupId/empresas/:companyId/filiais/:subCompanyId`} element={<SubCompanies />} />
             </Routes>
         </>
     )

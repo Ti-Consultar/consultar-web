@@ -77,7 +77,7 @@ export const MrpHome = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Grupos", path: "/home" }
+      { name: "Grupos", link: "/grupos" }
     ]);
   }, []);
 
@@ -217,7 +217,7 @@ export const MrpHome = () => {
   };
 
   const handleCardClick = (groupId: number) => {
-    navigate(`/grupo/${groupId}/empresas`);
+    navigate(`/grupos/${groupId}/empresas`);
   };
 
   return (

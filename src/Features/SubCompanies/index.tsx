@@ -7,12 +7,46 @@ import { InfoCard } from "../Companies/InfoCard";
 import { MainContainer } from "../Companies/styles";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { getBreadcrumb } from "../../services/apis/routes/breadcrumb.service";
+import { BreadcrumbItem } from "../../types/breadcrumb";
+import { useMainContext } from "../../contexts/mainContext";
 
 export const SubCompanies = () => {
   const userData = useAuth();
   const { setLoading } = useLoading();
-  const { companyId, subCompanyId } = useParams();
+  const { groupId, companyId, subCompanyId } = useParams();
   const [groupData, setGroupData] = useState<any>({} as any);
+  const { setBreadcrumbs } = useMainContext();
+
+  useEffect(() => {
+    const fetch = async () => {
+      if (subCompanyId) {
+        const items = await getBreadcrumb({
+          id: Number(subCompanyId),
+          type: "subcompany",
+        });
+
+        const modifiedItems = items.map((item: BreadcrumbItem) => {
+          let modifiedLink = item.link;
+
+          if (item.type === "group") {
+            modifiedLink = `/grupos/${item.id}/empresas`; 
+          } else if (item.type === "company") {
+            modifiedLink = `/grupos/${groupId}/empresas/${companyId}/filiais`;
+          }
+
+          return {
+            ...item,
+            link: modifiedLink,
+          };
+        });
+
+        setBreadcrumbs([{ name: "Grupos", link: "/grupos" }, ...modifiedItems]);
+      }
+    };
+
+    fetch();
+  }, [companyId]);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -47,9 +81,7 @@ export const SubCompanies = () => {
     <MainTemplate>
       <MainContainer>
         <InfoCard
-          title={
-            groupData.businessEntity?.razaoSocial
-          }
+          title={groupData.businessEntity?.razaoSocial}
           email={groupData.businessEntity?.email}
           phones={groupData.businessEntity?.telefone}
         />

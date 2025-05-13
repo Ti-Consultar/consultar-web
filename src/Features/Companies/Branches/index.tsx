@@ -25,6 +25,8 @@ import { useEffect, useState } from "react";
 import { GroupFormData } from "../../../types/group";
 import { SubCompanyEntity } from "../../../types/subCompany";
 import { unlinkFromCompany } from "../../../services/apis/routes/invitation.service";
+import { getBreadcrumb } from "../../../services/apis/routes/breadcrumb.service";
+import { BreadcrumbItem } from "../../../types/breadcrumb";
 
 export const Branches = () => {
   const userData = useAuth();
@@ -34,9 +36,9 @@ export const Branches = () => {
   const [subCompanies, setSubCompanies] = useState<any>({} as any);
   const [, setErrors] = useState<{ [key: string]: boolean }>({});
   const [company, setCompany] = useState<any>({} as any);
-  const { breadcrumbs, setBreadcrumbs } = useMainContext();
+  const { setBreadcrumbs } = useMainContext();
   const [editingCompany, setEditingCompany] = useState<GroupFormData>();
-  const [activeStep, setActiveStep] = useState(0);
+  const [, setActiveStep] = useState(0);
   const [subCompanyId, setSubCompanyId] = useState<number>(0);
   const [deletedSubCompanies, setDeletedSubCompanies] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
@@ -162,13 +164,32 @@ export const Branches = () => {
   };
 
   useEffect(() => {
-    if (company?.name) {
-      setBreadcrumbs([
-        ...breadcrumbs,
-        { label: company.name, path: `/grupo/${groupId}/empresas` },
-      ]);
-    }
-  }, [company]);
+    const fetch = async () => {
+      if (groupId) {
+        const items = await getBreadcrumb({
+          id: Number(companyId),
+          type: "company",
+        });
+
+        const modifiedItems = items.map((item: BreadcrumbItem) => {
+          let modifiedLink = item.link;
+
+          if (item.type === "group") {
+            modifiedLink = `/grupos/${groupId}/empresas/`;
+          }
+
+          return {
+            ...item,
+            link: modifiedLink,
+          };
+        });
+
+        setBreadcrumbs([{ name: "Grupos", link: "/grupos" }, ...modifiedItems]);
+      }
+    };
+
+    fetch();
+  }, [companyId]);
 
   useEffect(() => {
     if (userData && companyId) {
@@ -271,7 +292,7 @@ export const Branches = () => {
   };
 
   const handleRowClick = (id: number) => {
-    navigate(`/grupo/${Number(groupId)}/empresas/${companyId}/filiais/${id}`);
+    navigate(`/grupos/${Number(groupId)}/empresas/${companyId}/filiais/${id}`);
   };
 
   if (!subCompanies) {

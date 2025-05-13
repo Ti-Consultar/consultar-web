@@ -55,7 +55,7 @@ interface UserData {
 const drawerListData = [
   {
     title: "Início",
-    path: "/home",
+    path: "/grupos",
     icon: <HomeOutlinedIcon fontSize="medium" />,
   },
   // {
