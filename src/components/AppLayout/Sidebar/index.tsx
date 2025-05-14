@@ -9,7 +9,6 @@ import {
   ProfileItem,
 } from "./styles";
 
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import logoConsultar from "../../../../src/assets/icons/logo-consultar.svg";
 import logoConsultarHorizontal from "../../../../src/assets/icons/logo_horizontal 1.svg";
 // import DataSaverOffOutlinedIcon from '@mui/icons-material/DataSaverOffOutlined';
@@ -20,6 +19,8 @@ import logoConsultarHorizontal from "../../../../src/assets/icons/logo_horizonta
 // import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -100,6 +101,7 @@ export const Sidebar = () => {
   }>({ anchorEl: null, menuType: null });
 
   const { navSelected, setNavSelected } = useMainContext();
+  const nav = useNavigate();
 
   const handleNavSelected = (title: string, path: string) => {
     setNavSelected(title);
@@ -108,6 +110,10 @@ export const Sidebar = () => {
 
   const handleOpenPerfil = (event: React.MouseEvent<HTMLButtonElement>) => {
     setMenuState({ anchorEl: event.currentTarget, menuType: "perfil" });
+  };
+
+  const handleOpenProfile = () => {
+    nav(`/perfil/informacoes`);
   };
 
   const handleClose = () => {
@@ -200,9 +206,25 @@ export const Sidebar = () => {
           MenuListProps={{
             "aria-labelledby": "basic-button",
           }}
+          PaperProps={{
+            elevation: 4,
+            sx: {
+              borderRadius: 3,
+              minWidth: 150,
+              p: 1,
+              bgcolor: "background.paper",
+              boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+            },
+          }}
         >
-          <MenuItem>Minha conta</MenuItem>
-          <MenuItem onClick={handleLogout}>Sair</MenuItem>
+          <MenuItem sx={{ display: "flex", gap: 1 }} onClick={handleOpenProfile}>
+            <AccountCircleOutlinedIcon sx={{ fontSize: "18px" }} />
+            Minha conta
+          </MenuItem>
+          <MenuItem onClick={handleLogout} sx={{ display: "flex", gap: 1, borderRadius: '10px' }}>
+            <LogoutOutlinedIcon sx={{ fontSize: "18px" }} />
+            Sair
+          </MenuItem>
         </Menu>
         <div className="items-footer">
           <div className="line-divisor"></div>

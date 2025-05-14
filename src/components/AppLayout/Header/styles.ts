@@ -1,8 +1,8 @@
 import styled from "styled-components";
 
 interface HeaderPropsStyle {
-    breadcrumbActive?: boolean;
-    isDrawerOpen?: boolean;
+  breadcrumbActive?: boolean;
+  isDrawerOpen?: boolean;
 }
 
 export const MainContainer = styled.div<HeaderPropsStyle>`
@@ -17,8 +17,9 @@ export const MainContainer = styled.div<HeaderPropsStyle>`
   max-height: fit-content;
   transition: margin-left 0.3s;
   margin-left: ${({ isDrawerOpen }) => (isDrawerOpen ? "0" : "0")};
-    @media (max-width: 1200px) {
-    background-color: ${({ isDrawerOpen }) => (isDrawerOpen ? `rgba(56, 51, 51, 0.59)` : `rgba(0, 0, 0, 0)`)};
+  @media (max-width: 1200px) {
+    background-color: ${({ isDrawerOpen }) =>
+      isDrawerOpen ? `rgba(56, 51, 51, 0.59)` : `rgba(0, 0, 0, 0)`};
     transition: background-color 0.3s ease-in-out;
   }
 `;
@@ -35,11 +36,27 @@ export const BreadcrumbsContainer = styled.div`
 export const BreadcrumbsItems = styled.div<HeaderPropsStyle>`
   display: flex;
   align-items: center;
-  color: ${({ breadcrumbActive }) => breadcrumbActive ? "var(--branding-dark-blue)" : "var(--neutral-400)"};
+  color: ${({ breadcrumbActive }) =>
+    breadcrumbActive ? "var(--branding-dark-blue)" : "var(--neutral-400)"};
 `;
 
 export const BreadcrumbsItem = styled.a<HeaderPropsStyle>`
-  color: ${({ breadcrumbActive }) => breadcrumbActive ? "var(--branding-dark-blue)" : "var(--neutral-400)"};
+  color: ${({ breadcrumbActive }) =>
+    breadcrumbActive ? "var(--branding-dark-blue)" : "var(--neutral-400)"};
   cursor: pointer;
   text-decoration: none;
+`;
+
+export const HeaderButton = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--neutral-300);
+  }
 `;

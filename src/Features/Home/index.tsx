@@ -73,7 +73,7 @@ export const MrpHome = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [, setErrors] = useState<{ [key: string]: boolean }>({});
   const [activeStep, setActiveStep] = useState(0);
-  const { setBreadcrumbs } = useMainContext();
+  const {breadcrumbs ,setBreadcrumbs } = useMainContext();
 
   useEffect(() => {
     setBreadcrumbs([
