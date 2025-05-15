@@ -54,7 +54,7 @@ export const Companies = () => {
   const fetchAllData = async () => {
     try {
       const [groupResponse, companiesResponse] = await Promise.all([
-        getGroupById(Number(groupId), Number(userData?.userId)),
+        getGroupById(Number(groupId)),
         getCompanies(Number(groupId)),
       ]);
 
@@ -99,7 +99,6 @@ export const Companies = () => {
     try {
       if (!userData?.userId || !groupId) return;
       const response = await getDeletedCompanies(
-        Number(userData.userId),
         Number(groupId)
       );
       const formatted = response.data.companies.map((item: any) => ({
@@ -125,13 +124,12 @@ export const Companies = () => {
       setOpen(true);
       const data = await getCompanyById(
         company.companyId,
-        Number(userData?.userId),
         Number(groupId)
       );
       setCompanyId(company.companyId);
       setEditingCompany(data.data);
     } catch (error) {
-      toast.error("Erro ao buscar grupo para edição.");
+      toast.error("Erro ao buscar empresa para edição, entre em contato com o suporte.");
     }
   };
 
@@ -239,7 +237,6 @@ export const Companies = () => {
     try {
       setLoading(true, "Reativando empresas...");
       await restoreCompanies(
-        Number(userData?.userId),
         Number(groupId),
         selectedIds
       );
@@ -263,8 +260,7 @@ export const Companies = () => {
 
       const response = await deleteCompany(
         company.companyId,
-        Number(groupId),
-        Number(userData?.userId)
+        Number(groupId)
       );
 
       if (!response.success) {
@@ -322,7 +318,10 @@ export const Companies = () => {
           <CompanyForm
             onSubmit={onSubmit}
             isOpen={open}
-            onClose={() => setOpen(false)}
+            onClose={() => {
+            setOpen(false);
+            setEditingCompany(undefined);
+          }}
             title="Adicionar empresa"
             defaultValues={editingCompany}
             externalActiveStep={activeStep}

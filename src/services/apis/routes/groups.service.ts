@@ -1,5 +1,5 @@
 import { GroupFormData } from "../../../types/group";
-import { axiosIntanceWithoutToken } from "../config";
+import { axiosIntanceWithoutToken, axiosInstanceWithToken } from "../config";
 
 const URL = import.meta.env.VITE_API_URL_MRP;
 
@@ -9,7 +9,7 @@ export const getAllGroups = async () => {
   await delay(1500); //to-do: Remover quando o backend estiver pronto
 
   try {
-    const response = await axiosIntanceWithoutToken.get(`${URL}/api/Group/all`);
+    const response = await axiosInstanceWithToken.get(`${URL}/api/Group/all`);
 
     return response.data;
   } catch (error) {
@@ -17,10 +17,10 @@ export const getAllGroups = async () => {
   }
 };
 
-export const getGroupsByUserId = async (userId: number) => {
+export const getGroupsByUserId = async () => {
   try {
     const response = await axiosIntanceWithoutToken.get(
-      `${URL}/api/Group/user/${userId}/groups`
+      `${URL}/api/Group/all`
     );
     return response.data;
   } catch (error) {
@@ -30,7 +30,7 @@ export const getGroupsByUserId = async (userId: number) => {
 
 export const saveGroup = async (data: GroupFormData) => {
   try {
-    const response = await axiosIntanceWithoutToken.post(
+    const response = await axiosInstanceWithToken.post(
       `${URL}/api/Group/create`,
       data
     );
@@ -40,10 +40,10 @@ export const saveGroup = async (data: GroupFormData) => {
   }
 };
 
-export const deleteGroup = async (id: number, userId: number) => {
+export const deleteGroup = async (id: number) => {
   try {
-    const response = await axiosIntanceWithoutToken.patch(
-      `${URL}/api/Group/user/${userId}/group/${id}/delete`
+    const response = await axiosInstanceWithToken.patch(
+      `${URL}/api/Group/${id}/delete`
     );
     return response.data;
   } catch (error) {
@@ -53,12 +53,11 @@ export const deleteGroup = async (id: number, userId: number) => {
 
 export const updateGroup = async (
   id: number,
-  userId: number,
   data: GroupFormData
 ) => {
   try {
-    const response = await axiosIntanceWithoutToken.put(
-      `${URL}/api/Group/update/id/${id}/user/${userId}`,
+    const response = await axiosInstanceWithToken.put(
+      `${URL}/api/Group/${id}/update`,
       data
     );
     return response.data;
@@ -67,10 +66,10 @@ export const updateGroup = async (
   }
 };
 
-export const getGroupById = async (id: number, userId: number) => {
+export const getGroupById = async (id: number) => {
   try {
-    const response = await axiosIntanceWithoutToken.get(
-      `${URL}/api/Group/user/${userId}/group/${id}`
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/Group/detail/${id}`
     );
     return response.data;
   } catch (error) {

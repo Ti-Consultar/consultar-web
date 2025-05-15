@@ -50,7 +50,6 @@ export const Branches = () => {
       const [companyResponse, subCompaniesResponse] = await Promise.all([
         getCompanyById(
           Number(companyId),
-          Number(userData?.userId),
           Number(groupId)
         ),
         getBranches(Number(companyId), Number(userData?.userId)),
@@ -69,7 +68,6 @@ export const Branches = () => {
     try {
       if (!userData?.userId || !groupId) return;
       const response = await getDeletedSubCompanies(
-        Number(userData.userId),
         Number(companyId),
         skip,
         take
@@ -90,7 +88,6 @@ export const Branches = () => {
       setOpen(true);
       const data = await getSubCompanyById(
         company.id,
-        Number(userData?.userId),
         company.companyId
       );
       setSubCompanyId(company.id);
@@ -204,7 +201,6 @@ export const Branches = () => {
 
       const response = await deleteSubCompany(
         subCompany.id,
-        Number(userData?.userId),
         Number(companyId)
       );
 
@@ -273,7 +269,6 @@ export const Branches = () => {
     try {
       setLoading(true, "Reativando empresas...");
       await restoreSubCompanies(
-        Number(userData?.userId),
         Number(companyId),
         selectedIds
       );
@@ -322,7 +317,10 @@ export const Branches = () => {
           <CompanyForm
             onSubmit={onSubmit}
             isOpen={open}
-            onClose={() => setOpen(false)}
+            onClose={() => {
+            setOpen(false);
+            setEditingCompany(undefined);
+          }}
             title="Adicionar empresa"
             defaultValues={editingCompany}
           />

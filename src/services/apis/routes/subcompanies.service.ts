@@ -2,17 +2,10 @@ const URL = import.meta.env.VITE_API_URL_MRP;
 import { GroupFormData } from "../../../types/group";
 import { axiosInstanceWithToken, axiosIntanceWithoutToken } from "../config";
 
-export const getBranches = async (
-  companyId: number,
-  userId: number,
-  skip = 0,
-  take = 10
-) => {
-  if (!userId) throw new Error("UserId não encontrado no cookie.");
-
+export const getBranches = async (companyId: number, skip = 0, take = 10) => {
   try {
     const { data } = await axiosInstanceWithToken.get(
-      `${URL}/api/SubCompany/paginated/user/${userId}/company/${companyId}`,
+      `${URL}/api/SubCompany/company/${companyId}/paginated`,
       {
         params: { skip, take },
       }
@@ -26,26 +19,10 @@ export const getBranches = async (
   }
 };
 
-export const getSubCompanyById = async (
-  id: number,
-  userId: number,
-  companyId: number
-) => {
+export const getSubCompanyById = async (id: number, companyId: number) => {
   try {
-    const response = await axiosIntanceWithoutToken.get(
-      `${URL}/api/SubCompany/${id}/user/${userId}/company/${companyId}`
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const saveSubCompany = async (data: GroupFormData) => {
-  try {
-    const response = await axiosIntanceWithoutToken.post(
-      `${URL}/api/SubCompany/create`,
-      data
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/SubCompany/${id}/company/${companyId}`
     );
     return response.data;
   } catch (error) {
@@ -55,8 +32,23 @@ export const saveSubCompany = async (data: GroupFormData) => {
 
 export const updateSubCompany = async (data: GroupFormData, id: number) => {
   try {
-    const response = await axiosIntanceWithoutToken.put(
-      `${URL}/api/SubCompany/update/${id}`,
+    const response = await axiosInstanceWithToken.put(
+      `${URL}/api/SubCompany`,
+      data,
+      {
+        params: { id },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const saveSubCompany = async (data: GroupFormData) => {
+  try {
+    const response = await axiosInstanceWithToken.post(
+      `${URL}/api/SubCompany`,
       data
     );
     return response.data;
@@ -66,14 +58,13 @@ export const updateSubCompany = async (data: GroupFormData, id: number) => {
 };
 
 export const getDeletedSubCompanies = async (
-  userId: number,
   companyId: number,
   skip: number,
   take: number
 ) => {
   try {
-    const response = await axiosIntanceWithoutToken.get(
-      `${URL}/api/SubCompany/paginated/user/${userId}/company/${companyId}/deleted`,
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/SubCompany/company/${companyId}/paginated/deleted`,
       {
         params: { skip, take },
       }
@@ -87,12 +78,11 @@ export const getDeletedSubCompanies = async (
 
 export const deleteSubCompany = async (
   subCompanyId: number,
-  userId: number,
   id: number
 ) => {
   try {
-    const response = await axiosIntanceWithoutToken.patch(
-      `${URL}/api/SubCompany/${subCompanyId}/user/${userId}/company/${id}/delete`
+    const response = await axiosInstanceWithToken.patch(
+      `${URL}/api/SubCompany/${subCompanyId}/company/${id}/delete`
     );
     return response.data;
   } catch (error) {
@@ -101,13 +91,12 @@ export const deleteSubCompany = async (
 };
 
 export const restoreSubCompanies = async (
-  userId: number,
   companyId: number,
   data: number[]
 ) => {
   try {
-    const response = await axiosIntanceWithoutToken.patch(
-      `${URL}/api/SubCompany/user/${userId}/company/${companyId}/subcompanies/restore`,
+    const response = await axiosInstanceWithToken.patch(
+      `${URL}/api/SubCompany/company/${companyId}/subcompanies/restore`,
       data
     );
     return response.data;

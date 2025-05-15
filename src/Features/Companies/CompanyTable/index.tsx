@@ -14,7 +14,7 @@ import {
   MenuItem,
   Alert,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Company } from "../../../types/company";
 import {
   formatCNPJ,
@@ -26,11 +26,9 @@ import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { TableToolbar } from "./Header";
 
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import ModeEditOutlinedIcon from "@mui/icons-material/ModeEditOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { useTableUtils } from "../../../utils/hooks/useTableUtils";
-import { useNavigate, useParams } from "react-router";
 import { InactiveCompany } from "../InactiveCompaniesModal";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 

@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_API_URL_BASE;
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const login = async (email: string, password: string) => {
-  await delay(1000); // Simulate a delay to show the loading spinner
+  await delay(1000);
   try {
     const response = await axiosInstanceWithToken.post(`${BASE_URL}/login`, {
       email,
@@ -36,4 +36,4 @@ export const setNewPassword = async (email: string) => {
   } catch (error) {
     throw error;
   }
-}
+};
