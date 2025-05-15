@@ -17,6 +17,7 @@ import { CompanyForm } from "../GroupForm";
 import { toast } from "react-toastify";
 import {
   deleteGroup,
+  getAllGroups,
   getGroupById,
   getGroupsByUserId,
   saveGroup,
@@ -54,7 +55,7 @@ interface businessEntity {
 }
 
 interface GroupsResponse {
-  groupId: number;
+  id: number;
   userId: number;
   groupName: string;
   businessEntity: businessEntity;
@@ -73,12 +74,10 @@ export const MrpHome = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [, setErrors] = useState<{ [key: string]: boolean }>({});
   const [activeStep, setActiveStep] = useState(0);
-  const {breadcrumbs ,setBreadcrumbs } = useMainContext();
+  const { breadcrumbs, setBreadcrumbs } = useMainContext();
 
   useEffect(() => {
-    setBreadcrumbs([
-      { name: "Grupos", link: "/grupos" }
-    ]);
+    setBreadcrumbs([{ name: "Grupos", link: "/grupos" }]);
   }, []);
 
   useEffect(() => {
@@ -99,7 +98,7 @@ export const MrpHome = () => {
   const fetchGroups = async () => {
     setLoading(true, "Carregando grupos empresariais...");
     try {
-      const response = await getGroupsByUserId(Number(userData?.userId));
+      const response = await getAllGroups();
       const data = response.data;
       setGroupList(data);
     } catch (error: unknown) {
@@ -138,7 +137,7 @@ export const MrpHome = () => {
 
     try {
       const response = editingGroup?.groupId
-        ? await updateGroup(editingGroup.groupId, data.userId, data)
+        ? await updateGroup(editingGroup.groupId, data)
         : await saveGroup(data);
 
       if (
@@ -183,12 +182,12 @@ export const MrpHome = () => {
     }
   };
 
-  const handleDeleteGroup = async (id: number, userId: number) => {
+  const handleDeleteGroup = async (id: number) => {
     setLoading(true, "Deletando Grupo");
     setError("");
 
     try {
-      await deleteGroup(id, userId);
+      await deleteGroup(id);
       toast.success("Grupo deletado com sucesso!");
       fetchGroups();
     } catch {
@@ -198,10 +197,10 @@ export const MrpHome = () => {
     }
   };
 
-  const handleEdit = async (id: number, userId: number) => {
+  const handleEdit = async (id: number) => {
     try {
       setOpen(true);
-      const data = await getGroupById(userId, id);
+      const data = await getGroupById(id);
       setEditingGroup(data.data);
     } catch (error) {
       toast.error("Erro ao buscar grupo para edição.");
@@ -210,7 +209,7 @@ export const MrpHome = () => {
 
   const handleConfirmDelete = async () => {
     if (selectedGroupId !== null && userId?.userId) {
-      await handleDeleteGroup(selectedGroupId, Number(userId.userId));
+      await handleDeleteGroup(selectedGroupId);
       setSelectedGroupId(null);
     }
     setOpenDialog(false);
@@ -236,7 +235,10 @@ export const MrpHome = () => {
           onSubmit={onSubmit}
           externalActiveStep={activeStep}
           isOpen={open}
-          onClose={() => setOpen(false)}
+          onClose={() => {
+            setOpen(false);
+            setEditingGroup(undefined);
+          }}
           defaultValues={editingGroup}
           title="Adicionar Grupo Empresarial"
         />
@@ -272,16 +274,18 @@ export const MrpHome = () => {
         <CardsContainer container spacing={2}>
           {groupList?.map((group) => (
             <GroupCard
-              key={group.groupId}
+              key={group.id}
               fantasyName={
                 group.businessEntity?.nomeFantasia || group.groupName
               }
               corporateName={group.businessEntity.razaoSocial}
-              onEdit={() => handleEdit(Number(userId?.userId), group.groupId)}
-              onClick={() => handleCardClick(group.groupId)}
+              onEdit={() => {
+                handleEdit(group.id), console.log(group.id);
+              }}
+              onClick={() => handleCardClick(group.id)}
               onDelete={() => {
                 setOpenDialog(true);
-                setSelectedGroupId(group.groupId);
+                setSelectedGroupId(group.id);
               }}
             />
           ))}

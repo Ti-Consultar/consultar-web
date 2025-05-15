@@ -52,11 +52,10 @@ export const SubCompanies = () => {
     const fetchGroups = async () => {
       if (!companyId || !subCompanyId || !userData?.userId) return;
 
-      setLoading(true, "Carregando grupos empresariais...");
+      setLoading(true, "Carregando filial...");
       try {
         const response = await getSubCompanyById(
           +subCompanyId,
-          +userData.userId,
           +companyId
         );
         setGroupData(response.data);

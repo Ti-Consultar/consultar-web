@@ -51,7 +51,6 @@ export const CompanyForm = ({
   const [formData, setFormData] = useState<GroupFormData>(
     defaultValues || {
       name: "",
-      userId: 0,
       businessEntity: {
         nomeFantasia: "",
         razaoSocial: "",
@@ -140,7 +139,6 @@ export const CompanyForm = ({
     const rawCnpj = formData.businessEntity.cnpj.replace(/\D/g, "");
 
     if (rawCnpj.length !== 14) return;
-    if (formData.userId) return;
 
     const timeout = setTimeout(() => {
       setLoading(true, "Buscando dados da empresa");
@@ -269,7 +267,7 @@ export const CompanyForm = ({
   const handleCancel = () => {
     setFormData({
       name: "",
-      userId: 0,
+      groupId: undefined,
       businessEntity: {
         nomeFantasia: "",
         razaoSocial: "",
