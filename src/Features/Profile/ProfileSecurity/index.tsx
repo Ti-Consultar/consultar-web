@@ -19,7 +19,7 @@ export const ProfileSecurity = () => {
     <MainTemplate>
       <MainContainer>
         <Title>Configurações do Perfil</Title>
-        <SecurityCard></SecurityCard>
+        <SecurityCard />
       </MainContainer>
     </MainTemplate>
   );

@@ -13,9 +13,7 @@ export const MainContainer = styled.div`
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
   overflow: hidden;
-  @media (max-width: 767px) {
-    height: 100vh;
-  }
+  height: 100vh;
 `;
 
 export const ContentWrapper = styled.div<MainTemplateStyledProps>`
@@ -38,4 +36,5 @@ export const ContentContainer = styled.div<MainTemplateStyledProps>`
   background-color: var(--neutral-50);
   overflow-x: auto;
   max-width: 100vw;
+  height: 100%
 `;

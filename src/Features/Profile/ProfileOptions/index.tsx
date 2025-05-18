@@ -1,4 +1,10 @@
-import { Box, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+} from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const menuItems = [
@@ -14,20 +20,33 @@ export const ProfileOptions = () => {
 
   return (
     <Box
-      sx={{ height: "80vh", p: 2, borderRight: '1px solid var(--neutral-150)' }}
+      sx={{ height: "80vh", p: 2, borderRight: "1px solid var(--neutral-150)" }}
     >
       <List>
-        {menuItems.map((item) => (
-          <ListItem disablePadding key={item.path} sx={{marginBottom: '12px'}}>
-            <ListItemButton
-              selected={isActive(item.path)}
-              onClick={() => navigate(item.path)}
-              sx={{borderRadius: '15px'}}
+        {menuItems.map((item) => {
+          const active = isActive(item.path); // Verifica se a rota atual é a mesma do item
+          return (
+            <ListItem
+              disablePadding
+              key={item.path}
+              sx={{ marginBottom: "12px" }}
             >
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+              <ListItemButton
+                selected={active}
+                onClick={() => navigate(item.path)}
+                sx={{
+                  borderRadius: "15px",
+                  color: active ? "black" : "text.primary",
+                  "&.Mui-selected": {
+                    backgroundColor: "#E9F2FF!important",
+                  },
+                }}
+              >
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
       </List>
     </Box>
   );
