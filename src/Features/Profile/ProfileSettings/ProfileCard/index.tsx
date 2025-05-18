@@ -10,14 +10,28 @@ import {
 } from "./styles";
 import { Box, Button } from "@mui/material";
 import DriveFileRenameOutlineOutlinedIcon from "@mui/icons-material/DriveFileRenameOutlineOutlined";
-import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 
-export const ProfileCard = () => {
-  const [phone, setPhone] = useState("31984914474");
-  const [email, setEmail] = useState("wevertonoliveira@gmail.com");
+interface ProfileCardProps {
+  name: string;
+  role: string;
+  email: string;
+  phoneNumber: string;
+  onSave?: () => void;
+  onEdit?: () => void;
+}
+
+export const ProfileCard = ({
+  name,
+  role,
+  onSave,
+  onEdit,
+  email,
+  phoneNumber
+}: ProfileCardProps) => {
   const [editing, setEditing] = useState(false);
-  const [draftName, setDraftName] = useState(phone);
+  const [draftName, setDraftName] = useState(phoneNumber);
 
   return (
     <ProfileCardContainer>
@@ -27,13 +41,13 @@ export const ProfileCard = () => {
         </ProfilePic>
       </Container>
       <InfoContainer>
-        <NameText>Weverton Oliveira</NameText>
+        <NameText>{name}</NameText>
         <Info
           style={{
             fontWeight: "var(--fontWeightSemiBold)",
           }}
         >
-          Desenvolvedor
+          {role}
         </Info>
         <EditableField
           value={email}
@@ -42,7 +56,7 @@ export const ProfileCard = () => {
           placeholder=""
         />
         <EditableField
-          value={phone}
+          value={phoneNumber}
           isEditing={editing}
           onChangeDraft={setDraftName}
           placeholder=""
@@ -50,7 +64,7 @@ export const ProfileCard = () => {
       </InfoContainer>
       <Box>
         {editing ? (
-          <div style={{marginLeft: '1.5rem', display: 'flex', gap: '1rem'}}>
+          <div style={{ marginLeft: "1.5rem", display: "flex", gap: "1rem" }}>
             <Button
               variant="contained"
               color="primary"

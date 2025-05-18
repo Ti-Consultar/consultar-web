@@ -52,7 +52,7 @@ export const Branches = () => {
           Number(companyId),
           Number(groupId)
         ),
-        getBranches(Number(companyId), Number(userData?.userId)),
+        getBranches(Number(companyId)),
       ]);
 
       setCompany(companyResponse.data);
