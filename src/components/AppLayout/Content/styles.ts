@@ -5,7 +5,7 @@ interface MainTemplateStyledProps {
 }
 
 export const MainContainer = styled.div<MainTemplateStyledProps>`
-  height: 90vh;
+  height: 85vh;
   width: 100%;
   @media (max-width: 1200px) {
     transition: background-color 0.3s ease-in-out;

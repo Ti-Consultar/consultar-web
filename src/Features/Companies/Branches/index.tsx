@@ -73,7 +73,7 @@ export const Branches = () => {
         take
       );
       const formatted = response.data.subCompanies.map((item: any) => ({
-        id: item.id,
+        id: item.subCompanyId,
         nome: item.businessEntity.nomeFantasia || item.companyName,
         cnpj: item.businessEntity.cnpj,
       }));
@@ -191,7 +191,7 @@ export const Branches = () => {
   useEffect(() => {
     if (userData && companyId) {
       fetchAllData();
-      fetchDeletedCompanies(1, 50);
+      fetchDeletedCompanies(0, 50);
     }
   }, [userData, companyId]);
 
@@ -211,7 +211,7 @@ export const Branches = () => {
 
       toast.success("Empresa excluída com sucesso!");
       fetchAllData();
-      fetchDeletedCompanies(1, 50);
+      fetchDeletedCompanies(0, 50);
       setSubCompanies((prev: any) =>
         prev
           ? {
@@ -247,7 +247,7 @@ export const Branches = () => {
 
       toast.success("Desvinculado com sucesso.");
       fetchAllData();
-      fetchDeletedCompanies(1, 50);
+      fetchDeletedCompanies(0, 50);
       setSubCompanies((prev: any) =>
         prev
           ? {
@@ -273,11 +273,11 @@ export const Branches = () => {
         selectedIds
       );
       const updated = deletedSubCompanies.filter(
-        (c) => !selectedIds.includes(c.id)
+        (c) => !selectedIds.includes(c.subCompanyId)
       );
       setDeletedSubCompanies(updated);
       toast.success("Empresas reativadas com sucesso!");
-      fetchDeletedCompanies(1, 50);
+      fetchDeletedCompanies(0, 50);
       fetchAllData();
     } catch (error) {
       toast.error("Erro ao reativar empresas");
