@@ -1,30 +1,61 @@
 import styled from "styled-components";
-import graphicBackground from "../../../src/assets/images/graphic-background.png";
+import loginImage from "../../../src/assets/images/login-side.png";
+
+export const LoginGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr; // Duas colunas lado a lado
+  height: 100vh;
+  width: 100vw;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr; // <-- aqui você define só uma coluna
+  }
+`;
 
 export const MainContainer = styled.div`
+  display: flex;
   align-items: center;
-  background-image: url(${graphicBackground});
+  background-color: var(--neutral-200);
   background-size: cover;
   background-repeat: no-repeat;
-  display: flex;
   justify-content: center;
   height: 100vh;
 `;
 
 export const LoginContainer = styled.div`
-  // align-items: center;
   background-color: var(--neutral-white);
-  border-radius: 24px;
   display: flex;
   flex-direction: column;
 
-  padding: 48px 72px;
-  width: 540px;
+  padding: 32px 72px;
 
   @media (max-width: 720px) {
     margin: 2rem;
+    border-radius: 24px;
     padding: 32px 48px;
   }
+`;
+
+export const ContentContainer = styled.div`
+  background-image: url(${loginImage});
+  display: { xs: "none", md: "flex" };
+
+  padding: 24px 24px;
+
+    @media (max-width: 720px) {
+    display: none; // Oculta no mobile
+  }
+`;
+
+export const Info = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  padding: 32px;
+`;
+
+export const LogoWhite = styled.img`
+  width: 32px;
 `;
 
 export const ClickableText = styled.p`
@@ -38,28 +69,25 @@ export const Logo = styled.img`
 `;
 
 export const Title = styled.h2`
-  color: var(--branding-default-blue);
-  font-size: 32px;
-  font-weight: var(--fontWeightSemiBold);
+  color: var(--neutral-700);
+  font-size: 28px;
+  font-weight: 400;
   line-height: 32px;
   margin-bottom: 32px;
-  text-align: center;
 
-    @media (max-width: 720px) {
-      font-size: 24px;
+  @media (max-width: 720px) {
+    font-size: 24px;
   }
 `;
 
-export const SubTitle = styled.h3`
+export const SubTitle = styled.span`
   color: var(--text-gray);
-  font-size: 20px;
-  font-weight: var(--fontWeightMedium);
+  font-size: 18px;
   line-height: 20px;
   margin-bottom: 32px;
-  text-align: center;
 
-    @media (max-width: 720px) {
-      font-size: 18px;
+  @media (max-width: 720px) {
+    font-size: 18px;
   }
 `;
 
@@ -71,8 +99,41 @@ export const InfoText = styled.p`
   margin-top: 32px;
   text-align: center;
 
-    @media (max-width: 720px) {
-      font-size: 16px;
+  @media (max-width: 720px) {
+    font-size: 16px;
+  }
+`;
+
+export const Text = styled.p`
+  color: var(--neutral-white);
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 20px;
+  margin-top: 32px;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 720px) {
+    font-size: 16px;
+  }
+`;
+
+export const SubText = styled.span`
+  color: var(--neutral-300);
+  font-size: 1.2rem;
+  font-weight: 200;
+
+  @media (max-width: 720px) {
+    font-size: 16px;
+  }
+`;
+
+export const Copyright = styled.span`
+  color: var(--neutral-500);
+  font-size: 1rem;
+  font-weight: 300;
+
+  @media (max-width: 720px) {
+    font-size: 16px;
   }
 `;
 
