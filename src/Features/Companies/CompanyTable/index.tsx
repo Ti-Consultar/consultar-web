@@ -31,6 +31,7 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { useTableUtils } from "../../../utils/hooks/useTableUtils";
 import { InactiveCompany } from "../InactiveCompaniesModal";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { Member } from "../../../types/member";
 
 interface CompanyTableProps {
   companies: Company[];
@@ -45,6 +46,7 @@ interface CompanyTableProps {
   handleRowClick?: () => void;
   onUnlink: (company: any) => void;
   onRowClick: (companyId: number) => void;
+  members: Member[];
 }
 
 export const CompanyTable = ({
@@ -59,6 +61,7 @@ export const CompanyTable = ({
   companyType = "Empresas",
   onUnlink,
   onRowClick,
+  members = []
 }: CompanyTableProps) => {
   const {
     page,
@@ -176,6 +179,7 @@ export const CompanyTable = ({
   return (
     <TableContainer component={Paper}>
       <TableToolbar
+        members={members}
         deletedCompanies={deletedCompanies}
         title={companyType}
         searchValue={searchTerm}
@@ -186,6 +190,7 @@ export const CompanyTable = ({
         onAddClick={onAddCompany}
         onExport={handleExport}
         onReactivate={onReactivate}
+        onInvite={() => {}}
       />
       <Table>
         <TableHead sx={{ backgroundColor: "var(--neutral-100)" }}>

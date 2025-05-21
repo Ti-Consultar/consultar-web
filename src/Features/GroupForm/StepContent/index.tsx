@@ -30,7 +30,7 @@ export const GroupFormSteps = ({
               onChange={handleChange}
               error={errors["cnpj"]}
               helperText={errors["cnpj"] ? "Campo obrigatório" : ""}
-              disabled={!!formData.userId}
+              disabled={!!formData.groupId}
             />
             <TextField
               fullWidth

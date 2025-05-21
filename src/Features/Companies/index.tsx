@@ -16,7 +16,7 @@ import { CompanyTable } from "./CompanyTable";
 import { Company } from "../../types/company";
 import { HeaderContainer, MainContainer } from "./styles";
 import { DivSkeleton } from "../../styles/skeleton/skeleton";
-import { getGroupById } from "../../services/apis/routes/groups.service";
+import { getGroupById, getGroupUsers } from "../../services/apis/routes/groups.service";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { InfoCard } from "./InfoCard";
 import { GroupFormData } from "../../types/group";
@@ -28,6 +28,7 @@ import { useMainContext } from "../../contexts/mainContext";
 import { unlinkFromCompany } from "../../services/apis/routes/invitation.service";
 import { getBreadcrumb } from "../../services/apis/routes/breadcrumb.service";
 import { BreadcrumbItem } from "../../types/breadcrumb";
+import { Member } from "../../types/member";
 
 type Companies = {
   groupName: string;
@@ -46,6 +47,7 @@ export const Companies = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [editingCompany, setEditingCompany] = useState<GroupFormData>();
   const [deletedCompanies, setDeletedCompanies] = useState<any[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [companyId, setCompanyId] = useState<number>();
   const isMobile = useMediaQuery("(max-width: 600px)");
   const { setBreadcrumbs } = useMainContext();
@@ -112,10 +114,23 @@ export const Companies = () => {
     }
   };
 
+   const fetchCurrentUsers = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getGroupUsers(
+        Number(groupId)
+      );
+      setMembers(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar empresas inativas", error);
+    }
+  };
+
   useEffect(() => {
     if (userData && groupId) {
       fetchAllData();
       fetchDeletedCompanies();
+      fetchCurrentUsers()
     }
   }, [userData, groupId]);
 
@@ -357,6 +372,7 @@ export const Companies = () => {
             companies={companiesData.companies}
             onReactivate={handleReactivate}
             onAddCompany={() => setOpen(true)}
+            members={members}
           />
         )}
       </MainContainer>

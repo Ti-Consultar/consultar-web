@@ -6,9 +6,8 @@ import {
   InfoContainer,
   NameText,
   ProfileCardContainer,
-  ProfilePic,
 } from "./styles";
-import { Box, Button } from "@mui/material";
+import { Avatar, Box, Button } from "@mui/material";
 import DriveFileRenameOutlineOutlinedIcon from "@mui/icons-material/DriveFileRenameOutlineOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
@@ -28,23 +27,56 @@ export const ProfileCard = ({
   onSave,
   onEdit,
   email,
-  phoneNumber
+  phoneNumber,
 }: ProfileCardProps) => {
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(phoneNumber);
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
   return (
     <ProfileCardContainer>
       <Container>
-        <ProfilePic>
-          <p>WE</p>
-        </ProfilePic>
+        <Avatar
+          sx={{
+            alignItems: "center",
+            backgroundColor: "var(--neutral-800)",
+            borderRadius: "80px",
+            display: "flex",
+            height: "80px",
+            width: "80px",
+            marginRight: "16px",
+            justifyContent: "center",
+            "& p": {
+              fontSize: "32px",
+              color: "var(--neutral-white)",
+              fontWeight: "var(--fontWeightBold)",
+            },
+          }}
+        >
+          <p>{getInitials(name)}</p>
+        </Avatar>
       </Container>
       <InfoContainer>
         <NameText>{name}</NameText>
         <Info
           style={{
             fontWeight: "var(--fontWeightSemiBold)",
+            ...(role === "Desenvolvedor"
+              ? {
+                  background:
+                    "linear-gradient(90deg, #FFD700,rgb(191, 115, 0))",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }
+              : {}),
           }}
         >
           {role}

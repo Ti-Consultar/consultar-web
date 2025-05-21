@@ -37,3 +37,14 @@ export const setNewPassword = async (email: string) => {
     throw error;
   }
 };
+
+export const getUserPolicies = async () => {
+  try {
+    const response = await axiosIntanceWithoutToken.get(
+      `${BASE_URL}/policies`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
