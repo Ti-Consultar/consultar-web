@@ -1,8 +1,6 @@
 import { Box, IconButton, Modal, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Button } from "../Button";
-import { ToastContainer, toast } from "react-toastify";
-import { useEffect } from "react";
 
 interface ModalCustomProps {
   open: boolean;

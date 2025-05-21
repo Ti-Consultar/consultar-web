@@ -28,6 +28,17 @@ export const getGroupsByUserId = async () => {
   }
 };
 
+export const getGroupUsers = async (id: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/Group/${id}/users`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const saveGroup = async (data: GroupFormData) => {
   try {
     const response = await axiosInstanceWithToken.post(

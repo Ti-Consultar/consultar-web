@@ -30,6 +30,7 @@ import { GroupFormData } from "../../types/group";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import { AlertModal } from "../../components/AlertModal";
 import { useMainContext } from "../../contexts/mainContext";
+import { InvitationModal } from "../Invitation/InvitationModal";
 
 interface UserData {
   exp: number;
@@ -75,6 +76,7 @@ export const MrpHome = () => {
   const [, setErrors] = useState<{ [key: string]: boolean }>({});
   const [activeStep, setActiveStep] = useState(0);
   const { breadcrumbs, setBreadcrumbs } = useMainContext();
+  const [openInvitationModal, setOpenInvitationModal] = useState(false);
 
   useEffect(() => {
     setBreadcrumbs([{ name: "Grupos", link: "/grupos" }]);
@@ -221,6 +223,11 @@ export const MrpHome = () => {
 
   return (
     <MainTemplate>
+      <InvitationModal
+        open={openInvitationModal}
+        onClose={() => setOpenInvitationModal(false)}
+        members={[]}
+      />
       <MainContainer>
         <Title>
           Bem-vindo, <span>{userData?.unique_name}</span>.
@@ -280,7 +287,7 @@ export const MrpHome = () => {
               }
               corporateName={group.businessEntity.razaoSocial}
               onEdit={() => {
-                handleEdit(group.id), console.log(group.id);
+                handleEdit(group.id);
               }}
               onClick={() => handleCardClick(group.id)}
               onDelete={() => {

@@ -21,25 +21,6 @@ export const InfoContainer = styled.div`
   flex-direction: column;
 `;
 
-export const ProfilePic = styled.div`
-    align-items: center;
-    background-color: var(--neutral-800);
-    border-radius: 80px;
-    display: flex;
-    height: 80px;
-    width: 80px;
-    margin-right: 1rem;
-    justify-content: center;
-    margin-right: "16px";
-
-    p {
-      font-size: 28px;
-      color: var(--neutral-white);
-      font-weight: var(--fontWeightBold);
-    }
-  }
-`;
-
 export const NameText = styled.span`
   font-size: 20px;
   font-weight: var(--fontWeightSemiBold);

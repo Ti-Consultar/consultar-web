@@ -8,7 +8,7 @@ import {
   Box,
 } from "@mui/material";
 import { Error, Info, CheckCircle } from "@mui/icons-material";
-import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 
 type AlertType = "info" | "warning" | "error" | "success";
 
@@ -43,7 +43,18 @@ export const AlertModal = ({
   showCancel = true,
 }: AlertModalProps) => {
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
+      fullWidth
+      sx={{
+        "& .MuiPaper-root": {
+          borderRadius: 3,
+          padding: 1.5
+        },
+      }}
+    >
       <DialogTitle>
         <Box display="flex" alignItems="center" gap={1}>
           {iconMap[type]}
@@ -67,7 +78,7 @@ export const AlertModal = ({
           </Button>
         )}
         <Button
-          color="warning"
+          color="error"
           onClick={onConfirm}
           disableElevation
           sx={{
