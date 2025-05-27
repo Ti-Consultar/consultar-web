@@ -7,6 +7,8 @@ interface EditableTableProps {
   isEditing: boolean;
   placeholder: string;
   inputProps?: any;
+  style?: React.CSSProperties;
+  inputStyle?: React.CSSProperties;
 }
 
 const EditableField = ({
@@ -15,6 +17,8 @@ const EditableField = ({
   isEditing,
   placeholder = "Digite um valor...",
   inputProps = {},
+  style,
+  inputStyle
 }: EditableTableProps) => {
   const [draft, setDraft] = useState(value);
 
@@ -32,12 +36,16 @@ const EditableField = ({
     return (
       <Input
         disableUnderline
-        sx={{ maxWidth: "50%" }}
         type="text"
         value={draft}
         onChange={handleChange}
         placeholder={placeholder}
         autoFocus
+        sx={{
+          backgroundColor: "var(--neutral-200)",
+          borderRadius: '10px',
+          ...inputStyle
+        }}
         {...inputProps}
       />
     );
@@ -52,6 +60,7 @@ const EditableField = ({
         gap: "0.5rem",
         color: "var(--neutral-500)",
         fontWeight: "var(--fontWeightMedium)",
+        ...style,
       }}
     >
       <span>{value || placeholder}</span>

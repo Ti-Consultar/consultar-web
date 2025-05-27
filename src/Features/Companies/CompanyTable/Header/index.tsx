@@ -14,25 +14,20 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
-import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import React, { useState } from "react";
 import {
   InactiveCompaniesModal,
   InactiveCompany,
 } from "../../InactiveCompaniesModal";
-import { InvitationModal } from "../../../Invitation/InvitationModal";
-import { Member } from "../../../../types/member";
 
 interface TableToolbarProps {
   title: string;
   searchValue: string;
   onSearchChange: (value: string) => void;
   onAddClick: () => void;
-  onInvite: () => void;
   onExport: (format: string) => void;
   onReactivate: (selectedIds: number[]) => Promise<void>;
   deletedCompanies?: InactiveCompany[];
-  members?: Member[];
 }
 
 export const TableToolbar = ({
@@ -43,22 +38,15 @@ export const TableToolbar = ({
   onAddClick,
   onExport,
   onReactivate,
-  onInvite,
-  members = []
 }: TableToolbarProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [inviteOpen, setInviteOpen] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleOpenModal = () => {
     setModalOpen(true);
-  };
-
-  const handleInviteModal = () => {
-    setInviteOpen(true);
   };
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -167,20 +155,6 @@ export const TableToolbar = ({
             >
               Exportar
             </Button>
-
-            <Button
-              variant="outlined"
-              startIcon={<GroupAddOutlinedIcon />}
-              onClick={handleInviteModal}
-              fullWidth
-              sx={{
-                textTransform: "none",
-                color: "var(--neutral-500)",
-                borderColor: "var(--neutral-500)",
-              }}
-            >
-              Convidar
-            </Button>
           </Stack>
 
           {deletedCompanies && (
@@ -191,11 +165,6 @@ export const TableToolbar = ({
               onReactivate={onReactivate}
             />
           )}
-          <InvitationModal
-            open={inviteOpen}
-            onClose={() => setInviteOpen(false)}
-            members={members}
-          />
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}

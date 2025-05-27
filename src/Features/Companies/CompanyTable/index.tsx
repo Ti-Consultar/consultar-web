@@ -32,6 +32,8 @@ import { useTableUtils } from "../../../utils/hooks/useTableUtils";
 import { InactiveCompany } from "../InactiveCompaniesModal";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Member } from "../../../types/member";
+import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
+import { InvitationModal } from "../../Invitation/InvitationModal";
 
 interface CompanyTableProps {
   companies: Company[];
@@ -46,8 +48,15 @@ interface CompanyTableProps {
   handleRowClick?: () => void;
   onUnlink: (company: any) => void;
   onRowClick: (companyId: number) => void;
+
   members: Member[];
+  userPolicies: RoleOption[];
 }
+
+type RoleOption = {
+  id: number;
+  name: string;
+};
 
 export const CompanyTable = ({
   fileName,
@@ -61,7 +70,8 @@ export const CompanyTable = ({
   companyType = "Empresas",
   onUnlink,
   onRowClick,
-  members = []
+  userPolicies,
+  members = [],
 }: CompanyTableProps) => {
   const {
     page,
@@ -82,11 +92,12 @@ export const CompanyTable = ({
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [openUnlinkDialog, setOpenUnlinkDialog] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
-  
+
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -96,6 +107,10 @@ export const CompanyTable = ({
 
   const handleRowClick = (companyId: number) => {
     onRowClick(companyId);
+  };
+
+  const handleInviteModal = () => {
+    setInviteOpen(true);
   };
 
   const handleMenuOpen = (
@@ -179,7 +194,6 @@ export const CompanyTable = ({
   return (
     <TableContainer component={Paper}>
       <TableToolbar
-        members={members}
         deletedCompanies={deletedCompanies}
         title={companyType}
         searchValue={searchTerm}
@@ -190,7 +204,6 @@ export const CompanyTable = ({
         onAddClick={onAddCompany}
         onExport={handleExport}
         onReactivate={onReactivate}
-        onInvite={() => {}}
       />
       <Table>
         <TableHead sx={{ backgroundColor: "var(--neutral-100)" }}>
@@ -354,6 +367,10 @@ export const CompanyTable = ({
           <Inventory2OutlinedIcon sx={{ fontSize: "18px" }} />
           Inativar
         </MenuItem>
+        <MenuItem onClick={handleInviteModal} sx={{ display: "flex", gap: 1 }}>
+          <GroupAddOutlinedIcon sx={{ fontSize: "18px" }} />
+          Convidar
+        </MenuItem>
         <MenuItem
           sx={{ display: "flex", gap: 1, color: "var(--status-error-950)" }}
           onClick={() => setOpenUnlinkDialog(true)}
@@ -432,6 +449,14 @@ export const CompanyTable = ({
           </div>
         }
         type="warning"
+      />
+      <InvitationModal
+        userPolicies={userPolicies}
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        members={members}
+        companyId={selectedCompany?.companyId}
+        subCompanyId={selectedCompany?.companyId}
       />
     </TableContainer>
   );

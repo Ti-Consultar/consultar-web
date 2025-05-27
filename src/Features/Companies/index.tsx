@@ -16,7 +16,10 @@ import { CompanyTable } from "./CompanyTable";
 import { Company } from "../../types/company";
 import { HeaderContainer, MainContainer } from "./styles";
 import { DivSkeleton } from "../../styles/skeleton/skeleton";
-import { getGroupById, getGroupUsers } from "../../services/apis/routes/groups.service";
+import {
+  getGroupById,
+  getGroupUsers,
+} from "../../services/apis/routes/groups.service";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { InfoCard } from "./InfoCard";
 import { GroupFormData } from "../../types/group";
@@ -25,18 +28,30 @@ import { CompanyForm } from "../GroupForm";
 import { useMediaQuery } from "@mui/material";
 import { MobileTableView } from "./CompanyTable/MobileTableView";
 import { useMainContext } from "../../contexts/mainContext";
-import { unlinkFromCompany } from "../../services/apis/routes/invitation.service";
+import {
+  inviteUser,
+  unlinkFromCompany,
+} from "../../services/apis/routes/invitation.service";
 import { getBreadcrumb } from "../../services/apis/routes/breadcrumb.service";
 import { BreadcrumbItem } from "../../types/breadcrumb";
 import { Member } from "../../types/member";
+import { getUserPolicies } from "../../services/apis/routes/auth.service";
+import { invitations } from "../../types/userInvitationPayload";
+import { useCompany } from "../../contexts/CompanyProvider";
 
 type Companies = {
   groupName: string;
   companies: Company[];
 };
 
+type RoleOption = {
+  id: number;
+  name: string;
+};
+
 export const Companies = () => {
   const { groupId } = useParams();
+  const { companyId } = useCompany();
   const [companiesData, setCompaniesData] = useState<Companies | null>(null);
   const [groupData, setGroupData] = useState<any>({} as any);
   const { setLoading } = useLoading();
@@ -48,10 +63,12 @@ export const Companies = () => {
   const [editingCompany, setEditingCompany] = useState<GroupFormData>();
   const [deletedCompanies, setDeletedCompanies] = useState<any[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
-  const [companyId, setCompanyId] = useState<number>();
+  const [companyIdLocal, setCompanyId] = useState<number>();
   const isMobile = useMediaQuery("(max-width: 600px)");
   const { setBreadcrumbs } = useMainContext();
   const navigate = useNavigate();
+  const [hasFetched, setHasFetched] = useState(false);
+  const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
 
   const fetchAllData = async () => {
     try {
@@ -81,7 +98,7 @@ export const Companies = () => {
           let modifiedLink = item.link;
 
           if (item.type === "company") {
-            modifiedLink = `/grupos/${item.id}/empresas`; 
+            modifiedLink = `/grupos/${item.id}/empresas`;
           }
 
           return {
@@ -100,9 +117,7 @@ export const Companies = () => {
   const fetchDeletedCompanies = async () => {
     try {
       if (!userData?.userId || !groupId) return;
-      const response = await getDeletedCompanies(
-        Number(groupId)
-      );
+      const response = await getDeletedCompanies(Number(groupId));
       const formatted = response.data.companies.map((item: any) => ({
         id: item.companyId,
         nome: item.businessEntity.nomeFantasia || item.companyName,
@@ -114,15 +129,13 @@ export const Companies = () => {
     }
   };
 
-   const fetchCurrentUsers = async () => {
+  const fetchCurrentUsers = async () => {
     try {
       if (!groupId) return;
-      const response = await getGroupUsers(
-        Number(groupId)
-      );
+      const response = await getGroupUsers(Number(groupId));
       setMembers(response.data);
     } catch (error) {
-      console.error("Erro ao buscar empresas inativas", error);
+      console.error("Erro ao buscar usuários", error);
     }
   };
 
@@ -130,21 +143,20 @@ export const Companies = () => {
     if (userData && groupId) {
       fetchAllData();
       fetchDeletedCompanies();
-      fetchCurrentUsers()
+      fetchCurrentUsers();
     }
   }, [userData, groupId]);
 
   const handleEdit = async (company: Company) => {
     try {
       setOpen(true);
-      const data = await getCompanyById(
-        company.companyId,
-        Number(groupId)
-      );
+      const data = await getCompanyById(company.companyId, Number(groupId));
       setCompanyId(company.companyId);
       setEditingCompany(data.data);
     } catch (error) {
-      toast.error("Erro ao buscar empresa para edição, entre em contato com o suporte.");
+      toast.error(
+        "Erro ao buscar empresa para edição, entre em contato com o suporte."
+      );
     }
   };
 
@@ -166,8 +178,8 @@ export const Companies = () => {
         userId: Number(userData?.userId),
       };
 
-      const response = companyId
-        ? await updateCompany(updatedData, companyId)
+      const response = companyIdLocal
+        ? await updateCompany(updatedData, companyIdLocal)
         : await saveCompany(updatedData);
 
       if (
@@ -251,10 +263,7 @@ export const Companies = () => {
   const handleReactivate = async (selectedIds: number[]) => {
     try {
       setLoading(true, "Reativando empresas...");
-      await restoreCompanies(
-        Number(groupId),
-        selectedIds
-      );
+      await restoreCompanies(Number(groupId), selectedIds);
       const updated = deletedCompanies.filter(
         (c) => !selectedIds.includes(c.id)
       );
@@ -273,10 +282,7 @@ export const Companies = () => {
     try {
       setLoading(true, "Excluindo empresa...");
 
-      const response = await deleteCompany(
-        company.companyId,
-        Number(groupId)
-      );
+      const response = await deleteCompany(company.companyId, Number(groupId));
 
       if (!response.success) {
         toast.error("Um erro ocorreu ao tentar excluir a empresa");
@@ -306,6 +312,20 @@ export const Companies = () => {
     navigate(`/grupos/${Number(groupId)}/empresas/${companyId}/filiais`);
   };
 
+  useEffect(() => {
+    const fetchUserPolicies = async () => {
+      try {
+        const response = await getUserPolicies();
+        setUserPolicies(response.data);
+        setHasFetched(true);
+      } catch (error) {
+        console.error("Erro ao buscar políticas:", error);
+      }
+    };
+
+    fetchUserPolicies();
+  }, [hasFetched]);
+
   if (!companiesData) {
     return (
       <MainTemplate>
@@ -334,9 +354,9 @@ export const Companies = () => {
             onSubmit={onSubmit}
             isOpen={open}
             onClose={() => {
-            setOpen(false);
-            setEditingCompany(undefined);
-          }}
+              setOpen(false);
+              setEditingCompany(undefined);
+            }}
             title="Adicionar empresa"
             defaultValues={editingCompany}
             externalActiveStep={activeStep}
@@ -373,6 +393,7 @@ export const Companies = () => {
             onReactivate={handleReactivate}
             onAddCompany={() => setOpen(true)}
             members={members}
+            userPolicies={userPolicies}
           />
         )}
       </MainContainer>

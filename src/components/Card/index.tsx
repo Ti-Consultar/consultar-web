@@ -1,7 +1,8 @@
-import { CardContent, IconButton, Typography, Box } from "@mui/material";
+import { CardContent, IconButton, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Header, StyledAvatar, StyledCard, CardActionsBox } from "./styles";
+import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 
 interface GroupCardProps {
   fantasyName: string;
@@ -9,6 +10,7 @@ interface GroupCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onClick: () => void;
+  onInvite?: () => void;
 }
 
 export const GroupCard = ({
@@ -17,6 +19,7 @@ export const GroupCard = ({
   onEdit,
   onDelete,
   onClick,
+  onInvite
 }: GroupCardProps) => {
   return (
     <StyledCard onClick={onClick} sx={{ borderRadius: "8px" }}>
@@ -29,6 +32,9 @@ export const GroupCard = ({
           className="card-actions"
           onClick={(e) => e.stopPropagation()}
         >
+          <IconButton onClick={onInvite} size="small" color="inherit">
+            <GroupAddOutlinedIcon fontSize="small" />
+          </IconButton>
           <IconButton onClick={onEdit} size="small" color="primary">
             <EditIcon fontSize="small" />
           </IconButton>

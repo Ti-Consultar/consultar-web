@@ -9,8 +9,8 @@ import {
 } from '@mui/material';
 
 type MemberRole = {
-  label: string;
-  value: string;
+  name: string;
+  id: number;
 };
 
 type MemberCardProps = {
@@ -58,7 +58,7 @@ export const MemberCard = ({
         <Stack direction="row" spacing={2} alignItems="center">
           <Avatar sx={{backgroundColor: 'var(--branding-default-red)'}}>{getInitials(name)}</Avatar>
           <Box>
-            <Typography variant="subtitle1">{name}</Typography>
+            <Typography variant="subtitle1">{name} <span>(você)</span></Typography>
             <Typography variant="body2" color="text.secondary">
               {email}
             </Typography>
@@ -71,9 +71,9 @@ export const MemberCard = ({
           onChange={handleRoleChange}
           sx={{ minWidth: 120 }}
         >
-          {roles.map((r) => (
-            <MenuItem key={r.value} value={r.value}>
-              {r.label}
+          {(roles ?? []).map((r) => (
+            <MenuItem key={r.name} value={r.name}>
+              {r.name}
             </MenuItem>
           ))}
         </Select>

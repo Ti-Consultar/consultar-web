@@ -3,12 +3,8 @@ import styled from "styled-components";
 export const MainContainer = styled.div`
   display: flex;
   border-radius: 15px;
-  width: 98%;
   height: 100%;
   background-color: var(--neutral-white);
-  @media (min-width: 768px) and (max-width: 1023px) {
-    width: 85%;
-  }
 
   @media (max-width: 767px) {
     width: 100%;
