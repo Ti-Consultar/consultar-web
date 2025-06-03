@@ -9,7 +9,7 @@ import { CompanyProvider } from "./contexts/CompanyProvider/index.tsx";
 import { LoadingProvider } from "./contexts/LoadingProvider/index.tsx";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "./styles/theme.ts";
-import { GroupUpdateProvider } from "./contexts/updateContext.tsx";
+import { RefreshProvider } from "./contexts/refreshContext.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -18,7 +18,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <GlobalStyle />
       <BrowserRouter>
         <LoadingProvider>
-          <GroupUpdateProvider>
+          <RefreshProvider>
             <CompanyProvider>
               <DrawerProvider>
                 <AppProviders>
@@ -26,7 +26,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 </AppProviders>
               </DrawerProvider>
             </CompanyProvider>
-          </GroupUpdateProvider>
+          </RefreshProvider>
         </LoadingProvider>
       </BrowserRouter>
     </ThemeProvider>

@@ -48,6 +48,7 @@ interface CompanyTableProps {
   handleRowClick?: () => void;
   onUnlink: (company: any) => void;
   onRowClick: (companyId: number) => void;
+  subCompanyId?: number;
 
   members: Member[];
   userPolicies: RoleOption[];
@@ -71,6 +72,7 @@ export const CompanyTable = ({
   onUnlink,
   onRowClick,
   userPolicies,
+  subCompanyId,
   members = [],
 }: CompanyTableProps) => {
   const {
@@ -119,6 +121,7 @@ export const CompanyTable = ({
   ) => {
     setAnchorEl(event.currentTarget);
     setSelectedCompany(company);
+    console.log(company)
   };
 
   const handleMenuClose = () => {
@@ -457,7 +460,7 @@ export const CompanyTable = ({
         onClose={() => setInviteOpen(false)}
         members={members}
         companyId={selectedCompany?.companyId}
-        subCompanyId={selectedCompany?.companyId}
+        subCompanyId={selectedCompany?.id}
       />
     </TableContainer>
   );
