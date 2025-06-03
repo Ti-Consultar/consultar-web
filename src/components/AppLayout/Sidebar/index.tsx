@@ -26,7 +26,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useMainContext } from "../../../contexts/mainContext";
 
-import Cookies, { get } from "js-cookie";
+import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { Menu, MenuItem } from "@mui/material";
 import { useDrawer } from "../../../contexts/SidebarProvider";
@@ -40,7 +40,7 @@ import { Invite } from "../../../types/notificationInvite";
 import { acceptOrDeclineInvite } from "../../../services/apis/routes/invitation.service";
 import { toast } from "react-toastify";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { useGroupUpdate } from "../../../contexts/updateContext";
+import { useRefresh } from "../../../contexts/refreshContext";
 
 export interface Company {
   uuid: string;
@@ -108,7 +108,7 @@ export const Sidebar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [notifications, setNotifications] = useState<Invite[]>([]);
   const [sentNotifications, setSentNotifications] = useState<Invite[]>([]);
-  const { triggerGroupRefresh } = useGroupUpdate();
+  const { triggerRefresh } = useRefresh();
   const { setLoading } = useLoading();
 
   const fetchUserInvitesNotifications = async () => {
@@ -196,7 +196,7 @@ export const Sidebar = () => {
           prev.filter((notification) => notification.id !== id)
         );
         fetchUserInvitesNotifications();
-        triggerGroupRefresh();
+        triggerRefresh();
       } else {
         toast.error("Falha ao aceitar o convite.");
       }

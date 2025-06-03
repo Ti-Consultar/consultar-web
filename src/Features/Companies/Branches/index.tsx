@@ -396,6 +396,7 @@ export const Branches = () => {
             onReactivate={handleReactivate}
             onAddCompany={() => setOpen(true)}
             userPolicies={userPolicies}
+            subCompanyId={0}
           />
         )}
       </MainContainer>
