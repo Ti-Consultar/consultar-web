@@ -19,7 +19,7 @@ import {
   deleteGroup,
   getAllGroups,
   getGroupById,
-  getGroupsByUserId,
+  getGroupUsers,
   saveGroup,
   updateGroup,
 } from "../../services/apis/routes/groups.service";
@@ -31,6 +31,8 @@ import ApartmentIcon from "@mui/icons-material/Apartment";
 import { AlertModal } from "../../components/AlertModal";
 import { useMainContext } from "../../contexts/mainContext";
 import { InvitationModal } from "../Invitation/InvitationModal";
+import { getUserPolicies } from "../../services/apis/routes/auth.service";
+import { useGroupUpdate } from "../../contexts/updateContext";
 
 interface UserData {
   exp: number;
@@ -62,6 +64,11 @@ interface GroupsResponse {
   businessEntity: businessEntity;
 }
 
+type RoleOption = {
+  id: number;
+  name: string;
+};
+
 export const MrpHome = () => {
   const userId = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -77,6 +84,9 @@ export const MrpHome = () => {
   const [activeStep, setActiveStep] = useState(0);
   const { breadcrumbs, setBreadcrumbs } = useMainContext();
   const [openInvitationModal, setOpenInvitationModal] = useState(false);
+  const [groupToBeInvited, setGroupToBeInvited] = useState<number>(0);
+  const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
+  const { shouldRefreshGroup, resetGroupRefresh } = useGroupUpdate();
 
   useEffect(() => {
     setBreadcrumbs([{ name: "Grupos", link: "/grupos" }]);
@@ -95,6 +105,19 @@ export const MrpHome = () => {
     } else {
       navigate("/");
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchUserPolicies = async () => {
+      try {
+        const response = await getUserPolicies();
+        setUserPolicies(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar políticas:", error);
+      }
+    };
+
+    fetchUserPolicies();
   }, []);
 
   const fetchGroups = async () => {
@@ -121,7 +144,12 @@ export const MrpHome = () => {
     if (userData?.userId) {
       fetchGroups();
     }
-  }, [userData]);
+
+    if (shouldRefreshGroup) {
+      fetchGroups();
+      resetGroupRefresh();
+    }
+  }, [userData, shouldRefreshGroup]);
 
   const onSubmit = async (data: GroupFormData) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -221,16 +249,23 @@ export const MrpHome = () => {
     navigate(`/grupos/${groupId}/empresas`);
   };
 
+  const handleOpenInvitationModal = (groupId: number) => {
+    setOpenInvitationModal(true);
+    setGroupToBeInvited(groupId);
+  };
+
   return (
     <MainTemplate>
       <InvitationModal
         open={openInvitationModal}
         onClose={() => setOpenInvitationModal(false)}
+        userPolicies={userPolicies}
+        groupToBeInvited={groupToBeInvited}
         members={[]}
       />
       <MainContainer>
         <Title>
-          Bem-vindo, <span>{userData?.unique_name}</span>.
+          {`Olá`}, <span>{userData?.unique_name}</span>.
         </Title>
         <SubTitle>Acesse e administre suas empresas abaixo:</SubTitle>
         <Button
@@ -293,6 +328,9 @@ export const MrpHome = () => {
               onDelete={() => {
                 setOpenDialog(true);
                 setSelectedGroupId(group.id);
+              }}
+              onInvite={() => {
+                handleOpenInvitationModal(group.id);
               }}
             />
           ))}

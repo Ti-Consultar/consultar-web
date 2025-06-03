@@ -50,24 +50,6 @@ export const Header = () => {
               );
             })}
       </BreadcrumbsContainer>
-      <div style={{ display: "flex", gap: "12px" }}>
-        <HeaderButton>
-          <Badge
-            color="error"
-            variant="dot"
-            invisible={!hasNewNotifications}
-            overlap="circular"
-            anchorOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-          >
-            <NotificationsOutlinedIcon
-              sx={{ fontSize: "28px", color: "var(--neutral-500)" }}
-            />
-          </Badge>
-        </HeaderButton>
-      </div>
     </MainContainer>
   );
 };

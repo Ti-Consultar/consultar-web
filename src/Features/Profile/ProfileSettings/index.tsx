@@ -33,7 +33,7 @@ export const ProfileSettings = ({
           email={email}
           name={name}
           role={role}
-          phoneNumber={phoneNumber}
+          contact={phoneNumber}
           onEdit={onEdit}
           onSave={onSave}
         />

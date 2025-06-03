@@ -19,17 +19,28 @@ import logoConsultarHorizontal from "../../../../src/assets/icons/logo_horizonta
 // import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useMainContext } from "../../../contexts/mainContext";
 
-import Cookies from "js-cookie";
+import Cookies, { get } from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { Menu, MenuItem } from "@mui/material";
 import { useDrawer } from "../../../contexts/SidebarProvider";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import { NotificationDrawer } from "../../NotiicationModal";
+import {
+  getSentNotifications,
+  getUserInvitesNotifications,
+} from "../../../services/apis/routes/notifications.service";
+import { Invite } from "../../../types/notificationInvite";
+import { acceptOrDeclineInvite } from "../../../services/apis/routes/invitation.service";
+import { toast } from "react-toastify";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { useGroupUpdate } from "../../../contexts/updateContext";
 
 export interface Company {
   uuid: string;
@@ -94,6 +105,34 @@ const drawerListData = [
 export const Sidebar = () => {
   const [userData, setUserData] = useState<UserData | null | undefined>();
   const { isDrawerOpen, toggleDrawer } = useDrawer();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Invite[]>([]);
+  const [sentNotifications, setSentNotifications] = useState<Invite[]>([]);
+  const { triggerGroupRefresh } = useGroupUpdate();
+  const { setLoading } = useLoading();
+
+  const fetchUserInvitesNotifications = async () => {
+    try {
+      const response = await getUserInvitesNotifications();
+      setNotifications(response.data);
+    } catch (error) {
+      console.log("Erro ao buscar notificações de convites:", error);
+    }
+  };
+
+  const fetchSentNotifications = async () => {
+    try {
+      const response = await getSentNotifications();
+      setSentNotifications(response.data);
+    } catch (error) {
+      console.log("Erro ao buscar notificações de convites:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserInvitesNotifications();
+    fetchSentNotifications();
+  }, []);
 
   const [menuState, setMenuState] = useState<{
     anchorEl: HTMLElement | null;
@@ -145,6 +184,50 @@ export const Sidebar = () => {
       console.log("Couldn't find token");
     }
   }, []);
+
+  const handleAccept = async (id: number) => {
+    try {
+      setLoading(true, "Aceitando convite...");
+      const response = await acceptOrDeclineInvite(id, { status: 2 });
+
+      if (response && (response.success || response.sucess)) {
+        toast.success("Convite aceito com sucesso.");
+        setNotifications((prev) =>
+          prev.filter((notification) => notification.id !== id)
+        );
+        fetchUserInvitesNotifications();
+        triggerGroupRefresh();
+      } else {
+        toast.error("Falha ao aceitar o convite.");
+      }
+    } catch (error) {
+      toast.error("Erro ao aceitar o convite.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDecline = async (id: number) => {
+    try {
+      setLoading(true, "Recusando convite...");
+
+      const response = await acceptOrDeclineInvite(id, { status: 3 });
+
+      if (response && (response.success || response.sucess) === true) {
+        toast.success("Você recusou o convite.");
+        setNotifications((prev) =>
+          prev.filter((notification) => notification.id !== id)
+        );
+        fetchUserInvitesNotifications();
+      } else {
+        console.warn("Resposta inesperada:", response);
+      }
+    } catch (error) {
+      toast.error("Ocorreu um erro ao recusar o convite.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SidebarContainer isOpen={isDrawerOpen}>
@@ -217,11 +300,24 @@ export const Sidebar = () => {
             },
           }}
         >
-          <MenuItem sx={{ display: "flex", gap: 1 }} onClick={handleOpenProfile}>
+          <MenuItem
+            sx={{ display: "flex", gap: 1 }}
+            onClick={() => setDrawerOpen(true)}
+          >
+            <NotificationsNoneIcon sx={{ fontSize: "18px" }} />
+            Notificações
+          </MenuItem>
+          <MenuItem
+            sx={{ display: "flex", gap: 1 }}
+            onClick={handleOpenProfile}
+          >
             <AccountCircleOutlinedIcon sx={{ fontSize: "18px" }} />
             Minha conta
           </MenuItem>
-          <MenuItem onClick={handleLogout} sx={{ display: "flex", gap: 1, borderRadius: '10px' }}>
+          <MenuItem
+            onClick={handleLogout}
+            sx={{ display: "flex", gap: 1, borderRadius: "10px" }}
+          >
             <LogoutOutlinedIcon sx={{ fontSize: "18px" }} />
             Sair
           </MenuItem>
@@ -243,6 +339,14 @@ export const Sidebar = () => {
           )}
         </div>
       </ListNavItem>
+      <NotificationDrawer
+        sentNotifications={sentNotifications}
+        notifications={notifications}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onAccept={handleAccept}
+        onReject={handleDecline}
+      />
     </SidebarContainer>
   );
 };

@@ -1,22 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EditableField from "../../../../components/Inputs/EditableText";
-import {
-  Container,
-  Info,
-  InfoContainer,
-  NameText,
-  ProfileCardContainer,
-} from "./styles";
+import { Container, Info, InfoContainer, ProfileCardContainer } from "./styles";
 import { Avatar, Box, Button } from "@mui/material";
 import DriveFileRenameOutlineOutlinedIcon from "@mui/icons-material/DriveFileRenameOutlineOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import { ProfileChanges } from "../../../../types/profile";
+import { useLoading } from "../../../../contexts/LoadingProvider";
+import { editUserInfo } from "../../../../services/apis/routes/profile.service";
+import { toast } from "react-toastify";
 
 interface ProfileCardProps {
   name: string;
   role: string;
   email: string;
-  phoneNumber: string;
+  contact: string;
   onSave?: () => void;
   onEdit?: () => void;
 }
@@ -27,10 +25,15 @@ export const ProfileCard = ({
   onSave,
   onEdit,
   email,
-  phoneNumber,
+  contact,
 }: ProfileCardProps) => {
+  const { setLoading } = useLoading();
   const [editing, setEditing] = useState(false);
-  const [draftName, setDraftName] = useState(phoneNumber);
+  const [draft, setDraft] = useState<ProfileChanges>({
+    name,
+    email,
+    contact,
+  });
 
   const getInitials = (name: string) => {
     return name
@@ -39,6 +42,50 @@ export const ProfileCard = ({
       .map((n) => n[0])
       .join("")
       .toUpperCase();
+  };
+
+  const onSubmit = async () => {
+    setLoading(true, "Salvando informações...");
+
+    try {
+      const response = await editUserInfo(draft);
+
+      if (response === "Inserido com Sucesso") {
+        toast.success("Informações salvas com sucesso.");
+        return;
+      }
+
+      toast.dismiss();
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        (error as { response?: { status?: number } }).response?.status === 401
+      ) {
+        toast.error("Um erro ocorreu ao tentar salvar as informações");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setDraft({ name, email, contact });
+  }, [name, email, contact]);
+
+  const handleSubmit = () => {
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email);
+    const isNameValid = draft.name.trim() !== "";
+    const isContactValid = draft.contact.trim() !== "";
+
+    if (!isNameValid || !isEmailValid || !isContactValid) {
+      if (!isNameValid) toast.warning("O nome não pode estar vazio.");
+      if (!isEmailValid) toast.warning("Digite um e-mail válido.");
+      if (!isContactValid) toast.warning("O contato não pode estar vazio.");
+      return;
+    }
+
+    onSubmit();
+    setEditing(false);
   };
 
   return (
@@ -65,7 +112,18 @@ export const ProfileCard = ({
         </Avatar>
       </Container>
       <InfoContainer>
-        <NameText>{name}</NameText>
+        <EditableField
+          value={draft.name}
+          style={{ fontSize: "20px" }}
+          isEditing={editing}
+          onChangeDraft={(val) => setDraft((prev) => ({ ...prev, name: val }))}
+          placeholder="Nome"
+          inputStyle={{
+            marginBottom: "10px",
+            padding: "0 10px",
+            maxWidth: "60%",
+          }}
+        />
         <Info
           style={{
             fontWeight: "var(--fontWeightSemiBold)",
@@ -82,15 +140,27 @@ export const ProfileCard = ({
           {role}
         </Info>
         <EditableField
-          value={email}
+          inputStyle={{
+            marginBottom: "10px",
+            padding: "0 10px",
+            maxWidth: "60%",
+          }}
+          value={draft.email}
           isEditing={editing}
-          onChangeDraft={setDraftName}
+          onChangeDraft={(val) => setDraft((prev) => ({ ...prev, email: val }))}
           placeholder=""
         />
         <EditableField
-          value={phoneNumber}
+          inputStyle={{
+            marginBottom: "10px",
+            padding: "0 10px",
+            maxWidth: "60%",
+          }}
+          value={draft.contact}
           isEditing={editing}
-          onChangeDraft={setDraftName}
+          onChangeDraft={(val) =>
+            setDraft((prev) => ({ ...prev, contact: val }))
+          }
           placeholder=""
         />
       </InfoContainer>
@@ -100,11 +170,11 @@ export const ProfileCard = ({
             <Button
               variant="contained"
               color="primary"
-              onClick={() => setEditing(true)}
+              onClick={() => handleSubmit()}
               endIcon={<CheckCircleOutlineOutlinedIcon />}
               sx={{
                 textTransform: "none",
-                borderRadius: "15px",
+                borderRadius: "10px",
               }}
             >
               Salvar
@@ -116,7 +186,7 @@ export const ProfileCard = ({
               endIcon={<CancelOutlinedIcon />}
               sx={{
                 textTransform: "none",
-                borderRadius: "15px",
+                borderRadius: "10px",
               }}
             >
               Cancelar
@@ -131,7 +201,7 @@ export const ProfileCard = ({
             fullWidth
             sx={{
               textTransform: "none",
-              borderRadius: "15px",
+              borderRadius: "10px",
             }}
           >
             Editar

@@ -2,6 +2,7 @@ import { axiosInstanceWithToken, axiosIntanceWithoutToken } from '../config';
 import Cookies from 'js-cookie';
 
 const BASE_URL = import.meta.env.VITE_API_URL_BASE;
+const MRP_URL = import.meta.env.VITE_API_URL_MRP;
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -41,7 +42,7 @@ export const setNewPassword = async (email: string) => {
 export const getUserPolicies = async () => {
   try {
     const response = await axiosIntanceWithoutToken.get(
-      `${BASE_URL}/policies`
+      `${MRP_URL}/api/Permission/permissions`
     );
     return response.data;
   } catch (error) {

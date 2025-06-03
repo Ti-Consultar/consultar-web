@@ -2,56 +2,97 @@ import {
   Box,
   Button,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
+  Select,
   Typography,
 } from "@mui/material";
 import { MemberCard } from "./MemberInfo";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { useEffect, useState } from "react";
-import { getUserPolicies } from "../../../services/apis/routes/auth.service";
-import { EmailWithRoleInput } from "./InvitateInput";
+import { useState } from "react";
+import { MultiEmailEditableInput } from "./InvitateInput";
 import { Member } from "../../../types/member";
+import { useParams } from "react-router";
+import { invitations } from "../../../types/userInvitationPayload";
+import { inviteUser } from "../../../services/apis/routes/invitation.service";
+import { toast } from "react-toastify";
 
-interface InvitationModalprops {
+interface InvitationModalProps {
   open: boolean;
   onClose: () => void;
   members: Member[];
+  userPolicies: RoleOption[];
+  groupToBeInvited?: number;
+  companyId?: number;
+  subCompanyId?: number;
 }
 
 type RoleOption = {
-  value: string;
-  label: string;
+  id: number;
+  name: string;
 };
 
 export const InvitationModal = ({
   open,
   onClose,
   members,
-}: InvitationModalprops) => {
-  const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
-  const [email, setEmail] = useState("");
+  userPolicies,
+  companyId,
+  subCompanyId,
+  groupToBeInvited,
+}: InvitationModalProps) => {
+  const [emails, setEmails] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<number>(1);
+  const { groupId } = useParams();
 
-  useEffect(() => {
-    const fetchUserPolicies = async () => {
-      try {
-        const response = await getUserPolicies(); // ex: ["Admin: Admin", ...]
-        const parsed = response.map((item: string) => {
-          const [valueRaw, label] = item.split(":").map((part) => part.trim());
-          return {
-            value: valueRaw.toLowerCase(),
-            label,
-          };
-        });
-        setUserPolicies(parsed);
-      } catch (error) {
-        console.error("Erro ao buscar políticas:", error);
-      }
+  const sendInvitation = async () => {
+    //Verifica se o groupId é um número válido ou indefined
+    const parsedGroupId =
+      groupId !== undefined && !isNaN(Number(groupId))
+        ? Number(groupId)
+        : undefined;
+    const rawGroupId = parsedGroupId ?? groupToBeInvited;
+
+    // Verifica se o rawGroupId é um número válido
+    if (rawGroupId === undefined) {
+      console.error("ID do grupo é inválido.");
+      return;
+    }
+
+    if (emails.length === 0) {
+      toast.warning("Por favor, adicione pelo menos um email.");
+      return;
+    }
+
+    // Ajusta o companyId e subCompanyId pois em algumas situações eles podem ser iguais
+    const adjustedSubCompanyId =
+      companyId === subCompanyId ? 0 : subCompanyId ?? 0;
+
+    const payload: invitations = {
+      invitations: emails.map((email) => ({
+        groupId: rawGroupId,
+        companyId: companyId,
+        subCompanyId: adjustedSubCompanyId,
+        emailInvitedByUser: email,
+        permissionId: selectedRole,
+      })),
     };
 
-    fetchUserPolicies();
-  }, []);
+    try {
+      await toast.promise(inviteUser(payload), {
+        pending: "Enviando convite...",
+        success: "Convite enviado com sucesso!",
+        error: "Erro ao enviar convite.",
+      });
+
+      setEmails([]); // limpa os emails
+      setSelectedRole(1); // reseta a role
+      onClose(); // fecha o modal
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <Dialog
@@ -94,41 +135,60 @@ export const InvitationModal = ({
         </Box>
         <Box>
           <Typography sx={{ color: "var(--neutral-500)" }}>
-            Administre quem tem acesso a esta empresa.
+            Convide novos membros para participar da empresa
           </Typography>
         </Box>
       </DialogTitle>
       <DialogContent>
+        <Box>
+          <Typography sx={{ color: "var(--neutral-500)" }}>
+            Insira os emails
+          </Typography>
+        </Box>
         <Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 2 }}>
           <Box sx={{ width: "80%" }}>
-            <Typography
-              variant="body2"
-              fontWeight={600}
-              marginBottom={0.5}
-              sx={{ color: "var(--neutral-500)", fontSize: "16px" }}
-            >
-              Email
-            </Typography>
-            <EmailWithRoleInput
-              email={email}
-              roleOptions={userPolicies}
-              onEmailChange={setEmail}
-              onRoleChange={() => {}}
+            <MultiEmailEditableInput
+              emails={emails}
+              onEmailsChange={setEmails}
             />
           </Box>
           <Button
             variant="outlined"
             fullWidth
             sx={{
-              width: "30%",
-              marginTop: "26px",
+              width: "20%",
+              alignSelf: "flex-start",
               textTransform: "none",
+              border: "none",
               fontWeight: 600,
+              backgroundColor: "#F9B20F",
               color: "var(--neutral-700)",
             }}
+            onClick={sendInvitation}
           >
-            Enviar convite
+            Convidar
           </Button>
+        </Box>
+        <Box sx={{ gap: 2, alignItems: "center", display: "flex", mt: 1 }}>
+          <span>Os usuários acima terão a permissão de: </span>
+          <Select
+            size="small"
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(Number(e.target.value))}
+            sx={{ minWidth: 120 }}
+          >
+            {(userPolicies ?? []).length > 0 ? (
+              userPolicies.map((r) => (
+                <MenuItem key={r.id} value={r.id}>
+                  {r.name}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled value="">
+                Nenhuma permissão disponível
+              </MenuItem>
+            )}
+          </Select>
         </Box>
         <Box sx={{ gap: 2, alignItems: "center", mt: 3 }}>
           <Typography
@@ -145,7 +205,7 @@ export const InvitationModal = ({
                 key={member.id}
                 name={member.name}
                 email={member.email}
-                role={member.permission.name.toLowerCase()}
+                role={member.permission.name}
                 roles={userPolicies}
                 onRoleChange={(newRole) => console.log("Novo papel:", newRole)}
               />
@@ -155,18 +215,6 @@ export const InvitationModal = ({
           )}
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button
-          color="primary"
-          disableElevation
-          sx={{
-            textTransform: "none",
-          }}
-          variant="contained"
-        >
-          pronto
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

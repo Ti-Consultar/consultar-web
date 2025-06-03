@@ -27,6 +27,14 @@ import { SubCompanyEntity } from "../../../types/subCompany";
 import { unlinkFromCompany } from "../../../services/apis/routes/invitation.service";
 import { getBreadcrumb } from "../../../services/apis/routes/breadcrumb.service";
 import { BreadcrumbItem } from "../../../types/breadcrumb";
+import { Member } from "../../../types/member";
+import { getGroupUsers } from "../../../services/apis/routes/groups.service";
+import { getUserPolicies } from "../../../services/apis/routes/auth.service";
+
+type RoleOption = {
+  id: number;
+  name: string;
+};
 
 export const Branches = () => {
   const userData = useAuth();
@@ -42,16 +50,16 @@ export const Branches = () => {
   const [subCompanyId, setSubCompanyId] = useState<number>(0);
   const [deletedSubCompanies, setDeletedSubCompanies] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
   const navigate = useNavigate();
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
       const [companyResponse, subCompaniesResponse] = await Promise.all([
-        getCompanyById(
-          Number(companyId),
-          Number(groupId)
-        ),
+        getCompanyById(Number(companyId), Number(groupId)),
         getBranches(Number(companyId)),
       ]);
 
@@ -64,32 +72,70 @@ export const Branches = () => {
     }
   };
 
+  const fetchCurrentUsers = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getGroupUsers(Number(groupId));
+      setMembers(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar empresas inativas", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchUserPolicies = async () => {
+      try {
+        const response = await getUserPolicies();
+        setUserPolicies(response.data);
+        setHasFetched(true);
+      } catch (error) {
+        console.error("Erro ao buscar políticas:", error);
+      }
+    };
+
+    fetchUserPolicies();
+    fetchCurrentUsers();
+  }, [hasFetched]);
+
   const fetchDeletedCompanies = async (skip: number, take: number) => {
     try {
       if (!userData?.userId || !groupId) return;
+
       const response = await getDeletedSubCompanies(
         Number(companyId),
         skip,
         take
       );
-      const formatted = response.data.subCompanies.map((item: any) => ({
+
+      const subCompanies = response?.data?.subCompanies ?? [];
+
+      if (!Array.isArray(subCompanies)) {
+        toast.error("Resposta inválida da API ao buscar empresas inativas.");
+        return;
+      }
+
+      if (subCompanies.length === 0) {
+        setDeletedSubCompanies([]);
+        return;
+      }
+
+      const formatted = subCompanies.map((item: any) => ({
         id: item.subCompanyId,
-        nome: item.businessEntity.nomeFantasia || item.companyName,
-        cnpj: item.businessEntity.cnpj,
+        nome: item.businessEntity?.nomeFantasia || item.companyName,
+        cnpj: item.businessEntity?.cnpj,
       }));
+
       setDeletedSubCompanies(formatted);
     } catch (error) {
-      toast.error("Erro ao buscar empresas inativas");
+      console.error("Erro ao buscar empresas inativas:", error);
+      toast.error("Erro técnico ao buscar empresas inativas.");
     }
   };
 
   const handleEdit = async (company: SubCompanyEntity) => {
     try {
       setOpen(true);
-      const data = await getSubCompanyById(
-        company.id,
-        company.companyId
-      );
+      const data = await getSubCompanyById(company.id, company.companyId);
       setSubCompanyId(company.id);
       setEditingCompany(data.data);
     } catch (error) {
@@ -199,10 +245,7 @@ export const Branches = () => {
     try {
       setLoading(true, "Excluindo empresa...");
 
-      const response = await deleteSubCompany(
-        subCompany.id,
-        Number(companyId)
-      );
+      const response = await deleteSubCompany(subCompany.id, Number(companyId));
 
       if (!response.success) {
         toast.error("Um erro ocorreu ao tentar excluir a empresa");
@@ -268,10 +311,7 @@ export const Branches = () => {
   const handleReactivate = async (selectedIds: number[]) => {
     try {
       setLoading(true, "Reativando empresas...");
-      await restoreSubCompanies(
-        Number(companyId),
-        selectedIds
-      );
+      await restoreSubCompanies(Number(companyId), selectedIds);
       const updated = deletedSubCompanies.filter(
         (c) => !selectedIds.includes(c.subCompanyId)
       );
@@ -318,9 +358,9 @@ export const Branches = () => {
             onSubmit={onSubmit}
             isOpen={open}
             onClose={() => {
-            setOpen(false);
-            setEditingCompany(undefined);
-          }}
+              setOpen(false);
+              setEditingCompany(undefined);
+            }}
             title="Adicionar empresa"
             defaultValues={editingCompany}
           />
@@ -344,6 +384,7 @@ export const Branches = () => {
         ) : (
           <CompanyTable
             onRowClick={handleRowClick}
+            members={members}
             onUnlink={handleUnlinkBranch}
             companies={subCompanies.subCompanies}
             deletedCompanies={deletedSubCompanies}
@@ -354,6 +395,7 @@ export const Branches = () => {
             onDelete={handleDeleteBranch}
             onReactivate={handleReactivate}
             onAddCompany={() => setOpen(true)}
+            userPolicies={userPolicies}
           />
         )}
       </MainContainer>
