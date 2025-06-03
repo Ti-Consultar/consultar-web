@@ -30,7 +30,7 @@ export const ProfileInfo = () => {
       setLoading(true, "Carregando filial...");
       try {
         if (userData?.userId) {
-          const response = await getProfileInfo(+userData?.userId);
+          const response = await getProfileInfo();
           setProfileInfo(response);
         }
       } catch (error: unknown) {

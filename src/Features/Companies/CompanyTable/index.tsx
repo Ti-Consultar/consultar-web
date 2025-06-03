@@ -379,6 +379,7 @@ export const CompanyTable = ({
           Sair
         </MenuItem>
       </Menu>
+      
       {/* Deletar Empresa */}
       <AlertModal
         open={openDialog}

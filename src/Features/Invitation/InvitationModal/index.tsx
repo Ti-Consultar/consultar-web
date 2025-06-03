@@ -72,7 +72,7 @@ export const InvitationModal = ({
     const payload: invitations = {
       invitations: emails.map((email) => ({
         groupId: rawGroupId,
-        companyId: companyId ?? 0,
+        companyId: companyId,
         subCompanyId: adjustedSubCompanyId,
         emailInvitedByUser: email,
         permissionId: selectedRole,

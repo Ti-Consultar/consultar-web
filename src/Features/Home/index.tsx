@@ -32,6 +32,7 @@ import { AlertModal } from "../../components/AlertModal";
 import { useMainContext } from "../../contexts/mainContext";
 import { InvitationModal } from "../Invitation/InvitationModal";
 import { getUserPolicies } from "../../services/apis/routes/auth.service";
+import { useGroupUpdate } from "../../contexts/updateContext";
 
 interface UserData {
   exp: number;
@@ -85,6 +86,7 @@ export const MrpHome = () => {
   const [openInvitationModal, setOpenInvitationModal] = useState(false);
   const [groupToBeInvited, setGroupToBeInvited] = useState<number>(0);
   const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
+  const { shouldRefreshGroup, resetGroupRefresh } = useGroupUpdate();
 
   useEffect(() => {
     setBreadcrumbs([{ name: "Grupos", link: "/grupos" }]);
@@ -142,7 +144,12 @@ export const MrpHome = () => {
     if (userData?.userId) {
       fetchGroups();
     }
-  }, [userData]);
+
+    if (shouldRefreshGroup) {
+      fetchGroups();
+      resetGroupRefresh();
+    }
+  }, [userData, shouldRefreshGroup]);
 
   const onSubmit = async (data: GroupFormData) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

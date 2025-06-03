@@ -36,3 +36,19 @@ export const inviteUser = async (data: invitations) => {
     throw error;
   }
 };
+
+export const acceptOrDeclineInvite = async (
+  id: number,
+  data: { status: number }
+) => {
+  try {
+    const response = await axiosInstanceWithToken.patch(
+      `${URL}/api/Invitation/${id}/update-status`,
+      data
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
