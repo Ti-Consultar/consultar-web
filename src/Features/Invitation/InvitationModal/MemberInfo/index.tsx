@@ -6,7 +6,7 @@ import {
   SelectChangeEvent,
   Stack,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 
 type MemberRole = {
   name: string;
@@ -17,16 +17,17 @@ type MemberCardProps = {
   name: string;
   email: string;
   role: string;
+  isCurrentUser?: boolean;
   roles: MemberRole[];
   onRoleChange: (newRole: string) => void;
 };
 
 const getInitials = (name: string) => {
   return name
-    .split(' ')
+    .split(" ")
     .slice(0, 2)
     .map((n) => n[0])
-    .join('')
+    .join("")
     .toUpperCase();
 };
 
@@ -36,36 +37,42 @@ export const MemberCard = ({
   role,
   roles,
   onRoleChange,
+  isCurrentUser,
 }: MemberCardProps) => {
   const handleRoleChange = (event: SelectChangeEvent<string>) => {
     onRoleChange(event.target.value);
   };
 
+  console.log(isCurrentUser, "isCurrentUser");
   return (
     <Box
       sx={{
         py: 2,
         px: 1,
-        width: '100%',
+        width: "100%",
       }}
     >
       <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        direction={{ xs: "column", sm: "row" }}
+        alignItems={{ xs: "flex-start", sm: "center" }}
         justifyContent="space-between"
         spacing={2}
       >
         <Stack direction="row" spacing={2} alignItems="center">
-          <Avatar sx={{backgroundColor: 'var(--branding-default-red)'}}>{getInitials(name)}</Avatar>
+          <Avatar sx={{ backgroundColor: "var(--branding-default-red)" }}>
+            {getInitials(name)}
+          </Avatar>
           <Box>
-            <Typography variant="subtitle1">{name} <span>(você)</span></Typography>
+            <Typography variant="subtitle1">
+              {name} {isCurrentUser && <span>(você)</span>}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               {email}
             </Typography>
           </Box>
         </Stack>
 
-        <Select
+        {/* <Select
           size="small"
           value={role}
           onChange={handleRoleChange}
@@ -76,7 +83,10 @@ export const MemberCard = ({
               {r.name}
             </MenuItem>
           ))}
-        </Select>
+        </Select> */}
+        <Typography variant="body2" color="text.secondary">
+          {role}
+        </Typography>
       </Stack>
     </Box>
   );

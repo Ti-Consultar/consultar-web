@@ -76,6 +76,17 @@ export const getDeletedSubCompanies = async (
   }
 };
 
+export const getSubCompanyUsers = async (id: number, groupId: number, companyId: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/SubCompany/${id}/group/${groupId}/company/${companyId}/users`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const deleteSubCompany = async (
   subCompanyId: number,
   id: number

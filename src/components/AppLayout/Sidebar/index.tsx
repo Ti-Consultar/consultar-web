@@ -31,8 +31,9 @@ import { jwtDecode } from "jwt-decode";
 import { Menu, MenuItem } from "@mui/material";
 import { useDrawer } from "../../../contexts/SidebarProvider";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import { NotificationDrawer } from "../../NotiicationModal";
+import { NotificationDrawer } from "../../NoticationModal";
 import {
+  deleteNotification,
   getSentNotifications,
   getUserInvitesNotifications,
 } from "../../../services/apis/routes/notifications.service";
@@ -108,7 +109,7 @@ export const Sidebar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [notifications, setNotifications] = useState<Invite[]>([]);
   const [sentNotifications, setSentNotifications] = useState<Invite[]>([]);
-  const { triggerRefresh } = useRefresh();
+  const [, triggerRefreshCompanies] = useRefresh("companies");
   const { setLoading } = useLoading();
 
   const fetchUserInvitesNotifications = async () => {
@@ -130,9 +131,11 @@ export const Sidebar = () => {
   };
 
   useEffect(() => {
-    fetchUserInvitesNotifications();
-    fetchSentNotifications();
-  }, []);
+    if (drawerOpen) {
+      fetchUserInvitesNotifications();
+      fetchSentNotifications();
+    }
+  }, [drawerOpen]);
 
   const [menuState, setMenuState] = useState<{
     anchorEl: HTMLElement | null;
@@ -196,7 +199,7 @@ export const Sidebar = () => {
           prev.filter((notification) => notification.id !== id)
         );
         fetchUserInvitesNotifications();
-        triggerRefresh();
+        triggerRefreshCompanies();
       } else {
         toast.error("Falha ao aceitar o convite.");
       }
@@ -226,6 +229,23 @@ export const Sidebar = () => {
       toast.error("Ocorreu um erro ao recusar o convite.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRemove = async (id: number) => {
+    try {
+      const response = await deleteNotification(id);
+
+      if (response && (response.success || response.sucess) === true) {
+        setSentNotifications((prev) =>
+          prev.filter((notification) => notification.id !== id)
+        );
+        fetchSentNotifications();
+      } else {
+        toast.error("Falha ao remover a notificação.");
+      }
+    } catch (error) {
+      toast.error("Erro ao remover a notificação.");
     }
   };
 
@@ -302,7 +322,10 @@ export const Sidebar = () => {
         >
           <MenuItem
             sx={{ display: "flex", gap: 1 }}
-            onClick={() => setDrawerOpen(true)}
+            onClick={() => {
+              setDrawerOpen(true);
+              handleClose();
+            }}
           >
             <NotificationsNoneIcon sx={{ fontSize: "18px" }} />
             Notificações
@@ -343,6 +366,7 @@ export const Sidebar = () => {
         sentNotifications={sentNotifications}
         notifications={notifications}
         open={drawerOpen}
+        onRemove={handleRemove}
         onClose={() => setDrawerOpen(false)}
         onAccept={handleAccept}
         onReject={handleDecline}

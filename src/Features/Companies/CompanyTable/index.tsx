@@ -49,7 +49,9 @@ interface CompanyTableProps {
   onUnlink: (company: any) => void;
   onRowClick: (companyId: number) => void;
   subCompanyId?: number;
+  fetchCurrentUsers: (id: number) => void;
 
+  getUserPolicies?: () => Promise<RoleOption[]>;
   members: Member[];
   userPolicies: RoleOption[];
 }
@@ -63,7 +65,6 @@ export const CompanyTable = ({
   fileName,
   companies,
   onAddCompany,
-  onOpen,
   onEdit,
   onDelete,
   onReactivate,
@@ -72,8 +73,8 @@ export const CompanyTable = ({
   onUnlink,
   onRowClick,
   userPolicies,
-  subCompanyId,
   members = [],
+  fetchCurrentUsers
 }: CompanyTableProps) => {
   const {
     page,
@@ -112,6 +113,7 @@ export const CompanyTable = ({
   };
 
   const handleInviteModal = () => {
+    fetchCurrentUsers(selectedCompany?.id ?? selectedCompany?.companyId ?? 0);
     setInviteOpen(true);
   };
 
@@ -121,17 +123,11 @@ export const CompanyTable = ({
   ) => {
     setAnchorEl(event.currentTarget);
     setSelectedCompany(company);
-    console.log(company)
   };
 
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedCompany(null);
-  };
-
-  const handleOpen = () => {
-    if (selectedCompany) onOpen(selectedCompany);
-    handleMenuClose();
   };
 
   const handleEdit = () => {
@@ -382,7 +378,7 @@ export const CompanyTable = ({
           Sair
         </MenuItem>
       </Menu>
-      
+
       {/* Deletar Empresa */}
       <AlertModal
         open={openDialog}

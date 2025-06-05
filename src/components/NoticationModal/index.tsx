@@ -38,6 +38,7 @@ interface NotificationDrawerProps {
   sentNotifications: Invitation[]; // 🔹 NOVO
   onAccept: (id: number) => void;
   onReject: (id: number) => void;
+  onRemove?: (id: number) => void;
   anchor?: Anchor;
 }
 
@@ -48,6 +49,7 @@ export const NotificationDrawer = ({
   sentNotifications,
   onAccept,
   onReject,
+  onRemove,
   anchor = "left",
 }: NotificationDrawerProps) => {
   const [tabIndex, setTabIndex] = useState(0); // 🔹 ESTADO ABA
@@ -101,19 +103,31 @@ export const NotificationDrawer = ({
         </Avatar>
       </ListItemAvatar>
 
-      <Box>
-        <Typography variant="subtitle2" component="div">
-          De {isReceived ? n.user.name : n.user.name}
-        </Typography>
+      <Box sx={{ flexGrow: 1, position: "relative" }}>
+        {!isReceived && onRemove && (
+          <IconButton
+            size="small"
+            onClick={() => onRemove(n.id)}
+            sx={{ position: "absolute", top: 0, right: 0 }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
 
-        <Typography variant="body2" color="text.secondary" component="div">
+        {isReceived && (
+          <Typography variant="subtitle2" component="div">
+            Convite de {n.invitedByUser.name}
+          </Typography>
+        )}
+
+        <Typography variant="body2" color="text.secondary" component="div" sx={{width: '90%'}}>
           {isReceived
             ? `Você foi convidado para ser ${n.permission.name} em ${
                 n.company?.name ?? n.group.name
               }.`
-            : `Você convidou ${n.user.name} para ser ${n.permission.name} em ${
-                n.company?.name ?? n.group.name
-              }.`}
+            : `Você convidou ${n.user.name} para ser ${
+                n.permission.name
+              } em ${n.company?.name ?? n.group.name}.`}
         </Typography>
 
         <Typography
@@ -131,7 +145,7 @@ export const NotificationDrawer = ({
           })}
         </Typography>
 
-        {isReceived && (
+        {isReceived && onAccept && onReject && (
           <Stack direction="row" spacing={1} mt={1}>
             <Button
               size="small"

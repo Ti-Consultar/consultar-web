@@ -33,6 +33,7 @@ import { useMainContext } from "../../contexts/mainContext";
 import { InvitationModal } from "../Invitation/InvitationModal";
 import { getUserPolicies } from "../../services/apis/routes/auth.service";
 import { useRefresh } from "../../contexts/refreshContext";
+import { Member } from "../../types/member";
 
 interface UserData {
   exp: number;
@@ -86,7 +87,8 @@ export const MrpHome = () => {
   const [openInvitationModal, setOpenInvitationModal] = useState(false);
   const [groupToBeInvited, setGroupToBeInvited] = useState<number>(0);
   const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
-  const { shouldRefresh, resetRefresh } = useRefresh();
+  const [notificationsRefreshTimestamp] = useRefresh("companies");
+  const [members, setMembers] = useState<Member[]>([]);
 
   useEffect(() => {
     setBreadcrumbs([{ name: "Grupos", link: "/grupos" }]);
@@ -145,11 +147,8 @@ export const MrpHome = () => {
       fetchGroups();
     }
 
-    if (shouldRefresh) {
-      fetchGroups();
-      resetRefresh();
-    }
-  }, [userData, shouldRefresh]);
+    fetchGroups();
+  }, [userData, notificationsRefreshTimestamp]);
 
   const onSubmit = async (data: GroupFormData) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -237,6 +236,16 @@ export const MrpHome = () => {
     }
   };
 
+  const fetchCurrentUsers = async (id: number) => {
+    try {
+      if (!id) return;
+      const response = await getGroupUsers(id);
+      setMembers(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar empresas inativas", error);
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (selectedGroupId !== null && userId?.userId) {
       await handleDeleteGroup(selectedGroupId);
@@ -261,7 +270,7 @@ export const MrpHome = () => {
         onClose={() => setOpenInvitationModal(false)}
         userPolicies={userPolicies}
         groupToBeInvited={groupToBeInvited}
-        members={[]}
+        members={members}
       />
       <MainContainer>
         <Title>
@@ -330,6 +339,7 @@ export const MrpHome = () => {
                 setSelectedGroupId(group.id);
               }}
               onInvite={() => {
+                fetchCurrentUsers(group.id);
                 handleOpenInvitationModal(group.id);
               }}
             />
