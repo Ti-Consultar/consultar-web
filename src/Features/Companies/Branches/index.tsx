@@ -8,6 +8,7 @@ import {
   getBranches,
   getDeletedSubCompanies,
   getSubCompanyById,
+  getSubCompanyUsers,
   restoreSubCompanies,
   saveSubCompany,
   updateSubCompany,
@@ -28,7 +29,6 @@ import { unlinkFromCompany } from "../../../services/apis/routes/invitation.serv
 import { getBreadcrumb } from "../../../services/apis/routes/breadcrumb.service";
 import { BreadcrumbItem } from "../../../types/breadcrumb";
 import { Member } from "../../../types/member";
-import { getGroupUsers } from "../../../services/apis/routes/groups.service";
 import { getUserPolicies } from "../../../services/apis/routes/auth.service";
 
 type RoleOption = {
@@ -72,16 +72,6 @@ export const Branches = () => {
     }
   };
 
-  const fetchCurrentUsers = async () => {
-    try {
-      if (!groupId) return;
-      const response = await getGroupUsers(Number(groupId));
-      setMembers(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar empresas inativas", error);
-    }
-  };
-
   useEffect(() => {
     const fetchUserPolicies = async () => {
       try {
@@ -94,7 +84,6 @@ export const Branches = () => {
     };
 
     fetchUserPolicies();
-    fetchCurrentUsers();
   }, [hasFetched]);
 
   const fetchDeletedCompanies = async (skip: number, take: number) => {
@@ -330,6 +319,16 @@ export const Branches = () => {
     navigate(`/grupos/${Number(groupId)}/empresas/${companyId}/filiais/${id}`);
   };
 
+  const fetchCurrentUsers = async (id: number) => {
+    try {
+      if (!groupId) return;
+      const response = await getSubCompanyUsers(id, Number(groupId), Number(companyId));
+      setMembers(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar usuários", error);
+    }
+  };
+
   if (!subCompanies) {
     return (
       <MainTemplate>
@@ -396,7 +395,7 @@ export const Branches = () => {
             onReactivate={handleReactivate}
             onAddCompany={() => setOpen(true)}
             userPolicies={userPolicies}
-            subCompanyId={0}
+            fetchCurrentUsers={fetchCurrentUsers}
           />
         )}
       </MainContainer>

@@ -1,32 +1,37 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
+type RefreshMap = Record<string, number>; // key -> timestamp
+
 type RefreshContextType = {
-  shouldRefresh: boolean;
-  triggerRefresh: () => void;
-  resetRefresh: () => void;
+  refreshMap: RefreshMap;
+  triggerRefresh: (key: string) => void;
 };
 
 const RefreshContext = createContext<RefreshContextType | undefined>(undefined);
 
 export const RefreshProvider = ({ children }: { children: ReactNode }) => {
-  const [shouldRefresh, setShouldRefresh] = useState(false);
+  const [refreshMap, setRefreshMap] = useState<RefreshMap>({});
 
-  const triggerRefresh = () => setShouldRefresh(true);
-  const resetRefresh = () => setShouldRefresh(false);
+  const triggerRefresh = (key: string) => {
+    setRefreshMap((prev) => ({
+      ...prev,
+      [key]: Date.now(), // change value to force update
+    }));
+  };
 
   return (
-    <RefreshContext.Provider
-      value={{ shouldRefresh, triggerRefresh, resetRefresh }}
-    >
+    <RefreshContext.Provider value={{ refreshMap, triggerRefresh }}>
       {children}
     </RefreshContext.Provider>
   );
 };
 
-export const useRefresh = (): RefreshContextType => {
+export const useRefresh = (key: string): [number, () => void] => {
   const context = useContext(RefreshContext);
   if (!context) {
     throw new Error("useRefresh deve ser usado dentro de RefreshProvider");
   }
-  return context;
+
+  const { refreshMap, triggerRefresh } = context;
+  return [refreshMap[key] ?? 0, () => triggerRefresh(key)];
 };

@@ -5,6 +5,7 @@ import {
   deleteCompany,
   getCompanies,
   getCompanyById,
+  getCompanyUsers,
   getDeletedCompanies,
   restoreCompanies,
   saveCompany,
@@ -16,10 +17,7 @@ import { CompanyTable } from "./CompanyTable";
 import { Company } from "../../types/company";
 import { HeaderContainer, MainContainer } from "./styles";
 import { DivSkeleton } from "../../styles/skeleton/skeleton";
-import {
-  getGroupById,
-  getGroupUsers,
-} from "../../services/apis/routes/groups.service";
+import { getGroupById } from "../../services/apis/routes/groups.service";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { InfoCard } from "./InfoCard";
 import { GroupFormData } from "../../types/group";
@@ -28,15 +26,11 @@ import { CompanyForm } from "../GroupForm";
 import { useMediaQuery } from "@mui/material";
 import { MobileTableView } from "./CompanyTable/MobileTableView";
 import { useMainContext } from "../../contexts/mainContext";
-import {
-  inviteUser,
-  unlinkFromCompany,
-} from "../../services/apis/routes/invitation.service";
+import { unlinkFromCompany } from "../../services/apis/routes/invitation.service";
 import { getBreadcrumb } from "../../services/apis/routes/breadcrumb.service";
 import { BreadcrumbItem } from "../../types/breadcrumb";
 import { Member } from "../../types/member";
 import { getUserPolicies } from "../../services/apis/routes/auth.service";
-import { invitations } from "../../types/userInvitationPayload";
 import { useCompany } from "../../contexts/CompanyProvider";
 
 type Companies = {
@@ -129,21 +123,10 @@ export const Companies = () => {
     }
   };
 
-  const fetchCurrentUsers = async () => {
-    try {
-      if (!groupId) return;
-      const response = await getGroupUsers(Number(groupId));
-      setMembers(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar usuários", error);
-    }
-  };
-
   useEffect(() => {
     if (userData && groupId) {
       fetchAllData();
       fetchDeletedCompanies();
-      fetchCurrentUsers();
     }
   }, [userData, groupId]);
 
@@ -312,6 +295,16 @@ export const Companies = () => {
     navigate(`/grupos/${Number(groupId)}/empresas/${companyId}/filiais`);
   };
 
+  const fetchCurrentUsers = async (id: number) => {
+    try {
+      if (!groupId) return;
+      const response = await getCompanyUsers(id, Number(groupId));
+      setMembers(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar usuários", error);
+    }
+  };
+
   useEffect(() => {
     const fetchUserPolicies = async () => {
       try {
@@ -394,6 +387,7 @@ export const Companies = () => {
             onAddCompany={() => setOpen(true)}
             members={members}
             userPolicies={userPolicies}
+            fetchCurrentUsers={fetchCurrentUsers}
           />
         )}
       </MainContainer>

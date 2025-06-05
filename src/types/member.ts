@@ -9,4 +9,5 @@ export type Member = {
     email: string,
     contact: string,
     permission: Permission
+    userLogado?: boolean,
 }

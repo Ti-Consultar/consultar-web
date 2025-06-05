@@ -22,3 +22,13 @@ export const getSentNotifications = async () => {
     throw error;
   }
 };
+
+export const deleteNotification = async (id: number) => {
+  try {
+    const response = await axiosInstanceWithToken.delete(`${URL}/api/Invitation/${id}/delete`);
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

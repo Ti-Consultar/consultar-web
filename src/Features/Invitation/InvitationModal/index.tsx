@@ -17,6 +17,7 @@ import { useParams } from "react-router";
 import { invitations } from "../../../types/userInvitationPayload";
 import { inviteUser } from "../../../services/apis/routes/invitation.service";
 import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 interface InvitationModalProps {
   open: boolean;
@@ -47,14 +48,12 @@ export const InvitationModal = ({
   const { groupId } = useParams();
 
   const sendInvitation = async () => {
-    //Verifica se o groupId é um número válido ou indefined
     const parsedGroupId =
       groupId !== undefined && !isNaN(Number(groupId))
         ? Number(groupId)
         : undefined;
     const rawGroupId = parsedGroupId ?? groupToBeInvited;
 
-    // Verifica se o rawGroupId é um número válido
     if (rawGroupId === undefined) {
       console.error("ID do grupo é inválido.");
       return;
@@ -65,7 +64,6 @@ export const InvitationModal = ({
       return;
     }
 
-    // Ajusta o companyId e subCompanyId pois em algumas situações eles podem ser iguais
     const adjustedSubCompanyId =
       companyId === subCompanyId ? 0 : subCompanyId ?? 0;
 
@@ -86,11 +84,23 @@ export const InvitationModal = ({
         error: "Erro ao enviar convite.",
       });
 
-      setEmails([]); // limpa os emails
-      setSelectedRole(1); // reseta a role
-      onClose(); // fecha o modal
-    } catch (error) {
-      console.error(error);
+      setEmails([]);
+      setSelectedRole(1);
+      onClose();
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? error.message ?? "";
+
+      if (
+        typeof message === "string" &&
+        message.includes("Já existe um Convite")
+      ) {
+        toast.warning(
+          "Um ou mais convites já foram enviados para estes e-mails."
+        );
+      } else {
+        console.error(error);
+        toast.error("Erro inesperado ao enviar convite.");
+      }
     }
   };
 
@@ -207,6 +217,7 @@ export const InvitationModal = ({
                 email={member.email}
                 role={member.permission.name}
                 roles={userPolicies}
+                isCurrentUser={member.userLogado}
                 onRoleChange={(newRole) => console.log("Novo papel:", newRole)}
               />
             ))

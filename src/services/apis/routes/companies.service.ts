@@ -3,14 +3,6 @@ import { axiosInstanceWithToken } from "../config";
 
 const URL = import.meta.env.VITE_API_URL_MRP;
 
-interface JwtPayload {
-  unique_name: string;
-  role: string;
-  userId: string;
-  nbf: number;
-  exp: number;
-  iat: number;
-}
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)); //Somente para fins de mocking
 
 export const deleteCompany = async (
@@ -20,6 +12,17 @@ export const deleteCompany = async (
   try {
     const response = await axiosInstanceWithToken.patch(
       `${URL}/api/Company/${id}/group/${groupId}/delete`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getCompanyUsers = async (id: number, groupId: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/Company/${id}/group/${groupId}/users`
     );
     return response.data;
   } catch (error) {
