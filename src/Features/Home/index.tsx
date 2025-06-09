@@ -34,6 +34,7 @@ import { InvitationModal } from "../Invitation/InvitationModal";
 import { getUserPolicies } from "../../services/apis/routes/auth.service";
 import { useRefresh } from "../../contexts/refreshContext";
 import { Member } from "../../types/member";
+import { GroupsHeader } from "./Header";
 
 interface UserData {
   exp: number;
@@ -73,7 +74,10 @@ type RoleOption = {
 export const MrpHome = () => {
   const userId = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [groupList, setGroupList] = useState<GroupsResponse[]>([]);
+  const [groupList, setGroupList] = useState<any[]>([]);
+  const [filteredGroupList, setFilteredGroupList] = useState<GroupsResponse[]>(
+    []
+  );
   const [editingGroup, setEditingGroup] = useState<GroupFormData>();
   const [, setError] = useState<string | null>(null);
   const { setLoading } = useLoading();
@@ -83,7 +87,7 @@ export const MrpHome = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [, setErrors] = useState<{ [key: string]: boolean }>({});
   const [activeStep, setActiveStep] = useState(0);
-  const { breadcrumbs, setBreadcrumbs } = useMainContext();
+  const { setBreadcrumbs } = useMainContext();
   const [openInvitationModal, setOpenInvitationModal] = useState(false);
   const [groupToBeInvited, setGroupToBeInvited] = useState<number>(0);
   const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
@@ -127,7 +131,9 @@ export const MrpHome = () => {
     try {
       const response = await getAllGroups();
       const data = response.data;
-      setGroupList(data);
+
+      setGroupList(data); // fonte original
+      setFilteredGroupList(data); // lista inicial (sem filtro)
     } catch (error: unknown) {
       if (
         error instanceof Error &&
@@ -211,6 +217,19 @@ export const MrpHome = () => {
     }
   };
 
+  const handleSearchChange = (query: string) => {
+    if (query.trim() === "") {
+      setFilteredGroupList(groupList);
+      return;
+    }
+
+    const filtered = groupList.filter((group) =>
+      group.name.toLowerCase().includes(query.toLowerCase())
+    );
+
+    setFilteredGroupList(filtered);
+  };
+
   const handleDeleteGroup = async (id: number) => {
     setLoading(true, "Deletando Grupo");
     setError("");
@@ -273,7 +292,14 @@ export const MrpHome = () => {
         members={members}
       />
       <MainContainer>
-        <Title>
+        <GroupsHeader
+          onSearchChange={handleSearchChange}
+          onExportClick={() => {}}
+          onAddGroupClick={() => setOpen(true)}
+          viewMode={"grid"}
+          onChangeViewMode={() => {}}
+        />
+        {/* <Title>
           {`Olá`}, <span>{userData?.unique_name}</span>.
         </Title>
         <SubTitle>Acesse e administre suas empresas abaixo:</SubTitle>
@@ -281,7 +307,7 @@ export const MrpHome = () => {
           text="Criar Grupo"
           variant="primary"
           onClick={() => setOpen(true)}
-        />
+        /> */}
         <CompanyForm
           onSubmit={onSubmit}
           externalActiveStep={activeStep}
@@ -321,9 +347,9 @@ export const MrpHome = () => {
           type="warning"
         />
       </MainContainer>
-      {Array.isArray(groupList) && groupList.length > 0 ? (
+      {Array.isArray(filteredGroupList) && filteredGroupList.length > 0 ? (
         <CardsContainer container spacing={2}>
-          {groupList?.map((group) => (
+          {filteredGroupList?.map((group) => (
             <GroupCard
               key={group.id}
               fantasyName={

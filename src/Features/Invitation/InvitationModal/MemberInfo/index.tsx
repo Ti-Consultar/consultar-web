@@ -42,8 +42,7 @@ export const MemberCard = ({
   const handleRoleChange = (event: SelectChangeEvent<string>) => {
     onRoleChange(event.target.value);
   };
-
-  console.log(isCurrentUser, "isCurrentUser");
+  
   return (
     <Box
       sx={{

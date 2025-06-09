@@ -17,7 +17,7 @@ import { useParams } from "react-router";
 import { invitations } from "../../../types/userInvitationPayload";
 import { inviteUser } from "../../../services/apis/routes/invitation.service";
 import { toast } from "react-toastify";
-import Cookies from "js-cookie";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
 
 interface InvitationModalProps {
   open: boolean;
@@ -78,15 +78,22 @@ export const InvitationModal = ({
     };
 
     try {
-      await toast.promise(inviteUser(payload), {
-        pending: "Enviando convite...",
-        success: "Convite enviado com sucesso!",
-        error: "Erro ao enviar convite.",
-      });
+      await toast.promise(
+        inviteUser(payload),
+        {
+          pending: "Enviando convite...",
+          success: "Convite enviado",
+          error: "Erro ao enviar convite.",
+        },
+        {
+          position: "bottom-center",
+          hideProgressBar: true,
+          icon: () => <SendRoundedIcon fontSize="medium" />,
+        }
+      );
 
       setEmails([]);
       setSelectedRole(1);
-      onClose();
     } catch (error: any) {
       const message = error?.response?.data?.message ?? error.message ?? "";
 
