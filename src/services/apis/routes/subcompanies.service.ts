@@ -1,6 +1,6 @@
 const URL = import.meta.env.VITE_API_URL_MRP;
 import { GroupFormData } from "../../../types/group";
-import { axiosInstanceWithToken, axiosIntanceWithoutToken } from "../config";
+import { axiosInstanceWithToken } from "../config";
 
 export const getBranches = async (companyId: number, skip = 0, take = 10) => {
   try {

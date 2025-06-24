@@ -1,4 +1,4 @@
-import { InfoText, LoginContainer, MainContainer } from "../../styles"
+import { InfoText, MainContainer } from "../../styles"
 import EmailSent from '../../../../assets/images/sent.png';
 import { Subtitle } from "../../../../landingPage/components/AboutProduct/styles";
 import { Container, SentImg } from "./styles";

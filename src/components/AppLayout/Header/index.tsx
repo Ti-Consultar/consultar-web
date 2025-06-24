@@ -1,19 +1,15 @@
-import { Badge, useMediaQuery } from "@mui/material";
+import { useMediaQuery } from "@mui/material";
 import { useMainContext } from "../../../contexts/mainContext";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
-import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import {
   BreadcrumbsContainer,
   BreadcrumbsItem,
   BreadcrumbsItems,
-  HeaderButton,
   MainContainer,
 } from "./styles";
-import { useState } from "react";
 
 export const Header = () => {
   const { breadcrumbs } = useMainContext();
-  const [hasNewNotifications, setHasNewNotifications] = useState(true);
   const isMobile = useMediaQuery("(max-width:600px)");
 
   const flattenedBreadcrumbs = breadcrumbs.flat();

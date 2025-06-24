@@ -1,9 +1,6 @@
 import {
   Avatar,
   Box,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
   Stack,
   Typography,
 } from "@mui/material";
@@ -35,13 +32,8 @@ export const MemberCard = ({
   name,
   email,
   role,
-  roles,
-  onRoleChange,
   isCurrentUser,
 }: MemberCardProps) => {
-  const handleRoleChange = (event: SelectChangeEvent<string>) => {
-    onRoleChange(event.target.value);
-  };
   
   return (
     <Box

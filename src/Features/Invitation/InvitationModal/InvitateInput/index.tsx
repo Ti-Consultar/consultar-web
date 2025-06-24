@@ -1,4 +1,4 @@
-import { Box, Chip, FormControl, Typography, styled } from "@mui/material";
+import { Chip, FormControl, styled } from "@mui/material";
 import { useRef, useState, KeyboardEvent } from "react";
 
 interface MultiEmailEditableInputProps {
