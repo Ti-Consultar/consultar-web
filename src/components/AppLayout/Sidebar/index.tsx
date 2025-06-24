@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import {
   SidebarContainer,
   Header,
@@ -11,12 +12,6 @@ import {
 
 import logoConsultar from "../../../../src/assets/icons/logo-consultar.svg";
 import logoConsultarHorizontal from "../../../../src/assets/icons/logo_horizontal 1.svg";
-// import DataSaverOffOutlinedIcon from '@mui/icons-material/DataSaverOffOutlined';
-// import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
-// import FeedOutlinedIcon from '@mui/icons-material/FeedOutlined';
-// import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
-// import CompareArrowsOutlinedIcon from '@mui/icons-material/CompareArrowsOutlined';
-// import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
@@ -42,6 +37,8 @@ import { acceptOrDeclineInvite } from "../../../services/apis/routes/invitation.
 import { toast } from "react-toastify";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useRefresh } from "../../../contexts/refreshContext";
+import RequestPageOutlinedIcon from "@mui/icons-material/RequestPageOutlined";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 
 export interface Company {
   uuid: string;
@@ -65,45 +62,15 @@ interface UserData {
   unique_name: string;
 }
 
-const drawerListData = [
-  {
-    title: "Início",
-    path: "/grupos",
-    icon: <HomeOutlinedIcon fontSize="medium" />,
-  },
-  // {
-  //     title: 'Base Orçamentária',
-  //     path: '/base-orcamentaria',
-  //     icon: <CompareArrowsOutlinedIcon fontSize="medium" />,
-  // },
-  // {
-  //     title: 'Contas',
-  //     path: '/contas',
-  //     icon: <BarChartOutlinedIcon fontSize="medium" />,
-  // },
-  // {
-  //     title: 'Balancetes',
-  //     path: '/balancetes',
-  //     icon: <FeedOutlinedIcon fontSize="medium" />,
-  // },
-  // {
-  //     title: 'Dashboard',
-  //     path: '/dashboard',
-  //     icon: <DataSaverOffOutlinedIcon fontSize="medium" />,
-  // },
-  // {
-  //     title: 'Relatórios',
-  //     path: '/relatorios',
-  //     icon: <FileOpenOutlinedIcon fontSize="medium" />,
-  // },
-  // {
-  //     title: 'Inserir Balanços',
-  //     path: '/inserir-balancos',
-  //     icon: <AttachMoneyOutlinedIcon fontSize="medium" />,
-  // },
-];
+interface Ids {
+  groupId?: string | null;
+  companyId?: string | null;
+  subCompanyId?: string | null;
+}
 
 export const Sidebar = () => {
+  const location = useLocation();
+  const pathParts = location.pathname.split("/");
   const [userData, setUserData] = useState<UserData | null | undefined>();
   const { isDrawerOpen, toggleDrawer } = useDrawer();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -111,6 +78,97 @@ export const Sidebar = () => {
   const [sentNotifications, setSentNotifications] = useState<Invite[]>([]);
   const [, triggerRefreshCompanies] = useRefresh("companies");
   const { setLoading } = useLoading();
+
+  const groupIndex = pathParts.indexOf("grupos");
+  const groupId = groupIndex !== -1 ? pathParts[groupIndex + 1] : null;
+
+  const companyIndex = pathParts.indexOf("empresas");
+  const companyId = companyIndex !== -1 ? pathParts[companyIndex + 1] : null;
+
+  const filialIndex = pathParts.indexOf("filiais");
+  const subCompanyId = filialIndex !== -1 ? pathParts[filialIndex + 1] : null;
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  type DrawerItem = {
+    title: string;
+    path?: string;
+    icon: React.ReactNode;
+    subItems?: {
+      title: string;
+      path: string;
+    }[];
+  };
+
+  const drawerListData = [
+    {
+      title: "Início",
+      path: "/grupos",
+      icon: <HomeOutlinedIcon fontSize="medium" />,
+    } as DrawerItem,
+  ];
+
+  const buildUploadBalanceSheetUrl = ({
+    groupId,
+    companyId,
+    subCompanyId,
+  }: Ids) => {
+    if (groupId && companyId && subCompanyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/plano-de-contas`;
+    }
+    if (groupId && companyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/plano-de-contas`;
+    }
+    if (groupId) {
+      return `/grupos/${groupId}/plano-de-contas`;
+    }
+    return null;
+  };
+
+    const buildBalanceSheetUrl = ({
+    groupId,
+    companyId,
+    subCompanyId,
+  }: Ids) => {
+    if (groupId && companyId && subCompanyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/balancetes`;
+    }
+    if (groupId && companyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/balancetes`;
+    }
+    if (groupId) {
+      return `/grupos/${groupId}/balancetes`;
+    }
+    return null;
+  };
+
+  const toggleExpand = (title: string) => {
+    setExpandedItems((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const path = buildUploadBalanceSheetUrl({ groupId, companyId, subCompanyId });
+  const balancetePath = buildBalanceSheetUrl({ groupId, companyId, subCompanyId });
+
+  if (path && balancetePath) {
+    drawerListData.push(
+      {
+        title: "Uploads",
+        icon: <CloudUploadOutlinedIcon fontSize="medium" />,
+        subItems: [
+          {
+            title: "Balancete",
+            path,
+          },
+        ],
+      },
+      {
+        title: "Balancetes",
+        icon: <RequestPageOutlinedIcon fontSize="medium" />,
+        path: balancetePath
+      }
+    );
+  }
 
   const fetchUserInvitesNotifications = async () => {
     try {
@@ -185,6 +243,7 @@ export const Sidebar = () => {
       }
     } else {
       console.log("Couldn't find token");
+      navigate("/login");
     }
   }, []);
 
@@ -275,28 +334,68 @@ export const Sidebar = () => {
       <ListNavItem>
         <div className="items-main">
           {drawerListData.map((item) => {
+            const isExpanded = expandedItems[item.title] ?? false;
+
+            const hasSubItems = !!item.subItems?.length;
+
             return (
-              <NavItem
-                key={item.title}
-                onClick={() => handleNavSelected(item.title, item.path)}
-                selected={navSelected === item.title}
-                isOpen={isDrawerOpen}
-              >
-                <Icon
-                  isOpen={isDrawerOpen}
+              <div key={item.title}>
+                <NavItem
+                  onClick={() => {
+                    if (hasSubItems) {
+                      if (!isDrawerOpen) {
+                        toggleDrawer();
+                        setExpandedItems((prev) => ({
+                          ...prev,
+                          [item.title]: true,
+                        }));
+                      } else {
+                        toggleExpand(item.title);
+                      }
+                    } else if (item.path) {
+                      handleNavSelected(item.title, item.path);
+                    }
+                  }}
                   selected={navSelected === item.title}
-                  className="item-icon"
-                >
-                  {item.icon}
-                </Icon>
-                <Title
                   isOpen={isDrawerOpen}
-                  className="item-title"
-                  selected={navSelected === item.title}
                 >
-                  {item.title}
-                </Title>
-              </NavItem>
+                  <Icon
+                    isOpen={isDrawerOpen}
+                    selected={navSelected === item.title}
+                  >
+                    {item.icon}
+                  </Icon>
+                  <Title
+                    isOpen={isDrawerOpen}
+                    selected={navSelected === item.title}
+                  >
+                    {item.title}
+                  </Title>
+                </NavItem>
+
+                {/* SubItems */}
+                {hasSubItems && isExpanded && isDrawerOpen && (
+                  <div style={{ marginLeft: 32 }}>
+                    {item.subItems?.map((sub) => (
+                      <NavItem
+                        key={sub.title}
+                        onClick={() => {
+                          handleNavSelected(sub.title, sub.path);
+                        }}
+                        selected={navSelected === sub.title}
+                        isOpen={true}
+                      >
+                        <Title
+                          isOpen={true}
+                          selected={navSelected === sub.title}
+                        >
+                          {sub.title}
+                        </Title>
+                      </NavItem>
+                    ))}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
