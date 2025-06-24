@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Button,
@@ -12,7 +11,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import GridViewIcon from "@mui/icons-material/GridView";
-import ShareIcon from "@mui/icons-material/Share";
 import { useTheme } from "@mui/material/styles";
 
 interface GroupsHeaderProps {

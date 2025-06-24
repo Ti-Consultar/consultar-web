@@ -5,14 +5,11 @@ import {
   EmptyStateContainer,
   MainContainer,
   NoItems,
-  SubTitle,
-  Title,
 } from "./styles";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
-import { Button } from "../../components/Button";
 import { CompanyForm } from "../GroupForm";
 import { toast } from "react-toastify";
 import {

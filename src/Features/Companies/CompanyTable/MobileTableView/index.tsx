@@ -26,7 +26,6 @@ import { AlertModal } from "../../../../components/AlertModal";
 import { useTableUtils } from "../../../../utils/hooks/useTableUtils";
 import { useExportUtils } from "../../../../utils/hooks/useExportUtils";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
-import { useNavigate, useParams } from "react-router";
 
 interface MobileTableViewProps {
   companies: Company[];
@@ -52,12 +51,10 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const { exportPDF, exportCSV } = useExportUtils(`${fileName}-empresas`);
-  const { groupId } = useParams();
   const { searchTerm, setSearchTerm, setPage, filteredItems } = useTableUtils(
     companies,
     (company) => company.companyName
   );
-  const navigate = useNavigate();
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,

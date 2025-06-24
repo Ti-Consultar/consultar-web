@@ -22,8 +22,6 @@ interface ProfileCardProps {
 export const ProfileCard = ({
   name,
   role,
-  onSave,
-  onEdit,
   email,
   contact,
 }: ProfileCardProps) => {

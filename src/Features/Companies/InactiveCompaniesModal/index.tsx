@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   Typography,
@@ -80,7 +80,7 @@ export const InactiveCompaniesModal: React.FC<InactiveCompaniesModalProps> = ({
     setOrderBy(property);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
