@@ -375,7 +375,7 @@ export const CompanyTable = ({
           onClick={() => setOpenUnlinkDialog(true)}
         >
           <CloseRoundedIcon sx={{ fontSize: "18px" }} />
-          Sair
+          Sair da empresa
         </MenuItem>
       </Menu>
 

@@ -27,7 +27,7 @@ export const ProfileInfo = () => {
 
   useEffect(() => {
     const fetchProfileInfo = async () => {
-      setLoading(true, "Carregando filial...");
+      setLoading(true, "Carregando informações de usuário...");
       try {
         if (userData?.userId) {
           const response = await getProfileInfo();
