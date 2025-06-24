@@ -33,6 +33,7 @@ export const GlobalStyle = createGlobalStyle`
     --neutral-300: #D0D5DD;
     --neutral-400: #98A2B3;
     --neutral-500: #667085;
+    --neutral-600: #586173;
     --neutral-700: #1a1d23;
     --neutral-800: #1D2939;
 
