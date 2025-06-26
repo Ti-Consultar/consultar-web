@@ -32,7 +32,7 @@ export const GroupsHeader = ({
 }: GroupsHeaderProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const { isAuthorized, role } = usePermission();
+  const { role } = usePermission();
 
   useEffect(() => {
     console.log("Role:", role);
