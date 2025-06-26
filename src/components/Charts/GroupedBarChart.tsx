@@ -26,15 +26,16 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip as MuiTooltip,
+  Button,
 } from "@mui/material";
 
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import InsertChartIcon from "@mui/icons-material/InsertChart";
-import DescriptionIcon from "@mui/icons-material/Description";
 import SlideshowIcon from "@mui/icons-material/Slideshow";
 import ZoomOutMapRoundedIcon from "@mui/icons-material/ZoomOutMapRounded";
 import ZoomInMapRoundedIcon from "@mui/icons-material/ZoomInMapRounded";
+import PDFExportIcon from "../../assets/icons/pdf_export.svg";
+import PPTExportIcon from "../../assets/icons/ppt_export.svg";
+import KeyboardArrowUpOutlinedIcon from "@mui/icons-material/KeyboardArrowUpOutlined";
+import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -91,9 +92,28 @@ export const GroupedBarChart = ({ title, data }: GroupedBarChartProps) => {
     const canvas = await html2canvas(chartRef.current);
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("landscape", "pt", "a4");
+
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    pdf.addImage(imgData, "PNG", 20, 20, pageWidth - 40, pageHeight - 40);
+
+    const imgProps = pdf.getImageProperties(imgData);
+    const imgRatio = imgProps.width / imgProps.height;
+
+    const maxWidth = pageWidth - 40;
+    const maxHeight = pageHeight - 40;
+
+    let imgWidth = maxWidth;
+    let imgHeight = maxWidth / imgRatio;
+
+    if (imgHeight > maxHeight) {
+      imgHeight = maxHeight;
+      imgWidth = maxHeight * imgRatio;
+    }
+
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+
+    pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
     pdf.save("grafico.pdf");
   };
 
@@ -101,47 +121,39 @@ export const GroupedBarChart = ({ title, data }: GroupedBarChartProps) => {
     if (!chartRef.current) return;
     const canvas = await html2canvas(chartRef.current);
     const imgData = canvas.toDataURL("image/png");
+
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = imgWidth / imgHeight;
+
+    const slideWidth = 10;
+    const maxImgWidth = 8;
+    let pptImgWidth = maxImgWidth;
+    let pptImgHeight = maxImgWidth / ratio;
+
+    if (pptImgHeight > 5) {
+      pptImgHeight = 5;
+      pptImgWidth = 5 * ratio;
+    }
+
+    const x = (slideWidth - pptImgWidth) / 2;
+    const y = 1;
+
     const pptx = new PptxGenJS();
     const slide = pptx.addSlide();
-    slide.addImage({ data: imgData, x: 1, y: 1, w: 8, h: 4.5 });
+    slide.addImage({
+      data: imgData,
+      x,
+      y,
+      w: pptImgWidth,
+      h: pptImgHeight,
+    });
     await pptx.writeFile({ fileName: "grafico.pptx" });
-  };
-
-  const exportToExcel = () => {
-    const header = [
-      "Nome",
-      "Valor Inicial",
-      "Crédito",
-      "Débito",
-      "Valor Final",
-      "Centro de Custo",
-    ];
-    const rows = data.map((item) => [
-      item.name,
-      item.initialValue,
-      item.credit,
-      item.debit,
-      item.finalValue,
-      item.costCenter,
-    ]);
-
-    let csvContent =
-      "data:text/csv;charset=utf-8," +
-      [header, ...rows].map((e) => e.join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "grafico.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const handleExport = (format: "pdf" | "excel" | "ppt") => {
     if (format === "ppt") exportToPPT();
     if (format === "pdf") exportToPDF();
-    if (format === "excel") exportToExcel();
     handleClose();
   };
 
@@ -151,6 +163,53 @@ export const GroupedBarChart = ({ title, data }: GroupedBarChartProps) => {
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const renderCustomLegend = (props: any) => {
+    const { payload } = props;
+    return (
+      <ul
+        style={{ display: "flex", flexWrap: "wrap", paddingLeft: 0, margin: 0 }}
+      >
+        {payload.map((entry: any, index: number) => {
+          const match = seriesOptions.find((s) => s.key === entry.dataKey);
+          const color = match?.color.includes("url")
+            ? match.color.includes("initial")
+              ? "#1976d2"
+              : match.color.includes("credit")
+              ? "#2e7d32"
+              : match.color.includes("debit")
+              ? "#d32f2f"
+              : match.color.includes("final")
+              ? "#f9a825"
+              : "#000"
+            : match?.color;
+
+          return (
+            <li
+              key={`item-${index}`}
+              style={{
+                listStyle: "none",
+                display: "flex",
+                alignItems: "center",
+                marginRight: 16,
+                fontSize: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 12,
+                  height: 12,
+                  background: color,
+                  marginRight: 8,
+                }}
+              />
+              {entry.value}
+            </li>
+          );
+        })}
+      </ul>
+    );
   };
 
   const ChartContent = (
@@ -207,7 +266,7 @@ export const GroupedBarChart = ({ title, data }: GroupedBarChartProps) => {
             }
           />
           <Tooltip />
-          <Legend />
+          <Legend content={renderCustomLegend}/>
           {seriesOptions.map(
             (option) =>
               selectedKeys.includes(option.key) && (
@@ -315,16 +374,30 @@ export const GroupedBarChart = ({ title, data }: GroupedBarChartProps) => {
             color: darkMode ? "#fff" : "#000",
           }}
         >
-          <Box display="flex" alignItems="center" gap={2} justifyContent={"space-between"} width={'100%'}>
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={2}
+            justifyContent={"space-between"}
+            width={"100%"}
+          >
             <Typography variant="h6">
               Balanço Contábil - Centro de Custo
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <MuiTooltip title="Exportar">
-                <IconButton onClick={handleClick}>
-                  <FileDownloadIcon />
-                </IconButton>
-              </MuiTooltip>
+              <Button
+                sx={{ color: darkMode ? "#fff" : "#000" }}
+                onClick={handleClick}
+                endIcon={
+                  open ? (
+                    <KeyboardArrowUpOutlinedIcon />
+                  ) : (
+                    <KeyboardArrowDownOutlinedIcon />
+                  )
+                }
+              >
+                Exportar
+              </Button>
               <Menu
                 anchorEl={anchorEl}
                 open={open}
@@ -333,24 +406,28 @@ export const GroupedBarChart = ({ title, data }: GroupedBarChartProps) => {
                   vertical: "bottom",
                   horizontal: "left",
                 }}
+                PaperProps={{
+                  elevation: 4,
+                  sx: {
+                    borderRadius: 3,
+                    minWidth: 150,
+                    p: 1,
+                    bgcolor: "background.paper",
+                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                  },
+                }}
               >
-                <MenuItem onClick={() => handleExport("excel")}>
-                  <ListItemIcon>
-                    <InsertChartIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Exportar Excel</ListItemText>
-                </MenuItem>
                 <MenuItem onClick={() => handleExport("pdf")}>
                   <ListItemIcon>
-                    <PictureAsPdfIcon fontSize="small" />
+                    <img src={PDFExportIcon} style={{ width: "20px" }} />
                   </ListItemIcon>
-                  <ListItemText>Exportar PDF</ListItemText>
+                  <ListItemText>.PDF</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleExport("ppt")}>
                   <ListItemIcon>
-                    <DescriptionIcon fontSize="small" />
+                    <img src={PPTExportIcon} style={{ width: "20px" }} />
                   </ListItemIcon>
-                  <ListItemText>Exportar PPT</ListItemText>
+                  <ListItemText>PowerPoint</ListItemText>
                 </MenuItem>
               </Menu>
               <Typography variant="body2">
