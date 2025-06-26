@@ -109,6 +109,33 @@ export const Sidebar = () => {
     } as DrawerItem,
   ];
 
+  useEffect(() => {
+    const token = Cookies.get("token");
+
+    if (token) {
+      try {
+        const dataDecoded: UserData = jwtDecode(token);
+
+        const isExpired = dataDecoded.exp * 1000 < Date.now();
+
+        if (isExpired) {
+          console.warn("Token expirado");
+          Cookies.remove("token");
+          navigate("/login");
+        } else {
+          setUserData(dataDecoded);
+        }
+      } catch (error) {
+        console.error("Erro ao decodificar o token:", error);
+        Cookies.remove("token");
+        navigate("/login");
+      }
+    } else {
+      console.log("Token não encontrado");
+      navigate("/login");
+    }
+  }, []);
+
   const buildUploadBalanceSheetUrl = ({
     groupId,
     companyId,
@@ -126,11 +153,7 @@ export const Sidebar = () => {
     return null;
   };
 
-    const buildBalanceSheetUrl = ({
-    groupId,
-    companyId,
-    subCompanyId,
-  }: Ids) => {
+  const buildBalanceSheetUrl = ({ groupId, companyId, subCompanyId }: Ids) => {
     if (groupId && companyId && subCompanyId) {
       return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/balancetes`;
     }
@@ -148,7 +171,11 @@ export const Sidebar = () => {
   };
 
   const path = buildUploadBalanceSheetUrl({ groupId, companyId, subCompanyId });
-  const balancetePath = buildBalanceSheetUrl({ groupId, companyId, subCompanyId });
+  const balancetePath = buildBalanceSheetUrl({
+    groupId,
+    companyId,
+    subCompanyId,
+  });
 
   if (path && balancetePath) {
     drawerListData.push(
@@ -165,7 +192,7 @@ export const Sidebar = () => {
       {
         title: "Balancetes",
         icon: <RequestPageOutlinedIcon fontSize="medium" />,
-        path: balancetePath
+        path: balancetePath,
       }
     );
   }
@@ -231,22 +258,6 @@ export const Sidebar = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = Cookies.get("token");
-
-    if (token) {
-      try {
-        const dataDecoded: UserData = jwtDecode(token);
-        setUserData(dataDecoded);
-      } catch (error) {
-        console.error("Erro ao decodificar o token:", error);
-      }
-    } else {
-      console.log("Couldn't find token");
-      navigate("/login");
-    }
-  }, []);
-
   const handleAccept = async (id: number) => {
     try {
       setLoading(true, "Aceitando convite...");
@@ -306,6 +317,15 @@ export const Sidebar = () => {
     } catch (error) {
       toast.error("Erro ao remover a notificação.");
     }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
   };
 
   return (
@@ -450,7 +470,7 @@ export const Sidebar = () => {
             <>
               <ProfileItem isOpen={isDrawerOpen} onClick={handleOpenPerfil}>
                 <div className="icon-perfil">
-                  <p>{`${userData.unique_name[0].toUpperCase()}${userData.unique_name[1].toUpperCase()}`}</p>
+                  <p>{getInitials(userData.unique_name)}</p>
                 </div>
 
                 <Title isOpen={isDrawerOpen} className="item-title">
