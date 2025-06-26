@@ -39,6 +39,7 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { useRefresh } from "../../../contexts/refreshContext";
 import RequestPageOutlinedIcon from "@mui/icons-material/RequestPageOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import { usePermission } from "../../../contexts/PermissionsContext";
 
 export interface Company {
   uuid: string;
@@ -78,6 +79,7 @@ export const Sidebar = () => {
   const [sentNotifications, setSentNotifications] = useState<Invite[]>([]);
   const [, triggerRefreshCompanies] = useRefresh("companies");
   const { setLoading } = useLoading();
+  const { isAuthorized } = usePermission();
 
   const groupIndex = pathParts.indexOf("grupos");
   const groupId = groupIndex !== -1 ? pathParts[groupIndex + 1] : null;
@@ -178,8 +180,14 @@ export const Sidebar = () => {
   });
 
   if (path && balancetePath) {
-    drawerListData.push(
-      {
+    drawerListData.push({
+      title: "Balancetes",
+      icon: <RequestPageOutlinedIcon fontSize="medium" />,
+      path: balancetePath,
+    });
+
+    if (isAuthorized(["Admin", "Desenvolvedor", "Consultor", "Gestor"])) {
+      drawerListData.push({
         title: "Uploads",
         icon: <CloudUploadOutlinedIcon fontSize="medium" />,
         subItems: [
@@ -188,15 +196,9 @@ export const Sidebar = () => {
             path,
           },
         ],
-      },
-      {
-        title: "Balancetes",
-        icon: <RequestPageOutlinedIcon fontSize="medium" />,
-        path: balancetePath,
-      }
-    );
+      });
+    }
   }
-
   const fetchUserInvitesNotifications = async () => {
     try {
       const response = await getUserInvitesNotifications();

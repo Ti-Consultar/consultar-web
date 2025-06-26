@@ -3,6 +3,9 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Header, StyledAvatar, StyledCard, CardActionsBox } from "./styles";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
+import { Protected } from "../Protection";
+import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
+import { usePermission } from "../../contexts/PermissionsContext";
 
 interface GroupCardProps {
   fantasyName: string;
@@ -21,6 +24,8 @@ export const GroupCard = ({
   onClick,
   onInvite,
 }: GroupCardProps) => {
+  const { role } = usePermission();
+
   return (
     <StyledCard
       onClick={onClick}
@@ -37,14 +42,24 @@ export const GroupCard = ({
           onClick={(e) => e.stopPropagation()}
         >
           <IconButton onClick={onInvite} size="small" color="inherit">
-            <GroupAddOutlinedIcon fontSize="small" />
+            {["Admin", "Gestor", "Desenvolvedor", "Consultor"].includes(
+              role ?? ""
+            ) ? (
+              <GroupAddOutlinedIcon fontSize="small" />
+            ) : (
+              <PeopleOutlinedIcon fontSize="small" />
+            )}
           </IconButton>
-          <IconButton onClick={onEdit} size="small" color="primary">
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton onClick={onDelete} size="small" color="error">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          <Protected
+            allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
+          >
+            <IconButton onClick={onEdit} size="small" color="primary">
+              <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton onClick={onDelete} size="small" color="error">
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Protected>
         </CardActionsBox>
       </Header>
 
