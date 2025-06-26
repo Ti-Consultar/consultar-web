@@ -7,7 +7,6 @@ import {
   TableRow,
   Paper,
   Typography,
-  TableSortLabel,
   TablePagination,
   Box,
   Button,
@@ -31,51 +30,18 @@ interface BalanceSheetDetailsTableProps {
   onViewDetailed: () => void;
 }
 
-type Order = "asc" | "desc";
-type OrderBy = keyof Pick<
-  AccountLine,
-  "initialValue" | "credit" | "debit" | "finalValue"
->;
-
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
   minimumFractionDigits: 2,
 });
 
-function getComparator<Key extends keyof any>(
-  order: Order,
-  orderBy: Key
-): (a: { [key in Key]: any }, b: { [key in Key]: any }) => number {
-  return order === "desc"
-    ? (a, b) => (b[orderBy] < a[orderBy] ? -1 : b[orderBy] > a[orderBy] ? 1 : 0)
-    : (a, b) =>
-        a[orderBy] < b[orderBy] ? -1 : a[orderBy] > b[orderBy] ? 1 : 0;
-}
-
-function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
-  const stabilized = array.map((el, index) => [el, index] as const);
-  stabilized.sort((a, b) => {
-    const cmp = comparator(a[0], b[0]);
-    return cmp !== 0 ? cmp : a[1] - b[1];
-  });
-  return stabilized.map((el) => el[0]);
-}
-
 export const BalanceSheetDetailsTable = ({
   data,
   onViewDetailed,
 }: BalanceSheetDetailsTableProps) => {
-  const [order, setOrder] = useState<Order>("asc");
-  const [orderBy, setOrderBy] = useState<OrderBy>("finalValue");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-
-  const handleRequestSort = (property: OrderBy) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
-    setOrderBy(property);
-  };
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
 
@@ -86,12 +52,7 @@ export const BalanceSheetDetailsTable = ({
     setPage(0);
   };
 
-  const sortedData = stableSort(
-    [...data].sort((a, b) => Number(a.costCenter) - Number(b.costCenter)),
-    getComparator(order, orderBy)
-  );
-
-  const paginatedData = sortedData.slice(
+  const paginatedData = data.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
@@ -116,9 +77,7 @@ export const BalanceSheetDetailsTable = ({
           textAlign: "center",
         }}
       >
-        <InboxIcon
-          sx={{ fontSize: 48, color: "var(--neutral-400)" }}
-        />
+        <InboxIcon sx={{ fontSize: 48, color: "var(--neutral-400)" }} />
         <Typography variant="h6" mt={2} color="text.secondary">
           Nenhum dado encontrado.
         </Typography>
@@ -158,53 +117,25 @@ export const BalanceSheetDetailsTable = ({
                   Nome da Conta
                 </Typography>
               </TableCell>
-              <TableCell
-                sortDirection={orderBy === "initialValue" ? order : false}
-              >
-                <TableSortLabel
-                  active={orderBy === "initialValue"}
-                  direction={order}
-                  onClick={() => handleRequestSort("initialValue")}
-                >
-                  <Typography variant="subtitle2" color="var(--neutral-500)">
-                    Valor Inicial
-                  </Typography>
-                </TableSortLabel>
+              <TableCell>
+                <Typography variant="subtitle2" color="var(--neutral-500)">
+                  Valor Inicial
+                </Typography>
               </TableCell>
-              <TableCell sortDirection={orderBy === "credit" ? order : false}>
-                <TableSortLabel
-                  active={orderBy === "credit"}
-                  direction={order}
-                  onClick={() => handleRequestSort("credit")}
-                >
-                  <Typography variant="subtitle2" color="var(--neutral-500)">
-                    Crédito
-                  </Typography>
-                </TableSortLabel>
+              <TableCell>
+                <Typography variant="subtitle2" color="var(--neutral-500)">
+                  Crédito
+                </Typography>
               </TableCell>
-              <TableCell sortDirection={orderBy === "debit" ? order : false}>
-                <TableSortLabel
-                  active={orderBy === "debit"}
-                  direction={order}
-                  onClick={() => handleRequestSort("debit")}
-                >
-                  <Typography variant="subtitle2" color="var(--neutral-500)">
-                    Débito
-                  </Typography>
-                </TableSortLabel>
+              <TableCell>
+                <Typography variant="subtitle2" color="var(--neutral-500)">
+                  Débito
+                </Typography>
               </TableCell>
-              <TableCell
-                sortDirection={orderBy === "finalValue" ? order : false}
-              >
-                <TableSortLabel
-                  active={orderBy === "finalValue"}
-                  direction={order}
-                  onClick={() => handleRequestSort("finalValue")}
-                >
-                  <Typography variant="subtitle2" color="var(--neutral-500)">
-                    Valor Final
-                  </Typography>
-                </TableSortLabel>
+              <TableCell>
+                <Typography variant="subtitle2" color="var(--neutral-500)">
+                  Valor Final
+                </Typography>
               </TableCell>
             </TableRow>
           </TableHead>
