@@ -34,6 +34,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Member } from "../../../types/member";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import { InvitationModal } from "../../Invitation/InvitationModal";
+import { Protected } from "../../../components/Protection";
 
 interface CompanyTableProps {
   companies: Company[];
@@ -74,7 +75,7 @@ export const CompanyTable = ({
   onRowClick,
   userPolicies,
   members = [],
-  fetchCurrentUsers
+  fetchCurrentUsers,
 }: CompanyTableProps) => {
   const {
     page,
@@ -355,21 +356,28 @@ export const CompanyTable = ({
           },
         }}
       >
-        <MenuItem onClick={handleEdit} sx={{ display: "flex", gap: 1 }}>
-          <ModeEditOutlinedIcon sx={{ fontSize: "18px" }} />
-          Editar
-        </MenuItem>
-        <MenuItem
-          onClick={() => setOpenDialog(true)}
-          sx={{ display: "flex", gap: 1 }}
+        <Protected
+          allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
         >
-          <Inventory2OutlinedIcon sx={{ fontSize: "18px" }} />
-          Inativar
-        </MenuItem>
-        <MenuItem onClick={handleInviteModal} sx={{ display: "flex", gap: 1 }}>
-          <GroupAddOutlinedIcon sx={{ fontSize: "18px" }} />
-          Convidar
-        </MenuItem>
+          <MenuItem onClick={handleEdit} sx={{ display: "flex", gap: 1 }}>
+            <ModeEditOutlinedIcon sx={{ fontSize: "18px" }} />
+            Editar
+          </MenuItem>
+          <MenuItem
+            onClick={() => setOpenDialog(true)}
+            sx={{ display: "flex", gap: 1 }}
+          >
+            <Inventory2OutlinedIcon sx={{ fontSize: "18px" }} />
+            Inativar
+          </MenuItem>
+          <MenuItem
+            onClick={handleInviteModal}
+            sx={{ display: "flex", gap: 1 }}
+          >
+            <GroupAddOutlinedIcon sx={{ fontSize: "18px" }} />
+            Convidar
+          </MenuItem>
+        </Protected>
         <MenuItem
           sx={{ display: "flex", gap: 1, color: "var(--status-error-950)" }}
           onClick={() => setOpenUnlinkDialog(true)}

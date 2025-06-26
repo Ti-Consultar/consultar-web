@@ -10,6 +10,7 @@ import { LoadingProvider } from "./contexts/LoadingProvider/index.tsx";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "./styles/theme.ts";
 import { RefreshProvider } from "./contexts/refreshContext.tsx";
+import { PermissionProvider } from "./contexts/PermissionsContext/index.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -21,9 +22,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <RefreshProvider>
             <CompanyProvider>
               <DrawerProvider>
-                <AppProviders>
-                  <App />
-                </AppProviders>
+                <PermissionProvider>
+                  <AppProviders>
+                    <App />
+                  </AppProviders>
+                </PermissionProvider>
               </DrawerProvider>
             </CompanyProvider>
           </RefreshProvider>

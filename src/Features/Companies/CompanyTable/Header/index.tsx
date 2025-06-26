@@ -19,6 +19,7 @@ import {
   InactiveCompaniesModal,
   InactiveCompany,
 } from "../../InactiveCompaniesModal";
+import { Protected } from "../../../../components/Protection";
 
 interface TableToolbarProps {
   title: string;
@@ -113,33 +114,37 @@ export const TableToolbar = ({
           alignItems="stretch"
           sx={{ width: isMobile ? "100%" : "auto" }}
         >
-          <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={onAddClick}
-              fullWidth
-              sx={{
-                textTransform: "none",
-                backgroundColor: "var(--branding-default-blue)",
-              }}
-            >
-              Adicionar
-            </Button>
+          <Protected
+            allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
+          >
+            <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={onAddClick}
+                fullWidth
+                sx={{
+                  textTransform: "none",
+                  backgroundColor: "var(--branding-default-blue)",
+                }}
+              >
+                Adicionar
+              </Button>
 
-            <Button
-              variant="outlined"
-              color="warning"
-              onClick={handleOpenModal}
-              startIcon={<Inventory2OutlinedIcon />}
-              fullWidth
-              sx={{
-                textTransform: "none",
-              }}
-            >
-              Inativos
-            </Button>
-          </Stack>
+              <Button
+                variant="outlined"
+                color="warning"
+                onClick={handleOpenModal}
+                startIcon={<Inventory2OutlinedIcon />}
+                fullWidth
+                sx={{
+                  textTransform: "none",
+                }}
+              >
+                Inativos
+              </Button>
+            </Stack>
+          </Protected>
 
           <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
             <Button
