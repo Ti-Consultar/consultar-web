@@ -19,10 +19,14 @@ export const GroupCard = ({
   onEdit,
   onDelete,
   onClick,
-  onInvite
+  onInvite,
 }: GroupCardProps) => {
   return (
-    <StyledCard onClick={onClick} sx={{ borderRadius: "8px" }}>
+    <StyledCard
+      onClick={onClick}
+      sx={{ borderRadius: "8px", border: "1px solid var(--neutral-300)" }}
+      elevation={0}
+    >
       <Header>
         <StyledAvatar>
           {(fantasyName || "").slice(0, 2).toUpperCase()}
