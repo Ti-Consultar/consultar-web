@@ -12,15 +12,16 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Button,
 } from "@mui/material";
 import ZoomOutMapRoundedIcon from "@mui/icons-material/ZoomOutMapRounded";
 import ZoomInMapRoundedIcon from "@mui/icons-material/ZoomInMapRounded";
 import SlideshowIcon from "@mui/icons-material/Slideshow";
 import jsPDF from "jspdf";
-
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import SlideshowOutlinedIcon from "@mui/icons-material/SlideshowOutlined";
+import PDFExportIcon from "../../assets/icons/pdf_export.svg";
+import PPTExportIcon from "../../assets/icons/ppt_export.svg";
+import KeyboardArrowUpOutlinedIcon from "@mui/icons-material/KeyboardArrowUpOutlined";
+import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 
 import {
   LineChart,
@@ -259,43 +260,51 @@ export const BalanceLineChart = ({ data }: BalanceLineChartProps) => {
           <Typography variant="h6">Balanço Contábil - Detalhamento</Typography>
 
           <Box display="flex" alignItems="center" gap={2}>
-            <Tooltip title="Exportar">
-              <IconButton onClick={handleClick}>
-                <FileDownloadIcon />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleClose}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
-              }}
-              PaperProps={{
-                elevation: 4,
-                sx: {
-                  borderRadius: 3,
-                  minWidth: 150,
-                  p: 1,
-                  bgcolor: "background.paper",
-                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-                },
-              }}
-            >
-              <MenuItem onClick={() => handleExport("pdf")}>
-                <ListItemIcon>
-                  <PictureAsPdfIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Exportar PDF</ListItemText>
-              </MenuItem>
-              <MenuItem onClick={() => handleExport("ppt")}>
-                <ListItemIcon>
-                  <SlideshowOutlinedIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Exportar PPT</ListItemText>
-              </MenuItem>
-            </Menu>
+            <Button
+                sx={{ color: darkMode ? "#fff" : "#000" }}
+                onClick={handleClick}
+                endIcon={
+                  open ? (
+                    <KeyboardArrowUpOutlinedIcon />
+                  ) : (
+                    <KeyboardArrowDownOutlinedIcon />
+                  )
+                }
+              >
+                Exportar
+              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                PaperProps={{
+                  elevation: 4,
+                  sx: {
+                    borderRadius: 3,
+                    minWidth: 150,
+                    p: 1,
+                    bgcolor: "background.paper",
+                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                  },
+                }}
+              >
+                <MenuItem onClick={() => handleExport("pdf")}>
+                  <ListItemIcon>
+                    <img src={PDFExportIcon} style={{ width: "20px" }} />
+                  </ListItemIcon>
+                  <ListItemText>.PDF</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => handleExport("ppt")}>
+                  <ListItemIcon>
+                    <img src={PPTExportIcon} style={{ width: "20px" }} />
+                  </ListItemIcon>
+                  <ListItemText>PowerPoint</ListItemText>
+                </MenuItem>
+              </Menu>
             <Typography variant="body2">
               {darkMode ? "Tema Escuro" : "Tema Claro"}
             </Typography>
