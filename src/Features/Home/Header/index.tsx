@@ -12,6 +12,9 @@ import AddIcon from "@mui/icons-material/Add";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import GridViewIcon from "@mui/icons-material/GridView";
 import { useTheme } from "@mui/material/styles";
+import { usePermission } from "../../../contexts/PermissionsContext";
+import { useEffect } from "react";
+import { Protected } from "../../../components/Protection";
 
 interface GroupsHeaderProps {
   onSearchChange: (value: string) => void;
@@ -29,6 +32,11 @@ export const GroupsHeader = ({
 }: GroupsHeaderProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { isAuthorized, role } = usePermission();
+
+  useEffect(() => {
+    console.log("Role:", role);
+  }, []);
 
   return (
     <Box>
@@ -50,14 +58,18 @@ export const GroupsHeader = ({
             Grupos
           </Typography>
           <Box sx={{ gap: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={onAddGroupClick}
-              sx={{ backgroundColor: "#2F63A4" }}
+            <Protected
+              allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
             >
-              Adicionar
-            </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={onAddGroupClick}
+                sx={{ backgroundColor: "#2F63A4" }}
+              >
+                Adicionar
+              </Button>
+            </Protected>
           </Box>
         </Box>
       </Box>

@@ -26,6 +26,7 @@ import { AlertModal } from "../../../../components/AlertModal";
 import { useTableUtils } from "../../../../utils/hooks/useTableUtils";
 import { useExportUtils } from "../../../../utils/hooks/useExportUtils";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import { Protected } from "../../../../components/Protection";
 
 interface MobileTableViewProps {
   companies: Company[];
@@ -197,24 +198,28 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
                 <OpenInNewRoundedIcon sx={{ fontSize: "18px" }} />
                 Abrir
               </MenuItem>
-              <MenuItem
-                sx={{ display: "flex", gap: 1 }}
-                onClick={() => handleClickEdit(company)}
+              <Protected
+                allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
               >
-                <EditRoundedIcon
-                  sx={{
-                    fontSize: "18px",
-                  }}
-                />
-                Editar
-              </MenuItem>
-              <MenuItem
-                onClick={() => setOpenDialog(true)}
-                sx={{ display: "flex", gap: 1 }}
-              >
-                <Inventory2OutlinedIcon sx={{ fontSize: "18px" }} />
-                Inativar
-              </MenuItem>
+                <MenuItem
+                  sx={{ display: "flex", gap: 1 }}
+                  onClick={() => handleClickEdit(company)}
+                >
+                  <EditRoundedIcon
+                    sx={{
+                      fontSize: "18px",
+                    }}
+                  />
+                  Editar
+                </MenuItem>
+                <MenuItem
+                  onClick={() => setOpenDialog(true)}
+                  sx={{ display: "flex", gap: 1 }}
+                >
+                  <Inventory2OutlinedIcon sx={{ fontSize: "18px" }} />
+                  Inativar
+                </MenuItem>
+              </Protected>
             </Menu>
             <AlertModal
               open={openDialog}
