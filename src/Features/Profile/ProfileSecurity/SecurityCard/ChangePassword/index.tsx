@@ -1,5 +1,4 @@
 import {
-  ForgotPassword,
   FormContainer,
   SecurityCardContainer,
   SubTitle,
@@ -7,7 +6,7 @@ import {
 } from "./styles";
 import PasswordInput from "../../../../../components/Inputs/PasswordInput";
 import { useState } from "react";
-import { Button, Snackbar, Alert, TextField, Typography } from "@mui/material";
+import { Button, Snackbar, Alert } from "@mui/material";
 import PasswordInputWithValidation from "../../../../../components/Inputs/PasswordInput/PasswordInputWithValidation";
 import { redefinePassword } from "../../../../../services/apis/routes/auth.service";
 import { toast } from "react-toastify";
