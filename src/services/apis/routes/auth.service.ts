@@ -39,6 +39,18 @@ export const setNewPassword = async (email: string) => {
   }
 };
 
+export const redefinePassword = async (password: string) => {
+  try {
+    const response = await axiosInstanceWithToken.put(`${BASE_URL}/reset-password`, {
+      password,
+    });
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getUserPolicies = async () => {
   try {
     const response = await axiosIntanceWithoutToken.get(
