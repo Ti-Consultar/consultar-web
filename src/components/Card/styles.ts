@@ -28,7 +28,7 @@ export const Header = styled(Box)({
 });
 
 export const StyledAvatar = styled(Avatar)(() => ({
-  backgroundColor: "#f2f2f2",
+  backgroundColor: "#00000",
   width: 48,
   height: 48,
 }));
