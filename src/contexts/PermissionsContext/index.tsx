@@ -13,6 +13,7 @@ export type Role =
 
 interface PermissionContextType {
   role: Role | null;
+  isLoading: boolean;
   isAuthorized: (allowedRoles: Role[]) => boolean;
 }
 
@@ -26,13 +27,15 @@ export const PermissionProvider = ({
   children: React.ReactNode;
 }) => {
   const [role, setRole] = useState<Role | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const token = Cookies.get("token");
+
     if (token) {
       try {
         const decoded: any = jwtDecode(token);
-        const rawRole = decoded?.role?.trim(); // 👈 remove espaços
+        const rawRole = decoded?.role?.trim();
         const validRoles: Role[] = [
           "Admin",
           "Gestor",
@@ -52,6 +55,8 @@ export const PermissionProvider = ({
         console.error("Erro ao decodificar token:", err);
       }
     }
+
+    setIsLoading(false); // sempre chamada (mesmo sem token) para não travar a UI
   }, []);
 
   const isAuthorized = (allowedRoles: Role[]) => {
@@ -59,7 +64,7 @@ export const PermissionProvider = ({
   };
 
   return (
-    <PermissionContext.Provider value={{ role, isAuthorized }}>
+    <PermissionContext.Provider value={{ role, isLoading, isAuthorized }}>
       {children}
     </PermissionContext.Provider>
   );
@@ -68,7 +73,9 @@ export const PermissionProvider = ({
 export const usePermission = (): PermissionContextType => {
   const context = useContext(PermissionContext);
   if (!context) {
-    throw new Error("usePermission deve ser usado dentro do AuthProvider");
+    throw new Error(
+      "usePermission deve ser usado dentro do PermissionProvider"
+    );
   }
   return context;
 };
