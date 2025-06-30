@@ -12,8 +12,6 @@ import AddIcon from "@mui/icons-material/Add";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import GridViewIcon from "@mui/icons-material/GridView";
 import { useTheme } from "@mui/material/styles";
-import { usePermission } from "../../../contexts/PermissionsContext";
-import { useEffect } from "react";
 import { Protected } from "../../../components/Protection";
 
 interface GroupsHeaderProps {
@@ -32,11 +30,6 @@ export const GroupsHeader = ({
 }: GroupsHeaderProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const { isAuthorized, role } = usePermission();
-
-  useEffect(() => {
-    console.log("Role:", role);
-  }, []);
 
   return (
     <Box>

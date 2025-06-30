@@ -1,25 +1,52 @@
-import { ForgotPassword, FormContainer, SecurityCardContainer, SubTitle, Title } from "./styles";
+import {
+  FormContainer,
+  SecurityCardContainer,
+  SubTitle,
+  Title,
+} from "./styles";
 import PasswordInput from "../../../../../components/Inputs/PasswordInput";
 import { useState } from "react";
-import { Button } from "@mui/material";
+import { Button, Snackbar, Alert } from "@mui/material";
 import PasswordInputWithValidation from "../../../../../components/Inputs/PasswordInput/PasswordInputWithValidation";
+import { redefinePassword } from "../../../../../services/apis/routes/auth.service";
+import { toast } from "react-toastify";
 
 export const ChangePassword = () => {
-  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const handlePasswordChange = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.warning("As senhas não coincidem");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await redefinePassword(newPassword);
+      toast.success("Senha alterada com sucesso!");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      toast.error("Erro ao alterar senha!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SecurityCardContainer>
       <Title>Redefinir Senha</Title>
-      <SubTitle>Para redefinir sua senha, por favor preencha os campos abaixo.</SubTitle>
+      <SubTitle>
+        Para redefinir sua senha, por favor preencha os campos abaixo.
+      </SubTitle>
       <FormContainer>
-        <PasswordInput
-          label="Senha atual"
-          placeholder="Senha atual"
-          value={oldPassword}
-          onChange={(e) => setOldPassword(e.target.value)}
-        />
         <PasswordInputWithValidation
           label="Nova senha"
           placeholder="Nova senha"
@@ -36,16 +63,25 @@ export const ChangePassword = () => {
           variant="contained"
           color="primary"
           fullWidth
+          onClick={handlePasswordChange}
+          disabled={loading || !newPassword || !confirmPassword}
           sx={{
             width: "40%",
             textTransform: "none",
             mt: "1rem",
           }}
         >
-          Redefinir Senha
+          {loading ? "Salvando..." : "Redefinir Senha"}
         </Button>
-        <ForgotPassword>Esqueceu a senha?</ForgotPassword>
       </FormContainer>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert severity={snackbar.severity as any}>{snackbar.message}</Alert>
+      </Snackbar>
     </SecurityCardContainer>
   );
 };
