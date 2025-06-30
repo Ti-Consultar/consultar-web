@@ -15,6 +15,7 @@ interface PermissionContextType {
   role: Role | null;
   isLoading: boolean;
   isAuthorized: (allowedRoles: Role[]) => boolean;
+  reloadPermissions: () => void;
 }
 
 const PermissionContext = createContext<PermissionContextType | undefined>(
@@ -29,34 +30,45 @@ export const PermissionProvider = ({
   const [role, setRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const loadPermissions = () => {
     const token = Cookies.get("token");
 
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        const rawRole = decoded?.role?.trim();
-        const validRoles: Role[] = [
-          "Admin",
-          "Gestor",
-          "Usuario",
-          "Consultor",
-          "Comercial",
-          "Desenvolvedor",
-          "Designer",
-        ];
-
-        if (validRoles.includes(rawRole)) {
-          setRole(rawRole);
-        } else {
-          console.warn("Role inválido ou não reconhecido:", rawRole);
-        }
-      } catch (err) {
-        console.error("Erro ao decodificar token:", err);
-      }
+    if (!token) {
+      setRole(null);
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(false); // sempre chamada (mesmo sem token) para não travar a UI
+    try {
+      const decoded: any = jwtDecode(token);
+      const rawRole = decoded?.role?.trim();
+
+      const validRoles: Role[] = [
+        "Admin",
+        "Gestor",
+        "Usuario",
+        "Consultor",
+        "Comercial",
+        "Desenvolvedor",
+        "Designer",
+      ];
+
+      if (validRoles.includes(rawRole)) {
+        setRole(rawRole);
+      } else {
+        console.warn("Role inválida:", rawRole);
+        setRole(null);
+      }
+    } catch (err) {
+      console.error("Erro ao decodificar token:", err);
+      setRole(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPermissions();
   }, []);
 
   const isAuthorized = (allowedRoles: Role[]) => {
@@ -64,7 +76,14 @@ export const PermissionProvider = ({
   };
 
   return (
-    <PermissionContext.Provider value={{ role, isLoading, isAuthorized }}>
+    <PermissionContext.Provider
+      value={{
+        role,
+        isLoading,
+        isAuthorized,
+        reloadPermissions: loadPermissions,
+      }}
+    >
       {children}
     </PermissionContext.Provider>
   );
