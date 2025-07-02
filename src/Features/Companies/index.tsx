@@ -372,6 +372,9 @@ export const Companies = () => {
             onReactivate={handleReactivate}
             fileName={groupData.businessEntity.razaoSocial}
             onRowClick={handleRowClick}
+            onUnlink={handleUnlinkBranch}
+            members={members}
+            userPolicies={userPolicies}
           ></MobileTableView>
         ) : (
           <CompanyTable
@@ -380,7 +383,6 @@ export const Companies = () => {
             deletedCompanies={deletedCompanies}
             onDelete={handleDeleteCompany}
             onEdit={handleEdit}
-            onOpen={() => {}}
             fileName={groupData.businessEntity.razaoSocial}
             companies={companiesData.companies}
             onReactivate={handleReactivate}

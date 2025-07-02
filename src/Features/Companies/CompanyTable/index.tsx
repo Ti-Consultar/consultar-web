@@ -39,7 +39,6 @@ import { Protected } from "../../../components/Protection";
 interface CompanyTableProps {
   companies: Company[];
   onAddCompany: () => void;
-  onOpen: (company: Company) => void;
   onEdit: (company: any) => void;
   onReactivate: (selectedIds: number[]) => Promise<void>;
   onDelete: (company: Company) => void;

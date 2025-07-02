@@ -27,6 +27,14 @@ import { useTableUtils } from "../../../../utils/hooks/useTableUtils";
 import { useExportUtils } from "../../../../utils/hooks/useExportUtils";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { Protected } from "../../../../components/Protection";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
+import { Member } from "../../../../types/member";
+
+type RoleOption = {
+  id: number;
+  name: string;
+};
 
 interface MobileTableViewProps {
   companies: Company[];
@@ -36,7 +44,12 @@ interface MobileTableViewProps {
   onReactivate: (selectedIds: number[]) => Promise<void>;
   onDelete: (company: Company) => void;
   onRowClick: (companyId: number) => void;
+  onUnlink: (company: any) => void;
   fileName?: string;
+
+  getUserPolicies?: () => Promise<RoleOption[]>;
+  members: Member[];
+  userPolicies: RoleOption[];
 }
 
 export const MobileTableView: React.FC<MobileTableViewProps> = ({
@@ -47,11 +60,13 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   onReactivate,
   onRowClick,
   fileName,
+  onUnlink,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const { exportPDF, exportCSV } = useExportUtils(`${fileName}-empresas`);
+  const [openUnlinkDialog, setOpenUnlinkDialog] = useState(false);
   const { searchTerm, setSearchTerm, setPage, filteredItems } = useTableUtils(
     companies,
     (company) => company.companyName
@@ -79,6 +94,14 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
       onDelete(selectedCompany);
       setOpenDialog(false);
     }
+  };
+
+  const handleUnlink = async () => {
+    if (selectedCompany) {
+      onUnlink(selectedCompany);
+    }
+    handleMenuClose();
+    setOpenDialog(false);
   };
 
   const handleExport = (format: string) => {
@@ -123,6 +146,44 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   const handleRowClick = (companyId: number) => {
     onRowClick(companyId);
   };
+
+  {
+    /* Sair da Empresa */
+  }
+  <AlertModal
+    open={openUnlinkDialog}
+    onClose={() => setOpenUnlinkDialog(false)}
+    onConfirm={() => {
+      handleUnlink();
+      setOpenUnlinkDialog(false);
+    }}
+    title="Deseja sair desta empresa?"
+    confirmText="Sim, sair"
+    cancelText="Cancelar"
+    message={
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          width: "100%",
+          gap: "10px",
+        }}
+      >
+        <span style={{ textAlign: "center", fontWeight: "bold" }}>
+          {selectedCompany?.companyName}{" "}
+        </span>
+        <span style={{ textAlign: "center" }}>
+          Tem certeza que deseja sair dessa empresa?
+        </span>
+        <Alert color="warning" severity="warning">
+          Saindo, você estará se desvinculando da empresa.
+        </Alert>
+      </div>
+    }
+    type="warning"
+  />;
 
   return (
     <Box sx={{ gridArea: "content" }}>
@@ -219,7 +280,25 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
                   <Inventory2OutlinedIcon sx={{ fontSize: "18px" }} />
                   Inativar
                 </MenuItem>
+                <MenuItem onClick={() => {}} sx={{ display: "flex", gap: 1 }}>
+                  <GroupAddOutlinedIcon sx={{ fontSize: "18px" }} />
+                  Convidar
+                </MenuItem>
               </Protected>
+              <MenuItem
+                sx={{
+                  display: "flex",
+                  gap: 1,
+                  color: "var(--status-error-950)",
+                }}
+                onClick={() => {
+                  handleUnlink();
+                  setOpenUnlinkDialog(false);
+                }}
+              >
+                <CloseRoundedIcon sx={{ fontSize: "18px" }} />
+                Sair da empresa
+              </MenuItem>
             </Menu>
             <AlertModal
               open={openDialog}
@@ -233,7 +312,7 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
               cancelText="Não, manter empresa"
               message={
                 <div
-                  style={{
+                  style={{  
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
