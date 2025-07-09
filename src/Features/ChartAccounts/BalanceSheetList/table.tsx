@@ -72,16 +72,30 @@ export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
           a[orderBy] < b[orderBy] ? -1 : a[orderBy] > b[orderBy] ? 1 : 0;
   }
 
-  function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
-    const stabilized = array.map((el, index) => [el, index] as const);
-    stabilized.sort((a, b) => {
-      const cmp = comparator(a[0], b[0]);
-      return cmp !== 0 ? cmp : a[1] - b[1];
-    });
-    return stabilized.map((el) => el[0]);
+  function stableSort<T>(
+    array: (T | null | undefined)[] | undefined,
+    comparator: (a: T, b: T) => number
+  ): T[] {
+    if (!Array.isArray(array)) return [];
+
+    const stabilized = array
+      .map((el, index) => [el, index] as const)
+      .sort((a, b) => {
+        const elA = a[0];
+        const elB = b[0];
+
+        if (elA == null && elB == null) return a[1] - b[1];
+        if (elA == null) return 1;
+        if (elB == null) return -1;
+
+        const cmp = comparator(elA, elB);
+        return cmp !== 0 ? cmp : a[1] - b[1];
+      });
+
+    return stabilized.map(([el]) => el as T);
   }
 
-  const sortedData = stableSort(data.balancetes, getComparator(order, orderBy));
+  const sortedData = stableSort(data?.balancetes ?? [], getComparator(order, orderBy));
   const paginatedData = sortedData.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
@@ -177,7 +191,7 @@ export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
           alignSelf: "flex-end",
           overflow: "hidden",
         }}
-        count={data.balancetes.length}
+        count={data?.balancetes?.length ?? 0}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
