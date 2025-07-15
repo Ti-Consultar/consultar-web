@@ -144,7 +144,9 @@ export const UploadBalanceSheet = () => {
       if (response?.success) {
         toast.success("Arquivo enviado com sucesso!");
       } else {
-        toast.error("Erro ao enviar o balancete. Verifique o arquivo e tente novamente");
+        toast.error(
+          "Erro ao enviar o balancete. Verifique o arquivo e tente novamente"
+        );
       }
     } catch (error) {
       console.error("Erro ao fazer upload do balancete:", error);
