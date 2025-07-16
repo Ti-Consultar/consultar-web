@@ -191,7 +191,7 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
                 sx={{ display: "flex", gap: 1 }}
                 onClick={() => {
                   if (selectedCompany) {
-                    handleRowClick(selectedCompany.id);
+                    handleRowClick(selectedCompany.companyId || selectedCompany.id);
                   }
                 }}
               >

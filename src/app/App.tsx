@@ -1,8 +1,16 @@
 import { ToastContainer } from "react-toastify";
 import { AppRoutes } from "./routes/routes";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
+import { usePermission } from "../contexts/PermissionsContext";
+import { Skeleton } from "@mui/material";
 
 function App() {
+  const { isLoading } = usePermission();
+
+  if (isLoading) {
+    return <Skeleton />;
+  }
+
   return (
     <>
       <AppRoutes />

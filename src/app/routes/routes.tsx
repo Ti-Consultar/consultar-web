@@ -13,6 +13,8 @@ import { UploadBalanceSheet } from "../../Features/ChartAccounts/UploadBalanceSh
 import { BalanceSheet } from "../../Features/ChartAccounts/BalanceSheetList";
 import { BalanceSheetData } from "../../Features/ChartAccounts/BalanceSheetData";
 import { BalanceSheetDetailed } from "../../Features/ChartAccounts/BalanceSheetDetailed";
+import { BalanceAssetsLiabilities } from "../../Features/ChartAccounts/BalanceAssetsLiabilities";
+import { ClassificationPage } from "../../Features/Classification";
 
 export const AppRoutes = () => {
   return (
@@ -93,6 +95,20 @@ export const AppRoutes = () => {
           element={<BalanceSheetDetailed />}
         />
 
+        {/* Balanço contábil */}
+        <Route
+          path="grupos/:groupId/balancetes/:balanceteId/balanco-contabil"
+          element={<BalanceAssetsLiabilities />}
+        />
+        <Route
+          path="grupos/:groupId/empresas/:companyid/balancetes/:balanceteId/balanco-contabil"
+          element={<BalanceAssetsLiabilities />}
+        />
+        <Route
+          path="grupos/:groupId/empresas/:companyid/filiais/balancetes/:balanceteId/balanco-contabil"
+          element={<BalanceAssetsLiabilities />}
+        />
+
         {/* upload - balancete */}
         <Route
           path="grupos/:groupId/plano-de-contas/:balanceteId/upload"
@@ -105,6 +121,20 @@ export const AppRoutes = () => {
         <Route
           path="grupos/:groupId/empresas/:companyid/filiais/plano-de-contas/:balanceteId/upload"
           element={<UploadBalanceSheet />}
+        />
+
+        {/* upload - balancete */}
+        <Route
+          path="grupos/:groupId/classificacao"
+          element={<ClassificationPage />}
+        />
+        <Route
+          path="grupos/:groupId/empresas/:companyid/classificacao"
+          element={<ClassificationPage />}
+        />
+        <Route
+          path="grupos/:groupId/empresas/:companyid/filiais/subcompanyid/classificacao"
+          element={<ClassificationPage />}
         />
       </Routes>
     </>

@@ -111,6 +111,12 @@ export const BalanceSheetData = () => {
     navigate(`${basePath}/detalhado`);
   };
 
+    const handleClickBalanceSheet = () => {
+    const basePath = location.pathname;
+    navigate(`${basePath}/balanco-contabil`);
+  };
+
+
   return (
     <MainTemplate>
       <MainContainer>
@@ -129,6 +135,7 @@ export const BalanceSheetData = () => {
           <BalanceSheetDetailsTable
             data={balanceteCostCenterData}
             onViewDetailed={handleClickDetailed}
+            onViewBalanceSheet={handleClickBalanceSheet}
           />
         </ListContainer>
       </MainContainer>

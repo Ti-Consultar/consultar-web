@@ -39,6 +39,7 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { useRefresh } from "../../../contexts/refreshContext";
 import RequestPageOutlinedIcon from "@mui/icons-material/RequestPageOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import DeviceHubRoundedIcon from '@mui/icons-material/DeviceHubRounded';
 import { usePermission } from "../../../contexts/PermissionsContext";
 
 export interface Company {
@@ -168,12 +169,34 @@ export const Sidebar = () => {
     return null;
   };
 
+  const buildClassificationUrl = ({
+    groupId,
+    companyId,
+    subCompanyId,
+  }: Ids) => {
+    if (groupId && companyId && subCompanyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/classificacao`;
+    }
+    if (groupId && companyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/classificacao`;
+    }
+    if (groupId) {
+      return `/grupos/${groupId}/classificacao`;
+    }
+    return null;
+  };
+
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
   const path = buildUploadBalanceSheetUrl({ groupId, companyId, subCompanyId });
   const balancetePath = buildBalanceSheetUrl({
+    groupId,
+    companyId,
+    subCompanyId,
+  });
+  const classificationPath = buildClassificationUrl({
     groupId,
     companyId,
     subCompanyId,
@@ -199,6 +222,15 @@ export const Sidebar = () => {
       });
     }
   }
+
+  if (path && classificationPath) {
+    drawerListData.push({
+      title: "Classificação",
+      icon: <DeviceHubRoundedIcon fontSize="medium" />,
+      path: classificationPath,
+    });
+  }
+
   const fetchUserInvitesNotifications = async () => {
     try {
       const response = await getUserInvitesNotifications();

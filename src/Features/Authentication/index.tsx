@@ -32,6 +32,7 @@ import LogoConsultarHorizontal from "../../assets/images/logo-consultar-horizont
 import LogoConsultarWhite from "../../assets/icons/consultar-white.svg";
 import { TextCarousel } from "../../components/TextCarousel";
 import { PulseLoading } from "../../components/PulseLoading";
+import { usePermission } from "../../contexts/PermissionsContext";
 
 export const Authentication = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -44,6 +45,7 @@ export const Authentication = () => {
   ];
 
   const navigate = useNavigate();
+  const { reloadPermissions } = usePermission();
 
   const {
     handleSubmit,
@@ -74,6 +76,7 @@ export const Authentication = () => {
         return;
       } else {
         setLoginError(null);
+        reloadPermissions();
         navigate("/grupos");
       }
     } catch (error: unknown) {
@@ -112,7 +115,7 @@ export const Authentication = () => {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                height: '100%'
+                height: "100%",
               }}
             >
               <Logo src={LogoConsultarHorizontal} alt="Logo Consultar" />

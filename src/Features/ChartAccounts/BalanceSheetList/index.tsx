@@ -3,6 +3,7 @@ import {
   HeaderContainer,
   ListContainer,
   MainContainer,
+  OptionsContainer,
   Subtitle,
   Title,
 } from "./styles";
@@ -97,6 +98,18 @@ export const BalanceSheet = () => {
           </Subtitle>
         </HeaderContainer>
         <ListContainer>
+          <OptionsContainer>
+            {/* <Button
+              variant="contained"
+              sx={{
+                textTransform: "none",
+                backgroundColor: "#5C57F4",
+              }}
+              startIcon={<TableRowsRoundedIcon />}
+            >
+              Balanço Contábil
+            </Button> */}
+          </OptionsContainer>
           <AccountingTable data={balanceteList} onRowClick={handleRowClick} />
         </ListContainer>
       </MainContainer>

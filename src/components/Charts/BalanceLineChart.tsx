@@ -20,6 +20,7 @@ import SlideshowIcon from "@mui/icons-material/Slideshow";
 import jsPDF from "jspdf";
 import PDFExportIcon from "../../assets/icons/pdf_export.svg";
 import PPTExportIcon from "../../assets/icons/ppt_export.svg";
+import CSVExportIcon from "../../assets/icons/csv_export.svg";
 import KeyboardArrowUpOutlinedIcon from "@mui/icons-material/KeyboardArrowUpOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 
@@ -173,9 +174,50 @@ export const BalanceLineChart = ({ data }: BalanceLineChartProps) => {
     pdf.save("grafico.pdf");
   };
 
+  const exportToExcel = () => {
+    const header = [
+      "Nome",
+      "Valor Inicial",
+      "Crédito",
+      "Débito",
+      "Valor Final",
+      "Centro de Custo",
+    ];
+
+    const rows = data.map((item) => [
+      item.costCenter,
+      item.name,
+      item.initialValue,
+      item.finalValue,
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [header, ...rows]
+        .map((row) =>
+          row
+            .map((value) =>
+              typeof value === "string" && value.includes(";")
+                ? `"${value}"`
+                : value
+            )
+            .join(";")
+        )
+        .join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "grafico.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleExport = (format: "pdf" | "excel" | "ppt") => {
     if (format === "ppt") exportToPPT();
     if (format === "pdf") exportToPDF();
+    if (format === "excel") exportToExcel();
     handleClose();
   };
 
@@ -261,50 +303,56 @@ export const BalanceLineChart = ({ data }: BalanceLineChartProps) => {
 
           <Box display="flex" alignItems="center" gap={2}>
             <Button
-                sx={{ color: darkMode ? "#fff" : "#000" }}
-                onClick={handleClick}
-                endIcon={
-                  open ? (
-                    <KeyboardArrowUpOutlinedIcon />
-                  ) : (
-                    <KeyboardArrowDownOutlinedIcon />
-                  )
-                }
-              >
-                Exportar
-              </Button>
-              <Menu
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                PaperProps={{
-                  elevation: 4,
-                  sx: {
-                    borderRadius: 3,
-                    minWidth: 150,
-                    p: 1,
-                    bgcolor: "background.paper",
-                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-                  },
-                }}
-              >
-                <MenuItem onClick={() => handleExport("pdf")}>
-                  <ListItemIcon>
-                    <img src={PDFExportIcon} style={{ width: "20px" }} />
-                  </ListItemIcon>
-                  <ListItemText>.PDF</ListItemText>
-                </MenuItem>
-                <MenuItem onClick={() => handleExport("ppt")}>
-                  <ListItemIcon>
-                    <img src={PPTExportIcon} style={{ width: "20px" }} />
-                  </ListItemIcon>
-                  <ListItemText>PowerPoint</ListItemText>
-                </MenuItem>
-              </Menu>
+              sx={{ color: darkMode ? "#fff" : "#000" }}
+              onClick={handleClick}
+              endIcon={
+                open ? (
+                  <KeyboardArrowUpOutlinedIcon />
+                ) : (
+                  <KeyboardArrowDownOutlinedIcon />
+                )
+              }
+            >
+              Exportar
+            </Button>
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+              PaperProps={{
+                elevation: 4,
+                sx: {
+                  borderRadius: 3,
+                  minWidth: 150,
+                  p: 1,
+                  bgcolor: "background.paper",
+                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+                },
+              }}
+            >
+              <MenuItem onClick={() => handleExport("pdf")}>
+                <ListItemIcon>
+                  <img src={PDFExportIcon} style={{ width: "20px" }} />
+                </ListItemIcon>
+                <ListItemText>PDF</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleExport("ppt")}>
+                <ListItemIcon>
+                  <img src={PPTExportIcon} style={{ width: "20px" }} />
+                </ListItemIcon>
+                <ListItemText>PowerPoint</ListItemText>
+              </MenuItem>
+               <MenuItem onClick={() => handleExport("excel")}>
+                <ListItemIcon>
+                  <img src={CSVExportIcon} style={{ width: "20px" }} />
+                </ListItemIcon>
+                <ListItemText>Excel</ListItemText>
+              </MenuItem>
+            </Menu>
             <Typography variant="body2">
               {darkMode ? "Tema Escuro" : "Tema Claro"}
             </Typography>
