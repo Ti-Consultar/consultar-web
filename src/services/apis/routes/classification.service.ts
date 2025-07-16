@@ -14,6 +14,18 @@ export const getClassification = async (typeClassification: number, accountPlanI
   }
 };
 
+export const getClassificationTemplate = async (typeClassification: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/Classification/template/typeClassification`,
+      { params: { typeClassification } }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const validateClassificationModel = async (accountPlanId: number) => {
   try {
     const response = await axiosInstanceWithToken.get(

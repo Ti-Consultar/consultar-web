@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { MainTemplate } from "../../components/AppLayout";
-import { Container, MainContainer, Title } from "./styles";
+import { MainContainer, Title } from "./styles";
 import { useMainContext } from "../../contexts/mainContext";
 import { ClassificationPanel } from "./ClassificationOptions";
 import { Box, Button, Card, Grid2 } from "@mui/material";
@@ -248,7 +248,7 @@ export const ClassificationPage = () => {
       const response = await getBalanceteByDate(accountPlanId, year, month);
       if (response.success === true) {
         setBalanceteData(response.data?.dataDto);
-        setBalanceteId(response.data?.id);
+        setBalanceteId(response.data?.balancete?.id);
       }
     } catch {
       toast.error("Erro ao buscar balancete por data.");
@@ -297,7 +297,7 @@ export const ClassificationPage = () => {
 
       const response = await getBalanceteFiltered(balanceteId, accountType);
       if (response.success === true) {
-        setBalanceteData(response.data?.dataDto);
+        setBalanceteData(response?.data);
       } else {
         toast.error("Erro ao buscar balancete por tipo de conta.");
       }

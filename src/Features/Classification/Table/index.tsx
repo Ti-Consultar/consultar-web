@@ -74,10 +74,6 @@ export const AccountPlanTable = ({
   const [valueMode, setValueMode] = useState<ValueDisplayMode>("TOTAL");
 
   useEffect(() => {
-
-  }, [])
-
-  useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "K" || stored === "C" || stored === "TOTAL") {
       setValueMode(stored);

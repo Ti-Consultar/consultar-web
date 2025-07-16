@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import { ClassificationType } from "../../../types/classification";
 import { ClassificationPanel } from "../ClassificationOptions";
-import { getClassification } from "../../../services/apis/routes/classification.service";
+import { getClassification, getClassificationTemplate } from "../../../services/apis/routes/classification.service";
 import { toast } from "react-toastify";
 
 interface ClassificationModalProps {
@@ -50,7 +50,7 @@ export const ClassificationModal = ({
           return;
         }
 
-        const response = await getClassification(type);
+        const response = await getClassificationTemplate(type);
         setClassifications(response.data);
 
         localStorage.setItem(

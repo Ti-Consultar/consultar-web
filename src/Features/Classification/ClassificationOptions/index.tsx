@@ -2,13 +2,11 @@ import {
   Box,
   Tabs,
   Tab,
-  Typography,
   Radio,
   RadioGroup,
   FormControlLabel,
   Paper,
   Stack,
-  Divider,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { DivSkeleton } from "../../../styles/skeleton/skeleton";
@@ -79,7 +77,7 @@ export const ClassificationPanel = ({
           sx={{
             maxHeight: { xs: "300px", md: "400px" }, // ajustável conforme layout
             overflowY: "auto",
-            pr: 1, // padding para não cortar o radio no scroll
+            pr: 1,
           }}
         >
           {isLoading ? (
