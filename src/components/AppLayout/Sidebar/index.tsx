@@ -40,6 +40,7 @@ import { useRefresh } from "../../../contexts/refreshContext";
 import RequestPageOutlinedIcon from "@mui/icons-material/RequestPageOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeviceHubRoundedIcon from '@mui/icons-material/DeviceHubRounded';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import { usePermission } from "../../../contexts/PermissionsContext";
 
 export interface Company {
@@ -216,6 +217,19 @@ export const Sidebar = () => {
         subItems: [
           {
             title: "Balancete",
+            path,
+          },
+        ],
+      });
+    }
+
+    if (isAuthorized(["Admin", "Desenvolvedor", "Consultor", "Gestor"])) {
+      drawerListData.push({
+        title: "Balanço e DR",
+        icon: <AssignmentOutlinedIcon fontSize="medium" />,
+        subItems: [
+          {
+            title: "Balanço Contábil",
             path,
           },
         ],
