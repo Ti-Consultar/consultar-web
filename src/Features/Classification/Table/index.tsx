@@ -26,6 +26,7 @@ import { useEffect, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import CheckIcon from "@mui/icons-material/Check";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import RemoveDoneOutlinedIcon from "@mui/icons-material/RemoveDoneOutlined";
 
 export interface AccountPlanRow {
   id: number;
@@ -71,6 +72,10 @@ export const AccountPlanTable = ({
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [valueMode, setValueMode] = useState<ValueDisplayMode>("TOTAL");
+
+  useEffect(() => {
+
+  }, [])
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -125,7 +130,6 @@ export const AccountPlanTable = ({
             <TuneRoundedIcon />
           </IconButton>
         </Tooltip>
-
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
@@ -166,6 +170,7 @@ export const AccountPlanTable = ({
             onChange={(e) => onAccountTypeChange(Number(e.target.value))}
             label="Tipo de Conta"
           >
+            <MenuItem value={0}>Todos</MenuItem>
             <MenuItem value={1}>Ativo</MenuItem>
             <MenuItem value={2}>Passivo</MenuItem>
             <MenuItem value={3}>DRE</MenuItem>
@@ -191,7 +196,19 @@ export const AccountPlanTable = ({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell />
+              <TableCell>
+                {selectedKeys.length > 0 && (
+                  <Tooltip title="Limpar seleção">
+                    <IconButton aria-label="delete" size="small">
+                      <RemoveDoneOutlinedIcon
+                        fontSize="inherit"
+                        onClick={() => onSelect([])}
+                        color="error"
+                      />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </TableCell>
               <TableCell onClick={() => onSort("costCenter")}>Key</TableCell>
               <TableCell onClick={() => onSort("name")}>Nome</TableCell>
               <TableCell onClick={() => onSort("initialValue")}>

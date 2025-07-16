@@ -6,11 +6,15 @@ import { ClassificationPanel } from "./ClassificationOptions";
 import { Box, Button, Card, Grid2 } from "@mui/material";
 import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import {
+  classify,
   getClassification,
   sendAccountPlanId,
   validateClassificationModel,
 } from "../../services/apis/routes/classification.service";
-import { ClassificationType } from "../../types/classification";
+import {
+  BondListWrapper,
+  ClassificationType,
+} from "../../types/classification";
 import { toast } from "react-toastify";
 import { ClassificationModal } from "./UseDefaultsModal";
 import { useParams } from "react-router";
@@ -18,7 +22,10 @@ import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { AccountPlanTable } from "./Table";
 import { MonthYearPickerSearch } from "./MonthYearPickerSearch";
-import { getBalanceteByDate } from "../../services/apis/routes/balancete.service";
+import {
+  getBalanceteByDate,
+  getBalanceteFiltered,
+} from "../../services/apis/routes/balancete.service";
 
 interface BondListItem {
   accountPlanClassificationId: number;
@@ -31,29 +38,27 @@ export const ClassificationPage = () => {
   const [skeleton, setSkeleton] = useState(true);
   const [selectedTab, setSelectedTab] = useState(1);
   const [accountPlanId, setAccountPlanId] = useState<number>();
+  const [balanceteId, setBalanceteId] = useState<number>();
   const [classifications, setClassifications] = useState<ClassificationType[]>(
     []
   );
   const [selectedClassificationId, setSelectedClassificationId] =
     useState<number>();
   const [open, setOpen] = useState(false);
+  const [accountType, setAccountType] = useState<number>();
   const { groupId, companyid, subcompanyid } = useParams();
   const [balanceteData, setBalanceteData] = useState<any[]>([]);
   const { setLoading } = useLoading();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
-
-  // Estado para bondList (classificações com centros de custo)
   const [classificationBonds, setClassificationBonds] = useState<{
     bondList: BondListItem[];
   }>(() => {
-    // Inicializa do localStorage se tiver
     const saved = localStorage.getItem("classification-bondList");
     return saved ? JSON.parse(saved) : { bondList: [] };
   });
 
   const handleSelect = (ids: string[]) => {
     setSelectedKeys(ids);
-    console.log("Selecionados:", ids);
   };
 
   // Atualiza breadcrumb no mount
@@ -63,6 +68,11 @@ export const ClassificationPage = () => {
       { name: "Classificação", link: "" },
     ]);
   }, []);
+
+  const handleAccountTypeChange = (accountType: number) => {
+    setAccountType(accountType);
+    getBalanceteByAccountType(accountType);
+  };
 
   // Busca accountPlanId no mount e quando params mudam
   useEffect(() => {
@@ -128,7 +138,8 @@ export const ClassificationPage = () => {
           return;
         }
 
-        const response = await getClassification(type);
+        if (!accountPlanId) return;
+        const response = await getClassification(type, accountPlanId);
         setClassifications(response.data);
 
         localStorage.setItem(
@@ -146,11 +157,12 @@ export const ClassificationPage = () => {
 
     localStorage.setItem("selectedTab", selectedTab.toString());
     fetchClassifications(selectedTab);
-  }, [selectedTab]);
+  }, [selectedTab, accountPlanId]);
 
   // Atualiza bondList e salva localStorage no momento da seleção da classificação
   const handleClassificationChange = (classificationId: number) => {
     if (!classificationId) return;
+    setSelectedKeys([]);
 
     setClassificationBonds((prev) => {
       // Clona bondList
@@ -164,14 +176,14 @@ export const ClassificationPage = () => {
       if (!group) {
         group = {
           accountPlanClassificationId: classificationId,
-          classificationName: classifications.find(
-            (c) => c.id === classificationId
-          )?.name || "Sem nome",
+          classificationName:
+            classifications.find((c) => c.id === classificationId)?.name ||
+            "Sem nome",
           costCenters: [],
         };
         bondList.push(group);
       }
-      
+
       selectedKeys.forEach((costCenter) => {
         if (!group.costCenters.some((cc) => cc.costCenter === costCenter)) {
           group.costCenters.push({ costCenter });
@@ -230,12 +242,70 @@ export const ClassificationPage = () => {
   }) => {
     try {
       if (!accountPlanId) return;
+
+      localStorage.removeItem("classification-bondList");
+      setSelectedKeys([]);
       const response = await getBalanceteByDate(accountPlanId, year, month);
       if (response.success === true) {
         setBalanceteData(response.data?.dataDto);
+        setBalanceteId(response.data?.id);
       }
     } catch {
       toast.error("Erro ao buscar balancete por data.");
+    }
+  };
+
+  const handleSaveClassification = async () => {
+    try {
+      const saved = localStorage.getItem("classification-bondList");
+      if (!saved) {
+        toast.warning("Nenhuma classificação para enviar.");
+        return;
+      }
+
+      const parsed: BondListWrapper = JSON.parse(saved);
+
+      if (!parsed.bondList || parsed.bondList.length === 0) {
+        toast.warning("Nenhuma classificação para enviar.");
+        return;
+      }
+
+      setLoading(true, "Enviando classificação...");
+
+      const response = await classify(parsed);
+
+      if (response.success === true) {
+        toast.success("Classificação enviada com sucesso!");
+        localStorage.removeItem("classification-bondList");
+      } else {
+        toast.error("Erro ao classificar.");
+      }
+    } catch (error) {
+      toast.error("Erro ao enviar classificação.");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getBalanceteByAccountType = async (accountType: number) => {
+    try {
+      if (!balanceteId) return;
+      if (!accountType) return;
+
+      setLoading(true, "Buscando balancete por tipo de conta...");
+
+      const response = await getBalanceteFiltered(balanceteId, accountType);
+      if (response.success === true) {
+        setBalanceteData(response.data?.dataDto);
+      } else {
+        toast.error("Erro ao buscar balancete por tipo de conta.");
+      }
+    } catch (error) {
+      toast.error("Erro ao buscar balancete por tipo de conta.");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -269,8 +339,8 @@ export const ClassificationPage = () => {
                       selectedKeys={selectedKeys}
                       onSelect={handleSelect}
                       onSort={() => {}}
-                      accountType={1}
-                      onAccountTypeChange={() => {}}
+                      accountType={accountType ? accountType : 0}
+                      onAccountTypeChange={handleAccountTypeChange}
                       classificationBonds={classificationBonds}
                     />
                   </Grid2>
@@ -285,13 +355,7 @@ export const ClassificationPage = () => {
                   <Grid2 size={{ xs: 12 }}>
                     <Button
                       variant="contained"
-                      onClick={() => {
-                        // aqui só chama a API usando classificationBonds
-                        console.log(
-                          "Enviar classificação para API:",
-                          classificationBonds
-                        );
-                      }}
+                      onClick={handleSaveClassification}
                       fullWidth
                       startIcon={<LinkOutlinedIcon />}
                     >
