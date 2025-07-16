@@ -14,7 +14,7 @@ import { AccountPlan, Balancetes } from "../../../types/balancete";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
-import { getBalancetes } from "../../../services/apis/routes/balancete.service";
+import { deleteBalancete, getBalancetes } from "../../../services/apis/routes/balancete.service";
 import { AccountingTable } from "../BalanceSheetList/table";
 import { toast } from "react-toastify";
 
@@ -54,6 +54,26 @@ export const BalanceSheet = () => {
   const handleRowClick = (balanceteId: number) => {
     const basePath = location.pathname.replace(/\/\d+$/, "");
     navigate(`${basePath}/${balanceteId}`);
+  };
+
+  const handleDeleteBalancete = async (id: number) => {
+    setLoading(true, "Excluindo balancete...");
+    try {
+      const response = await deleteBalancete(id);
+      if (response?.success === true) {
+        toast.success("Balancete excluído!");
+        setBalanceteList((prev) => ({
+          ...prev,
+          balancetes: prev.balancetes.filter((item) => item.id !== id),
+        }));
+      } else {
+        toast.error("Erro ao excluir o balancete.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir o balancete.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchBalancetes = async () => {
@@ -98,19 +118,12 @@ export const BalanceSheet = () => {
           </Subtitle>
         </HeaderContainer>
         <ListContainer>
-          <OptionsContainer>
-            {/* <Button
-              variant="contained"
-              sx={{
-                textTransform: "none",
-                backgroundColor: "#5C57F4",
-              }}
-              startIcon={<TableRowsRoundedIcon />}
-            >
-              Balanço Contábil
-            </Button> */}
-          </OptionsContainer>
-          <AccountingTable data={balanceteList} onRowClick={handleRowClick} />
+          <OptionsContainer></OptionsContainer>
+          <AccountingTable
+            data={balanceteList}
+            onRowClick={handleRowClick}
+            onDelete={handleDeleteBalancete}
+          />
         </ListContainer>
       </MainContainer>
     </MainTemplate>

@@ -108,3 +108,14 @@ export const getBalanceteFiltered = async (id: number, tipo: number) => {
     throw error;
   }
 };
+
+export const deleteBalancete = async (id: number) => {
+  try {
+    const response = await axiosInstanceWithToken.delete(
+      `${URL}/api/Balancete/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

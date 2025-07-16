@@ -9,18 +9,26 @@ import {
   Chip,
   TableSortLabel,
   TablePagination,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { useState } from "react";
 import { Balancetes } from "../../../types/balancete";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 interface AccountingTableProps {
   data: Balancetes;
   onRowClick?: (id: number) => void;
+  onDelete?: (id: number) => void;
 }
 
 type Order = "asc" | "desc";
 
-export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
+export const AccountingTable = ({
+  data,
+  onRowClick,
+  onDelete,
+}: AccountingTableProps) => {
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<"dateYear" | "dateMonth" | "status">(
     "dateYear"
@@ -95,7 +103,10 @@ export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
     return stabilized.map(([el]) => el as T);
   }
 
-  const sortedData = stableSort(data?.balancetes ?? [], getComparator(order, orderBy));
+  const sortedData = stableSort(
+    data?.balancetes ?? [],
+    getComparator(order, orderBy)
+  );
   const paginatedData = sortedData.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
@@ -133,9 +144,9 @@ export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
                   <span style={{ color: "var(--neutral-500)" }}>Status</span>
                 </TableSortLabel>
               </TableCell>
-              {/* <TableCell align="center" sx={{ color: "var(--neutral-500)" }}>
+              <TableCell align="center" sx={{ color: "var(--neutral-500)" }}>
                 Ações
-              </TableCell> */}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -167,17 +178,19 @@ export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
                   >
                     <Chip label={status} color="warning" variant="outlined" />
                   </TableCell>
-                  {/* <TableCell align="center">
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation(); // impede o clique na linha
-                        onRowClick?.(id);
-                      }}
-                      color="primary"
-                    >
-                      <OpenInNewIcon />
-                    </IconButton>
-                  </TableCell> */}
+                  <TableCell align="center">
+                    <Tooltip title="Excluir balancete">
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete?.(id);
+                        }}
+                        color="error"
+                      >
+                        <DeleteOutlineRoundedIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
               ))
             )}
