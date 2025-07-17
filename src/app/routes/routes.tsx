@@ -15,6 +15,7 @@ import { BalanceSheetData } from "../../Features/ChartAccounts/BalanceSheetData"
 import { BalanceSheetDetailed } from "../../Features/ChartAccounts/BalanceSheetDetailed";
 import { BalanceAssetsLiabilities } from "../../Features/ChartAccounts/BalanceAssetsLiabilities";
 import { ClassificationPage } from "../../Features/Classification";
+import { BalancoContabil } from "../../Features/BalanceSheet/BalanceSheet";
 
 export const AppRoutes = () => {
   return (
@@ -140,15 +141,15 @@ export const AppRoutes = () => {
         {/* upload - balanço patrimonial contábil */}
         <Route
           path="grupos/:groupId/contabil"
-          element={<ClassificationPage />}
+          element={<BalancoContabil />}
         />
         <Route
           path="grupos/:groupId/empresas/:companyid/contabil"
-          element={<ClassificationPage />}
+          element={<BalancoContabil />}
         />
         <Route
           path="grupos/:groupId/empresas/:companyid/filiais/subcompanyid/contabil"
-          element={<ClassificationPage />}
+          element={<BalancoContabil />}
         />
       </Routes>
     </>

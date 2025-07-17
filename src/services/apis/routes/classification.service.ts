@@ -26,6 +26,22 @@ export const getClassificationTemplate = async (typeClassification: number) => {
   }
 };
 
+export const getBalancoContabil = async (accountPlanId: number, year: number, type: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/get-bond-painel/type`,
+      { params: { 
+        accountPlanId,
+        year,
+        type
+       } }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const validateClassificationModel = async (accountPlanId: number) => {
   try {
     const response = await axiosInstanceWithToken.get(

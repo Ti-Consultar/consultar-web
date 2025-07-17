@@ -39,8 +39,8 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { useRefresh } from "../../../contexts/refreshContext";
 import RequestPageOutlinedIcon from "@mui/icons-material/RequestPageOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
-import DeviceHubRoundedIcon from '@mui/icons-material/DeviceHubRounded';
-import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import DeviceHubRoundedIcon from "@mui/icons-material/DeviceHubRounded";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import { usePermission } from "../../../contexts/PermissionsContext";
 
 export interface Company {
@@ -170,6 +170,23 @@ export const Sidebar = () => {
     return null;
   };
 
+  const buildBalancoContabilUrl = ({
+    groupId,
+    companyId,
+    subCompanyId,
+  }: Ids) => {
+    if (groupId && companyId && subCompanyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/contabil`;
+    }
+    if (groupId && companyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/contabil`;
+    }
+    if (groupId) {
+      return `/grupos/${groupId}/contabil`;
+    }
+    return null;
+  };
+
   const buildClassificationUrl = ({
     groupId,
     companyId,
@@ -202,6 +219,11 @@ export const Sidebar = () => {
     companyId,
     subCompanyId,
   });
+  const balancoContabilPath = buildBalancoContabilUrl({
+    groupId,
+    companyId,
+    subCompanyId,
+  });
 
   if (path && balancetePath) {
     drawerListData.push({
@@ -222,19 +244,19 @@ export const Sidebar = () => {
         ],
       });
     }
+  }
 
-    if (isAuthorized(["Admin", "Desenvolvedor", "Consultor", "Gestor"])) {
-      drawerListData.push({
-        title: "Balanço e DR",
-        icon: <AssignmentOutlinedIcon fontSize="medium" />,
-        subItems: [
-          {
-            title: "Balanço Contábil",
-            path,
-          },
-        ],
-      });
-    }
+  if (path && balancoContabilPath) {
+    drawerListData.push({
+      title: "Balanço e DR",
+      icon: <AssignmentOutlinedIcon fontSize="medium" />,
+      subItems: [
+        {
+          title: "Balanço Contábil",
+          path: balancoContabilPath,
+        },
+      ],
+    });
   }
 
   if (path && classificationPath) {
