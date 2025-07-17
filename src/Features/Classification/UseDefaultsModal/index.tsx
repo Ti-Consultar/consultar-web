@@ -52,11 +52,6 @@ export const ClassificationModal = ({
 
         const response = await getClassificationTemplate(type);
         setClassifications(response.data);
-
-        localStorage.setItem(
-          `classifications-${type}`,
-          JSON.stringify(response.data)
-        );
       } catch (error) {
         toast.error(
           "Erro ao buscar classificações, tente novamente mais tarde."
