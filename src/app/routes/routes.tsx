@@ -136,6 +136,20 @@ export const AppRoutes = () => {
           path="grupos/:groupId/empresas/:companyid/filiais/subcompanyid/classificacao"
           element={<ClassificationPage />}
         />
+
+        {/* upload - balanço patrimonial contábil */}
+        <Route
+          path="grupos/:groupId/contabil"
+          element={<ClassificationPage />}
+        />
+        <Route
+          path="grupos/:groupId/empresas/:companyid/contabil"
+          element={<ClassificationPage />}
+        />
+        <Route
+          path="grupos/:groupId/empresas/:companyid/filiais/subcompanyid/contabil"
+          element={<ClassificationPage />}
+        />
       </Routes>
     </>
   );
