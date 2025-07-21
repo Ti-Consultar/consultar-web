@@ -79,7 +79,6 @@ export const BalanceSheetDetailed = () => {
           </Box>
           <Subtitle>{date}</Subtitle>
         </HeaderContainer>
-        <BalanceLineChart data={balanceteDataDetailed} />
         <ListContainer>
           <BalanceSheetTable data={balanceteDataDetailed} />
         </ListContainer>

@@ -116,7 +116,6 @@ export const Branches = () => {
 
       setDeletedSubCompanies(formatted);
     } catch (error) {
-      console.error("Erro ao buscar empresas inativas:", error);
       toast.error("Erro técnico ao buscar empresas inativas.");
     }
   };

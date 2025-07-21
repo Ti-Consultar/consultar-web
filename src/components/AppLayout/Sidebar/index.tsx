@@ -187,6 +187,23 @@ export const Sidebar = () => {
     return null;
   };
 
+   const buildBalancoReclassificadoUrl = ({
+    groupId,
+    companyId,
+    subCompanyId,
+  }: Ids) => {
+    if (groupId && companyId && subCompanyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/demonstracoes-contabeis`;
+    }
+    if (groupId && companyId) {
+      return `/grupos/${groupId}/empresas/${companyId}/demonstracoes-contabeis`;
+    }
+    if (groupId) {
+      return `/grupos/${groupId}/demonstracoes-contabeis`;
+    }
+    return null;
+  };
+
   const buildClassificationUrl = ({
     groupId,
     companyId,
@@ -224,6 +241,11 @@ export const Sidebar = () => {
     companyId,
     subCompanyId,
   });
+  const balancoReclassificadoPath = buildBalancoReclassificadoUrl({
+    groupId,
+    companyId,
+    subCompanyId,
+  });
 
   if (path && balancetePath) {
     drawerListData.push({
@@ -246,7 +268,7 @@ export const Sidebar = () => {
     }
   }
 
-  if (path && balancoContabilPath) {
+  if (path && balancoContabilPath && balancoReclassificadoPath) {
     drawerListData.push({
       title: "Balanço e DR",
       icon: <AssignmentOutlinedIcon fontSize="medium" />,
@@ -254,6 +276,9 @@ export const Sidebar = () => {
         {
           title: "Balanço Contábil",
           path: balancoContabilPath,
+        },{
+          title: "Demonstrações Contábeis",
+          path: balancoReclassificadoPath,
         },
       ],
     });

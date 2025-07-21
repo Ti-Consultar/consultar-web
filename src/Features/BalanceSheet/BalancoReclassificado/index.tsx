@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { MainTemplate } from "../../../components/AppLayout";
 import { Container, MainContainer, Title } from "./styles";
 import { BalancoContabilTable } from "./table";
-import {
-  Box,
-  Tabs,
-  Tab,
-  Paper,
-  Button,
-} from "@mui/material";
+import { Box, Tabs, Tab, Paper, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -20,7 +14,7 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { getBalancoContabil } from "../../../services/apis/routes/classification.service";
 import { toast } from "react-toastify";
 
-export const BalancoContabil = () => {
+export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState(1); // 1 = Ativo, 2 = Passivo
   const [selectedYear, setSelectedYear] = useState(dayjs().startOf("year"));
   const [accountPlanId, setAccountPlanId] = useState<number>();
@@ -97,7 +91,7 @@ export const BalancoContabil = () => {
   return (
     <MainTemplate>
       <MainContainer>
-        <Title>Balanço Contábil</Title>
+        <Title>Demonstrações Contábeis</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box
             sx={{
@@ -132,6 +126,17 @@ export const BalancoContabil = () => {
               />
               <Tab
                 label="Passivo"
+                value={2}
+                sx={{
+                  color: "var(--neutral-700)",
+                  fontWeight: "bold",
+                  "&.Mui-selected": {
+                    color: "var(--neutral-700)",
+                  },
+                }}
+              />
+              <Tab
+                label="DRE"
                 value={2}
                 sx={{
                   color: "var(--neutral-700)",
