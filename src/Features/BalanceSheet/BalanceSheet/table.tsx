@@ -43,6 +43,7 @@ type BalancoTableProps = {
   data: MonthData[];
   sections?: SectionConfig[];
   fixedColumnTitle?: string;
+  format?: (value: string) => void;
 };
 
 const SECTIONS_ATIVO: SectionConfig[] = [
@@ -70,6 +71,7 @@ export function BalancoContabilTable({
   data,
   sections: sectionsProp,
   fixedColumnTitle: fixedColumnTitleProp,
+  format
 }: BalancoTableProps) {
   const [hoverRow, setHoverRow] = useState<number | null>(null);
   const [hoverCol, setHoverCol] = useState<number | null>(null);

@@ -17,6 +17,11 @@ import { BalanceAssetsLiabilities } from "../../Features/ChartAccounts/BalanceAs
 import { ClassificationPage } from "../../Features/Classification";
 import { BalancoContabil } from "../../Features/BalanceSheet/BalanceSheet";
 import { BalancoReclassificado } from "../../Features/BalanceSheet/BalancoReclassificado";
+import { withScopes } from "./helper";
+import { GestaoLiquidez } from "../../Features/Results/GestaoLiquidez";
+import { IndicesEconomicos } from "../../Features/Results/IndicesEconomicos";
+import { CILeEC } from "../../Features/Results/CILeEC";
+import { EficienciaOperacional } from "../../Features/Results/EficienciaOperacional";
 
 export const AppRoutes = () => {
   return (
@@ -46,125 +51,74 @@ export const AppRoutes = () => {
         />
 
         {/* plano de contas */}
-        <Route
-          path="grupos/:groupId/plano-de-contas"
-          element={<UploadBalanceSheet />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/plano-de-contas"
-          element={<UploadBalanceSheet />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/filiais/plano-de-contasplano-de-contas"
-          element={<UploadBalanceSheet />}
-        />
+        {withScopes("plano-de-contas").map((path) => (
+          <Route key={path} path={path} element={<UploadBalanceSheet />} />
+        ))}
+
+        {/* plano de contas upload */}
+        {withScopes("plano-de-contas/:balanceteId/upload").map((path) => (
+          <Route key={path} path={path} element={<UploadBalanceSheet />} />
+        ))}
+
         {/* balancetes */}
-        <Route path="grupos/:groupId/balancetes" element={<BalanceSheet />} />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/balancetes"
-          element={<BalanceSheet />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/filiais/balancetes"
-          element={<BalanceSheet />}
-        />
+        {withScopes("balancetes").map((path) => (
+          <Route key={path} path={path} element={<BalanceSheet />} />
+        ))}
 
         {/* balancetes data */}
-        <Route
-          path="grupos/:groupId/balancetes/:balanceteId"
-          element={<BalanceSheetData />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/balancetes/:balanceteId"
-          element={<BalanceSheetData />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/filiais/balancetes/:balanceteId"
-          element={<BalanceSheetData />}
-        />
+        {withScopes("balancetes/:balanceteId").map((path) => (
+          <Route key={path} path={path} element={<BalanceSheetData />} />
+        ))}
 
-        {/* balancetes balanço detalhado */}
-        <Route
-          path="grupos/:groupId/balancetes/:balanceteId/detalhado"
-          element={<BalanceSheetDetailed />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/balancetes/:balanceteId/detalhado"
-          element={<BalanceSheetDetailed />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/filiais/balancetes/:balanceteId/detalhado"
-          element={<BalanceSheetDetailed />}
-        />
+        {/* balancetes detalhado */}
+        {withScopes("balancetes/:balanceteId/detalhado").map((path) => (
+          <Route key={path} path={path} element={<BalanceSheetDetailed />} />
+        ))}
 
-        {/* Balanço contábil */}
-        <Route
-          path="grupos/:groupId/balancetes/:balanceteId/balanco-contabil"
-          element={<BalanceAssetsLiabilities />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/balancetes/:balanceteId/balanco-contabil"
-          element={<BalanceAssetsLiabilities />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/filiais/balancetes/:balanceteId/balanco-contabil"
-          element={<BalanceAssetsLiabilities />}
-        />
+        {/* balanço contábil */}
+        {withScopes("balancetes/:balanceteId/balanco-contabil").map((path) => (
+          <Route
+            key={path}
+            path={path}
+            element={<BalanceAssetsLiabilities />}
+          />
+        ))}
 
-        {/* upload - balancete */}
-        <Route
-          path="grupos/:groupId/plano-de-contas/:balanceteId/upload"
-          element={<UploadBalanceSheet />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/plano-de-contas/:balanceteId/upload"
-          element={<UploadBalanceSheet />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/filiais/plano-de-contas/:balanceteId/upload"
-          element={<UploadBalanceSheet />}
-        />
+        {/* classificação */}
+        {withScopes("classificacao").map((path) => (
+          <Route key={path} path={path} element={<ClassificationPage />} />
+        ))}
 
-        {/* upload - balancete */}
-        <Route
-          path="grupos/:groupId/classificacao"
-          element={<ClassificationPage />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/classificacao"
-          element={<ClassificationPage />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/filiais/subcompanyid/classificacao"
-          element={<ClassificationPage />}
-        />
+        {/* balanço contábil geral */}
+        {withScopes("contabil").map((path) => (
+          <Route key={path} path={path} element={<BalancoContabil />} />
+        ))}
 
-        {/* upload - balanço patrimonial contábil */}
-        <Route
-          path="grupos/:groupId/contabil"
-          element={<BalancoContabil />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/contabil"
-          element={<BalancoContabil />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/filiais/subcompanyid/contabil"
-          element={<BalancoContabil />}
-        />
-        {/* upload - balanço patrimonial contábil */}
-        <Route
-          path="grupos/:groupId/demonstracoes-contabeis"
-          element={<BalancoReclassificado />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/demonstracoes-contabeis"
-          element={<BalancoReclassificado />}
-        />
-        <Route
-          path="grupos/:groupId/empresas/:companyid/filiais/subcompanyid/demonstracoes-contabeis"
-          element={<BalancoReclassificado />}
-        />
+        {/* demonstrações contábeis */}
+        {withScopes("demonstracoes-contabeis").map((path) => (
+          <Route key={path} path={path} element={<BalancoReclassificado />} />
+        ))}
+
+        {/* RESULTADOS */}
+        {/* demonstrações contábeis */}
+        {withScopes("resultados/gestao-liquidez").map((path) => (
+          <Route key={path} path={path} element={<GestaoLiquidez />} />
+        ))}
+
+        {/* Indíces econômicos */}
+        {withScopes("resultados/indices-economicos").map((path) => (
+          <Route key={path} path={path} element={<IndicesEconomicos />} />
+        ))}
+
+        {/* CIL e EC */}
+        {withScopes("resultados/cil-ec").map((path) => (
+          <Route key={path} path={path} element={<CILeEC />} />
+        ))}
+
+        {/* Eficiencia Operacional */}
+        {withScopes("resultados/eficiencia-operacional").map((path) => (
+          <Route key={path} path={path} element={<EficienciaOperacional />} />
+        ))}
       </Routes>
     </>
   );

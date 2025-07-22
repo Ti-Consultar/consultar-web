@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { MainTemplate } from "../../../components/AppLayout";
 import { Container, MainContainer, Title } from "./styles";
 import { BalancoContabilTable } from "./table";
-import {
-  Box,
-  Tabs,
-  Tab,
-  Paper,
-  Button,
-} from "@mui/material";
+import { Box, Tabs, Tab, Paper, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -19,6 +13,9 @@ import { getAccountPlan } from "../../../services/apis/routes/accountplan.servic
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getBalancoContabil } from "../../../services/apis/routes/classification.service";
 import { toast } from "react-toastify";
+import { ValueDisplayMode } from "../../Classification/Table";
+
+const STORAGE_KEY = "accountPlanTable:valueMode";
 
 export const BalancoContabil = () => {
   const [tabValue, setTabValue] = useState(1); // 1 = Ativo, 2 = Passivo
@@ -27,6 +24,25 @@ export const BalancoContabil = () => {
   const { setLoading } = useLoading();
   const [data, setData] = useState<any>([]);
   const { groupId, companyid, subCompanyId } = useParams();
+  const [valueMode, setValueMode] = useState<ValueDisplayMode>("TOTAL");
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "K" || stored === "C" || stored === "TOTAL") {
+      setValueMode(stored);
+    }
+  }, []);
+
+  const formatValue = (value: number) => {
+    switch (valueMode) {
+      case "K":
+        return `${(value / 1000000).toFixed(1)}`;
+      case "C":
+        return Math.round(value / 1000).toLocaleString("pt-BR");
+      default:
+        return value.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+    }
+  };
 
   useEffect(() => {
     if (groupId) {
@@ -177,7 +193,7 @@ export const BalancoContabil = () => {
           </Box>
 
           <Container>
-            <BalancoContabilTable data={data} />
+            <BalancoContabilTable data={data} format={() => formatValue}/>
           </Container>
         </Paper>
       </MainContainer>

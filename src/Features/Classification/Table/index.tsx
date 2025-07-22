@@ -39,7 +39,7 @@ export interface AccountPlanRow {
   finalValue: number;
 }
 
-type ValueDisplayMode = "TOTAL" | "K" | "C";
+export type ValueDisplayMode = "TOTAL" | "K" | "C";
 const STORAGE_KEY = "accountPlanTable:valueMode";
 
 interface BondListItem {

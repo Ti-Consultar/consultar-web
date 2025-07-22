@@ -41,6 +41,8 @@ import RequestPageOutlinedIcon from "@mui/icons-material/RequestPageOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeviceHubRoundedIcon from "@mui/icons-material/DeviceHubRounded";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
+
 import { usePermission } from "../../../contexts/PermissionsContext";
 
 export interface Company {
@@ -140,112 +142,58 @@ export const Sidebar = () => {
     }
   }, []);
 
-  const buildUploadBalanceSheetUrl = ({
-    groupId,
-    companyId,
-    subCompanyId,
-  }: Ids) => {
-    if (groupId && companyId && subCompanyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/plano-de-contas`;
-    }
-    if (groupId && companyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/plano-de-contas`;
-    }
-    if (groupId) {
-      return `/grupos/${groupId}/plano-de-contas`;
-    }
-    return null;
-  };
+  const buildNestedUrl = (
+    { groupId, companyId, subCompanyId }: Ids,
+    finalPath: string
+  ): string | null => {
+    if (!groupId) return null;
 
-  const buildBalanceSheetUrl = ({ groupId, companyId, subCompanyId }: Ids) => {
-    if (groupId && companyId && subCompanyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/balancetes`;
-    }
-    if (groupId && companyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/balancetes`;
-    }
-    if (groupId) {
-      return `/grupos/${groupId}/balancetes`;
-    }
-    return null;
-  };
-
-  const buildBalancoContabilUrl = ({
-    groupId,
-    companyId,
-    subCompanyId,
-  }: Ids) => {
-    if (groupId && companyId && subCompanyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/contabil`;
-    }
-    if (groupId && companyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/contabil`;
-    }
-    if (groupId) {
-      return `/grupos/${groupId}/contabil`;
-    }
-    return null;
-  };
-
-   const buildBalancoReclassificadoUrl = ({
-    groupId,
-    companyId,
-    subCompanyId,
-  }: Ids) => {
-    if (groupId && companyId && subCompanyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/demonstracoes-contabeis`;
-    }
-    if (groupId && companyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/demonstracoes-contabeis`;
-    }
-    if (groupId) {
-      return `/grupos/${groupId}/demonstracoes-contabeis`;
-    }
-    return null;
-  };
-
-  const buildClassificationUrl = ({
-    groupId,
-    companyId,
-    subCompanyId,
-  }: Ids) => {
-    if (groupId && companyId && subCompanyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/filiais/${subCompanyId}/classificacao`;
-    }
-    if (groupId && companyId) {
-      return `/grupos/${groupId}/empresas/${companyId}/classificacao`;
-    }
-    if (groupId) {
-      return `/grupos/${groupId}/classificacao`;
-    }
-    return null;
+    let url = `/grupos/${groupId}`;
+    if (companyId) url += `/empresas/${companyId}`;
+    if (subCompanyId) url += `/filiais/${subCompanyId}`;
+    return `${url}/${finalPath}`;
   };
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
-  const path = buildUploadBalanceSheetUrl({ groupId, companyId, subCompanyId });
-  const balancetePath = buildBalanceSheetUrl({
-    groupId,
-    companyId,
-    subCompanyId,
-  });
-  const classificationPath = buildClassificationUrl({
-    groupId,
-    companyId,
-    subCompanyId,
-  });
-  const balancoContabilPath = buildBalancoContabilUrl({
-    groupId,
-    companyId,
-    subCompanyId,
-  });
-  const balancoReclassificadoPath = buildBalancoReclassificadoUrl({
-    groupId,
-    companyId,
-    subCompanyId,
-  });
+  const path = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "plano-de-contas"
+  );
+  const balancetePath = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "balancetes"
+  );
+  const classificationPath = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "classificacao"
+  );
+  const balancoContabilPath = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "contabil"
+  );
+  const balancoReclassificadoPath = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "demonstracoes-contabeis"
+  );
+  const gestaoLiquidezPath = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "resultados/gestao-liquidez"
+  );
+  const indicesEconomicosPath = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "resultados/indices-economicos"
+  );
+  const cilEcPath = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "resultados/cil-ec"
+  );
+  const eficienciaOperacionalPath = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "resultados/eficiencia-operacional"
+  );
 
   if (path && balancetePath) {
     drawerListData.push({
@@ -276,9 +224,35 @@ export const Sidebar = () => {
         {
           title: "Balanço Contábil",
           path: balancoContabilPath,
-        },{
+        },
+        {
           title: "Demonstrações Contábeis",
           path: balancoReclassificadoPath,
+        },
+      ],
+    });
+  }
+
+  if (path && gestaoLiquidezPath && indicesEconomicosPath && cilEcPath && eficienciaOperacionalPath) {
+    drawerListData.push({
+      title: "Resultados",
+      icon: <PollOutlinedIcon fontSize="medium" />,
+      subItems: [
+        {
+          title: "Gestão da liquidez",
+          path: gestaoLiquidezPath,
+        },
+        {
+          title: "Índices Econômicos",
+          path: indicesEconomicosPath,
+        },
+        {
+          title: "CIL e EC",
+          path: cilEcPath,
+        },
+        {
+          title: "Eficiencia Operacional",
+          path: eficienciaOperacionalPath,
         },
       ],
     });

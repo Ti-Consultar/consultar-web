@@ -9,7 +9,7 @@ export const SidebarContainer = styled.div<MainTemplateStyledProps>`
   background-color: #333;
   background: var(--neutral-white);
   transition: width 0.3s;
-  width: ${({ isOpen }) => (isOpen ? "200px" : "82px")};
+  width: ${({ isOpen }) => (isOpen ? "230px" : "82px")};
   transition: width 0.3s ease;
   border-right: 1px solid var(--neutral-200);
   height: 100%;
@@ -40,6 +40,10 @@ export const ListNavItem = styled.div<MainTemplateStyledProps>`
     background-color: var(--neutral-200);
     height: 2px;
     margin: 0 10px;
+  }
+
+  .items-main {
+    overflow: auto;
   }
 `;
 
