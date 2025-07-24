@@ -106,45 +106,33 @@ export const ClassificationPage = () => {
   }, [groupId, companyid, subcompanyid]);
 
   // Valida modelo de classificação
-  useEffect(() => {
-    const validateHasClassificationModel = async (classificationId: number) => {
-      try {
-        if (!accountPlanId) return;
-        const response = await validateClassificationModel(classificationId);
-        if (response.data === true) {
-          setOpen(false);
-        } else {
-          setOpen(true);
-        }
-      } catch (error) {
-        toast.error(`${error}`);
-      }
-    };
+  const loadClassificationsFlow = async () => {
+    if (!accountPlanId) return;
 
-    validateHasClassificationModel(accountPlanId ?? 0);
-  }, [accountPlanId]);
+    try {
+      setSkeleton(true);
 
-  // Busca e carrega classificações
-  useEffect(() => {
-    const fetchClassifications = async (type: number) => {
-      try {
-        setSkeleton(true);
+      const response = await validateClassificationModel(accountPlanId);
+      const isValid = response.data === true;
 
-        if (!accountPlanId) return;
-        const response = await getClassification(type, accountPlanId);
-        setClassifications(response.data);
-      } catch {
-        toast.error(
-          "Erro ao buscar classificações, tente novamente mais tarde."
+      setOpen(!isValid);
+
+      if (isValid) {
+        const classificationResponse = await getClassification(
+          selectedTab,
+          accountPlanId
         );
-      } finally {
-        setSkeleton(false);
+        setClassifications(classificationResponse.data);
       }
-    };
-
-    localStorage.setItem("selectedTab", selectedTab.toString());
-    fetchClassifications(selectedTab);
-  }, [selectedTab, accountPlanId]);
+    } catch (error) {
+      toast.error("Erro ao carregar dados. Tente novamente mais tarde.");
+    } finally {
+      setSkeleton(false);
+    }
+  };
+  useEffect(() => {
+    loadClassificationsFlow();
+  }, [accountPlanId, selectedTab]);
 
   // Atualiza bondList e salva localStorage no momento da seleção da classificação
   const handleClassificationChange = (classificationId: number) => {
@@ -209,6 +197,7 @@ export const ClassificationPage = () => {
       });
       if (response.success === true) {
         toast.success("Classificação aplicada");
+        loadClassificationsFlow();
         setOpen(false);
       } else {
         toast.error("Erro ao aplicar classificação.");

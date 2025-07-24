@@ -166,11 +166,7 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                     ...stickyHeaderStyle,
                     minWidth: 250,
                   }}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    Balanço
-                  </Typography>
-                </TableCell>
+                ></TableCell>
                 {months.map((month: Month) => (
                   <TableCell
                     key={month.id}
