@@ -1,16 +1,11 @@
 import {
   Dialog,
   DialogTitle,
-  DialogContent,
   DialogActions,
-  Typography,
   Button,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ClassificationType } from "../../../types/classification";
-import { ClassificationPanel } from "../ClassificationOptions";
-import { getClassification, getClassificationTemplate } from "../../../services/apis/routes/classification.service";
-import { toast } from "react-toastify";
 
 interface ClassificationModalProps {
   open: boolean;
@@ -31,39 +26,32 @@ export const ClassificationModal = ({
   const [selectedClassificationId, setSelectedClassificationId] =
     useState<number>();
 
-  useEffect(() => {
-    const savedTab = localStorage.getItem("selectedTab");
-    if (savedTab) {
-      setSelectedTab(Number(savedTab));
-    }
-  }, []);
+  // useEffect(() => {
+  //   const fetchClassifications = async (type: number) => {
+  //     try {
+  //       setSkeleton(true);
 
-  useEffect(() => {
-    const fetchClassifications = async (type: number) => {
-      try {
-        setSkeleton(true);
+  //       const cached = localStorage.getItem(`classifications-${type}`);
+  //       if (cached) {
+  //         setClassifications(JSON.parse(cached));
+  //         setSkeleton(false);
+  //         return;
+  //       }
 
-        const cached = localStorage.getItem(`classifications-${type}`);
-        if (cached) {
-          setClassifications(JSON.parse(cached));
-          setSkeleton(false);
-          return;
-        }
+  //       const response = await getClassificationTemplate(type);
+  //       setClassifications(response.data);
+  //     } catch (error) {
+  //       toast.error(
+  //         "Erro ao buscar classificações, tente novamente mais tarde."
+  //       );
+  //     } finally {
+  //       setSkeleton(false);
+  //     }
+  //   };
 
-        const response = await getClassificationTemplate(type);
-        setClassifications(response.data);
-      } catch (error) {
-        toast.error(
-          "Erro ao buscar classificações, tente novamente mais tarde."
-        );
-      } finally {
-        setSkeleton(false);
-      }
-    };
-
-    localStorage.setItem("selectedTab", selectedTab.toString());
-    fetchClassifications(selectedTab);
-  }, [selectedTab]);
+  //   localStorage.setItem("selectedTab", selectedTab.toString());
+  //   fetchClassifications(selectedTab);
+  // }, [selectedTab]);
 
   return (
     <Dialog
@@ -82,7 +70,7 @@ export const ClassificationModal = ({
         Deseja utilizar o modelo padrão de classificação para os balancetes?
       </DialogTitle>
 
-      <DialogContent sx={{ px: 0 }}>
+      {/* <DialogContent sx={{ px: 0 }}>
         <ClassificationPanel
           data={classifications}
           selectedId={selectedClassificationId}
@@ -91,7 +79,7 @@ export const ClassificationModal = ({
           isLoading={skeleton}
           readOnly
         />
-      </DialogContent>
+      </DialogContent> */}
 
       <DialogActions sx={{ px: 0, mt: 2, justifyContent: "flex-end" }}>
         <Button onClick={onClose} color="inherit">

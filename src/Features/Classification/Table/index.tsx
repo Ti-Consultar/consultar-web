@@ -27,6 +27,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import CheckIcon from "@mui/icons-material/Check";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import RemoveDoneOutlinedIcon from "@mui/icons-material/RemoveDoneOutlined";
+import { SearchInput } from "../../../components/Inputs/SearchInput";
 
 export interface AccountPlanRow {
   id: number;
@@ -40,6 +41,7 @@ export interface AccountPlanRow {
 
 type ValueDisplayMode = "TOTAL" | "K" | "C";
 const STORAGE_KEY = "accountPlanTable:valueMode";
+const STORAGE_BONDS_KEY = "classificationBonds";
 
 interface BondListItem {
   accountPlanClassificationId: number;
@@ -80,6 +82,28 @@ export const AccountPlanTable = ({
     }
   }, []);
 
+  const removeCostCenterFromStorage = (costCenterToRemove: string) => {
+    const stored = localStorage.getItem(STORAGE_BONDS_KEY);
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored) as BondListItem[];
+
+      const updated = parsed
+        .map((bond) => ({
+          ...bond,
+          costCenters: bond.costCenters.filter(
+            (cc) => cc.costCenter !== costCenterToRemove
+          ),
+        }))
+        .filter((bond) => bond.costCenters.length > 0); // remove grupo vazio
+
+      localStorage.setItem(STORAGE_BONDS_KEY, JSON.stringify(updated));
+    } catch (err) {
+      console.error("Erro ao remover costCenter do localStorage", err);
+    }
+  };
+
   const handleValueModeChange = (mode: ValueDisplayMode) => {
     setValueMode(mode);
     localStorage.setItem(STORAGE_KEY, mode);
@@ -105,9 +129,9 @@ export const AccountPlanTable = ({
   const formatValue = (value: number) => {
     switch (valueMode) {
       case "K":
-        return `${(value / 1000).toFixed(1)}`;
+        return `${(value / 1000000).toFixed(1)}`;
       case "C":
-        return `${(value / 100).toFixed(1)}`;
+        return Math.round(value / 1000).toLocaleString("pt-BR");
       default:
         return value.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
     }
@@ -137,17 +161,17 @@ export const AccountPlanTable = ({
             </ListItemIcon>
             <ListItemText>Padrão (Total)</ListItemText>
           </MenuItem>
-          <MenuItem onClick={() => handleValueModeChange("K")}>
-            <ListItemIcon>
-              {valueMode === "K" && <CheckIcon fontSize="small" />}
-            </ListItemIcon>
-            <ListItemText>Milhar (K)</ListItemText>
-          </MenuItem>
           <MenuItem onClick={() => handleValueModeChange("C")}>
             <ListItemIcon>
               {valueMode === "C" && <CheckIcon fontSize="small" />}
             </ListItemIcon>
-            <ListItemText>Centena (C)</ListItemText>
+            <ListItemText>Milhar</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => handleValueModeChange("K")}>
+            <ListItemIcon>
+              {valueMode === "K" && <CheckIcon fontSize="small" />}
+            </ListItemIcon>
+            <ListItemText>Milhões</ListItemText>
           </MenuItem>
         </Menu>
 
@@ -172,19 +196,11 @@ export const AccountPlanTable = ({
             <MenuItem value={3}>DRE</MenuItem>
           </Select>
         </FormControl>
-
-        <TextField
+        <SearchInput
           size="small"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por nome"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
+          placeholder="Pesquisar"
+          onChange={setSearch}
         />
       </Box>
 
@@ -205,8 +221,8 @@ export const AccountPlanTable = ({
                   </Tooltip>
                 )}
               </TableCell>
-              <TableCell onClick={() => onSort("costCenter")}>Key</TableCell>
-              <TableCell onClick={() => onSort("name")}>Nome</TableCell>
+              <TableCell onClick={() => onSort("costCenter")}>Conta</TableCell>
+              <TableCell onClick={() => onSort("name")}>Descrição</TableCell>
               <TableCell onClick={() => onSort("initialValue")}>
                 V. Inicial
               </TableCell>
@@ -263,7 +279,7 @@ export const AccountPlanTable = ({
                     <TableRow
                       key={row.id}
                       hover
-                      onClick={() => handleCheckboxToggle(row.costCenter)}
+                      onClick={() => handleCheckboxToggle(row.costCenter)} // continua aqui
                       sx={{
                         backgroundColor: isSelected ? "#f3f3f3" : "inherit",
                         cursor: "pointer",
@@ -279,12 +295,14 @@ export const AccountPlanTable = ({
                         ) : (
                           <Checkbox
                             checked={isSelected}
-                            onChange={() =>
-                              handleCheckboxToggle(row.costCenter)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation(); // impede que o clique se propague para a linha
+                              handleCheckboxToggle(row.costCenter);
+                            }}
                           />
                         )}
                       </TableCell>
+
                       <TableCell>{row.costCenter}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{formatValue(row.initialValue)}</TableCell>

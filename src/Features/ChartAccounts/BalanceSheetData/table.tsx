@@ -124,7 +124,7 @@ export const BalanceSheetDetailsTable = ({
             <TableRow>
               <TableCell>
                 <Typography variant="subtitle2" color="var(--neutral-500)">
-                  Centro de Custo
+                  Conta
                 </Typography>
               </TableCell>
               <TableCell>

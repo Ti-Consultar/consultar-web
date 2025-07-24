@@ -130,22 +130,9 @@ export const ClassificationPage = () => {
       try {
         setSkeleton(true);
 
-        // Cache localStorage
-        const cached = localStorage.getItem(`classifications-${type}`);
-        if (cached) {
-          setClassifications(JSON.parse(cached));
-          setSkeleton(false);
-          return;
-        }
-
         if (!accountPlanId) return;
         const response = await getClassification(type, accountPlanId);
         setClassifications(response.data);
-
-        localStorage.setItem(
-          `classifications-${type}`,
-          JSON.stringify(response.data)
-        );
       } catch {
         toast.error(
           "Erro ao buscar classificações, tente novamente mais tarde."

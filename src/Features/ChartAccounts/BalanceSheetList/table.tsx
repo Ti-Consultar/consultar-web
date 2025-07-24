@@ -15,6 +15,9 @@ import {
 import { useState } from "react";
 import { Balancetes } from "../../../types/balancete";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+dayjs.locale("pt-br");
 
 interface AccountingTableProps {
   data: Balancetes;
@@ -131,7 +134,7 @@ export const AccountingTable = ({
                   onClick={() => handleRequestSort("dateMonth")}
                 >
                   <strong style={{ color: "var(--neutral-500)" }}>
-                    Data do balancete
+                    Referência
                   </strong>
                 </TableSortLabel>
               </TableCell>
@@ -141,8 +144,15 @@ export const AccountingTable = ({
                   direction={orderBy === "status" ? order : "asc"}
                   onClick={() => handleRequestSort("status")}
                 >
-                  <span style={{ color: "var(--neutral-500)" }}>Status</span>
+                  <strong style={{ color: "var(--neutral-500)" }}>
+                    Status
+                  </strong>
                 </TableSortLabel>
+              </TableCell>
+              <TableCell sortDirection={orderBy === "status" ? order : false}>
+                <strong style={{ color: "var(--neutral-500)" }}>
+                  Data do Envio
+                </strong>
               </TableCell>
               <TableCell align="center" sx={{ color: "var(--neutral-500)" }}>
                 Ações
@@ -161,38 +171,45 @@ export const AccountingTable = ({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map(({ id, dateMonth, dateYear, status }) => (
-                <TableRow
-                  key={id}
-                  hover
-                  onClick={() => onRowClick?.(id)}
-                  sx={{ cursor: onRowClick ? "pointer" : "default" }}
-                >
-                  <TableCell
-                    sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
+              paginatedData.map(
+                ({ id, dateMonth, dateYear, status, dateCreate }) => (
+                  <TableRow
+                    key={id}
+                    hover
+                    onClick={() => onRowClick?.(id)}
+                    sx={{ cursor: onRowClick ? "pointer" : "default" }}
                   >
-                    {formatDate(dateMonth, dateYear)}
-                  </TableCell>
-                  <TableCell
-                    sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
-                  >
-                    <Chip label={status} color="warning" variant="outlined" />
-                  </TableCell>
-                  <TableCell align="center">
-                    <Tooltip title="Excluir balancete">
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete?.(id);
-                        }}
-                        color="error"
-                      >
-                        <DeleteOutlineRoundedIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))
+                    <TableCell
+                      sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
+                    >
+                      {formatDate(dateMonth, dateYear)}
+                    </TableCell>
+                    <TableCell
+                      sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
+                    >
+                      <Chip label={status} color="warning" variant="outlined" />
+                    </TableCell>
+                    <TableCell
+                      sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
+                    >
+                      {dayjs(dateCreate).format("D [de] MMMM [de] YYYY")}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Excluir balancete">
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete?.(id);
+                          }}
+                          color="error"
+                        >
+                          <DeleteOutlineRoundedIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                )
+              )
             )}
           </TableBody>
         </Table>
