@@ -23,7 +23,6 @@ export const Container = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 2rem;
-  max-width: 95%;
 `;
 
 export const Title = styled.h2`

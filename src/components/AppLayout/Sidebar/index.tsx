@@ -37,7 +37,6 @@ import { acceptOrDeclineInvite } from "../../../services/apis/routes/invitation.
 import { toast } from "react-toastify";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useRefresh } from "../../../contexts/refreshContext";
-import RequestPageOutlinedIcon from "@mui/icons-material/RequestPageOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeviceHubRoundedIcon from "@mui/icons-material/DeviceHubRounded";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
@@ -160,7 +159,7 @@ export const Sidebar = () => {
 
   const path = buildNestedUrl(
     { groupId, companyId, subCompanyId },
-    "plano-de-contas"
+    "arquivos/upload/balancete"
   );
   const balancetePath = buildNestedUrl(
     { groupId, companyId, subCompanyId },
@@ -196,11 +195,6 @@ export const Sidebar = () => {
   );
 
   if (path && balancetePath) {
-    drawerListData.push({
-      title: "Balancetes",
-      icon: <RequestPageOutlinedIcon fontSize="medium" />,
-      path: balancetePath,
-    });
 
     if (isAuthorized(["Admin", "Desenvolvedor", "Consultor", "Gestor"])) {
       drawerListData.push({

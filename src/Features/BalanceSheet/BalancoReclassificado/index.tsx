@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { MainTemplate } from "../../../components/AppLayout";
 import { Container, MainContainer, Title } from "./styles";
-import { BalancoContabilTable } from "./table";
 import { Box, Tabs, Tab, Paper, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -13,77 +12,89 @@ import { getAccountPlan } from "../../../services/apis/routes/accountplan.servic
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getBalancoContabil } from "../../../services/apis/routes/classification.service";
 import { toast } from "react-toastify";
+import { BalancoResponse, Month } from "../../../types/balanco";
+import BalancoContabilTable from "../BalanceSheet/table";
 
 export const BalancoReclassificado = () => {
-  const [tabValue, setTabValue] = useState(1); // 1 = Ativo, 2 = Passivo
-  const [selectedYear, setSelectedYear] = useState(dayjs().startOf("year"));
-  const [accountPlanId, setAccountPlanId] = useState<number>();
+  const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
+  const [selectedYear, setSelectedYear] = useState<Dayjs>(
+    dayjs().startOf("year")
+  );
+  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const { setLoading } = useLoading();
-  const [data, setData] = useState<any>([]);
-  const { groupId, companyid, subCompanyId } = useParams();
+  const [balanceteData, setBalanceteData] = useState<Month[]>([]);
+  const { groupId, companyid, subCompanyId } = useParams<{
+    groupId: string;
+    companyid?: string;
+    subCompanyId?: string;
+  }>();
 
   useEffect(() => {
-    if (groupId) {
-      const getAccountPlanId = async (
-        groupId: number,
-        companyId?: number,
-        subCompanyId?: number
-      ): Promise<number | null> => {
-        try {
-          setLoading(true, "Salvando data...");
-          const response = await getAccountPlan(
-            groupId,
-            companyId,
-            subCompanyId
-          );
+    if (!groupId || accountPlanId) return; // <-- impede loop se accountPlanId já está definido
 
-          const data = response.data;
+    const getAccountPlanId = async (
+      groupId: number,
+      companyId?: number,
+      subCompanyId?: number
+    ): Promise<void> => {
+      try {
+        setLoading(true, "Salvando data...");
+        const response = await getAccountPlan(groupId, companyId, subCompanyId);
 
-          if (!Array.isArray(data) || data.length === 0) return null;
+        const data = response.data;
 
-          const lastItem = data[data.length - 1];
+        if (!Array.isArray(data) || data.length === 0) return;
 
-          setAccountPlanId(lastItem.id);
-          setLoading(false);
+        const lastItem = data[data.length - 1];
+        setAccountPlanId(lastItem.id);
+      } catch (error) {
+        console.error("Failed to fetch AccountPlanId", error);
+        toast.error("Erro ao buscar plano de contas");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-          return null;
-        } catch (error) {
-          setLoading(false);
-          console.error("Failed to fetch AccountPlanId", error);
-          throw error;
-        }
-      };
+    getAccountPlanId(
+      Number(groupId),
+      companyid ? Number(companyid) : undefined,
+      subCompanyId ? Number(subCompanyId) : undefined
+    );
+  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
 
-      getAccountPlanId(
-        +groupId,
-        companyid ? +companyid : undefined,
-        subCompanyId ? +subCompanyId : undefined
-      );
-    }
-  }, [groupId, companyid, subCompanyId]);
-
-  const handleSearch = async (tab?: number) => {
+  const handleSearch = async (tab?: number): Promise<void> => {
     try {
       setLoading(true, "Buscando Balanço Contábil");
-      if (!accountPlanId) return;
-      const response = await getBalancoContabil(
+      if (!accountPlanId) {
+        toast.warning("Plano de contas não encontrado");
+        return;
+      }
+
+      const response: BalancoResponse = await getBalancoContabil(
         accountPlanId,
         selectedYear.year(),
-        tab ?? tabValue // usa o valor recebido, ou o atual do state
+        tab ?? tabValue
       );
-      if (response.success === true) {
-        setData(response.data?.meses);
+
+      if (response.success && response.data?.months) {
+        setBalanceteData(response.data.months);
       } else {
-        toast.warning("Não encontramos um balanço para esta data.");
+        toast.warning(
+          response.message || "Não encontramos um balanço para esta data."
+        );
       }
     } catch (err) {
+      console.error(err);
       toast.error("Ocorreu um erro ao tentar buscar o balanço contábil");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleChangeTab = (
+    _event: React.SyntheticEvent,
+    newValue: number
+  ): void => {
     setTabValue(newValue);
     handleSearch(newValue);
   };
@@ -91,7 +102,7 @@ export const BalancoReclassificado = () => {
   return (
     <MainTemplate>
       <MainContainer>
-        <Title>Demonstrações Contábeis</Title>
+        <Title>Balanço Reclassificado</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box
             sx={{
@@ -137,7 +148,7 @@ export const BalancoReclassificado = () => {
               />
               <Tab
                 label="DRE"
-                value={2}
+                value={3}
                 sx={{
                   color: "var(--neutral-700)",
                   fontWeight: "bold",
@@ -155,7 +166,7 @@ export const BalancoReclassificado = () => {
                 views={["year"]}
                 label="Ano"
                 value={selectedYear}
-                onChange={(newValue) => {
+                onChange={(newValue: Dayjs | null) => {
                   if (newValue) setSelectedYear(newValue);
                 }}
                 slotProps={{
@@ -177,12 +188,11 @@ export const BalancoReclassificado = () => {
                 px: 2,
               }}
             >
-              Buscar
+              Pesquisar
             </Button>
           </Box>
-
           <Container>
-            <BalancoContabilTable data={data} />
+            <BalancoContabilTable months={balanceteData} />
           </Container>
         </Paper>
       </MainContainer>

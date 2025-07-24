@@ -9,7 +9,6 @@ import { SubCompanies } from "../../Features/SubCompanies";
 import { ProfileInfo } from "../../Features/Profile";
 import { Authentication } from "../../Features/Authentication";
 import { ProfileSecurity } from "../../Features/Profile/ProfileSecurity";
-import { UploadBalanceSheet } from "../../Features/ChartAccounts/UploadBalanceSheet";
 import { BalanceSheet } from "../../Features/ChartAccounts/BalanceSheetList";
 import { BalanceSheetData } from "../../Features/ChartAccounts/BalanceSheetData";
 import { BalanceSheetDetailed } from "../../Features/ChartAccounts/BalanceSheetDetailed";
@@ -51,13 +50,8 @@ export const AppRoutes = () => {
         />
 
         {/* plano de contas */}
-        {withScopes("plano-de-contas").map((path) => (
-          <Route key={path} path={path} element={<UploadBalanceSheet />} />
-        ))}
-
-        {/* plano de contas upload */}
-        {withScopes("plano-de-contas/:balanceteId/upload").map((path) => (
-          <Route key={path} path={path} element={<UploadBalanceSheet />} />
+        {withScopes("arquivos/upload/balancete").map((path) => (
+          <Route key={path} path={path} element={<BalanceSheet />} />
         ))}
 
         {/* balancetes */}

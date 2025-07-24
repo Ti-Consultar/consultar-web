@@ -26,14 +26,14 @@ export const getClassificationTemplate = async (typeClassification: number) => {
   }
 };
 
-export const getBalancoContabil = async (accountPlanId: number, year: number, type: number) => {
+export const getBalancoContabil = async (accountPlanId: number, year: number, typeClassification: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}/get-bond-painel/type`,
+      `${URL}/painel`,
       { params: { 
         accountPlanId,
         year,
-        type
+        typeClassification
        } }
     );
     return response.data;

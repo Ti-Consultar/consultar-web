@@ -5,6 +5,7 @@ export const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   margin: 2.5rem;
+  max-width: 95%;
   @media (min-width: 768px) and (max-width: 1023px) {
     width: 85%;
   }
@@ -23,14 +24,14 @@ export const Container = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 2rem;
-  max-width: 90%;
 `;
 
 export const Title = styled.h2`
   font-size: 24px;
   color: var(--neutral-700);
-  margin-bottom: 1rem
+  margin-bottom: 1rem;
 `;
+
 export const StickyTableCell = styled(TableCell)<{
   isHovered?: boolean;
   isSection?: boolean;
@@ -67,7 +68,7 @@ export const StyledTableCell = styled(TableCell)<{
 export const StickyHeaderCell = styled(StickyTableCell)`
   z-index: 2;
   font-weight: bold;
-  background-color: #d7d9eeff
+  background-color: #d7d9eeff;
 `;
 
 export const HoverableTableRow = styled(TableRow)<{ isSection?: boolean }>`

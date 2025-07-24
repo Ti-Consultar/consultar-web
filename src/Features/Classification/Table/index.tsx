@@ -39,8 +39,9 @@ export interface AccountPlanRow {
   finalValue: number;
 }
 
-export type ValueDisplayMode = "TOTAL" | "K" | "C";
+type ValueDisplayMode = "TOTAL" | "K" | "C";
 const STORAGE_KEY = "accountPlanTable:valueMode";
+const STORAGE_BONDS_KEY = "classificationBonds";
 
 interface BondListItem {
   accountPlanClassificationId: number;
@@ -80,6 +81,28 @@ export const AccountPlanTable = ({
       setValueMode(stored);
     }
   }, []);
+
+  const removeCostCenterFromStorage = (costCenterToRemove: string) => {
+    const stored = localStorage.getItem(STORAGE_BONDS_KEY);
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored) as BondListItem[];
+
+      const updated = parsed
+        .map((bond) => ({
+          ...bond,
+          costCenters: bond.costCenters.filter(
+            (cc) => cc.costCenter !== costCenterToRemove
+          ),
+        }))
+        .filter((bond) => bond.costCenters.length > 0); // remove grupo vazio
+
+      localStorage.setItem(STORAGE_BONDS_KEY, JSON.stringify(updated));
+    } catch (err) {
+      console.error("Erro ao remover costCenter do localStorage", err);
+    }
+  };
 
   const handleValueModeChange = (mode: ValueDisplayMode) => {
     setValueMode(mode);
@@ -256,7 +279,7 @@ export const AccountPlanTable = ({
                     <TableRow
                       key={row.id}
                       hover
-                      onClick={() => handleCheckboxToggle(row.costCenter)}
+                      onClick={() => handleCheckboxToggle(row.costCenter)} // continua aqui
                       sx={{
                         backgroundColor: isSelected ? "#f3f3f3" : "inherit",
                         cursor: "pointer",
@@ -272,12 +295,14 @@ export const AccountPlanTable = ({
                         ) : (
                           <Checkbox
                             checked={isSelected}
-                            onChange={() =>
-                              handleCheckboxToggle(row.costCenter)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation(); // impede que o clique se propague para a linha
+                              handleCheckboxToggle(row.costCenter);
+                            }}
                           />
                         )}
                       </TableCell>
+
                       <TableCell>{row.costCenter}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{formatValue(row.initialValue)}</TableCell>

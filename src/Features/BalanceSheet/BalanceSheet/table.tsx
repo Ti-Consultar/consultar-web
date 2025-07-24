@@ -1,198 +1,346 @@
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
+  TableCell,
   TableContainer,
   TableHead,
   TableRow,
   Paper,
+  Typography,
+  useTheme,
+  Box,
 } from "@mui/material";
-import React, { useState, useMemo } from "react";
-import {
-  HoverableTableRow,
-  StickyHeaderCell,
-  StickyTableCell,
-  StyledTableCell,
-} from "./styles";
+import { TableDetailModal } from "./tableDetail";
+import InboxIcon from "@mui/icons-material/Inbox";
 
-type SectionKey = string;
-
-type Classification = {
+// Type definitions
+interface FinancialData {
   id: number;
+  typeOrder: number;
   name: string;
   value: number;
-  valueFormatted: string;
-};
+  costCenter?: string;
+}
 
-type MonthData = {
-  month: string | any;
-  [key: SectionKey]:
-    | {
-        value: number;
-        classifications: Classification[];
+interface Classification {
+  id: number;
+  typeOrder: number;
+  name: string;
+  value: number;
+  datas?: FinancialData[];
+}
+
+interface Totalizer {
+  id: number;
+  typeOrder: number;
+  name: string;
+  totalValue: number;
+  classifications?: Classification[];
+}
+
+interface MonthPainelContabilTotalizer {
+  name: string;
+  totalValue: number;
+}
+
+interface Month {
+  id: number;
+  name: string;
+  dateMonth: number;
+  monthPainelContabilTotalizer: MonthPainelContabilTotalizer;
+  totalizer: Totalizer[];
+}
+
+interface FinancialTableProps {
+  months: Month[];
+}
+
+const BalancoContabilTable = ({ months }: FinancialTableProps) => {
+  const theme = useTheme();
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedData, setSelectedData] = useState<FinancialData[]>([]);
+  const [selectedTitle, setSelectedTitle] = useState("");
+
+  const allTotalizers: Totalizer[] = [];
+  months.forEach((month) => {
+    month.totalizer.forEach((totalizer) => {
+      if (!allTotalizers.some((t) => t.id === totalizer.id)) {
+        allTotalizers.push(totalizer);
       }
-    | { value: number } // Para totalGeral
-    | undefined;
-};
+    });
+  });
 
-type SectionConfig = {
-  key: SectionKey;
-  label: string;
-};
+  function monthTranslator(mesIngles: string): string {
+    const meses: Record<string, string> = {
+      January: "Janeiro",
+      February: "Fevereiro",
+      March: "Março",
+      April: "Abril",
+      May: "Maio",
+      June: "Junho",
+      July: "Julho",
+      August: "Agosto",
+      September: "Setembro",
+      October: "Outubro",
+      November: "Novembro",
+      December: "Dezembro",
+    };
 
-type BalancoTableProps = {
-  data: MonthData[];
-  sections?: SectionConfig[];
-  fixedColumnTitle?: string;
-  format?: (value: string) => void;
-};
+    return meses[mesIngles] || mesIngles;
+  }
 
-const SECTIONS_ATIVO: SectionConfig[] = [
-  { key: "totalAtivoCirculante", label: "Total Ativo Circulante" },
-  { key: "totalLongoPrazo", label: "Total Longo Prazo" },
-  { key: "totalPermanente", label: "Total Permanente" },
-  { key: "totalAtivoNaoCirculante", label: "Total Ativo Não Circulante" },
-  { key: "totalGeralDoAtivo", label: "Total Geral do Ativo" },
-];
-
-const SECTIONS_PASSIVO: SectionConfig[] = [
-  { key: "totalPassivoCirculante", label: "Total Passivo Circulante" },
-  { key: "totalPassivoNaoCirculante", label: "Total Passivo Não Circulante" },
-  { key: "patrimonioLiquido", label: "Patrimônio Líquido" },
-  { key: "totalGeralDoPassivo", label: "Total Geral do Passivo" },
-];
-
-const traduzirMes = (englishMonth: string): string => {
-  const date = new Date(`${englishMonth} 1, 2025`);
-  const mes = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date);
-  return mes.charAt(0).toUpperCase() + mes.slice(1);
-};
-
-export function BalancoContabilTable({
-  data,
-  sections: sectionsProp,
-  fixedColumnTitle: fixedColumnTitleProp,
-  format
-}: BalancoTableProps) {
-  const [hoverRow, setHoverRow] = useState<number | null>(null);
-  const [hoverCol, setHoverCol] = useState<number | null>(null);
-
-  // Detecta sections e título caso não passe via props
-  const { sections, fixedColumnTitle } = useMemo(() => {
-    if (sectionsProp && fixedColumnTitleProp) {
-      return { sections: sectionsProp, fixedColumnTitle: fixedColumnTitleProp };
-    }
-    if (data.length === 0) {
-      return { sections: [], fixedColumnTitle: "Selecione uma data" };
-    }
-    if ("totalAtivoCirculante" in data[0]) {
-      return { sections: SECTIONS_ATIVO, fixedColumnTitle: "ATIVO" };
-    }
-    if ("totalPassivoCirculante" in data[0]) {
-      return { sections: SECTIONS_PASSIVO, fixedColumnTitle: "PASSIVO" };
-    }
-    return { sections: [], fixedColumnTitle: "Selecione uma data" };
-  }, [data, sectionsProp, fixedColumnTitleProp]);
-
-  let rowCount = 0;
-
-  const renderRow = (
-    label: string,
-    rowDataByMonth: { [month: string]: string },
-    isSection: boolean
+  const handleCellClick = (
+    datas: FinancialData[] | undefined,
+    title: string
   ) => {
-    const rowIndex = rowCount++;
-    return (
-      <HoverableTableRow
-        key={label}
-        onMouseEnter={() => setHoverRow(rowIndex)}
-        onMouseLeave={() => setHoverRow(null)}
-        isSection={isSection}
-      >
-        <StickyTableCell
-          isHovered={hoverRow === rowIndex || hoverCol === 0}
-          isFocusedCell={hoverRow === rowIndex && hoverCol === 0}
-          isSection={isSection}
-          onMouseEnter={() => setHoverCol(0)}
-          onMouseLeave={() => setHoverCol(null)}
-        >
-          {label}
-        </StickyTableCell>
-        {data.map((month, colIndex) => {
-          const adjustedCol = colIndex + 1;
-          return (
-            <StyledTableCell
-              key={month.month}
-              align="right"
-              isHovered={hoverRow === rowIndex || hoverCol === adjustedCol}
-              isFocusedCell={hoverRow === rowIndex && hoverCol === adjustedCol}
-              isSection={isSection}
-              onMouseEnter={() => setHoverCol(adjustedCol)}
-              onMouseLeave={() => setHoverCol(null)}
-            >
-              {rowDataByMonth[month.month] || "-"}
-            </StyledTableCell>
-          );
-        })}
-      </HoverableTableRow>
-    );
+    if (datas && datas.length > 0) {
+      setSelectedData(datas);
+      setSelectedTitle(title);
+      setOpenModal(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedData([]);
+    setSelectedTitle("");
+  };
+
+  allTotalizers.sort((a, b) => a.typeOrder - b.typeOrder);
+
+  const isEmpty = !months.length || !allTotalizers.length;
+
+  const stickyCellStyle = {
+    position: "sticky",
+    left: 0,
+    backgroundColor: "white",
+    zIndex: 10,
+    borderRight: `1px solid ${theme.palette.divider}`,
+  };
+
+  const stickyHeaderStyle = {
+    position: "sticky",
+    top: 0,
+    backgroundColor: "#DDE4EB",
+    zIndex: 11,
   };
 
   return (
-    <TableContainer component={Paper} elevation={0}>
-      <Table sx={{minWidth: '90%'}}>
-        <TableHead sx={{ backgroundColor: "#d7d9eeff" }}>
-          <TableRow>
-            <StickyHeaderCell sx={{ backgroundColor: "#d7d9eeff" }}>
-              {fixedColumnTitle}
-            </StickyHeaderCell>
-            {data.map((month) => (
-              <StyledTableCell key={month.month} align="right">
-                {traduzirMes(month.month)}
-              </StyledTableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {sections.map((section) => {
-            const key = section.key;
+    <>
+      <TableContainer
+        component={Paper}
+        sx={{
+          maxWidth: "100%",
+          maxHeight: 600,
+          overflow: "auto",
+          width: "100%",
+        }}
+      >
+        {isEmpty ? (
+          <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            height={200}
+            color={theme.palette.text.secondary}
+            px={2}
+            textAlign="center"
+          >
+            <InboxIcon sx={{ fontSize: 48, color: "var(--neutral-400)" }} />
+            <Typography variant="subtitle1" fontWeight="medium">
+              Nada a exibir ainda
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Selecione uma data válida para acessar os dados
+            </Typography>
+          </Box>
+        ) : (
+          <Table size="small" aria-label="financial table">
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    ...stickyCellStyle,
+                    ...stickyHeaderStyle,
+                    minWidth: 250,
+                  }}
+                >
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    Balanço
+                  </Typography>
+                </TableCell>
+                {months.map((month: Month) => (
+                  <TableCell
+                    key={month.id}
+                    align="right"
+                    sx={{ ...stickyHeaderStyle, minWidth: 120 }}
+                  >
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {monthTranslator(month.name)}
+                    </Typography>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {allTotalizers.map((totalizer: Totalizer) => (
+                <React.Fragment key={totalizer.id}>
+                  <TableRow
+                    sx={{
+                      "&:last-child td, &:last-child th": { border: 0 },
+                      backgroundColor: theme.palette.grey[100],
+                    }}
+                  >
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      sx={{ ...stickyCellStyle }}
+                    >
+                      <Typography variant="body2" fontWeight="bold">
+                        {totalizer.name}
+                      </Typography>
+                    </TableCell>
+                    {months.map((month: Month) => {
+                      const monthTotalizer = month.totalizer.find(
+                        (t) => t.id === totalizer.id
+                      );
+                      return (
+                        <TableCell
+                          key={`${month.id}-${totalizer.id}`}
+                          align="right"
+                        >
+                          <Typography variant="body2" fontFamily="monospace">
+                            {monthTotalizer
+                              ? monthTotalizer.totalValue === 0
+                                ? "-"
+                                : Math.trunc(
+                                    monthTotalizer.totalValue / 1000
+                                  ).toLocaleString("pt-BR")
+                              : "-"}
+                          </Typography>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
 
-            const totalRowData = Object.fromEntries(
-              data.map((month) => [
-                month.month,
-                month[key]?.value?.toLocaleString("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                }) ?? "-",
-              ])
-            );
+                  {totalizer.classifications?.map(
+                    (classification: Classification) => (
+                      <TableRow
+                        key={classification.id}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                        }}
+                      >
+                        <TableCell
+                          component="th"
+                          scope="row"
+                          sx={{ pl: 4, ...stickyCellStyle }}
+                        >
+                          <Typography variant="body2">
+                            {classification.name}
+                          </Typography>
+                        </TableCell>
+                        {months.map((month: Month) => {
+                          const monthTotalizer = month.totalizer.find(
+                            (t) => t.id === totalizer.id
+                          );
+                          const monthClassification =
+                            monthTotalizer?.classifications?.find(
+                              (c) => c.id === classification.id
+                            );
+                          return (
+                            <TableCell
+                              key={`${month.id}-${classification.id}`}
+                              align="right"
+                              onClick={() =>
+                                handleCellClick(
+                                  monthClassification?.datas,
+                                  `${classification.name} - ${monthTranslator(
+                                    month.name
+                                  )}`
+                                )
+                              }
+                              sx={{
+                                cursor: monthClassification?.datas?.length
+                                  ? "pointer"
+                                  : "default",
+                                "&:hover": {
+                                  backgroundColor: monthClassification?.datas
+                                    ?.length
+                                    ? theme.palette.action.hover
+                                    : "inherit",
+                                },
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                fontFamily="monospace"
+                              >
+                                {monthClassification
+                                  ? monthClassification.value === 0
+                                    ? "-"
+                                    : Math.trunc(
+                                        monthClassification.value / 1000
+                                      ).toLocaleString("pt-BR")
+                                  : "-"}
+                              </Typography>
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    )
+                  )}
+                </React.Fragment>
+              ))}
 
-            const innerRowsMap: {
-              [classificationName: string]: { [month: string]: string };
-            } = {};
-
-            data.forEach((month) => {
-              const sectionData = month[key] as any;
-              if (sectionData?.classifications) {
-                sectionData.classifications.forEach((cls: Classification) => {
-                  if (!innerRowsMap[cls.name]) {
-                    innerRowsMap[cls.name] = {};
-                  }
-                  innerRowsMap[cls.name][month.month] = cls.valueFormatted;
-                });
-              }
-            });
-
-            return (
-              <React.Fragment key={section.key}>
-                {renderRow(section.label, totalRowData, true)}
-                {Object.entries(innerRowsMap).map(([name, rowByMonth]) =>
-                  renderRow(name, rowByMonth, false)
-                )}
-              </React.Fragment>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+              {months[0]?.monthPainelContabilTotalizer && (
+                <TableRow
+                  sx={{
+                    "&:last-child td, &:last-child th": { border: 0 },
+                    backgroundColor: theme.palette.grey[200],
+                  }}
+                >
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    sx={{ ...stickyCellStyle }}
+                  >
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {months[0].monthPainelContabilTotalizer.name}
+                    </Typography>
+                  </TableCell>
+                  {months.map((month: Month) => (
+                    <TableCell key={`total-${month.id}`} align="right">
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight="bold"
+                        fontFamily="monospace"
+                      >
+                        {month.monthPainelContabilTotalizer.totalValue === 0
+                          ? "-"
+                          : Math.trunc(
+                              month.monthPainelContabilTotalizer.totalValue /
+                                1000
+                            ).toLocaleString("pt-BR")}
+                      </Typography>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </TableContainer>
+      <TableDetailModal
+        handleCloseModal={handleCloseModal}
+        openModal={openModal}
+        selectedData={selectedData}
+        selectedTitle={selectedTitle}
+      />
+    </>
   );
-}
+};
+
+export default BalancoContabilTable;
