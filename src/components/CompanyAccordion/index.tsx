@@ -3,7 +3,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 import { ContentContainer, MainContainer, Title, Button, CompanyButton } from './styles';
 import { useState } from 'react';
-import { ButtonTittle } from '../../Features/Home/styles';
+import { ButtonTittle } from '../../Features/Groups/styles';
 import { SubCompany } from './SubCompanyExpansion';
 
 interface CompanyAccordionProps {
