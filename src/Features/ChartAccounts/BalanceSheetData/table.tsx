@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
+import TableRowsRoundedIcon from "@mui/icons-material/TableRowsRounded";
 import InboxIcon from "@mui/icons-material/Inbox";
 
 interface AccountLine {
@@ -28,6 +29,7 @@ interface AccountLine {
 interface BalanceSheetDetailsTableProps {
   data: AccountLine[];
   onViewDetailed: () => void;
+  onViewBalanceSheet: () => void;
 }
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -39,6 +41,7 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
 export const BalanceSheetDetailsTable = ({
   data,
   onViewDetailed,
+  onViewBalanceSheet
 }: BalanceSheetDetailsTableProps) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -90,7 +93,19 @@ export const BalanceSheetDetailsTable = ({
 
   return (
     <>
-      <Box display="flex" alignItems="flex-end" mb={2} sx={{ width: "100%" }}>
+      <Box display="flex" alignItems="flex-end" mb={2} sx={{ width: "100%", gap: 2 }}>
+        <Button
+          variant="contained"
+          sx={{
+            textTransform: "none",
+            backgroundColor: "#5C57F4",
+          }}
+          startIcon={<TableRowsRoundedIcon />}
+          onClick={onViewBalanceSheet}
+          disableElevation
+        >
+          Balanço Contábil
+        </Button>
         <Button
           variant="outlined"
           onClick={onViewDetailed}
@@ -109,7 +124,7 @@ export const BalanceSheetDetailsTable = ({
             <TableRow>
               <TableCell>
                 <Typography variant="subtitle2" color="var(--neutral-500)">
-                  Centro de Custo
+                  Conta
                 </Typography>
               </TableCell>
               <TableCell>

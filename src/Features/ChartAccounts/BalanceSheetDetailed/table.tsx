@@ -69,13 +69,13 @@ export const BalanceSheetTable = ({ data }: Props) => {
               sx={{ fontWeight: "var(--fontWeightSemiBold)" }}
               align="left"
             >
-              Centro de Custo
+              Conta
             </TableCell>
             <TableCell
               sx={{ fontWeight: "var(--fontWeightSemiBold)" }}
               align="left"
             >
-              Nome
+              Descrição
             </TableCell>
             <TableCell
               sx={{ fontWeight: "var(--fontWeightSemiBold)" }}
@@ -152,22 +152,13 @@ export const BalanceSheetTable = ({ data }: Props) => {
                           : "inherit",
                       }}
                     >
-                      {main.initialValue.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
+                      {main.initialValue}
                     </TableCell>
                     <TableCell align="right">
-                      {main.credit.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
+                      {main.credit}
                     </TableCell>
                     <TableCell align="right">
-                      {main.debit.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
+                      {main.debit}
                     </TableCell>
                     <TableCell
                       align="right"
@@ -175,10 +166,7 @@ export const BalanceSheetTable = ({ data }: Props) => {
                         color: isNegative(main.finalValue) ? "red" : "inherit",
                       }}
                     >
-                      {main.finalValue.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
+                      {main.finalValue}
                     </TableCell>
                   </TableRow>
                 )}
@@ -222,22 +210,13 @@ export const BalanceSheetTable = ({ data }: Props) => {
                                     : "inherit",
                                 }}
                               >
-                                {row.initialValue.toLocaleString("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                })}
+                                {row.initialValue}
                               </TableCell>
                               <TableCell align="right">
-                                {row.credit.toLocaleString("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                })}
+                                {row.credit}
                               </TableCell>
                               <TableCell align="right">
-                                {row.debit.toLocaleString("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                })}
+                                {row.debit}
                               </TableCell>
                               <TableCell
                                 align="right"
@@ -247,10 +226,7 @@ export const BalanceSheetTable = ({ data }: Props) => {
                                     : "inherit",
                                 }}
                               >
-                                {row.finalValue.toLocaleString("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                })}
+                                {row.finalValue}
                               </TableCell>
                             </TableRow>
                           ))}

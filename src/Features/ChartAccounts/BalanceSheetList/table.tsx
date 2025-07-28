@@ -9,18 +9,29 @@ import {
   Chip,
   TableSortLabel,
   TablePagination,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { useState } from "react";
 import { Balancetes } from "../../../types/balancete";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+dayjs.locale("pt-br");
 
 interface AccountingTableProps {
   data: Balancetes;
   onRowClick?: (id: number) => void;
+  onDelete?: (id: number) => void;
 }
 
 type Order = "asc" | "desc";
 
-export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
+export const AccountingTable = ({
+  data,
+  onRowClick,
+  onDelete,
+}: AccountingTableProps) => {
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<"dateYear" | "dateMonth" | "status">(
     "dateYear"
@@ -95,7 +106,10 @@ export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
     return stabilized.map(([el]) => el as T);
   }
 
-  const sortedData = stableSort(data?.balancetes ?? [], getComparator(order, orderBy));
+  const sortedData = stableSort(
+    data?.balancetes ?? [],
+    getComparator(order, orderBy)
+  );
   const paginatedData = sortedData.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
@@ -120,7 +134,7 @@ export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
                   onClick={() => handleRequestSort("dateMonth")}
                 >
                   <strong style={{ color: "var(--neutral-500)" }}>
-                    Data do balancete
+                    Referência
                   </strong>
                 </TableSortLabel>
               </TableCell>
@@ -130,12 +144,19 @@ export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
                   direction={orderBy === "status" ? order : "asc"}
                   onClick={() => handleRequestSort("status")}
                 >
-                  <span style={{ color: "var(--neutral-500)" }}>Status</span>
+                  <strong style={{ color: "var(--neutral-500)" }}>
+                    Status
+                  </strong>
                 </TableSortLabel>
               </TableCell>
-              {/* <TableCell align="center" sx={{ color: "var(--neutral-500)" }}>
+              <TableCell sortDirection={orderBy === "status" ? order : false}>
+                <strong style={{ color: "var(--neutral-500)" }}>
+                  Data do Envio
+                </strong>
+              </TableCell>
+              <TableCell align="center" sx={{ color: "var(--neutral-500)" }}>
                 Ações
-              </TableCell> */}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -150,36 +171,45 @@ export const AccountingTable = ({ data, onRowClick }: AccountingTableProps) => {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map(({ id, dateMonth, dateYear, status }) => (
-                <TableRow
-                  key={id}
-                  hover
-                  onClick={() => onRowClick?.(id)}
-                  sx={{ cursor: onRowClick ? "pointer" : "default" }}
-                >
-                  <TableCell
-                    sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
+              paginatedData.map(
+                ({ id, dateMonth, dateYear, dateCreate }) => (
+                  <TableRow
+                    key={id}
+                    hover
+                    onClick={() => onRowClick?.(id)}
+                    sx={{ cursor: onRowClick ? "pointer" : "default" }}
                   >
-                    {formatDate(dateMonth, dateYear)}
-                  </TableCell>
-                  <TableCell
-                    sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
-                  >
-                    <Chip label={status} color="warning" variant="outlined" />
-                  </TableCell>
-                  {/* <TableCell align="center">
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation(); // impede o clique na linha
-                        onRowClick?.(id);
-                      }}
-                      color="primary"
+                    <TableCell
+                      sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
                     >
-                      <OpenInNewIcon />
-                    </IconButton>
-                  </TableCell> */}
-                </TableRow>
-              ))
+                      {formatDate(dateMonth, dateYear)}
+                    </TableCell>
+                    <TableCell
+                      sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
+                    >
+                      <Chip label={"enviado"} color="primary" variant="outlined" />
+                    </TableCell>
+                    <TableCell
+                      sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
+                    >
+                      {dayjs(dateCreate).format("D [de] MMMM [de] YYYY")}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Excluir balancete">
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete?.(id);
+                          }}
+                          color="error"
+                        >
+                          <DeleteOutlineRoundedIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                )
+              )
             )}
           </TableBody>
         </Table>

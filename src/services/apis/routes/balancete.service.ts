@@ -26,6 +26,24 @@ export const getBalancete = async (balanceteId: number) => {
   }
 };
 
+export const getBalanceteByDate = async (
+  accountPlanId: number,
+  year: number,
+  month: number
+) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/Balancete/accountplan/${accountPlanId}/date`,
+      {
+        params: { year, month },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getBalanceteData = async (balanceteId: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
@@ -70,6 +88,31 @@ export const importAccounting = async (data: File, balanceteId: number) => {
       {
         params: { balanceteId },
       }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getBalanceteFiltered = async (id: number, tipo: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/Balancete/${id}/filter`,
+      {
+        params: { tipo },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteBalancete = async (id: number) => {
+  try {
+    const response = await axiosInstanceWithToken.delete(
+      `${URL}/api/Balancete/${id}`
     );
     return response.data;
   } catch (error) {

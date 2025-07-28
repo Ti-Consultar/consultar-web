@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-import { BreadcrumbItem } from '../types/breadcrumb';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { BreadcrumbItem } from "../types/breadcrumb";
 
 interface MainProviderType {
   navSelected: string;
@@ -15,9 +15,20 @@ const MainContext = createContext<MainProviderType | undefined>(undefined);
 export const MainProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [navSelected, setNavSelected] = useState('Início');
-  const [company, setCompany] = useState<string>('');
+  const [navSelected, setNavSelected] = useState("Início");
+  const [company, setCompany] = useState<string>("");
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("navSelected");
+    if (stored) setNavSelected(stored);
+  }, []);
+
+  useEffect(() => {
+    if (navSelected) {
+      localStorage.setItem("navSelected", navSelected);
+    }
+  }, [navSelected]);
 
   return (
     <MainContext.Provider
@@ -38,7 +49,7 @@ export const MainProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useMainContext = () => {
   const context = useContext(MainContext);
   if (!context) {
-    throw new Error('useMainContext must be used within a MainProvider');
+    throw new Error("useMainContext must be used within a MainProvider");
   }
   return context;
 };

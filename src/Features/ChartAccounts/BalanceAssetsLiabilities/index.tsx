@@ -11,17 +11,22 @@ import RequestPageOutlinedIcon from "@mui/icons-material/RequestPageOutlined";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { BalanceSheetTable } from "./table";
-import { getBalanceteData } from "../../../services/apis/routes/balancete.service";
+import {
+  getBalanceteData,
+  getBalanceteFiltered,
+} from "../../../services/apis/routes/balancete.service";
 import { BalanceteData } from "../../../types/balancete";
 import { toast } from "react-toastify";
+import { TableTabs } from "./table";
 
-export const BalanceSheetDetailed = () => {
+export const BalanceAssetsLiabilities = () => {
   const { balanceteId } = useParams();
   const { setLoading } = useLoading();
   const [balanceteDataDetailed, setBalanceteDataDetailed] = useState<
     BalanceteData[]
   >([]);
+  const [ativo, setAtivo] = useState<BalanceteData[]>([]);
+  const [passivo, setPassivo] = useState<BalanceteData[]>([]);
   const [date, setDate] = useState<string>("");
 
   const monthMap: Record<string, string> = {
@@ -45,27 +50,46 @@ export const BalanceSheetDetailed = () => {
   };
 
   useEffect(() => {
-    const fetchBalanceSheetData = async () => {
-      setLoading(true, "Buscando dados do balancete...");
+    const fetchAllBalanceteData = async () => {
+      if (!balanceteId) return;
+
       try {
-        if (!balanceteId) return;
-        const response = await getBalanceteData(+balanceteId);
-        if (response?.success) {
-          setBalanceteDataDetailed(response.data?.dataDto);
+        setLoading(true, "Carregando dados do balancete...");
+
+        // Faz as duas requisições em paralelo
+        const [detailsRes, ativosRes, passivosRes] = await Promise.all([
+          getBalanceteData(+balanceteId),
+          getBalanceteFiltered(+balanceteId, 1),
+          getBalanceteFiltered(+balanceteId, 2),
+        ]);
+
+        // Trata dados detalhados
+        if (detailsRes?.success) {
+          setBalanceteDataDetailed(detailsRes.data?.dataDto);
+
           const date = formatDate(
-            response.data?.balancete?.dateMonth,
-            response.data?.balancete?.dateYear
+            detailsRes.data?.balancete?.dateMonth,
+            detailsRes.data?.balancete?.dateYear
           );
           setDate(date);
         }
-      } catch {
-        toast.error("Ocorreu um erro ao tentar obter os dados.");
+
+        // Trata ativos e passivos
+        if (ativosRes?.success) {
+          setAtivo(ativosRes.data);
+        }
+
+        if (passivosRes?.success) {
+          setPassivo(passivosRes.data);
+        }
+      } catch (error) {
+        toast.error("Ocorreu um erro ao tentar obter os dados do balancete.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBalanceSheetData();
+    fetchAllBalanceteData();
   }, []);
 
   return (
@@ -74,12 +98,14 @@ export const BalanceSheetDetailed = () => {
         <HeaderContainer>
           <Box sx={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <RequestPageOutlinedIcon />
-            <Title>Balanço Contábil Detalhado</Title>
+            <Title>Balanço Patrimonial Contábil</Title>
           </Box>
           <Subtitle>{date}</Subtitle>
         </HeaderContainer>
         <ListContainer>
-          <BalanceSheetTable data={balanceteDataDetailed} />
+          {balanceteDataDetailed.length > 0 && (
+            <TableTabs ativos={ativo} passivos={passivo} />
+          )}
         </ListContainer>
       </MainContainer>
     </MainTemplate>

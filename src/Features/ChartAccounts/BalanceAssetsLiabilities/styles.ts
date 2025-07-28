@@ -39,7 +39,7 @@ export const ListContainer = styled.div`
   align-items: center;
   padding: 2rem;
   width: 100%;
-  height: 70vh
+  height: 100%
 `;
 
 export const Title = styled.h2`
@@ -52,11 +52,3 @@ export const Subtitle = styled.span`
   color: var(--neutral-500);
   margin-bottom: 0.5rem;
 `;
-
-export const OptionsContainer = styled.div`
-  dsplay: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  width: 100%;
-  margin-bottom: 1rem;
-`
