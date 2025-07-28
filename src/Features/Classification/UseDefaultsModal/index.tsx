@@ -1,11 +1,4 @@
-import {
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  Button,
-} from "@mui/material";
-import { useState } from "react";
-import { ClassificationType } from "../../../types/classification";
+import { Dialog, DialogTitle, DialogActions, Button } from "@mui/material";
 
 interface ClassificationModalProps {
   open: boolean;
@@ -18,41 +11,6 @@ export const ClassificationModal = ({
   onClose,
   onConfirm,
 }: ClassificationModalProps) => {
-  const [skeleton, setSkeleton] = useState(true);
-  const [selectedTab, setSelectedTab] = useState(1);
-  const [classifications, setClassifications] = useState<ClassificationType[]>(
-    []
-  );
-  const [selectedClassificationId, setSelectedClassificationId] =
-    useState<number>();
-
-  // useEffect(() => {
-  //   const fetchClassifications = async (type: number) => {
-  //     try {
-  //       setSkeleton(true);
-
-  //       const cached = localStorage.getItem(`classifications-${type}`);
-  //       if (cached) {
-  //         setClassifications(JSON.parse(cached));
-  //         setSkeleton(false);
-  //         return;
-  //       }
-
-  //       const response = await getClassificationTemplate(type);
-  //       setClassifications(response.data);
-  //     } catch (error) {
-  //       toast.error(
-  //         "Erro ao buscar classificações, tente novamente mais tarde."
-  //       );
-  //     } finally {
-  //       setSkeleton(false);
-  //     }
-  //   };
-
-  //   localStorage.setItem("selectedTab", selectedTab.toString());
-  //   fetchClassifications(selectedTab);
-  // }, [selectedTab]);
-
   return (
     <Dialog
       open={open}
@@ -69,18 +27,6 @@ export const ClassificationModal = ({
       <DialogTitle sx={{ px: 0, textAlign: "center" }}>
         Deseja utilizar o modelo padrão de classificação para os balancetes?
       </DialogTitle>
-
-      {/* <DialogContent sx={{ px: 0 }}>
-        <ClassificationPanel
-          data={classifications}
-          selectedId={selectedClassificationId}
-          onTabChange={(tabId) => setSelectedTab(tabId)}
-          onSelect={(id) => setSelectedClassificationId(id)}
-          isLoading={skeleton}
-          readOnly
-        />
-      </DialogContent> */}
-
       <DialogActions sx={{ px: 0, mt: 2, justifyContent: "flex-end" }}>
         <Button onClick={onClose} color="inherit">
           Criar uma nova classificação

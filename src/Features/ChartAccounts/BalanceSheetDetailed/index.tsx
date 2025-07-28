@@ -15,7 +15,6 @@ import { BalanceSheetTable } from "./table";
 import { getBalanceteData } from "../../../services/apis/routes/balancete.service";
 import { BalanceteData } from "../../../types/balancete";
 import { toast } from "react-toastify";
-import { BalanceLineChart } from "../../../components/Charts/BalanceLineChart";
 
 export const BalanceSheetDetailed = () => {
   const { balanceteId } = useParams();

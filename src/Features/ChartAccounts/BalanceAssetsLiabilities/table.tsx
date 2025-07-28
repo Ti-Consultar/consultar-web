@@ -32,13 +32,6 @@ interface TableTabsProps {
   passivos: FinancialRow[];
 }
 
-const formatCurrency = (value: number) =>
-  value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-  });
-
 export const TableTabs = ({ ativos, passivos }: TableTabsProps) => {
   const [tabIndex, setTabIndex] = useState(0);
   const currentData = tabIndex === 0 ? ativos ?? [] : passivos ?? [];

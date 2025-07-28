@@ -1,4 +1,3 @@
-import { TableCell, TableRow } from "@mui/material";
 import styled from "styled-components";
 
 export const MainContainer = styled.div`

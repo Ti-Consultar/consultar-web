@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Tabs, Tab, Paper, Button, Container } from "@mui/material";
+import { Box, Paper, Button, Container } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -55,7 +55,7 @@ export const EficienciaOperacional = () => {
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
   );
-  const [data, setData] = useState<any[]>([]);
+  const [data, ] = useState<any[]>([]);
 
   // Placeholder function for handling the search action
   const handleSearch = () => {

@@ -172,7 +172,7 @@ export const AccountingTable = ({
               </TableRow>
             ) : (
               paginatedData.map(
-                ({ id, dateMonth, dateYear, status, dateCreate }) => (
+                ({ id, dateMonth, dateYear, dateCreate }) => (
                   <TableRow
                     key={id}
                     hover
