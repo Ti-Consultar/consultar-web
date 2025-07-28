@@ -187,7 +187,7 @@ export const AccountingTable = ({
                     <TableCell
                       sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
                     >
-                      <Chip label={status} color="warning" variant="outlined" />
+                      <Chip label={"enviado"} color="primary" variant="outlined" />
                     </TableCell>
                     <TableCell
                       sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
