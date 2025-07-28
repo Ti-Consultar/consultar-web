@@ -14,6 +14,7 @@ import { getBalancoContabil } from "../../../services/apis/routes/classification
 import { toast } from "react-toastify";
 import BalancoContabilTable from "./table";
 import { BalancoResponse, Month } from "../../../types/balanco";
+import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
 export const BalancoContabil = () => {
   const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
@@ -179,6 +180,7 @@ export const BalancoContabil = () => {
             >
               Pesquisar
             </Button>
+            <TableValueVisualization />
           </Box>
           <Container>
             <BalancoContabilTable months={balanceteData} />

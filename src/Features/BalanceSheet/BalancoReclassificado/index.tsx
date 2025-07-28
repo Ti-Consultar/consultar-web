@@ -10,10 +10,11 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { getBalancoContabil } from "../../../services/apis/routes/classification.service";
+import { getBalancoContabil, getBalancoReclassificado } from "../../../services/apis/routes/classification.service";
 import { toast } from "react-toastify";
 import { BalancoResponse, Month } from "../../../types/balanco";
 import BalancoContabilTable from "../BalanceSheet/table";
+import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
@@ -65,16 +66,29 @@ export const BalancoReclassificado = () => {
   const handleSearch = async (tab?: number): Promise<void> => {
     try {
       setLoading(true, "Buscando Balanço Contábil");
+
       if (!accountPlanId) {
         toast.warning("Plano de contas não encontrado");
         return;
       }
 
-      const response: BalancoResponse = await getBalancoContabil(
-        accountPlanId,
-        selectedYear.year(),
-        tab ?? tabValue
-      );
+      const currentTab = tab ?? tabValue;
+
+      let response: BalancoResponse;
+
+      if (currentTab === 1 || currentTab === 2) {
+        response = await getBalancoReclassificado(
+          accountPlanId,
+          selectedYear.year(),
+          currentTab
+        );
+      } else {
+        response = await getBalancoContabil(
+          accountPlanId,
+          selectedYear.year(),
+          currentTab
+        );
+      }
 
       if (response.success && response.data?.months) {
         setBalanceteData(response.data.months);
@@ -85,7 +99,7 @@ export const BalancoReclassificado = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Ocorreu um erro ao tentar buscar o balanço contábil");
+      toast.error("Ocorreu um erro ao tentar buscar os dados");
     } finally {
       setLoading(false);
     }
@@ -102,7 +116,7 @@ export const BalancoReclassificado = () => {
   return (
     <MainTemplate>
       <MainContainer>
-        <Title>Balanço Reclassificado</Title>
+        <Title>Demonstrações Contábeis</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box
             sx={{
@@ -190,6 +204,7 @@ export const BalancoReclassificado = () => {
             >
               Pesquisar
             </Button>
+            <TableValueVisualization />
           </Box>
           <Container>
             <BalancoContabilTable months={balanceteData} />

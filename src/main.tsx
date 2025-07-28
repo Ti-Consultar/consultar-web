@@ -11,6 +11,7 @@ import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "./styles/theme.ts";
 import { RefreshProvider } from "./contexts/refreshContext.tsx";
 import { PermissionProvider } from "./contexts/PermissionsContext/index.tsx";
+import { ValueDisplayProvider } from "./contexts/ValueDisplayContext/index.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -19,17 +20,19 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <GlobalStyle />
       <BrowserRouter>
         <LoadingProvider>
-          <RefreshProvider>
-            <CompanyProvider>
-              <DrawerProvider>
-                <PermissionProvider>
-                  <AppProviders>
-                    <App />
-                  </AppProviders>
-                </PermissionProvider>
-              </DrawerProvider>
-            </CompanyProvider>
-          </RefreshProvider>
+          <ValueDisplayProvider>
+            <RefreshProvider>
+              <CompanyProvider>
+                <DrawerProvider>
+                  <PermissionProvider>
+                    <AppProviders>
+                      <App />
+                    </AppProviders>
+                  </PermissionProvider>
+                </DrawerProvider>
+              </CompanyProvider>
+            </RefreshProvider>
+          </ValueDisplayProvider>
         </LoadingProvider>
       </BrowserRouter>
     </ThemeProvider>

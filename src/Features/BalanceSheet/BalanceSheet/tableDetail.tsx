@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
 
 interface TableDetailModalProps {
   openModal: boolean;
@@ -27,6 +28,13 @@ export const TableDetailModal = ({
   selectedData,
   selectedTitle,
 }: TableDetailModalProps) => {
+  const { valueMode } = useValueDisplay();
+
+  const formatValue = (value: number) => {
+    if (valueMode === "MILHAR") return (value / 1000).toFixed(2);
+    if (valueMode === "MILHARES") return (value / 1000000).toFixed(2);
+    return value.toString();
+  };
   return (
     <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
       <Box
@@ -63,7 +71,7 @@ export const TableDetailModal = ({
                 <TableRow key={data.id}>
                   <TableCell>{data.name}</TableCell>
                   <TableCell align="right">
-                    <Typography fontFamily="monospace">{data.value}</Typography>
+                    <Typography fontFamily="monospace">{formatValue(data.value)}</Typography>
                   </TableCell>
                 </TableRow>
               ))}

@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { TableDetailModal } from "./tableDetail";
 import InboxIcon from "@mui/icons-material/Inbox";
+import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
 
 // Type definitions
 interface FinancialData {
@@ -61,7 +62,9 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedData, setSelectedData] = useState<FinancialData[]>([]);
   const [selectedTitle, setSelectedTitle] = useState("");
+  const { valueMode } = useValueDisplay();
 
+  // Cria lista única de totalizadores
   const allTotalizers: Totalizer[] = [];
   months.forEach((month) => {
     month.totalizer.forEach((totalizer) => {
@@ -71,6 +74,11 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
     });
   });
 
+  allTotalizers.sort((a, b) => a.typeOrder - b.typeOrder);
+
+  const isEmpty = !months.length || !allTotalizers.length;
+
+  // Tradutor de mês
   function monthTranslator(mesIngles: string): string {
     const meses: Record<string, string> = {
       January: "Janeiro",
@@ -86,10 +94,10 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
       November: "Novembro",
       December: "Dezembro",
     };
-
     return meses[mesIngles] || mesIngles;
   }
 
+  // Modal
   const handleCellClick = (
     datas: FinancialData[] | undefined,
     title: string
@@ -107,14 +115,11 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
     setSelectedTitle("");
   };
 
-  allTotalizers.sort((a, b) => a.typeOrder - b.typeOrder);
-
-  const isEmpty = !months.length || !allTotalizers.length;
-
+  // Estilos Sticky
   const stickyCellStyle = {
     position: "sticky",
     left: 0,
-    backgroundColor: "white",
+    backgroundColor: theme.palette.background.paper,
     zIndex: 10,
     borderRight: `1px solid ${theme.palette.divider}`,
   };
@@ -122,8 +127,40 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
   const stickyHeaderStyle = {
     position: "sticky",
     top: 0,
-    backgroundColor: "#DDE4EB",
+    backgroundColor: theme.palette.grey[200],
     zIndex: 11,
+  };
+
+  const stickyHeaderFirstCellStyle = {
+    ...stickyHeaderStyle,
+    left: 0,
+    zIndex: 12,
+  };
+
+  const formatValue = (classificationName: string, value: number): string => {
+    if (value === 0) return "-";
+
+    let adjustedValue = Math.abs(value); // Remove sinal negativo sempre
+
+    // Ajuste com base no modo selecionado
+    if (valueMode === "MILHAR") {
+      adjustedValue = adjustedValue / 1000;
+    } else if (valueMode === "MILHARES") {
+      adjustedValue = adjustedValue / 1000000;
+    }
+
+    // Caso porcentagem
+    if (classificationName.includes("%")) {
+      return `${adjustedValue.toFixed(2).replace(".", ",")}%`;
+    }
+
+    // Caso negativo contábil com parênteses
+    if (classificationName.startsWith("(-)")) {
+      return `(${Math.trunc(adjustedValue).toLocaleString("pt-BR")})`;
+    }
+
+    // Caso normal
+    return Math.trunc(adjustedValue).toLocaleString("pt-BR");
   };
 
   return (
@@ -148,7 +185,9 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
             px={2}
             textAlign="center"
           >
-            <InboxIcon sx={{ fontSize: 48, color: "var(--neutral-400)" }} />
+            <InboxIcon
+              sx={{ fontSize: 48, color: theme.palette.text.disabled }}
+            />
             <Typography variant="subtitle1" fontWeight="medium">
               Nada a exibir ainda
             </Typography>
@@ -161,12 +200,8 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
             <TableHead>
               <TableRow>
                 <TableCell
-                  sx={{
-                    ...stickyCellStyle,
-                    ...stickyHeaderStyle,
-                    minWidth: 250,
-                  }}
-                ></TableCell>
+                  sx={{ ...stickyHeaderFirstCellStyle, minWidth: 250 }}
+                />
                 {months.map((month: Month) => (
                   <TableCell
                     key={month.id}
@@ -183,17 +218,14 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
             <TableBody>
               {allTotalizers.map((totalizer: Totalizer) => (
                 <React.Fragment key={totalizer.id}>
+                  {/* Linha de Totalizador */}
                   <TableRow
                     sx={{
                       "&:last-child td, &:last-child th": { border: 0 },
                       backgroundColor: theme.palette.grey[100],
                     }}
                   >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      sx={{ ...stickyCellStyle }}
-                    >
+                    <TableCell component="th" scope="row" sx={stickyCellStyle}>
                       <Typography variant="body2" fontWeight="bold">
                         {totalizer.name}
                       </Typography>
@@ -208,12 +240,11 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                           align="right"
                         >
                           <Typography variant="body2" fontFamily="monospace">
-                            {monthTotalizer
-                              ? monthTotalizer.totalValue === 0
-                                ? "-"
-                                : Math.trunc(
-                                    monthTotalizer.totalValue / 1000
-                                  ).toLocaleString("pt-BR")
+                            {monthTotalizer?.totalValue
+                              ? formatValue(
+                                  monthTotalizer.name,
+                                  monthTotalizer?.totalValue
+                                )
                               : "-"}
                           </Typography>
                         </TableCell>
@@ -221,14 +252,10 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                     })}
                   </TableRow>
 
+                  {/* Linhas de Classificação */}
                   {totalizer.classifications?.map(
                     (classification: Classification) => (
-                      <TableRow
-                        key={classification.id}
-                        sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
-                        }}
-                      >
+                      <TableRow key={classification.id}>
                         <TableCell
                           component="th"
                           scope="row"
@@ -275,11 +302,10 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                                 fontFamily="monospace"
                               >
                                 {monthClassification
-                                  ? monthClassification.value === 0
-                                    ? "-"
-                                    : Math.trunc(
-                                        monthClassification.value / 1000
-                                      ).toLocaleString("pt-BR")
+                                  ? formatValue(
+                                      classification.name,
+                                      monthClassification.value
+                                    )
                                   : "-"}
                               </Typography>
                             </TableCell>
@@ -291,6 +317,7 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                 </React.Fragment>
               ))}
 
+              {/* Total do Painel Contábil */}
               {months[0]?.monthPainelContabilTotalizer && (
                 <TableRow
                   sx={{
@@ -298,11 +325,7 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                     backgroundColor: theme.palette.grey[200],
                   }}
                 >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    sx={{ ...stickyCellStyle }}
-                  >
+                  <TableCell component="th" scope="row" sx={stickyCellStyle}>
                     <Typography variant="subtitle2" fontWeight="bold">
                       {months[0].monthPainelContabilTotalizer.name}
                     </Typography>
@@ -329,6 +352,7 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
           </Table>
         )}
       </TableContainer>
+
       <TableDetailModal
         handleCloseModal={handleCloseModal}
         openModal={openModal}
