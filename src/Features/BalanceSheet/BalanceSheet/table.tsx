@@ -337,12 +337,12 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                         fontWeight="bold"
                         fontFamily="monospace"
                       >
-                        {month.monthPainelContabilTotalizer.totalValue === 0
-                          ? "-"
-                          : Math.trunc(
-                              month.monthPainelContabilTotalizer.totalValue /
-                                1000
-                            ).toLocaleString("pt-BR")}
+                        {month.monthPainelContabilTotalizer
+                          ? formatValue(
+                              "Totalizador",
+                              month.monthPainelContabilTotalizer.totalValue
+                            )
+                          : "-"}
                       </Typography>
                     </TableCell>
                   ))}

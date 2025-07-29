@@ -100,6 +100,12 @@ export const BalancoContabil = () => {
     handleSearch(newValue);
   };
 
+  useEffect(() => {
+    if (accountPlanId) {
+      handleSearch(1);
+    }
+  }, [accountPlanId]);
+
   return (
     <MainTemplate>
       <MainContainer>

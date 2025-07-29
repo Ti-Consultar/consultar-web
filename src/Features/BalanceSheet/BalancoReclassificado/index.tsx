@@ -10,7 +10,10 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { getBalancoContabil, getBalancoReclassificado } from "../../../services/apis/routes/classification.service";
+import {
+  getBalancoContabil,
+  getBalancoReclassificado,
+} from "../../../services/apis/routes/classification.service";
 import { toast } from "react-toastify";
 import { BalancoResponse, Month } from "../../../types/balanco";
 import BalancoContabilTable from "../BalanceSheet/table";
@@ -112,6 +115,12 @@ export const BalancoReclassificado = () => {
     setTabValue(newValue);
     handleSearch(newValue);
   };
+
+  useEffect(() => {
+    if (accountPlanId) {
+      handleSearch(1);
+    }
+  }, [accountPlanId]);
 
   return (
     <MainTemplate>

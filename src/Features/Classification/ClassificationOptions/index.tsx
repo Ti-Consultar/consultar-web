@@ -1,13 +1,4 @@
-import {
-  Box,
-  Tabs,
-  Tab,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  Paper,
-  Stack,
-} from "@mui/material";
+import { Box, Tabs, Tab, Paper, Stack } from "@mui/material";
 import { useState, useEffect } from "react";
 import { DivSkeleton } from "../../../styles/skeleton/skeleton";
 
@@ -75,7 +66,7 @@ export const ClassificationPanel = ({
       <Box sx={{ px: 1 }}>
         <Box
           sx={{
-            maxHeight: { xs: "300px", md: "400px" }, // ajustável conforme layout
+            maxHeight: { xs: "300px", md: "400px" },
             overflowY: "auto",
             pr: 1,
           }}
@@ -104,33 +95,31 @@ export const ClassificationPanel = ({
               ))}
             </Stack>
           ) : (
-            <RadioGroup
-              name="classification"
-              value={selectedId ?? ""}
-              onChange={(e) => onSelect?.(Number(e.target.value))}
-            >
-              <Stack spacing={1}>
-                {data.map((item) => (
-                  <FormControlLabel
-                    key={item.id}
-                    value={item.id}
-                    control={<Radio color="primary" />}
-                    label={item.name}
-                    sx={{
-                      borderRadius: 1,
-                      px: 1,
-                      py: 0.5,
-                      "& .MuiTypography-root": {
-                        fontSize: { xs: "0.875rem", md: "1rem" },
-                      },
-                      "&:hover": {
-                        backgroundColor: "action.hover",
-                      },
-                    }}
-                  />
-                ))}
-              </Stack>
-            </RadioGroup>
+            <Stack spacing={1}>
+              {data.map((item) => (
+                <Box
+                  key={item.id}
+                  onClick={() => onSelect(item.id)}
+                  sx={{
+                    cursor: "pointer",
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    bgcolor:
+                      item.id === selectedId ? "#F6F8FA" : "transparent",
+                    color:
+                      item.id === selectedId ? "#6941C6" : "text.primary",
+                    fontWeight: item.id === selectedId ? 600 : 400,
+                    fontSize: { xs: "0.875rem", md: "1rem" },
+                    "&:hover": {
+                      backgroundColor: "action.hover",
+                    },
+                  }}
+                >
+                  {item.name}
+                </Box>
+              ))}
+            </Stack>
           )}
         </Box>
       </Box>
