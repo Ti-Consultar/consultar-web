@@ -48,6 +48,7 @@ interface AccountPlanTableProps {
   accountType: number;
   onAccountTypeChange: (type: number) => void;
   classificationBonds: { bondList: BondListItem[] };
+  onRemoveClassified: (costCentersToRemove: string[]) => void;
 }
 
 export const AccountPlanTable = ({
@@ -58,6 +59,7 @@ export const AccountPlanTable = ({
   accountType,
   onAccountTypeChange,
   classificationBonds,
+  onRemoveClassified,
 }: AccountPlanTableProps) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -125,26 +127,27 @@ export const AccountPlanTable = ({
               <TableCell>
                 {selectedKeys.length > 0 && (
                   <Tooltip title="Limpar seleção">
-                    <IconButton aria-label="delete" size="small">
+                    <IconButton aria-label="delete" size="small" sx={{ p: 0 }}>
                       <RemoveDoneOutlinedIcon
                         fontSize="inherit"
-                        onClick={() => onSelect([])}
+                        onClick={() => {
+                          onRemoveClassified(selectedKeys);
+                          onSelect([]);
+                        }}
                         color="error"
                       />
                     </IconButton>
                   </Tooltip>
                 )}
               </TableCell>
-              <TableCell onClick={() => onSort("costCenter")}>Conta</TableCell>
-              <TableCell onClick={() => onSort("name")}>Descrição</TableCell>
-              <TableCell onClick={() => onSort("initialValue")}>
-                V. Inicial
+              <TableCell onClick={() => onSort("costCenter")} align="center">Conta</TableCell>
+              <TableCell onClick={() => onSort("name")} align="center">Descrição</TableCell>
+              <TableCell onClick={() => onSort("initialValue")} align="center">
+                Inicial
               </TableCell>
-              <TableCell onClick={() => onSort("credit")}>Crédito</TableCell>
-              <TableCell onClick={() => onSort("debit")}>Débito</TableCell>
-              <TableCell onClick={() => onSort("finalValue")}>
-                V. Final
-              </TableCell>
+              <TableCell onClick={() => onSort("credit")} align="center">Crédito</TableCell>
+              <TableCell onClick={() => onSort("debit")} align="center">Débito</TableCell>
+              <TableCell onClick={() => onSort("finalValue")} align="center">Final</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -199,13 +202,18 @@ export const AccountPlanTable = ({
                         cursor: "pointer",
                       }}
                     >
-                      <TableCell padding="checkbox">
+                      <TableCell
+                        padding="checkbox"
+                        sx={{ display: "flex", alignItems: "center" }}
+                      >
                         {classificationId !== null ? (
-                          <Tooltip
-                            title={`Classificado como ${classificationName}`}
-                          >
-                            <CheckIcon color="success" />
-                          </Tooltip>
+                          <>
+                            <Tooltip
+                              title={`Classificado como ${classificationName}`}
+                            >
+                              <CheckIcon color="success" />
+                            </Tooltip>
+                          </>
                         ) : (
                           <Checkbox
                             checked={isSelected}
@@ -218,11 +226,42 @@ export const AccountPlanTable = ({
                       </TableCell>
 
                       <TableCell>{row.costCenter}</TableCell>
-                      <TableCell>{row.name}</TableCell>
-                      <TableCell>{formatValue(row.initialValue)}</TableCell>
-                      <TableCell>{formatValue(row.credit)}</TableCell>
-                      <TableCell>{formatValue(row.debit)}</TableCell>
-                      <TableCell>{formatValue(row.finalValue)}</TableCell>
+                      <TableCell
+                        sx={{
+                          maxWidth: 200,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <Tooltip title={row.name}>
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "inline-block",
+                              maxWidth: "100%",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              verticalAlign: "middle",
+                            }}
+                          >
+                            {row.name}
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatValue(row.initialValue)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatValue(row.credit)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatValue(row.debit)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatValue(row.finalValue)}
+                      </TableCell>
                     </TableRow>
                   );
                 })

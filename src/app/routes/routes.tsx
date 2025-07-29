@@ -2,7 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { Home } from "../../landingPage";
 import { ForgotPassword } from "../../Features/Authentication/forgot-password";
 import { PasswordSent } from "../../Features/Authentication/forgot-password/password-sent";
-import { MrpHome } from "../../Features/Home";
+import { Groups } from "../../Features/Groups";
 import { Companies } from "../../Features/Companies";
 import { Branches } from "../../Features/Companies/Branches";
 import { SubCompanies } from "../../Features/SubCompanies";
@@ -21,6 +21,7 @@ import { GestaoLiquidez } from "../../Features/Results/GestaoLiquidez";
 import { IndicesEconomicos } from "../../Features/Results/IndicesEconomicos";
 import { CILeEC } from "../../Features/Results/CILeEC";
 import { EficienciaOperacional } from "../../Features/Results/EficienciaOperacional";
+import { MrpHome } from "../../Features/Home";
 
 export const AppRoutes = () => {
   return (
@@ -38,7 +39,8 @@ export const AppRoutes = () => {
           element={<PasswordSent />}
         />
 
-        <Route path="/grupos" element={<MrpHome />} />
+        <Route path="/dashboard" element={<MrpHome />} />
+        <Route path="/grupos" element={<Groups />} />
         <Route path={`/grupos/:groupId/empresas`} element={<Companies />} />
         <Route
           path={`/grupos/:groupId/empresas/:companyId/filiais`}

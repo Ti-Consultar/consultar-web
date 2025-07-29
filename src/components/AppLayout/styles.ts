@@ -36,5 +36,4 @@ export const ContentContainer = styled.div<MainTemplateStyledProps>`
   background-color: var(--neutral-50);
   overflow-x: auto;
   max-width: 100vw;
-  height: 100%
 `;
