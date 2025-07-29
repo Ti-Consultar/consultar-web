@@ -252,7 +252,6 @@ export const ClassificationPage = () => {
 
       if (response.success === true) {
         toast.success("Classificação enviada com sucesso!");
-        localStorage.removeItem("classification-bondList");
       } else {
         toast.error("Erro ao classificar.");
       }
@@ -282,6 +281,33 @@ export const ClassificationPage = () => {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRemoveClassified = (costCentersToRemove: string[]) => {
+    const updated = { ...classificationBonds };
+    let hasChanges = false;
+
+    updated.bondList = updated.bondList.map((group) => {
+      const filtered = group.costCenters.filter(
+        (cc) => !costCentersToRemove.includes(cc.costCenter)
+      );
+
+      if (filtered.length !== group.costCenters.length) {
+        hasChanges = true;
+      }
+
+      return { ...group, costCenters: filtered };
+    });
+
+    // Remove grupos que ficaram vazios
+    updated.bondList = updated.bondList.filter(
+      (group) => group.costCenters.length > 0
+    );
+
+    if (hasChanges) {
+      localStorage.setItem("classification-bondList", JSON.stringify(updated));
+      setClassificationBonds(updated);
     }
   };
 
@@ -318,6 +344,7 @@ export const ClassificationPage = () => {
                       accountType={accountType ? accountType : 0}
                       onAccountTypeChange={handleAccountTypeChange}
                       classificationBonds={classificationBonds}
+                      onRemoveClassified={handleRemoveClassified}
                     />
                   </Grid2>
                 </Grid2>
