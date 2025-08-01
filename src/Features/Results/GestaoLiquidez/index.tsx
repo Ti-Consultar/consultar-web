@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Box, Tabs, Tab, Paper, Button, Container } from "@mui/material";
+import React, { useState, useEffect, useMemo } from "react";
+import { Box, Tabs, Tab, Paper, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -7,74 +7,386 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
+import { ResultsTable } from "../resultsTable";
+import {
+  getCapitalDynamics,
+  getCapitalStructure,
+  getGrossCashFlow,
+  getLiquidity,
+  getLiquidityManagement,
+  getLiquidityMonth,
+  getTurnover,
+} from "../../../services/apis/routes/gestaoLiquidez.service";
+import { useParams } from "react-router";
+import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { toast } from "react-toastify";
+import { BarChartStackedBySign } from "../../../components/Charts/BarChartStackedBySign";
+import FleurietGestaoLiquidezChart from "../../../components/Charts/FleurietChart/FleurietGestaoLiquidezChart";
 
-interface BalancoContabilTableProps {
-  data: any[];
+interface LiquidityMonth {
+  name: string;
+  dateMonth: number;
+  saldoTesouraria: number;
+  ncg: number;
+  cdg: number;
+  indiceDeLiquidez: number;
 }
 
-const BalancoContabilTable: React.FC<BalancoContabilTableProps> = ({
-  data,
-}) => {
-  return (
-    <div
-      style={{
-        border: "1px dashed #ccc",
-        padding: "30px",
-        textAlign: "center",
-        minHeight: "200px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-      }}
-    >
-      <p style={{ color: "#777", fontSize: "1.1em" }}>
-        Conteúdo da tabela Balanço Contábil será carregado aqui.
-      </p>
-      {data.length > 0 && (
-        <div style={{ marginTop: "15px", fontSize: "0.9em", color: "#555" }}>
-          <p>Dados simulados recebidos para a tabela:</p>
-          <pre
-            style={{
-              backgroundColor: "#eee",
-              padding: "10px",
-              borderRadius: "5px",
-              overflowX: "auto",
-            }}
-          >
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
-};
+interface LiquidityVariables {
+  months: LiquidityMonth[];
+}
 
-// --- Main BalancoContabil Component (replicated structure) ---
+interface LiquidityData {
+  liquidityVariables: LiquidityVariables;
+}
+
 export const GestaoLiquidez = () => {
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
   );
-  const [data, setData] = useState<any[]>([]);
+  const [months, setMonths] = useState<any[]>([]);
+  const [metricKeys, setMetricKeys] = useState<string[]>([]);
+  const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
+  const { setLoading } = useLoading();
+  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
+  const [liquidityMonth, setLiquidityMonth] = useState<LiquidityData>();
+  const { groupId, companyid, subCompanyId } = useParams<{
+    groupId: string;
+    companyid?: string;
+    subCompanyId?: string;
+  }>();
 
-  // Placeholder function for handling tab changes
-  const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-    // In a real application, this would trigger data fetching based on the new tab
-    console.log(
-      `Tab changed to: ${newValue}. Logic to fetch new data would go here.`
+  interface Metric {
+    key: string;
+    label: string;
+    color: string;
+  }
+
+  useEffect(() => {
+    if (!groupId || accountPlanId) return;
+
+    const getAccountPlanId = async (
+      groupId: number,
+      companyId?: number,
+      subCompanyId?: number
+    ): Promise<void> => {
+      try {
+        setLoading(true, "Salvando data...");
+        const response = await getAccountPlan(groupId, companyId, subCompanyId);
+
+        const data = response.data;
+
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const lastItem = data[data.length - 1];
+        setAccountPlanId(lastItem.id);
+      } catch (error) {
+        console.error("Failed to fetch AccountPlanId", error);
+        toast.error("Erro ao buscar plano de contas");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAccountPlanId(
+      Number(groupId),
+      companyid ? Number(companyid) : undefined,
+      subCompanyId ? Number(subCompanyId) : undefined
     );
-    // Optionally clear data or load dummy data
-    setData([]);
+  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+
+  const fetchData = async () => {
+    if (!selectedYear) return;
+
+    setLoading(true);
+    const year = Number(selectedYear.format("YYYY"));
+
+    try {
+      if (!accountPlanId) return;
+      let response;
+      let metrics: string[] = [];
+      let labels: Record<string, string> = {};
+      let extractedMonths: any[] = [];
+
+      switch (tabValue) {
+        case 1:
+          response = await getLiquidityManagement(accountPlanId, year);
+          extractedMonths = response?.liquidityVariables?.months ?? [];
+          metrics = ["saldoTesouraria", "ncg", "cdg", "indiceDeLiquidez"];
+          labels = {
+            saldoTesouraria: "Saldo Tesouraria",
+            ncg: "Necessidade de Capital de Giro (NCG)",
+            cdg: "Capital de Giro (CDG)",
+            indiceDeLiquidez: "Índice de Liquidez",
+          };
+          break;
+
+        case 2:
+          response = await getCapitalDynamics(accountPlanId, year);
+          extractedMonths = response?.capitalDynamics?.months ?? [];
+          metrics = [
+            "pme",
+            "pmr",
+            "pmp",
+            "cicloFinanceiroDasOperacoesPrincipais",
+            "cicloFinanceiroNCG",
+          ];
+          labels = {
+            pme: "(PME) Prazo Médio Estocagem",
+            pmr: "(PMR) Prazo Médio Clientes",
+            pmp: "(PMP) Prazo Médio Fornecedores",
+            cicloFinanceiroDasOperacoesPrincipais:
+              "Ciclo Financeiro das Operações",
+            cicloFinanceiroNCG: "Ciclo Financeiro NCG",
+          };
+          break;
+
+        case 3:
+          response = await getGrossCashFlow(accountPlanId, year);
+          extractedMonths = response?.grossCashFlows?.months ?? [];
+          metrics = [
+            "ebitida",
+            "margemEBITIDA",
+            "variacaoNCG",
+            "fluxoCaixaOperacional",
+            "geracaoCaixa",
+            "aumentoReducaoFluxoCaixa",
+          ];
+          labels = {
+            ebitida: "EBITDA",
+            margemEBITIDA: "Margem EBITDA",
+            variacaoNCG: "Variação da NCG",
+            fluxoCaixaOperacional: "Fluxo de Caixa Operacional",
+            geracaoCaixa: "Geração de Caixa",
+            aumentoReducaoFluxoCaixa: "Aumento/Redução do Fluxo de Caixa",
+          };
+          break;
+
+        case 4:
+          response = await getTurnover(accountPlanId, year);
+          extractedMonths = response?.turnovers?.months ?? [];
+          metrics = ["giroPME", "giroPMR", "giroPMP", "giroCaixa"];
+          labels = {
+            giroPME: "Giro PME",
+            giroPMR: "Giro PMR",
+            giroPMP: "Giro PMP",
+            giroCaixa: "Giro Caixa",
+          };
+          break;
+
+        case 5:
+          response = await getLiquidity(accountPlanId, year);
+          extractedMonths = response?.liquiditys?.months ?? [];
+          metrics = ["liquidezCorrente", "liquidezSeca", "liquidezImediata"];
+          labels = {
+            liquidezCorrente: "Liquidez Corrente",
+            liquidezSeca: "Liquidez Seca",
+            liquidezImediata: "Liquidez Geral",
+          };
+          break;
+
+        case 6:
+          response = await getCapitalStructure(accountPlanId, year);
+          extractedMonths = response?.capitalStructures?.months ?? [];
+          metrics = [
+            "terceirosCurtoPrazo",
+            "terceirosLongoPrazo",
+            "participacaoCapitalTerceiros",
+            "participacaoCapitalProprio",
+          ];
+          labels = {
+            terceirosCurtoPrazo: "Endividamento de Terceiros de Curto Prazo",
+            terceirosLongoPrazo: "Endividamento de Terceiros de Longo Prazo",
+            participacaoCapitalTerceiros:
+              "Participação de Capital de Terceiros",
+            participacaoCapitalProprio: "Participação de Capital Próprio",
+          };
+          break;
+      }
+
+      setMonths(extractedMonths);
+      if (tabValue === 1 && extractedMonths.length > 0) {
+        const lastMonth = extractedMonths[extractedMonths.length - 1];
+        if (lastMonth.dateMonth) {
+          // Ajuste para criar um Dayjs com base no número do mês e ano selecionado
+          const monthDate = dayjs()
+            .year(Number(selectedYear.format("YYYY")))
+            .month(lastMonth.dateMonth - 1)
+            .startOf("month");
+
+          setSelectedMonth(monthDate);
+        }
+      }
+      setMetricKeys(metrics);
+      setMetricLabels(labels);
+    } catch (error) {
+      console.error("Erro ao buscar dados da aba:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Placeholder function for handling the search action
+  const getMetricsByTab = (tabValue: number): Metric[] => {
+    const colors = [
+      "#94191D",
+      "#3A5F9B",
+      "#F9A825",
+      "#43A047",
+      "#6A1B9A",
+      "#00ACC1",
+    ];
+
+    switch (tabValue) {
+      case 1:
+        return [
+          {
+            key: "saldoTesouraria",
+            label: "Saldo Tesouraria",
+            color: colors[0],
+          },
+          { key: "ncg", label: "NCG", color: colors[1] },
+          { key: "cdg", label: "CDG", color: colors[2] },
+          {
+            key: "indiceDeLiquidez",
+            label: "Índice de Liquidez",
+            color: colors[3],
+          },
+        ];
+      case 2:
+        return [
+          {
+            key: "pme",
+            label: "PME",
+            color: colors[0],
+          },
+          { key: "pmr", label: "PMR", color: colors[1] },
+          {
+            key: "pmp",
+            label: "PMP",
+            color: colors[2],
+          },
+        ];
+      // E assim por diante pra cada tab
+      default:
+        return [];
+    }
+  };
+
+  const fetchFeurietData = async () => {
+    if (!accountPlanId || !selectedYear || !selectedMonth) return;
+
+    const year = Number(selectedYear.format("YYYY"));
+    const selectedMonthNumber = selectedMonth.month() + 1;
+
+    setLoading(true);
+    try {
+      const response = await getLiquidityMonth(
+        accountPlanId,
+        year,
+        selectedMonthNumber
+      );
+      setLiquidityMonth(response);
+    } catch (error) {
+      console.error("Erro ao buscar dados do Fleuriet:", error);
+      toast.error("Erro ao buscar dados do Fleuriet");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
   const handleSearch = () => {
-    // In a real application, this would trigger API calls to fetch data
-    console.log("Search button clicked!");
-    console.log("Current Year:", selectedYear?.format("YYYY"));
-    console.log("Current Tab:", tabValue === 1 ? "Ativo" : "Passivo");
+    fetchData();
+  };
+
+  useEffect(() => {
+    if (accountPlanId) {
+      fetchData();
+    }
+  }, [tabValue, selectedYear, accountPlanId]);
+
+  useEffect(() => {
+    if (selectedMonth && accountPlanId && selectedYear) {
+      fetchFeurietData();
+    }
+  }, [selectedMonth, accountPlanId, selectedYear]);
+
+  const tabStyle = {
+    color: "var(--neutral-700)",
+    fontWeight: "bold",
+    fontSize: "0.75rem",
+    "&.Mui-selected": {
+      color: "var(--neutral-700)",
+    },
+  };
+  const metrics = getMetricsByTab(tabValue);
+
+  const allowedMonths = useMemo(() => {
+    if (tabValue !== 1 || !months) return [];
+    return months.map((m) => m.dateMonth);
+  }, [months, tabValue]);
+
+  const renderChartByTab = () => {
+    switch (tabValue) {
+      case 1:
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                views={["month"]}
+                label="Mês"
+                value={selectedMonth}
+                onChange={(newValue) => {
+                  setSelectedMonth(newValue);
+                }}
+                slotProps={{ textField: { size: "small" } }}
+                shouldDisableMonth={(date) => {
+                  const month = date.month() + 1; // dayjs usa 0-11
+                  return !allowedMonths.includes(month);
+                }}
+              />
+            </LocalizationProvider>
+            {selectedMonth && (
+              <FleurietGestaoLiquidezChart
+                propData={liquidityMonth?.liquidityVariables?.months || []}
+              />
+            )}
+          </Box>
+        );
+      case 2:
+        return <Box></Box>;
+      case 3:
+        return <Box></Box>;
+      case 4:
+        return <Box></Box>;
+      case 5:
+        return <Box></Box>;
+      case 6:
+        return (
+          <BarChartStackedBySign
+            data={months}
+            metrics={metrics}
+            width="100%"
+            height={300}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -93,87 +405,29 @@ export const GestaoLiquidez = () => {
             <Tabs
               value={tabValue}
               onChange={handleChangeTab}
-              aria-label="Tabs Ativo/Passivo"
+              aria-label="Tabs gestão"
               textColor="primary"
               indicatorColor="primary"
               sx={{
                 "& .MuiTabs-indicator": {
-                  backgroundColor: "var(--neutral-700)", // Example CSS variable
+                  backgroundColor: "var(--neutral-700)",
                 },
               }}
             >
-              <Tab
-                label="Variáveis da Liquidez"
-                value={1}
-                sx={{
-                  color: "var(--neutral-700)", // Example CSS variable
-                  fontWeight: "bold",
-                  fontSize: "0.75rem",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)", // Example CSS variable
-                  },
-                }}
-              />
+              <Tab label="Variáveis da Liquidez" value={1} sx={tabStyle} />
               <Tab
                 label="Dinâmica do Capital de Giro"
                 value={2}
-                sx={{
-                  color: "var(--neutral-700)", // Example CSS variable
-                  fontWeight: "bold",
-                  fontSize: "0.75rem",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)", // Example CSS variable
-                  },
-                }}
+                sx={tabStyle}
               />
               <Tab
                 label="Geração de Fluxo de Caixa Bruto"
                 value={3}
-                sx={{
-                  color: "var(--neutral-700)", // Example CSS variable
-                  fontWeight: "bold",
-                  fontSize: "0.75rem",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)", // Example CSS variable
-                  },
-                }}
+                sx={tabStyle}
               />
-              <Tab
-                label="Rotatividade"
-                value={4}
-                sx={{
-                  color: "var(--neutral-700)", // Example CSS variable
-                  fontWeight: "bold",
-                  fontSize: "0.75rem",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)", // Example CSS variable
-                  },
-                }}
-              />
-              <Tab
-                label="Liquidez"
-                value={5}
-                sx={{
-                  color: "var(--neutral-700)", // Example CSS variable
-                  fontWeight: "bold",
-                  fontSize: "0.75rem",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)", // Example CSS variable
-                  },
-                }}
-              />
-              <Tab
-                label="Estrutura de Capital"
-                value={6}
-                sx={{
-                  color: "var(--neutral-700)", // Example CSS variable
-                  fontWeight: "bold",
-                  fontSize: "0.75rem",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)", // Example CSS variable
-                  },
-                }}
-              />
+              <Tab label="Rotatividade" value={4} sx={tabStyle} />
+              <Tab label="Liquidez" value={5} sx={tabStyle} />
+              <Tab label="Estrutura de Capital" value={6} sx={tabStyle} />
             </Tabs>
           </Box>
 
@@ -183,14 +437,8 @@ export const GestaoLiquidez = () => {
                 views={["year"]}
                 label="Ano"
                 value={selectedYear}
-                onChange={(newValue) => {
-                  setSelectedYear(newValue);
-                }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                  },
-                }}
+                onChange={(newValue) => setSelectedYear(newValue)}
+                slotProps={{ textField: { size: "small" } }}
               />
             </LocalizationProvider>
             <Button
@@ -209,9 +457,24 @@ export const GestaoLiquidez = () => {
             </Button>
           </Box>
 
-          <Container>
-            <BalancoContabilTable data={data} />
-          </Container>
+          <Box>
+            <ResultsTable
+              months={months}
+              metricKeys={metricKeys}
+              metricLabels={metricLabels}
+            />
+          </Box>
+          <Box
+            sx={{
+              mt: 4,
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {renderChartByTab()}
+          </Box>
         </Paper>
       </MainContainer>
     </MainTemplate>

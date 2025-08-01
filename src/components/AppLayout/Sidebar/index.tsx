@@ -41,6 +41,7 @@ import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import DeviceHubRoundedIcon from "@mui/icons-material/DeviceHubRounded";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
+import SettingsSuggestOutlinedIcon from "@mui/icons-material/SettingsSuggestOutlined";
 
 import { usePermission } from "../../../contexts/PermissionsContext";
 
@@ -194,8 +195,12 @@ export const Sidebar = () => {
     "resultados/eficiencia-operacional"
   );
 
-  if (path && balancetePath) {
+  const parametrosPatch = buildNestedUrl(
+    { groupId, companyId, subCompanyId },
+    "parametros"
+  );
 
+  if (path && balancetePath) {
     if (isAuthorized(["Admin", "Desenvolvedor", "Consultor", "Gestor"])) {
       drawerListData.push({
         title: "Uploads",
@@ -227,7 +232,13 @@ export const Sidebar = () => {
     });
   }
 
-  if (path && gestaoLiquidezPath && indicesEconomicosPath && cilEcPath && eficienciaOperacionalPath) {
+  if (
+    path &&
+    gestaoLiquidezPath &&
+    indicesEconomicosPath &&
+    cilEcPath &&
+    eficienciaOperacionalPath
+  ) {
     drawerListData.push({
       title: "Resultados",
       icon: <PollOutlinedIcon fontSize="medium" />,
@@ -241,7 +252,7 @@ export const Sidebar = () => {
           path: indicesEconomicosPath,
         },
         {
-          title: "CIL e EC",
+          title: "CIL e PFL",
           path: cilEcPath,
         },
         {
@@ -257,6 +268,14 @@ export const Sidebar = () => {
       title: "Classificação",
       icon: <DeviceHubRoundedIcon fontSize="medium" />,
       path: classificationPath,
+    });
+  }
+
+  if (path && parametrosPatch) {
+    drawerListData.push({
+      title: "Parâmetros",
+      icon: <SettingsSuggestOutlinedIcon fontSize="medium" />,
+      path: parametrosPatch,
     });
   }
 

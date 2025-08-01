@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Box, Paper, Button, Container } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Box, Paper, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -7,62 +7,141 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-
-interface BalancoContabilTableProps {
-  data: any[];
-}
-
-const BalancoContabilTable: React.FC<BalancoContabilTableProps> = ({
-  data,
-}) => {
-  return (
-    <div
-      style={{
-        border: "1px dashed #ccc",
-        padding: "30px",
-        textAlign: "center",
-        minHeight: "200px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-      }}
-    >
-      <p style={{ color: "#777", fontSize: "1.1em" }}>
-        Conteúdo da tabela Balanço Contábil será carregado aqui.
-      </p>
-      {data.length > 0 && (
-        <div style={{ marginTop: "15px", fontSize: "0.9em", color: "#555" }}>
-          <p>Dados simulados recebidos para a tabela:</p>
-          <pre
-            style={{
-              backgroundColor: "#eee",
-              padding: "10px",
-              borderRadius: "5px",
-              overflowX: "auto",
-            }}
-          >
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
-};
+import { ResultsTable } from "../resultsTable";
+import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { useParams } from "react-router";
+import { toast } from "react-toastify";
+import { getOperationalEfficieny } from "../../../services/apis/routes/operationalEfficiency.service";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const EficienciaOperacional = () => {
+  const [tabValue, ] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
   );
-  const [data, ] = useState<any[]>([]);
+  const [data, setData] = useState<any[]>([]);
+  const { setLoading } = useLoading();
+  const { groupId, companyid, subCompanyId } = useParams<{
+    groupId: string;
+    companyid?: string;
+    subCompanyId?: string;
+  }>();
+  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
 
-  // Placeholder function for handling the search action
-  const handleSearch = () => {
-    // In a real application, this would trigger API calls to fetch data
-    console.log("Search button clicked!");
-    console.log("Current Year:", selectedYear?.format("YYYY"));
+  const metrics = [
+    "receitasLiquidas",
+    "custosDespesas",
+    "ebitda",
+    "margemEBITDA",
+    "lucroOperacionalAntesJurosImpostos",
+    "resultadoFinanceiro",
+    "impostos",
+    "lucroLiquido",
+    "nopat",
+    "margemNOPAT",
+    "disponivel",
+    "clientes",
+    "estoques",
+    "fornecedores",
+    "ncgTotal",
+    "ncgcef",
+    "investimentosAtivosFixos",
+    "capitalInvestidoLiquido",
+    "capitalTurnover",
+    "roic",
+    "wacc",
+    "evaspread",
+    "eva",
+  ];
+
+  const metricLabels: Record<string, string> = {
+    receitasLiquidas: "Receitas Líquidas",
+    custosDespesas: "Custos e Despesas",
+    ebitda: "EBITDA",
+    margemEBITDA: "Margem do EBITDA",
+    lucroOperacionalAntesJurosImpostos:
+      "Lucro Operacional Antes do Juros e Impostos",
+    resultadoFinanceiro: "Resultado Financeiro",
+    impostos: "Impostos",
+    lucroLiquido: "Lucro Líquido ",
+    nopat: "NOPAT",
+    margemNOPAT: "Margem do NOPAT",
+    disponivel: "Caixa e Equivalentes de Caixa",
+    clientes: "Clientes",
+    estoques: "Estoques",
+    fornecedores: "Fornecedores",
+    ncgcef: "NCG (Clientes + Estoques - Fornecedores)",
+    ncgTotal: "NGC (Total)",
+    investimentosAtivosFixos: "Investimentos em Ativos Fixos",
+    capitalInvestidoLiquido: "Capital Investido Líquido",
+    capitalTurnover: "Capital Turnover",
+    roic: "ROIC",
+    wacc: "WACC",
+    evaspread: "EVA (SPREAD)",
+    eva: "EVA",
   };
+
+  useEffect(() => {
+    if (!groupId || accountPlanId) return;
+
+    const getAccountPlanId = async (
+      groupId: number,
+      companyId?: number,
+      subCompanyId?: number
+    ): Promise<void> => {
+      try {
+        setLoading(true, "Salvando data...");
+        const response = await getAccountPlan(groupId, companyId, subCompanyId);
+
+        const data = response.data;
+
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const lastItem = data[data.length - 1];
+        setAccountPlanId(lastItem.id);
+      } catch (error) {
+        console.error("Failed to fetch AccountPlanId", error);
+        toast.error("Erro ao buscar plano de contas");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAccountPlanId(
+      Number(groupId),
+      companyid ? Number(companyid) : undefined,
+      subCompanyId ? Number(subCompanyId) : undefined
+    );
+  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+
+  const fetchData = async () => {
+    if (!selectedYear) return;
+
+    setLoading(true);
+    const year = Number(selectedYear.format("YYYY"));
+
+    try {
+      if (!accountPlanId) return;
+
+      const response = await getOperationalEfficieny(accountPlanId, year);
+      setData(response.operationalEfficiency?.months);
+    } catch (error) {
+      console.error("Erro ao buscar dados da aba:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    fetchData();
+  };
+
+  useEffect(() => {
+    if (accountPlanId) {
+      fetchData();
+    }
+  }, [tabValue, selectedYear, accountPlanId]);
 
   return (
     <MainTemplate>
@@ -101,9 +180,11 @@ export const EficienciaOperacional = () => {
             </Button>
           </Box>
 
-          <Container>
-            <BalancoContabilTable data={data} />
-          </Container>
+          <ResultsTable
+            metricKeys={metrics}
+            metricLabels={metricLabels}
+            months={data}
+          />
         </Paper>
       </MainContainer>
     </MainTemplate>
