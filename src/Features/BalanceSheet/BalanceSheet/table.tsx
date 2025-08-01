@@ -251,10 +251,23 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                       );
                     })}
                   </TableRow>
-
-                  {/* Linhas de Classificação */}
-                  {totalizer.classifications?.map(
-                    (classification: Classification) => (
+                  {totalizer.classifications
+                    ?.filter((classification) => {
+                      return months.some((month) => {
+                        const monthTotalizer = month.totalizer.find(
+                          (t) => t.id === totalizer.id
+                        );
+                        const monthClassification =
+                          monthTotalizer?.classifications?.find(
+                            (c) => c.id === classification.id
+                          );
+                        return (
+                          monthClassification?.datas &&
+                          monthClassification.datas.length > 0
+                        );
+                      });
+                    })
+                    .map((classification: Classification) => (
                       <TableRow key={classification.id}>
                         <TableCell
                           component="th"
@@ -312,8 +325,7 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                           );
                         })}
                       </TableRow>
-                    )
-                  )}
+                    ))}
                 </React.Fragment>
               ))}
 
