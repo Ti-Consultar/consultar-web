@@ -162,7 +162,7 @@ export const ButtonDrawer = styled.button<MainTemplateStyledProps>`
   cursor: pointer;
   display: flex;
   justify-content: center;
-  margin-left: ${({ isOpen }) => (isOpen ? "186px" : "68px")};
+  margin-left: ${({ isOpen }) => (isOpen ? "217px" : "68px")};
   margin-top: -60px;
   padding: 4px;
   position: absolute;

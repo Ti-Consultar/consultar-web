@@ -15,6 +15,12 @@ export const MainContainer = styled.div`
   }
 `;
 
+export const Title = styled.h2`
+  font-size: 24px;
+  color: var(--neutral-700);
+  margin-bottom: 1rem
+`;
+
 export const Container = styled.div`
   background-color: var(--neutral-white);
   border-radius: 8px;
@@ -25,11 +31,7 @@ export const Container = styled.div`
   padding: 2rem;
 `;
 
-export const Title = styled.h2`
-  font-size: 24px;
-  color: var(--neutral-700);
-  margin-bottom: 1rem
-`;
+
 export const StickyTableCell = styled(TableCell)<{
   isHovered?: boolean;
   isSection?: boolean;

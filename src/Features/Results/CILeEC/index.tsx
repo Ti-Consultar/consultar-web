@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Box, Tabs, Tab, Paper, Button, Container } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Box, Paper, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -7,128 +7,158 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-
-interface BalancoContabilTableProps {
-  data: any[];
-}
-
-const BalancoContabilTable: React.FC<BalancoContabilTableProps> = ({
-  data,
-}) => {
-  return (
-    <div
-      style={{
-        border: "1px dashed #ccc",
-        padding: "30px",
-        textAlign: "center",
-        minHeight: "200px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-      }}
-    >
-      <p style={{ color: "#777", fontSize: "1.1em" }}>
-        Conteúdo da tabela Balanço Contábil será carregado aqui.
-      </p>
-      {data.length > 0 && (
-        <div style={{ marginTop: "15px", fontSize: "0.9em", color: "#555" }}>
-          <p>Dados simulados recebidos para a tabela:</p>
-          <pre
-            style={{
-              backgroundColor: "#eee",
-              padding: "10px",
-              borderRadius: "5px",
-              overflowX: "auto",
-            }}
-          >
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
-};
+import { ResultsTable } from "../resultsTable";
+import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { useParams } from "react-router";
+import { toast } from "react-toastify";
+import { getCILeEC } from "../../../services/apis/routes/CILeEC.service";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const CILeEC = () => {
-  const [tabValue, setTabValue] = useState<number>(1);
+  const [tabValue, ] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
   );
   const [data, setData] = useState<any[]>([]);
+  const { setLoading } = useLoading();
+  const { groupId, companyid, subCompanyId } = useParams<{
+    groupId: string;
+    companyid?: string;
+    subCompanyId?: string;
+  }>();
+  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
 
-  // Placeholder function for handling tab changes
-  const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-    // In a real application, this would trigger data fetching based on the new tab
-    console.log(
-      `Tab changed to: ${newValue}. Logic to fetch new data would go here.`
+  const metrics = [
+    "disponibilidades",
+    "clientes",
+    "estoques",
+    "outrosAtivosOperacionais",
+    "fornecedores",
+    "obrigacoesTributariasTrabalhistas",
+    "outrosPassivosOperacionais",
+    "ncg",
+    "realizavelLongoPrazo",
+    "exigivelALongoPrazoOperacional",
+    "ativosFixos",
+    "capitalInvestidoLiquido",
+    "estruturaDeCapital",
+  ];
+
+  const metricLabels: Record<string, string> = {
+    disponibilidades: "( + ) Caixa e Equivalentes de Caixa",
+    clientes: "( + ) Clientes",
+    estoques: "( + ) Estoque",
+    outrosAtivosOperacionais: "( + ) Outros Ativos Operacionais",
+    fornecedores: "( - ) Fornecedores",
+    obrigacoesTributariasTrabalhistas:
+      "( - ) Obrigações Tributárias e Trabalhistas",
+    outrosPassivosOperacionais: "( - ) Outros Passivos Operacionais",
+    ncg: "( = ) NCG Necessidade de Capital de Giro",
+    realizavelLongoPrazo: "( + ) Realizável a Longo Prazo",
+    exigivelALongoPrazoOperacional: "( - ) Passivo Não Circulante Operacional",
+    ativosFixos:
+      "( + ) Ativos Fixos (Investimentos, Imobilizados e Intangíveis)",
+    capitalInvestidoLiquido: "( = ) Capital Investido Líquido",
+    emprestimos: "( - ) Empréstimos",
+    posicaoFinanceiraCurtoPrazo: "( = ) Posição Financeira de Curto Prazo",
+    exigivelaLongoPrazoFinanceiro: "( - ) Passivo Não Circulante Financeiro",
+    posicaoFinanceiraTerceiros: "( = ) Posição Financeira de Terceiros",
+    patrimonioLiquido: "( - ) Patrimônio Liquido",
+    estruturaDeCapital: "Posição Financeira Líquida",
+    cil: "Capital Investido Líquido",
+  };
+
+  const nestedMetrics = {
+    estruturaDeCapital: [
+      "emprestimos",
+      "posicaoFinanceiraCurtoPrazo",
+      "exigivelaLongoPrazoFinanceiro",
+      "posicaoFinanceiraTerceiros",
+      "patrimonioLiquido",
+      "estruturaDeCapital",
+    ],
+    cil: [
+      "disponibilidades",
+      "clientes",
+      "estoques",
+      "outrosAtivosOperacionais",
+      "fornecedores",
+      "obrigacoesTributariasTrabalhistas",
+      "outrosPassivosOperacionais",
+      "ncg",
+      "realizavelLongoPrazo",
+      "exigivelALongoPrazoOperacional",
+      "ativosFixos",
+      "capitalInvestidoLiquido",
+    ],
+  };
+
+  useEffect(() => {
+    if (!groupId || accountPlanId) return;
+
+    const getAccountPlanId = async (
+      groupId: number,
+      companyId?: number,
+      subCompanyId?: number
+    ): Promise<void> => {
+      try {
+        setLoading(true, "Salvando data...");
+        const response = await getAccountPlan(groupId, companyId, subCompanyId);
+
+        const data = response.data;
+
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const lastItem = data[data.length - 1];
+        setAccountPlanId(lastItem.id);
+      } catch (error) {
+        console.error("Failed to fetch AccountPlanId", error);
+        toast.error("Erro ao buscar plano de contas");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAccountPlanId(
+      Number(groupId),
+      companyid ? Number(companyid) : undefined,
+      subCompanyId ? Number(subCompanyId) : undefined
     );
-    // Optionally clear data or load dummy data
-    setData([]);
+  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+
+  const fetchData = async () => {
+    if (!selectedYear) return;
+
+    setLoading(true);
+    const year = Number(selectedYear.format("YYYY"));
+
+    try {
+      if (!accountPlanId) return;
+      const response = await getCILeEC(accountPlanId, year);
+      setData(response.ciLeEC?.months);
+    } catch (error) {
+      console.error("Erro ao buscar dados da aba:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Placeholder function for handling the search action
   const handleSearch = () => {
-    // In a real application, this would trigger API calls to fetch data
-    console.log("Search button clicked!");
-    console.log("Current Year:", selectedYear?.format("YYYY"));
-    console.log("Current Tab:", tabValue === 1 ? "Ativo" : "Passivo");
+    fetchData();
   };
+
+  useEffect(() => {
+    if (accountPlanId) {
+      fetchData();
+    }
+  }, [tabValue, selectedYear, accountPlanId]);
 
   return (
     <MainTemplate>
       <MainContainer>
-        <Title>CIL e EC</Title>
+        <Title>CIL E PFL</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
-          <Box
-            sx={{
-              borderBottom: "1px solid",
-              borderColor: "divider",
-              width: "100%",
-              mb: 3,
-            }}
-          >
-            <Tabs
-              value={tabValue}
-              onChange={handleChangeTab}
-              aria-label="Tabs Ativo/Passivo"
-              textColor="primary"
-              indicatorColor="primary"
-              sx={{
-                "& .MuiTabs-indicator": {
-                  backgroundColor: "var(--neutral-700)", 
-                },
-              }}
-            >
-              <Tab
-                label="Capital Investido Líquido"
-                value={1}
-                sx={{
-                  color: "var(--neutral-700)", 
-                  fontWeight: "bold",
-                  fontSize: "0.75rem",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)", 
-                  },
-                }}
-              />
-              <Tab
-                label="Estrutura de Capital"
-                value={2}
-                sx={{
-                  color: "var(--neutral-700)", 
-                  fontWeight: "bold",
-                  fontSize: "0.75rem",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)", 
-                  },
-                }}
-              />
-            </Tabs>
-          </Box>
-
           <Box display="flex" gap={2} alignItems="center" mb={2}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
@@ -161,9 +191,12 @@ export const CILeEC = () => {
             </Button>
           </Box>
 
-          <Container>
-            <BalancoContabilTable data={data} />
-          </Container>
+          <ResultsTable
+            metricKeys={metrics}
+            metricLabels={metricLabels}
+            months={data}
+            nestedMetrics={nestedMetrics}
+          />
         </Paper>
       </MainContainer>
     </MainTemplate>

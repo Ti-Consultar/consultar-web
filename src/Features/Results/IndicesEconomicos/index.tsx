@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Box, Tabs, Tab, Paper, Button, Container } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Box, Tabs, Tab, Paper, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -7,48 +7,18 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-
-interface BalancoContabilTableProps {
-  data: any[];
-}
-
-const BalancoContabilTable: React.FC<BalancoContabilTableProps> = ({
-  data,
-}) => {
-  return (
-    <div
-      style={{
-        border: "1px dashed #ccc",
-        padding: "30px",
-        textAlign: "center",
-        minHeight: "200px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-      }}
-    >
-      <p style={{ color: "#777", fontSize: "1.1em" }}>
-        Conteúdo da tabela Balanço Contábil será carregado aqui.
-      </p>
-      {data.length > 0 && (
-        <div style={{ marginTop: "15px", fontSize: "0.9em", color: "#555" }}>
-          <p>Dados simulados recebidos para a tabela:</p>
-          <pre
-            style={{
-              backgroundColor: "#eee",
-              padding: "10px",
-              borderRadius: "5px",
-              overflowX: "auto",
-            }}
-          >
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
-};
+import { ResultsTable } from "../resultsTable";
+import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
+import { toast } from "react-toastify";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { useParams } from "react-router";
+import {
+  getEbitida,
+  getNopat,
+  getProfitability,
+  getRentability,
+  getReturnExpectation,
+} from "../../../services/apis/routes/economicIndices,service";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const IndicesEconomicos = () => {
@@ -56,26 +26,164 @@ export const IndicesEconomicos = () => {
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
   );
-  const [data, setData] = useState<any[]>([]);
+  const { setLoading } = useLoading();
+  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const { groupId, companyid, subCompanyId } = useParams<{
+    groupId: string;
+    companyid?: string;
+    subCompanyId?: string;
+  }>();
+  const [months, setMonths] = useState<any[]>([]);
+  const [metricKeys, setMetricKeys] = useState<string[]>([]);
+  const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
 
-  // Placeholder function for handling tab changes
+  useEffect(() => {
+    if (!groupId || accountPlanId) return;
+
+    const getAccountPlanId = async (
+      groupId: number,
+      companyId?: number,
+      subCompanyId?: number
+    ): Promise<void> => {
+      try {
+        setLoading(true, "Salvando data...");
+        const response = await getAccountPlan(groupId, companyId, subCompanyId);
+
+        const data = response.data;
+
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const lastItem = data[data.length - 1];
+        setAccountPlanId(lastItem.id);
+      } catch (error) {
+        console.error("Failed to fetch AccountPlanId", error);
+        toast.error("Erro ao buscar plano de contas");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAccountPlanId(
+      Number(groupId),
+      companyid ? Number(companyid) : undefined,
+      subCompanyId ? Number(subCompanyId) : undefined
+    );
+  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+
   const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-    // In a real application, this would trigger data fetching based on the new tab
-    console.log(
-      `Tab changed to: ${newValue}. Logic to fetch new data would go here.`
-    );
-    // Optionally clear data or load dummy data
-    setData([]);
   };
 
-  // Placeholder function for handling the search action
-  const handleSearch = () => {
-    // In a real application, this would trigger API calls to fetch data
-    console.log("Search button clicked!");
-    console.log("Current Year:", selectedYear?.format("YYYY"));
-    console.log("Current Tab:", tabValue === 1 ? "Ativo" : "Passivo");
+  const fetchData = async () => {
+    if (!selectedYear) return;
+
+    setLoading(true);
+    const year = Number(selectedYear.format("YYYY"));
+
+    try {
+      if (!accountPlanId) return;
+      let response;
+      let metrics: string[] = [];
+      let labels: Record<string, string> = {};
+      let extractedMonths: any[] = [];
+
+      switch (tabValue) {
+        case 1:
+          response = await getProfitability(accountPlanId, year);
+          extractedMonths = response?.profitability?.months ?? [];
+          metrics = [
+            "margemBruta",
+            "margemEBITDA",
+            "margemOperacional",
+            "margemNOPAT",
+            "margemLiquida",
+          ];
+          labels = {
+            margemBruta: "Margem Bruta",
+            margemEBITDA: "Margem EBITDA",
+            margemOperacional: "% Margem Operacional",
+            margemNOPAT: "Margem do NOPAT",
+            margemLiquida: "Margem Líquida",
+          };
+          break;
+
+        case 2:
+          response = await getRentability(accountPlanId, year);
+          extractedMonths = response?.rentability?.months ?? [];
+          metrics = ["roi", "liquidoMensalROE", "liquidoInicioROE"];
+          labels = {
+            roi: "Retorno do Investimento (ROI)",
+            liquidoMensalROE: "Retorno do Patrimônio Líquido Mensal (ROE)",
+            liquidoInicioROE: "Retorno do Patrimônio Líquido do Início (ROE)",
+          };
+          break;
+
+        case 3:
+          response = await getReturnExpectation(accountPlanId, year);
+          extractedMonths = response?.returnExpectation?.months ?? [];
+          metrics = ["roic", "ke", "criacaoValor"];
+          labels = {
+            roic: "ROIC - Retorno Capital Investido",
+            ke: "Expectativa de Retorno",
+            criacaoValor: "Criação de Valor (EVA)",
+          };
+          break;
+
+        case 4:
+          response = await getEbitida(accountPlanId, year);
+          extractedMonths = response?.ebitda?.months ?? [];
+          metrics = [
+            "ebitda",
+            "lucroOperacionalAntesDoResultadoFinanceiro",
+            "despesasDepreciacao",
+          ];
+          labels = {
+            ebitda: "EBITDA",
+            lucroOperacionalAntesDoResultadoFinanceiro:
+              "Lucro Operacional Antes do Resultado Financeiro (EBIT)",
+            despesasDepreciacao: "( + ) Despesas com Depreciação",
+          };
+          break;
+
+        case 5:
+          response = await getNopat(accountPlanId, year);
+          extractedMonths = response?.nopat?.months ?? [];
+          metrics = [
+            "lucroOperacionalAntes",
+            "margemOperacionalDRE",
+            "provisaoIRPJCSLL",
+            "nopat",
+          ];
+          labels = {
+            lucroOperacionalAntes:
+              "Lucro Operacional Antes do Resultado Financeiro (EBIT)",
+            margemOperacionalDRE: "% Margem Operacional",
+            provisaoIRPJCSLL: "Provisão IRPJ/CSLL	",
+            nopat: "(=) Resultado Operacional Líquido Após Impostos (NOPAT)",
+          };
+          break;
+      }
+
+      setMonths(extractedMonths);
+      setMetricKeys(metrics);
+      setMetricLabels(labels);
+      console.log(extractedMonths);
+    } catch (error) {
+      console.error("Erro ao buscar dados da aba:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSearch = () => {
+    fetchData();
+  };
+
+  useEffect(() => {
+    if (accountPlanId) {
+      fetchData();
+    }
+  }, [tabValue, selectedYear, accountPlanId]);
 
   return (
     <MainTemplate>
@@ -98,7 +206,7 @@ export const IndicesEconomicos = () => {
               indicatorColor="primary"
               sx={{
                 "& .MuiTabs-indicator": {
-                  backgroundColor: "var(--neutral-700)", 
+                  backgroundColor: "var(--neutral-700)",
                 },
               }}
             >
@@ -106,11 +214,11 @@ export const IndicesEconomicos = () => {
                 label="Lucratividade"
                 value={1}
                 sx={{
-                  color: "var(--neutral-700)", 
+                  color: "var(--neutral-700)",
                   fontWeight: "bold",
                   fontSize: "0.75rem",
                   "&.Mui-selected": {
-                    color: "var(--neutral-700)", 
+                    color: "var(--neutral-700)",
                   },
                 }}
               />
@@ -118,11 +226,11 @@ export const IndicesEconomicos = () => {
                 label="Rentabilidade"
                 value={2}
                 sx={{
-                  color: "var(--neutral-700)", 
+                  color: "var(--neutral-700)",
                   fontWeight: "bold",
                   fontSize: "0.75rem",
                   "&.Mui-selected": {
-                    color: "var(--neutral-700)", 
+                    color: "var(--neutral-700)",
                   },
                 }}
               />
@@ -130,23 +238,23 @@ export const IndicesEconomicos = () => {
                 label="Expectativa de Retorno"
                 value={3}
                 sx={{
-                  color: "var(--neutral-700)", 
+                  color: "var(--neutral-700)",
                   fontWeight: "bold",
                   fontSize: "0.75rem",
                   "&.Mui-selected": {
-                    color: "var(--neutral-700)", 
+                    color: "var(--neutral-700)",
                   },
                 }}
               />
               <Tab
-                label="EBTIDA"
+                label="EBITDA"
                 value={4}
                 sx={{
-                  color: "var(--neutral-700)", 
+                  color: "var(--neutral-700)",
                   fontWeight: "bold",
                   fontSize: "0.75rem",
                   "&.Mui-selected": {
-                    color: "var(--neutral-700)", 
+                    color: "var(--neutral-700)",
                   },
                 }}
               />
@@ -154,11 +262,11 @@ export const IndicesEconomicos = () => {
                 label="NOPAT"
                 value={5}
                 sx={{
-                  color: "var(--neutral-700)", 
+                  color: "var(--neutral-700)",
                   fontWeight: "bold",
                   fontSize: "0.75rem",
                   "&.Mui-selected": {
-                    color: "var(--neutral-700)", 
+                    color: "var(--neutral-700)",
                   },
                 }}
               />
@@ -197,9 +305,11 @@ export const IndicesEconomicos = () => {
             </Button>
           </Box>
 
-          <Container>
-            <BalancoContabilTable data={data} />
-          </Container>
+          <ResultsTable
+            months={months}
+            metricKeys={metricKeys}
+            metricLabels={metricLabels}
+          />
         </Paper>
       </MainContainer>
     </MainTemplate>
