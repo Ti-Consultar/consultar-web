@@ -15,8 +15,10 @@ import { toast } from "react-toastify";
 import {
   deleteGroup,
   getAllGroups,
+  getDeletedGroups,
   getGroupById,
   getGroupUsers,
+  restoreGroups,
   saveGroup,
   updateGroup,
 } from "../../services/apis/routes/groups.service";
@@ -90,6 +92,7 @@ export const Groups = () => {
   const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
   const [notificationsRefreshTimestamp] = useRefresh("companies");
   const [members, setMembers] = useState<Member[]>([]);
+  const [deletedGroups, setDeletedGroups] = useState<any[]>([]);
 
   useEffect(() => {
     setBreadcrumbs([{ name: "Grupos", link: "/grupos" }]);
@@ -145,11 +148,41 @@ export const Groups = () => {
     }
   };
 
+  const handleReactivate = async (selectedIds: number[]) => {
+    try {
+      setLoading(true, "Reativando empresas...");
+      await restoreGroups(selectedIds);
+      const updated = deletedGroups.filter((c) => !selectedIds.includes(c.id));
+      setDeletedGroups(updated);
+      toast.success("Empresas reativadas com sucesso!");
+      fetchDeletedroups();
+      fetchGroups();
+    } catch (error) {
+      toast.error("Erro ao reativar empresas");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDeletedroups = async () => {
+    try {
+      const response = await getDeletedGroups();
+      const formatted = response.data.map((item: any) => ({
+        id: item.groupId,
+        nome: item.businessEntity.nomeFantasia || item.companyName,
+        cnpj: item.businessEntity.cnpj,
+      }));
+      setDeletedGroups(formatted);
+    } catch (error) {
+      console.error("Erro ao buscar grupos inativos", error);
+    }
+  };
+
   useEffect(() => {
     if (userData?.userId) {
       fetchGroups();
     }
-
+    fetchDeletedroups();
     fetchGroups();
   }, [userData, notificationsRefreshTimestamp]);
 
@@ -295,6 +328,8 @@ export const Groups = () => {
           onAddGroupClick={() => setOpen(true)}
           viewMode={"grid"}
           onChangeViewMode={() => {}}
+          deletedCompanies={deletedGroups}
+          onReactivate={handleReactivate}
         />
         {/* <Title>
           {`Olá`}, <span>{userData?.unique_name}</span>.

@@ -15,6 +15,8 @@ import {
   TableSortLabel,
   TablePagination,
   InputAdornment,
+  Box,
+  Tooltip,
 } from "@mui/material";
 import { formatCNPJ } from "../../../utils/formatters";
 import InboxIcon from "@mui/icons-material/Inbox";
@@ -67,10 +69,10 @@ export const InactiveCompaniesModal: React.FC<InactiveCompaniesModalProps> = ({
 
   const filteredRows = (inactiveCompanies || []).filter((company) => {
     const search = searchTerm?.toLowerCase() || "";
-  
+
     const nome = company.nome?.toLowerCase() || "";
     const cnpj = company.cnpj?.toLowerCase() || "";
-  
+
     return nome.includes(search) || cnpj.includes(search);
   });
 
@@ -122,6 +124,7 @@ export const InactiveCompaniesModal: React.FC<InactiveCompaniesModalProps> = ({
         >
           Empresas Inativadas
         </Typography>
+
         <SearchInput
           size="small"
           placeholder="Pesquisar..."
@@ -137,82 +140,115 @@ export const InactiveCompaniesModal: React.FC<InactiveCompaniesModalProps> = ({
           }}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <TableContainer component={Paper} sx={{ borderRadius: 1, mt: 2 }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ bgcolor: "grey.100" }}>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={allSelected}
-                    indeterminate={someSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                  />
-                </TableCell>
-                <TableCell sortDirection={orderBy === "nome" ? order : false}>
-                  <TableSortLabel
-                    active={orderBy === "nome"}
-                    direction={orderBy === "nome" ? order : "asc"}
-                    onClick={() => handleRequestSort("nome")}
-                  >
-                    <Typography
-                      sx={{ fontWeight: "bold", color: "var(--neutral-500)" }}
+
+        {/* Área com scroll */}
+        <Box sx={{ flexGrow: 1, overflow: "auto", mt: 2 }}>
+          <TableContainer component={Paper} sx={{ borderRadius: 1 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: "grey.100" }}>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={allSelected}
+                      indeterminate={someSelected}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                    />
+                  </TableCell>
+                  <TableCell sortDirection={orderBy === "nome" ? order : false}>
+                    <TableSortLabel
+                      active={orderBy === "nome"}
+                      direction={orderBy === "nome" ? order : "asc"}
+                      onClick={() => handleRequestSort("nome")}
                     >
-                      Empresa
-                    </Typography>
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell sortDirection={orderBy === "cnpj" ? order : false}>
-                  <TableSortLabel
-                    active={orderBy === "cnpj"}
-                    direction={orderBy === "cnpj" ? order : "asc"}
-                    onClick={() => handleRequestSort("cnpj")}
-                  >
-                    <Typography
-                      sx={{ fontWeight: "bold", color: "var(--neutral-500)" }}
-                    >
-                      CNPJ
-                    </Typography>
-                  </TableSortLabel>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {inactiveCompanies.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3}>
-                    <EmptyStateBox>
-                      <InboxIcon fontSize="large" color="disabled" />
-                      <Typography variant="body2" color="text.secondary" mt={1}>
-                        Você não possui empresas inativadas.
+                      <Typography
+                        sx={{ fontWeight: "bold", color: "var(--neutral-500)" }}
+                      >
+                        Empresa
                       </Typography>
-                    </EmptyStateBox>
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sortDirection={orderBy === "cnpj" ? order : false}>
+                    <TableSortLabel
+                      active={orderBy === "cnpj"}
+                      direction={orderBy === "cnpj" ? order : "asc"}
+                      onClick={() => handleRequestSort("cnpj")}
+                    >
+                      <Typography
+                        sx={{ fontWeight: "bold", color: "var(--neutral-500)" }}
+                      >
+                        CNPJ
+                      </Typography>
+                    </TableSortLabel>
                   </TableCell>
                 </TableRow>
-              ) : (
-                visibleRows.map((company) => (
-                  <TableRow
-                    key={company.id}
-                    hover
-                    selected={selected.includes(company.id)}
-                    sx={{
-                      transition: "background-color 0.2s ease",
-                    }}
-                  >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={selected.includes(company.id)}
-                        onChange={() => {handleSelect(company.id)}}
-                      />
+              </TableHead>
+              <TableBody>
+                {inactiveCompanies.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3}>
+                      <EmptyStateBox>
+                        <InboxIcon fontSize="large" color="disabled" />
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          mt={1}
+                        >
+                          Você não possui empresas inativadas.
+                        </Typography>
+                      </EmptyStateBox>
                     </TableCell>
-                    <TableCell>{company.nome}</TableCell>
-                    <TableCell>{formatCNPJ(company.cnpj)}</TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                ) : (
+                  visibleRows.map((company) => (
+                    <TableRow
+                      key={company.id}
+                      hover
+                      selected={selected.includes(company.id)}
+                      sx={{
+                        transition: "background-color 0.2s ease",
+                      }}
+                    >
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selected.includes(company.id)}
+                          onChange={() => handleSelect(company.id)}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 200 }}>
+                        <Tooltip title={company.nome}>
+                          <span
+                            style={{
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              display: "block",
+                            }}
+                          >
+                            {company.nome}
+                          </span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 180 }}>
+                        <span
+                          style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "block",
+                          }}
+                        >
+                          {formatCNPJ(company.cnpj)}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
 
+        {/* Paginação */}
         <TablePagination
           component="div"
           count={filteredRows.length}
@@ -225,19 +261,28 @@ export const InactiveCompaniesModal: React.FC<InactiveCompaniesModalProps> = ({
           sx={{ mt: 2 }}
         />
 
-        <Stack direction="row" justifyContent="flex-end" spacing={2} mt={3}>
-          <Button onClick={onClose} variant="outlined" color="inherit">
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleReactivate}
-            variant="contained"
-            color="primary"
-            disabled={selected.length === 0}
-          >
-            Reativar
-          </Button>
-        </Stack>
+        {/* Footer fixo */}
+        <Box
+          sx={{
+            borderTop: "1px solid #e0e0e0",
+            pt: 2,
+            mt: 2,
+          }}
+        >
+          <Stack direction="row" justifyContent="flex-end" spacing={2}>
+            <Button onClick={onClose} variant="outlined" color="inherit">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleReactivate}
+              variant="contained"
+              color="primary"
+              disabled={selected.length === 0}
+            >
+              Reativar
+            </Button>
+          </Stack>
+        </Box>
       </ModalBox>
     </Modal>
   );
