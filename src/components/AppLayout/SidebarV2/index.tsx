@@ -26,6 +26,7 @@ import BalanceFile from "../../../assets/icons/sidebar/balanco-dre.svg";
 import SidebarOpen from "../../../assets/icons/sidebar/sidebar-open.svg";
 import SidebarClose from "../../../assets/icons/sidebar/sidebar-close.svg";
 import ClassificationIcon from "../../../assets/icons/sidebar/classification.svg";
+import FluxoIcon from "../../../assets/icons/sidebar/fluxo-caixa.svg";
 import ParamsIcon from "../../../assets/icons/sidebar/params.svg";
 import logoConsultar from "../../../../src/assets/icons/logo_horizontal 1.svg";
 import Cookies from "js-cookie";
@@ -110,6 +111,7 @@ export const Sidebar = () => {
   }>({ anchorEl: null, menuType: null });
   const [drawerOpen, setDrawerOpen] = useState(false);
   [];
+  const hasParams = !!params.groupId;
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -196,87 +198,112 @@ export const Sidebar = () => {
           ),
           path: "/grupos",
         },
-        {
-          title: "Uploads",
-          icon: <CloudUploadOutlined />,
-          subItems: [
-            {
-              title: "Balancete",
-              path: buildNestedUrl(params, "arquivos/upload/balancete"),
-            },
-          ],
-        },
-        {
-          title: "Balanço e DR",
-          icon: (
-            <img
-              src={BalanceFile}
-              alt="Home"
-              style={{ width: 22, height: 22 }}
-            />
-          ),
-          subItems: [
-            {
-              title: "Balanço Contábil",
-              path: buildNestedUrl(params, "contabil"),
-            },
-            {
-              title: "Demonstrações Contábeis",
-              path: buildNestedUrl(params, "demonstracoes-contabeis"),
-            },
-          ],
-        },
-        {
-          title: "Resultados",
-          icon: <PollOutlinedIcon />,
-          subItems: [
-            {
-              title: "Gestão de Liquidez",
-              path: buildNestedUrl(params, "resultados/gestao-liquidez"),
-            },
-            {
-              title: "Índices Econômicos",
-              path: buildNestedUrl(params, "resultados/indices-economicos"),
-            },
-            {
-              title: "CIL e PFL",
-              path: buildNestedUrl(params, "resultados/cil-ec"),
-            },
-            {
-              title: "Eficiência Operacional",
-              path: buildNestedUrl(params, "resultados/eficiencia-operacional"),
-            },
-          ],
-        },
+        ...(hasParams
+          ? [
+              {
+                title: "Uploads",
+                icon: <CloudUploadOutlined />,
+                subItems: [
+                  {
+                    title: "Balancete",
+                    path: buildNestedUrl(params, "arquivos/upload/balancete"),
+                  },
+                ],
+              },
+              {
+                title: "Balanço e DR",
+                icon: (
+                  <img
+                    src={BalanceFile}
+                    alt="Balanço"
+                    style={{ width: 22, height: 22 }}
+                  />
+                ),
+                subItems: [
+                  {
+                    title: "Balanço Contábil",
+                    path: buildNestedUrl(params, "contabil"),
+                  },
+                  {
+                    title: "Demonstrações Contábeis",
+                    path: buildNestedUrl(params, "demonstracoes-contabeis"),
+                  },
+                ],
+              },
+              {
+                title: "Resultados",
+                icon: <PollOutlinedIcon />,
+                subItems: [
+                  {
+                    title: "Gestão de Liquidez",
+                    path: buildNestedUrl(params, "resultados/gestao-liquidez"),
+                  },
+                  {
+                    title: "Índices Econômicos",
+                    path: buildNestedUrl(
+                      params,
+                      "resultados/indices-economicos"
+                    ),
+                  },
+                  {
+                    title: "CIL e PFL",
+                    path: buildNestedUrl(params, "resultados/cil-ec"),
+                  },
+                  {
+                    title: "Eficiência Operacional",
+                    path: buildNestedUrl(
+                      params,
+                      "resultados/eficiencia-operacional"
+                    ),
+                  },
+                ],
+              },
+              {
+                title: "Fluxo de Caixa",
+                icon: (
+                  <img
+                    src={FluxoIcon}
+                    alt="Fluxo"
+                    style={{ width: 22, height: 22 }}
+                  />
+                ),
+                path: buildNestedUrl(params, "fluxo-caixa"),
+              },
+            ]
+          : []),
       ],
     },
-    {
-      title: "Administração",
-      items: [
-        {
-          title: "Classificação",
-          icon: (
-            <img
-              src={ClassificationIcon}
-              alt="Classificação"
-              style={{ width: 22, height: 22 }}
-            />
-          ),
-          path: buildNestedUrl(params, "classificacao"),
-        },
-        {
-          title: "Parametrização",
-          icon: (
-            <img
-              src={ParamsIcon}
-              alt="Parametrização"
-              style={{ width: 22, height: 22 }}
-            />
-          ),
-          path: buildNestedUrl(params, "parametros"),
-        },
-      ],
-    },
+    ...(hasParams
+      ? [
+          {
+            title: "Administração",
+            items: [
+              {
+                title: "Classificação",
+                icon: (
+                  <img
+                    src={ClassificationIcon}
+                    alt="Classificação"
+                    style={{ width: 22, height: 22 }}
+                  />
+                ),
+                path: buildNestedUrl(params, "classificacao"),
+              },
+              {
+                title: "Parametrização",
+                icon: (
+                  <img
+                    src={ParamsIcon}
+                    alt="Parametrização"
+                    style={{ width: 22, height: 22 }}
+                  />
+                ),
+                path: buildNestedUrl(params, "parametros"),
+              },
+            ],
+          },
+        ]
+      : []),
   ];
 
   return (

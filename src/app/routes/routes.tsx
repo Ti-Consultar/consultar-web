@@ -23,6 +23,7 @@ import { CILeEC } from "../../Features/Results/CILeEC";
 import { EficienciaOperacional } from "../../Features/Results/EficienciaOperacional";
 import { MrpHome } from "../../Features/Home";
 import { Params } from "../../Features/Params";
+import { CashFlow } from "../../Features/CashFlow";
 
 export const AppRoutes = () => {
   return (
@@ -117,9 +118,14 @@ export const AppRoutes = () => {
           <Route key={path} path={path} element={<EficienciaOperacional />} />
         ))}
 
-        {/* Eficiencia Operacional */}
+        {/* Parâmetros */}
         {withScopes("parametros").map((path) => (
           <Route key={path} path={path} element={<Params />} />
+        ))}
+
+        {/* Fluxo de Caixa */}
+        {withScopes("fluxo-caixa").map((path) => (
+          <Route key={path} path={path} element={<CashFlow />} />
         ))}
       </Routes>
     </>
