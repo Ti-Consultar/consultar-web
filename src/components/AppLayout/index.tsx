@@ -6,10 +6,10 @@ import {
   MainContainer,
   ContentWrapper
 } from "./styles";
-import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { Content } from "./Content";
 import { useDrawer } from "../../contexts/SidebarProvider";
+import SidebarV2 from "./SidebarV2";
 
 interface MainTemplateProps {
   children: React.ReactNode;
@@ -21,7 +21,7 @@ export const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
   return (
     <MainContainer>
       <DrawerContainer>
-        <Sidebar />
+        <SidebarV2 />
       </DrawerContainer>
       <ContentWrapper isDrawerOpen={isDrawerOpen}>
         <HeaderContainer>
