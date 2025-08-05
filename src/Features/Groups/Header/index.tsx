@@ -13,6 +13,12 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import GridViewIcon from "@mui/icons-material/GridView";
 import { useTheme } from "@mui/material/styles";
 import { Protected } from "../../../components/Protection";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import { useState } from "react";
+import {
+  InactiveCompaniesModal,
+  InactiveCompany,
+} from "../../Companies/InactiveCompaniesModal";
 
 interface GroupsHeaderProps {
   onSearchChange: (value: string) => void;
@@ -20,6 +26,8 @@ interface GroupsHeaderProps {
   onAddGroupClick: () => void;
   viewMode: "list" | "grid";
   onChangeViewMode: (mode: "list" | "grid") => void;
+  onReactivate: (selectedIds: number[]) => Promise<void>;
+  deletedCompanies: InactiveCompany[];
 }
 
 export const GroupsHeader = ({
@@ -27,9 +35,16 @@ export const GroupsHeader = ({
   onAddGroupClick,
   viewMode,
   onChangeViewMode,
+  onReactivate,
+  deletedCompanies,
 }: GroupsHeaderProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleOpenModal = () => {
+    setModalOpen(true);
+  };
 
   return (
     <Box>
@@ -50,7 +65,29 @@ export const GroupsHeader = ({
           <Typography variant="h5" fontWeight="bold">
             Grupos
           </Typography>
-          <Box sx={{ gap: 2 }}>
+          <Box
+            sx={{
+              gap: 2,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Protected
+              allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
+            >
+              <Button
+                variant="outlined"
+                color="warning"
+                onClick={handleOpenModal}
+                startIcon={<Inventory2OutlinedIcon />}
+                sx={{
+                  textTransform: "none",
+                }}
+              >
+                Inativos
+              </Button>
+            </Protected>
+
             <Protected
               allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
             >
@@ -107,6 +144,12 @@ export const GroupsHeader = ({
           </Box>
         </Box>
       </Box>
+      <InactiveCompaniesModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        inactiveCompanies={deletedCompanies}
+        onReactivate={onReactivate}
+      />
     </Box>
   );
 };
