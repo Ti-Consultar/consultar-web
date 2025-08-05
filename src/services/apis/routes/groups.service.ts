@@ -19,8 +19,28 @@ export const getAllGroups = async () => {
 
 export const getGroupsByUserId = async () => {
   try {
-    const response = await axiosIntanceWithoutToken.get(
-      `${URL}/api/Group/all`
+    const response = await axiosIntanceWithoutToken.get(`${URL}/api/Group/all`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getDeletedGroups = async () => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/Group/deleted`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const restoreGroups = async (data: number[]) => {
+  try {
+    const response = await axiosInstanceWithToken.patch(
+      `${URL}/api/Group/restore`, data
     );
     return response.data;
   } catch (error) {
@@ -62,10 +82,7 @@ export const deleteGroup = async (id: number) => {
   }
 };
 
-export const updateGroup = async (
-  id: number,
-  data: GroupFormData
-) => {
+export const updateGroup = async (id: number, data: GroupFormData) => {
   try {
     const response = await axiosInstanceWithToken.put(
       `${URL}/api/Group/${id}/update`,
