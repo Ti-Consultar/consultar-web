@@ -138,6 +138,7 @@ export const ClassificationPage = () => {
   const handleClassificationChange = (classificationId: number) => {
     if (!classificationId) return;
     setSelectedKeys([]);
+    console.log(selectedKeys);
 
     setClassificationBonds((prev) => {
       // Clona bondList
@@ -252,6 +253,13 @@ export const ClassificationPage = () => {
 
       if (response.success === true) {
         toast.success("Classificação enviada com sucesso!");
+        localStorage.removeItem("classification-bondList");
+        const allClassifiedCostCenters = classificationBonds.bondList.flatMap(
+          (group) => group.costCenters.map((cc) => cc.costCenter)
+        );
+
+        handleRemoveClassified(allClassifiedCostCenters);
+        setSelectedKeys([]);
       } else {
         toast.error("Erro ao classificar.");
       }
@@ -285,30 +293,27 @@ export const ClassificationPage = () => {
   };
 
   const handleRemoveClassified = (costCentersToRemove: string[]) => {
-    const updated = { ...classificationBonds };
-    let hasChanges = false;
+    console.log("Antes:", classificationBonds);
 
-    updated.bondList = updated.bondList.map((group) => {
-      const filtered = group.costCenters.filter(
-        (cc) => !costCentersToRemove.includes(cc.costCenter)
-      );
+    const updated = {
+      bondList: classificationBonds.bondList
+        .map((group) => ({
+          ...group,
+          costCenters: group.costCenters.filter(
+            (cc) => !costCentersToRemove.includes(cc.costCenter)
+          ),
+        }))
+        .filter((group) => group.costCenters.length > 0),
+    };
 
-      if (filtered.length !== group.costCenters.length) {
-        hasChanges = true;
-      }
-
-      return { ...group, costCenters: filtered };
-    });
-
-    // Remove grupos que ficaram vazios
-    updated.bondList = updated.bondList.filter(
-      (group) => group.costCenters.length > 0
+    console.log("Depois:", updated);
+    console.log("Mesma referência?", classificationBonds === updated);
+    console.log(
+      "Mesma referência bondList?",
+      classificationBonds.bondList === updated.bondList
     );
 
-    if (hasChanges) {
-      localStorage.setItem("classification-bondList", JSON.stringify(updated));
-      setClassificationBonds(updated);
-    }
+    setClassificationBonds(updated);
   };
 
   return (
