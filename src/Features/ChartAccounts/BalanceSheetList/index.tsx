@@ -131,7 +131,7 @@ export const BalanceSheet = () => {
         subCompanyId?: number
       ): Promise<number | null> => {
         try {
-          setLoading(true, "Salvando data...");
+          setLoading(true, "Buscando...");
           const response = await getAccountPlan(
             groupId,
             companyId,

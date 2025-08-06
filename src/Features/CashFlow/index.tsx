@@ -105,7 +105,7 @@ export const CashFlow = () => {
       subCompanyId?: number
     ): Promise<void> => {
       try {
-        setLoading(true, "Salvando data...");
+        setLoading(true, "Buscando...");
         const response = await getAccountPlan(groupId, companyId, subCompanyId);
 
         const data = response.data;

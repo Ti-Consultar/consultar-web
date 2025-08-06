@@ -28,6 +28,7 @@ import SidebarClose from "../../../assets/icons/sidebar/sidebar-close.svg";
 import ClassificationIcon from "../../../assets/icons/sidebar/classification.svg";
 import FluxoIcon from "../../../assets/icons/sidebar/fluxo-caixa.svg";
 import ParamsIcon from "../../../assets/icons/sidebar/params.svg";
+import ValueTreeIcon from "../../../assets/icons/sidebar/value-tree.svg";
 import logoConsultar from "../../../../src/assets/icons/logo_horizontal 1.svg";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
@@ -35,6 +36,16 @@ import { NotificationDrawer } from "../../NoticationModal";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import { Invite } from "../../../types/notificationInvite";
+import {
+  deleteNotification,
+  getSentNotifications,
+  getUserInvitesNotifications,
+} from "../../../services/apis/routes/notifications.service";
+import { toast } from "react-toastify";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { acceptOrDeclineInvite } from "../../../services/apis/routes/invitation.service";
+import { useRefresh } from "../../../contexts/refreshContext";
 
 const SidebarContainer = styled.div<{ collapsed: boolean }>`
   width: ${({ collapsed }) => (collapsed ? "64px" : "240px")};
@@ -97,11 +108,15 @@ interface UserData {
 }
 
 export const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    const saved = localStorage.getItem("sidebar-collapsed");
+    return saved ? JSON.parse(saved) : true;
+  });
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
     {}
   );
   const location = useLocation();
+  const { setLoading } = useLoading();
   const navigate = useNavigate();
   const params = useParams();
   const [userData, setUserData] = useState<UserData | null | undefined>();
@@ -110,8 +125,10 @@ export const Sidebar = () => {
     menuType: "perfil" | "companies" | null;
   }>({ anchorEl: null, menuType: null });
   const [drawerOpen, setDrawerOpen] = useState(false);
-  [];
   const hasParams = !!params.groupId;
+  const [sentNotifications, setSentNotifications] = useState<Invite[]>([]);
+  const [notifications, setNotifications] = useState<Invite[]>([]);
+  const [, triggerRefreshCompanies] = useRefresh("companies");
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -159,6 +176,97 @@ export const Sidebar = () => {
       .join("")
       .toUpperCase();
   };
+
+  const fetchUserInvitesNotifications = async () => {
+    try {
+      const response = await getUserInvitesNotifications();
+      setNotifications(response.data);
+    } catch (error) {
+      console.log("Erro ao buscar notificações de convites:", error);
+    }
+  };
+
+  const fetchSentNotifications = async () => {
+    try {
+      const response = await getSentNotifications();
+      setSentNotifications(response.data);
+    } catch (error) {
+      console.log("Erro ao buscar notificações de convites:", error);
+    }
+  };
+
+  const handleAccept = async (id: number) => {
+    try {
+      setLoading(true, "Aceitando convite...");
+      const response = await acceptOrDeclineInvite(id, { status: 2 });
+
+      if (response && (response.success || response.sucess)) {
+        toast.success("Convite aceito com sucesso.");
+        setNotifications((prev) =>
+          prev.filter((notification) => notification.id !== id)
+        );
+        fetchUserInvitesNotifications();
+        triggerRefreshCompanies();
+      } else {
+        toast.error("Falha ao aceitar o convite.");
+      }
+    } catch (error) {
+      toast.error("Erro ao aceitar o convite.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDecline = async (id: number) => {
+    try {
+      setLoading(true, "Recusando convite...");
+
+      const response = await acceptOrDeclineInvite(id, { status: 3 });
+
+      if (response && (response.success || response.sucess) === true) {
+        toast.success("Você recusou o convite.");
+        setNotifications((prev) =>
+          prev.filter((notification) => notification.id !== id)
+        );
+        fetchUserInvitesNotifications();
+      } else {
+        console.warn("Resposta inesperada:", response);
+      }
+    } catch (error) {
+      toast.error("Ocorreu um erro ao recusar o convite.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemove = async (id: number) => {
+    try {
+      const response = await deleteNotification(id);
+
+      if (response && (response.success || response.sucess) === true) {
+        setSentNotifications((prev) =>
+          prev.filter((notification) => notification.id !== id)
+        );
+        fetchSentNotifications();
+      } else {
+        toast.error("Falha ao remover a notificação.");
+      }
+    } catch (error) {
+      toast.error("Erro ao remover a notificação.");
+    }
+  };
+
+  // Salvar estado do sidebar no localStorage
+  useEffect(() => {
+    localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
+  }, [collapsed]);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      fetchUserInvitesNotifications();
+      fetchSentNotifications();
+    }
+  }, [drawerOpen]);
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -269,6 +377,29 @@ export const Sidebar = () => {
                 ),
                 path: buildNestedUrl(params, "fluxo-caixa"),
               },
+              {
+                title: "Árvore de Valor",
+                icon: (
+                  <img
+                    src={ValueTreeIcon}
+                    alt="Fluxo"
+                    style={{ width: 22, height: 22 }}
+                  />
+                ),
+                subItems: [
+                  {
+                    title: "Valor Agregado Mensal",
+                    path: buildNestedUrl(params, "resultados/cil-ec"),
+                  },
+                  {
+                    title: "Valor Agregado Acumulado",
+                    path: buildNestedUrl(
+                      params,
+                      "resultados/eficiencia-operacional"
+                    ),
+                  },
+                ],
+              },
             ]
           : []),
       ],
@@ -305,6 +436,17 @@ export const Sidebar = () => {
         ]
       : []),
   ];
+
+  const handleSubItemClick = (subItemPath: string, parentTitle: string) => {
+    if (collapsed) {
+      setCollapsed(false);
+      setExpandedItems((prev) => ({
+        ...prev,
+        [parentTitle]: true,
+      }));
+    }
+    navigate(subItemPath);
+  };
 
   return (
     <SidebarContainer collapsed={collapsed}>
@@ -353,7 +495,17 @@ export const Sidebar = () => {
               return (
                 <div key={item.title}>
                   <ListItemButton
-                    onClick={() => toggleExpand(item.title)}
+                    onClick={() => {
+                      if (collapsed) {
+                        setCollapsed(false);
+                        setExpandedItems((prev) => ({
+                          ...prev,
+                          [item.title]: true,
+                        }));
+                      } else {
+                        toggleExpand(item.title);
+                      }
+                    }}
                     sx={{ paddingLeft: collapsed ? `30%` : 2 }}
                   >
                     <ListItemIcon sx={{ minWidth: collapsed ? "0px" : 40 }}>
@@ -380,7 +532,9 @@ export const Sidebar = () => {
                             key={sub.title}
                             sx={{ pl: 4 }}
                             selected={isActive(sub.path!)}
-                            onClick={() => navigate(sub.path!)}
+                            onClick={() =>
+                              handleSubItemClick(sub.path!, item.title)
+                            }
                           >
                             <ListItemText
                               slotProps={{
@@ -459,13 +613,13 @@ export const Sidebar = () => {
         </MenuItem>
       </Menu>
       <NotificationDrawer
-        sentNotifications={[]}
-        notifications={[]}
+        sentNotifications={sentNotifications}
+        notifications={notifications}
         open={drawerOpen}
-        onRemove={() => {}}
+        onRemove={handleRemove}
         onClose={() => setDrawerOpen(false)}
-        onAccept={() => {}}
-        onReject={() => {}}
+        onAccept={handleAccept}
+        onReject={handleDecline}
       />
     </SidebarContainer>
   );
