@@ -16,8 +16,9 @@ import {
 } from "../../../services/apis/routes/classification.service";
 import { toast } from "react-toastify";
 import { BalancoResponse, Month } from "../../../types/balanco";
-import BalancoContabilTable from "../BalanceSheet/table";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import BalancoReclassificadoTable from "./table";
+import BalancoContabilTable from "../BalanceSheet/table";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
@@ -33,6 +34,21 @@ export const BalancoReclassificado = () => {
     subCompanyId?: string;
   }>();
 
+  const boldKeys = [
+    "ativoFinanceiro",
+    "ativoOperacional",
+    "outrosAtivosOperacionais",
+    "ativoNaoCirculante",
+    "ativoFixo",
+    "totalDoAtivo",
+    "passivoFinanceiro",
+    "passivoOperacional",
+    "outrosPassivosOperacionais",
+    "passivoNaoCirculante",
+    "patrimonioLiquido",
+    "totalDoPassivo"
+  ]
+
   useEffect(() => {
     if (!groupId || accountPlanId) return; // <-- impede loop se accountPlanId já está definido
 
@@ -42,7 +58,7 @@ export const BalancoReclassificado = () => {
       subCompanyId?: number
     ): Promise<void> => {
       try {
-        setLoading(true, "Salvando data...");
+        setLoading(true, "Buscando Plano de Contas...");
         const response = await getAccountPlan(groupId, companyId, subCompanyId);
 
         const data = response.data;
@@ -216,7 +232,11 @@ export const BalancoReclassificado = () => {
             <TableValueVisualization />
           </Box>
           <Container>
-            <BalancoContabilTable months={balanceteData} />
+            {tabValue === 1 || tabValue === 2 ? (
+              <BalancoReclassificadoTable months={balanceteData} />
+            ) : (
+              <BalancoContabilTable months={balanceteData} />
+            )}
           </Container>
         </Paper>
       </MainContainer>

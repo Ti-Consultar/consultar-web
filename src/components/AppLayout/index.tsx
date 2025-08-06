@@ -4,7 +4,7 @@ import {
   DrawerContainer,
   HeaderContainer,
   MainContainer,
-  ContentWrapper
+  ContentWrapper,
 } from "./styles";
 import { Header } from "./Header";
 import { Content } from "./Content";
@@ -16,7 +16,7 @@ interface MainTemplateProps {
 }
 
 export const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
-    const { isDrawerOpen } = useDrawer();
+  const { isDrawerOpen } = useDrawer();
 
   return (
     <MainContainer>
