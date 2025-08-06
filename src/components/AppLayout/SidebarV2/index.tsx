@@ -97,7 +97,7 @@ interface UserData {
 }
 
 export const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
     {}
   );
