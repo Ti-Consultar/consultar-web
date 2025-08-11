@@ -19,6 +19,7 @@ import {
   getRentability,
   getReturnExpectation,
 } from "../../../services/apis/routes/economicIndices,service";
+import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const IndicesEconomicos = () => {
@@ -274,6 +275,7 @@ export const IndicesEconomicos = () => {
           </Box>
 
           <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <TableValueVisualization />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 views={["year"]}

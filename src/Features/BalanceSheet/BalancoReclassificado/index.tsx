@@ -34,21 +34,6 @@ export const BalancoReclassificado = () => {
     subCompanyId?: string;
   }>();
 
-  const boldKeys = [
-    "ativoFinanceiro",
-    "ativoOperacional",
-    "outrosAtivosOperacionais",
-    "ativoNaoCirculante",
-    "ativoFixo",
-    "totalDoAtivo",
-    "passivoFinanceiro",
-    "passivoOperacional",
-    "outrosPassivosOperacionais",
-    "passivoNaoCirculante",
-    "patrimonioLiquido",
-    "totalDoPassivo"
-  ]
-
   useEffect(() => {
     if (!groupId || accountPlanId) return; // <-- impede loop se accountPlanId já está definido
 
@@ -200,6 +185,7 @@ export const BalancoReclassificado = () => {
           </Box>
 
           <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <TableValueVisualization />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 views={["year"]}
@@ -229,7 +215,6 @@ export const BalancoReclassificado = () => {
             >
               Pesquisar
             </Button>
-            <TableValueVisualization />
           </Box>
           <Container>
             {tabValue === 1 || tabValue === 2 ? (

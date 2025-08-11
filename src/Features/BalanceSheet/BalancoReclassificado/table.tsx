@@ -144,23 +144,6 @@ const BalancoReclassificadoTable = ({ months }: FinancialTableProps) => {
     }
   };
 
-  // Função para pegar classifications únicas, para exibir as linhas abaixo do totalizador
-  const getUniqueClassifications = (
-    months: Month[],
-    totalizerId: number
-  ): Classification[] => {
-    const map = new Map<number, Classification>();
-    months.forEach((month) => {
-      const monthTotalizer = month.totalizer.find((t) => t.id === totalizerId);
-      monthTotalizer?.classifications?.forEach((classification) => {
-        if (!map.has(classification.id)) {
-          map.set(classification.id, classification);
-        }
-      });
-    });
-    return Array.from(map.values()).sort((a, b) => a.typeOrder - b.typeOrder);
-  };
-
   return (
     <>
       <TableContainer
@@ -219,9 +202,7 @@ const BalancoReclassificadoTable = ({ months }: FinancialTableProps) => {
                   {/* Linha do Totalizador */}
                   <TableRow>
                     <TableCell component="th" scope="row" sx={stickyCellStyle}>
-                      <Typography variant="body2">
-                        {totalizer.name}
-                      </Typography>
+                      <Typography variant="body2">{totalizer.name}</Typography>
                     </TableCell>
                     {months.map((month) => {
                       const monthTotalizer = month.totalizer.find(
@@ -258,7 +239,6 @@ const BalancoReclassificadoTable = ({ months }: FinancialTableProps) => {
                   </TableRow>
 
                   {/* Linhas das Classificações */}
-    
                 </React.Fragment>
               ))}
 

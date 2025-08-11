@@ -13,10 +13,11 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import { getOperationalEfficieny } from "../../../services/apis/routes/operationalEfficiency.service";
+import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const EficienciaOperacional = () => {
-  const [tabValue, ] = useState<number>(1);
+  const [tabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
   );
@@ -149,6 +150,7 @@ export const EficienciaOperacional = () => {
         <Title>Eficiência Operacional</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <TableValueVisualization />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 views={["year"]}

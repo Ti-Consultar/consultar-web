@@ -24,6 +24,7 @@ import { EficienciaOperacional } from "../../Features/Results/EficienciaOperacio
 import { MrpHome } from "../../Features/Home";
 import { Params } from "../../Features/Params";
 import { CashFlow } from "../../Features/CashFlow";
+import { AgregadoMensal } from "../../Features/ValueTree/AgregadoMensal";
 
 export const AppRoutes = () => {
   return (
@@ -31,7 +32,6 @@ export const AppRoutes = () => {
       <Routes>
         {/* <Route path="*" element={<Navigate to="/" />} /> */}
         <Route path="/" element={<Home />} />
-
         <Route path="/perfil/informacoes" element={<ProfileInfo />} />
         <Route path="/perfil/seguranca" element={<ProfileSecurity />} />
         <Route path="/login" element={<Authentication />} />
@@ -40,7 +40,6 @@ export const AppRoutes = () => {
           path="/recuperar-senha/senha-enviada"
           element={<PasswordSent />}
         />
-
         <Route path="/dashboard" element={<MrpHome />} />
         <Route path="/grupos" element={<Groups />} />
         <Route path={`/grupos/:groupId/empresas`} element={<Companies />} />
@@ -52,27 +51,22 @@ export const AppRoutes = () => {
           path={`/grupos/:groupId/empresas/:companyId/filiais/:subCompanyId`}
           element={<SubCompanies />}
         />
-
         {/* plano de contas */}
         {withScopes("arquivos/upload/balancete").map((path) => (
           <Route key={path} path={path} element={<BalanceSheet />} />
         ))}
-
         {/* balancetes */}
         {withScopes("balancetes").map((path) => (
           <Route key={path} path={path} element={<BalanceSheet />} />
         ))}
-
         {/* balancetes data */}
         {withScopes("balancetes/:balanceteId").map((path) => (
           <Route key={path} path={path} element={<BalanceSheetData />} />
         ))}
-
         {/* balancetes detalhado */}
         {withScopes("balancetes/:balanceteId/detalhado").map((path) => (
           <Route key={path} path={path} element={<BalanceSheetDetailed />} />
         ))}
-
         {/* balanço contábil */}
         {withScopes("balancetes/:balanceteId/balanco-contabil").map((path) => (
           <Route
@@ -81,51 +75,46 @@ export const AppRoutes = () => {
             element={<BalanceAssetsLiabilities />}
           />
         ))}
-
         {/* classificação */}
         {withScopes("classificacao").map((path) => (
           <Route key={path} path={path} element={<ClassificationPage />} />
         ))}
-
         {/* balanço contábil geral */}
         {withScopes("contabil").map((path) => (
           <Route key={path} path={path} element={<BalancoContabil />} />
         ))}
-
         {/* demonstrações contábeis */}
         {withScopes("demonstracoes-contabeis").map((path) => (
           <Route key={path} path={path} element={<BalancoReclassificado />} />
         ))}
-
         {/* RESULTADOS */}
         {/* demonstrações contábeis */}
         {withScopes("resultados/gestao-liquidez").map((path) => (
           <Route key={path} path={path} element={<GestaoLiquidez />} />
         ))}
-
         {/* Indíces econômicos */}
         {withScopes("resultados/indices-economicos").map((path) => (
           <Route key={path} path={path} element={<IndicesEconomicos />} />
         ))}
-
         {/* CIL e EC */}
         {withScopes("resultados/cil-ec").map((path) => (
           <Route key={path} path={path} element={<CILeEC />} />
         ))}
-
         {/* Eficiencia Operacional */}
         {withScopes("resultados/eficiencia-operacional").map((path) => (
           <Route key={path} path={path} element={<EficienciaOperacional />} />
         ))}
-
         {/* Parâmetros */}
         {withScopes("parametros").map((path) => (
           <Route key={path} path={path} element={<Params />} />
         ))}
-
         {/* Fluxo de Caixa */}
         {withScopes("fluxo-caixa").map((path) => (
           <Route key={path} path={path} element={<CashFlow />} />
+        ))}{" "}
+        {/* FEVA */}
+        {withScopes("eva/mensal").map((path) => (
+          <Route key={path} path={path} element={<AgregadoMensal />} />
         ))}
       </Routes>
     </>

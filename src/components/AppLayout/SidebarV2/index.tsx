@@ -28,7 +28,7 @@ import SidebarClose from "../../../assets/icons/sidebar/sidebar-close.svg";
 import ClassificationIcon from "../../../assets/icons/sidebar/classification.svg";
 import FluxoIcon from "../../../assets/icons/sidebar/fluxo-caixa.svg";
 import ParamsIcon from "../../../assets/icons/sidebar/params.svg";
-import ValueTreeIcon from "../../../assets/icons/sidebar/value-tree.svg";
+// import ValueTreeIcon from "../../../assets/icons/sidebar/value-tree.svg";
 import logoConsultar from "../../../../src/assets/icons/logo_horizontal 1.svg";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
@@ -377,29 +377,29 @@ export const Sidebar = () => {
                 ),
                 path: buildNestedUrl(params, "fluxo-caixa"),
               },
-              {
-                title: "Árvore de Valor",
-                icon: (
-                  <img
-                    src={ValueTreeIcon}
-                    alt="Fluxo"
-                    style={{ width: 22, height: 22 }}
-                  />
-                ),
-                subItems: [
-                  {
-                    title: "Valor Agregado Mensal",
-                    path: buildNestedUrl(params, "resultados/cil-ec"),
-                  },
-                  {
-                    title: "Valor Agregado Acumulado",
-                    path: buildNestedUrl(
-                      params,
-                      "resultados/eficiencia-operacional"
-                    ),
-                  },
-                ],
-              },
+              // {
+              //   title: "Árvore de Valor",
+              //   icon: (
+              //     <img
+              //       src={ValueTreeIcon}
+              //       alt="Fluxo"
+              //       style={{ width: 22, height: 22 }}
+              //     />
+              //   ),
+              //   subItems: [
+              //     {
+              //       title: "Valor Agregado Mensal",
+              //       path: buildNestedUrl(params, "eva/mensal"),
+              //     },
+              //     {
+              //       title: "Valor Agregado Acumulado",
+              //       path: buildNestedUrl(
+              //         params,
+              //         "eva/acumulado"
+              //       ),
+              //     },
+              //   ],
+              // },
             ]
           : []),
       ],

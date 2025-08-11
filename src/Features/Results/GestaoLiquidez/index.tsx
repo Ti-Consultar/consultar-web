@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Box, Tabs, Tab, Paper, Button } from "@mui/material";
+import { Box, Tabs, Tab, Paper, Button, Typography } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -23,6 +23,7 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { toast } from "react-toastify";
 import { BarChartStackedBySign } from "../../../components/Charts/BarChartStackedBySign";
 import FleurietGestaoLiquidezChart from "../../../components/Charts/FleurietChart/FleurietGestaoLiquidezChart";
+import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
 interface LiquidityMonth {
   name: string;
@@ -120,7 +121,7 @@ export const GestaoLiquidez = () => {
             saldoTesouraria: "Saldo Tesouraria",
             ncg: "Necessidade de Capital de Giro (NCG)",
             cdg: "Capital de Giro (CDG)",
-            indiceDeLiquidez: "Índice de Liquidez",
+            indiceDeLiquidez: "Índice de Liquidez (%)",
           };
           break;
 
@@ -251,7 +252,7 @@ export const GestaoLiquidez = () => {
           { key: "cdg", label: "CDG", color: colors[2] },
           {
             key: "indiceDeLiquidez",
-            label: "Índice de Liquidez",
+            label: "Índice de Liquidez (%)",
             color: colors[3],
           },
         ];
@@ -360,6 +361,10 @@ export const GestaoLiquidez = () => {
                 }}
               />
             </LocalizationProvider>
+            <Box sx={{ display: "flex", gap: 9, mt: 2 }}>
+              <Typography>ATIVO</Typography>
+              <Typography>PASSIVO</Typography>
+            </Box>
             {selectedMonth && (
               <FleurietGestaoLiquidezChart
                 propData={liquidityMonth?.liquidityVariables?.months || []}
@@ -377,12 +382,14 @@ export const GestaoLiquidez = () => {
         return <Box></Box>;
       case 6:
         return (
-          <BarChartStackedBySign
-            data={months}
-            metrics={metrics}
-            width="100%"
-            height={300}
-          />
+          <>
+            <BarChartStackedBySign
+              data={months}
+              metrics={metrics}
+              width="100%"
+              height={300}
+            />
+          </>
         );
       default:
         return null;
@@ -432,6 +439,7 @@ export const GestaoLiquidez = () => {
           </Box>
 
           <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <TableValueVisualization />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 views={["year"]}

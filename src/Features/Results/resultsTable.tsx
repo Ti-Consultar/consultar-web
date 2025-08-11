@@ -9,6 +9,7 @@ import {
   Paper,
 } from "@mui/material";
 import React, { useMemo } from "react";
+import { useValueDisplay } from "../../contexts/ValueDisplayContext";
 
 interface MonthData {
   name: string;
@@ -21,7 +22,6 @@ interface TabelaMetricasTranspostaProps {
   metricKeys: string[];
   metricLabels: Record<string, string>;
   nestedMetrics?: Record<string, string[]>;
-  valueFormatter?: (value: number) => string;
 }
 
 const monthNameToPTBR: Record<string, string> = {
@@ -44,12 +44,6 @@ export const ResultsTable = ({
   metricKeys,
   metricLabels,
   nestedMetrics = {},
-  valueFormatter = (val) => {
-    const formatted = Math.abs(val).toLocaleString("pt-BR", {
-      maximumFractionDigits: 2,
-    });
-    return val < 0 ? `(${formatted})` : formatted;
-  },
 }: TabelaMetricasTranspostaProps) => {
   const translatedMonths: MonthData[] = useMemo(
     () =>
@@ -61,6 +55,7 @@ export const ResultsTable = ({
   );
 
   const allNestedKeys = Object.values(nestedMetrics).flat();
+  const { valueMode } = useValueDisplay();
 
   const nestedGroupOrder = useMemo(() => {
     const month = months?.[0];
@@ -68,6 +63,26 @@ export const ResultsTable = ({
 
     return Object.keys(month).filter((key) => key in nestedMetrics);
   }, [months, nestedMetrics]);
+
+  // Novo formatValue que ignora formatação em porcentagens
+  const formatValue = (classificationName: string, value: number): string => {
+    if (value === 0) return "-";
+
+    // Não formata porcentagem
+    if (classificationName.includes("%")) {
+      return `${value.toFixed(2).replace(".", ",")}%`;
+    }
+
+    let adjustedValue = Math.abs(value);
+
+    if (valueMode === "MILHAR") adjustedValue /= 1000;
+    else if (valueMode === "MILHARES") adjustedValue /= 1000000;
+
+    if (classificationName.startsWith("(-)"))
+      return `(${Math.trunc(adjustedValue).toLocaleString("pt-BR")})`;
+
+    return Math.trunc(adjustedValue).toLocaleString("pt-BR");
+  };
 
   return (
     <TableContainer
@@ -112,7 +127,7 @@ export const ResultsTable = ({
         </TableHead>
 
         <TableBody>
-          {/* Renderizar grupos aninhados na ordem definida */}
+          {/* Renderizar grupos aninhados */}
           {nestedGroupOrder.map((groupKey) => {
             const metrics = nestedMetrics[groupKey];
             return (
@@ -150,7 +165,10 @@ export const ResultsTable = ({
                       const rawValue = month[groupKey]?.[metric];
                       const value =
                         typeof rawValue === "number"
-                          ? valueFormatter(rawValue)
+                          ? formatValue(
+                              metricLabels[metric] || metric,
+                              rawValue
+                            )
                           : "-";
                       return (
                         <TableCell
@@ -171,7 +189,7 @@ export const ResultsTable = ({
             );
           })}
 
-          {/* Renderizar métricas isoladas (não agrupadas) */}
+          {/* Renderizar métricas isoladas */}
           {metricKeys
             .filter((metric) => !allNestedKeys.includes(metric))
             .map((metric) => (
@@ -196,7 +214,7 @@ export const ResultsTable = ({
                   const rawValue = month[metric];
                   const value =
                     typeof rawValue === "number"
-                      ? valueFormatter(rawValue)
+                      ? formatValue(metricLabels[metric] || metric, rawValue)
                       : "-";
                   return (
                     <TableCell

@@ -3,7 +3,7 @@ export const metricLabels: Record<string, string> = {
   saldoTesouraria: "Saldo Tesouraria",
   ncg: "Necessidade de Capital de Giro (NCG)",
   cdg: "Capital de Giro (CDG)",
-  indiceDeLiquidez: "Índice de Liquidez",
+  indiceDeLiquidez: "Índice de Liquidez (%)",
   // Dinamica do Capital de Giro
   pme: "(PME) Prazo Médio Estocagem",
   pmr: "(PMR) Prazo Médio Clientes",
