@@ -16,8 +16,9 @@ import {
 } from "../../../services/apis/routes/classification.service";
 import { toast } from "react-toastify";
 import { BalancoResponse, Month } from "../../../types/balanco";
-import BalancoContabilTable from "../BalanceSheet/table";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import BalancoReclassificadoTable from "./table";
+import BalancoContabilTable from "../BalanceSheet/table";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
@@ -42,7 +43,7 @@ export const BalancoReclassificado = () => {
       subCompanyId?: number
     ): Promise<void> => {
       try {
-        setLoading(true, "Salvando data...");
+        setLoading(true, "Buscando Plano de Contas...");
         const response = await getAccountPlan(groupId, companyId, subCompanyId);
 
         const data = response.data;
@@ -184,6 +185,7 @@ export const BalancoReclassificado = () => {
           </Box>
 
           <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <TableValueVisualization />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 views={["year"]}
@@ -213,10 +215,13 @@ export const BalancoReclassificado = () => {
             >
               Pesquisar
             </Button>
-            <TableValueVisualization />
           </Box>
           <Container>
-            <BalancoContabilTable months={balanceteData} />
+            {tabValue === 1 || tabValue === 2 ? (
+              <BalancoReclassificadoTable months={balanceteData} />
+            ) : (
+              <BalancoContabilTable months={balanceteData} />
+            )}
           </Container>
         </Paper>
       </MainContainer>

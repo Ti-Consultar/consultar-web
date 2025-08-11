@@ -9,6 +9,7 @@ import {
   Paper,
 } from "@mui/material";
 import React, { useMemo } from "react";
+import { useValueDisplay } from "../../contexts/ValueDisplayContext";
 
 interface MonthData {
   name: string;
@@ -21,7 +22,6 @@ interface TabelaMetricasTranspostaProps {
   metricKeys: string[];
   metricLabels: Record<string, string>;
   nestedMetrics?: Record<string, string[]>;
-  valueFormatter?: (value: number) => string;
   highlightedMetrics?: string[];
 }
 
@@ -45,12 +45,6 @@ export const CashFlowTable = ({
   metricKeys,
   metricLabels,
   nestedMetrics = {},
-  valueFormatter = (val) => {
-    const formatted = Math.abs(val).toLocaleString("pt-BR", {
-      maximumFractionDigits: 2,
-    });
-    return val < 0 ? `(${formatted})` : formatted;
-  },
   highlightedMetrics = [],
 }: TabelaMetricasTranspostaProps) => {
   const translatedMonths: MonthData[] = useMemo(
@@ -62,14 +56,41 @@ export const CashFlowTable = ({
     [months]
   );
 
+  const { valueMode } = useValueDisplay();
+
   const allNestedKeys = Object.values(nestedMetrics).flat();
 
   const nestedGroupOrder = useMemo(() => {
     const month = months?.[0];
     if (!month || !nestedMetrics) return [];
-
     return Object.keys(month).filter((key) => key in nestedMetrics);
   }, [months, nestedMetrics]);
+
+  const formatValue = (classificationName: string, value: number): string => {
+    if (value === 0) return "-";
+
+    let adjustedValue = Math.abs(value); // Remove sinal negativo sempre
+
+    // Ajuste com base no modo selecionado
+    if (valueMode === "MILHAR") {
+      adjustedValue = adjustedValue / 1000;
+    } else if (valueMode === "MILHARES") {
+      adjustedValue = adjustedValue / 1000000;
+    }
+
+    // Caso porcentagem
+    if (classificationName.includes("%")) {
+      return `${adjustedValue.toFixed(2).replace(".", ",")}%`;
+    }
+
+    // Caso negativo contábil com parênteses
+    if (classificationName.startsWith("(-)")) {
+      return `(${Math.trunc(adjustedValue).toLocaleString("pt-BR")})`;
+    }
+
+    // Caso normal
+    return Math.trunc(adjustedValue).toLocaleString("pt-BR");
+  };
 
   return (
     <TableContainer
@@ -159,7 +180,7 @@ export const CashFlowTable = ({
                         const rawValue = month[groupKey]?.[metric];
                         const value =
                           typeof rawValue === "number"
-                            ? valueFormatter(rawValue)
+                            ? formatValue(metric, rawValue)
                             : "-";
                         return (
                           <TableCell
@@ -216,7 +237,7 @@ export const CashFlowTable = ({
                     const rawValue = month[metric];
                     const value =
                       typeof rawValue === "number"
-                        ? valueFormatter(rawValue)
+                        ? formatValue(metric, rawValue)
                         : "-";
                     return (
                       <TableCell

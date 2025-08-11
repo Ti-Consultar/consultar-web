@@ -66,4 +66,8 @@ export const GlobalStyle = createGlobalStyle`
       font-size: 87.5%;
     }
   }
+
+  .custom-node .react-flow__handle {
+  display: none;
+}
 `;

@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { MainTemplate } from "../../components/AppLayout";
 import { getCashFlow } from "../../services/apis/routes/cashFlow.service";
 import { CashFlowTable } from "./table";
+import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
 
 export const CashFlow = () => {
   const [tabValue] = useState<number>(1);
@@ -58,12 +59,11 @@ export const CashFlow = () => {
     "disponibilidadeFinalDoPeriodo",
   ];
 
-    const highlightedMetrics = [
-      "variacaoNCG",
-      "fluxoDeCaixaOperacional",
-      "fluxoDeCaixaLivre",
-      "fluxoDeCaixaDaEmpresa",
-
+  const highlightedMetrics = [
+    "variacaoNCG",
+    "fluxoDeCaixaOperacional",
+    "fluxoDeCaixaLivre",
+    "fluxoDeCaixaDaEmpresa",
   ];
 
   const metricLabels: Record<string, string> = {
@@ -105,7 +105,7 @@ export const CashFlow = () => {
       subCompanyId?: number
     ): Promise<void> => {
       try {
-        setLoading(true, "Salvando data...");
+        setLoading(true, "Buscando...");
         const response = await getAccountPlan(groupId, companyId, subCompanyId);
 
         const data = response.data;
@@ -163,6 +163,7 @@ export const CashFlow = () => {
         <Title>Fluxo de Caixa</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <TableValueVisualization />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 views={["year"]}

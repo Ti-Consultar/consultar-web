@@ -13,10 +13,11 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import { getCILeEC } from "../../../services/apis/routes/CILeEC.service";
+import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const CILeEC = () => {
-  const [tabValue, ] = useState<number>(1);
+  const [tabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
   );
@@ -103,7 +104,7 @@ export const CILeEC = () => {
       subCompanyId?: number
     ): Promise<void> => {
       try {
-        setLoading(true, "Salvando data...");
+        setLoading(true, "Buscando...");
         const response = await getAccountPlan(groupId, companyId, subCompanyId);
 
         const data = response.data;
@@ -160,6 +161,7 @@ export const CILeEC = () => {
         <Title>CIL E PFL</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <TableValueVisualization />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 views={["year"]}

@@ -68,7 +68,7 @@ export const InvitationModal = ({
     }
 
     const adjustedSubCompanyId =
-      companyId === subCompanyId ? 0 : subCompanyId ?? 0;
+      companyId === subCompanyId ? undefined : subCompanyId ?? 0;
 
     const payload: invitations = {
       invitations: emails.map((email) => ({

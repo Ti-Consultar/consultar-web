@@ -19,6 +19,7 @@ import {
   getRentability,
   getReturnExpectation,
 } from "../../../services/apis/routes/economicIndices,service";
+import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const IndicesEconomicos = () => {
@@ -46,7 +47,7 @@ export const IndicesEconomicos = () => {
       subCompanyId?: number
     ): Promise<void> => {
       try {
-        setLoading(true, "Salvando data...");
+        setLoading(true, "Buscando...");
         const response = await getAccountPlan(groupId, companyId, subCompanyId);
 
         const data = response.data;
@@ -274,6 +275,7 @@ export const IndicesEconomicos = () => {
           </Box>
 
           <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <TableValueVisualization />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 views={["year"]}
