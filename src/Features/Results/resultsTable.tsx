@@ -60,15 +60,18 @@ export const ResultsTable = ({
   const nestedGroupOrder = useMemo(() => {
     const month = months?.[0];
     if (!month || !nestedMetrics) return [];
-
     return Object.keys(month).filter((key) => key in nestedMetrics);
   }, [months, nestedMetrics]);
 
-  // Novo formatValue que ignora formatação em porcentagens
+  // 🔹 Novo objeto para rótulos dos grupos
+  const nestedGroupLabels: Record<string, string> = {
+    estruturaDeCapital: "Estrutura de Capital",
+    cil: "Capital Investido Líquido",
+  };
+
   const formatValue = (classificationName: string, value: number): string => {
     if (value === 0) return "-";
 
-    // Não formata porcentagem
     if (classificationName.includes("%")) {
       return `${value.toFixed(2).replace(".", ",")}%`;
     }
@@ -78,10 +81,13 @@ export const ResultsTable = ({
     if (valueMode === "MILHAR") adjustedValue /= 1000;
     else if (valueMode === "MILHARES") adjustedValue /= 1000000;
 
-    if (classificationName.startsWith("(-)"))
-      return `(${Math.trunc(adjustedValue).toLocaleString("pt-BR")})`;
+    const formatted = adjustedValue.toLocaleString("pt-BR", {
+      minimumFractionDigits: adjustedValue < 1 ? 2 : 0,
+      maximumFractionDigits: adjustedValue < 1 ? 2 : 0,
+    });
 
-    return Math.trunc(adjustedValue).toLocaleString("pt-BR");
+    if (value < 0) return `(${formatted})`;
+    return formatted;
   };
 
   return (
@@ -140,7 +146,9 @@ export const ResultsTable = ({
                       backgroundColor: "#fafafa",
                     }}
                   >
-                    {metricLabels[groupKey] || groupKey}
+                    {nestedGroupLabels[groupKey] ||
+                      metricLabels[groupKey] ||
+                      groupKey}
                   </TableCell>
                 </TableRow>
                 {metrics.map((metric) => (

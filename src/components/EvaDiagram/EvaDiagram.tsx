@@ -5,10 +5,12 @@ import ReactFlow, {
   Controls,
   Edge,
   Node,
+  NodeProps,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
 type EvaData = {
+  label: string;
   economicView: {
     receitaLiquida?: number;
     custoDespesaVariavel?: number;
@@ -61,14 +63,43 @@ const commonStyle = {
   fontSize: "14px",
 };
 
-const parallelogramStyle = {
-  background: "#ffffffff",
-  transform: "skew(-20deg)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  border: "2px solid #333",
-  fontWeight: "bold",
+const ParallelogramNode = ({ data }: NodeProps<EvaData>) => {
+  return (
+    <div
+      style={{
+        background: "#ffffffff",
+        border: "2px solid #333",
+        fontWeight: "bold",
+        display: "inline-block",
+        padding: "0",
+        transform: "skew(-20deg)",
+      }}
+    >
+      <div style={{ padding: "10px 20px" }}>{data.label}</div>
+    </div>
+  );
+};
+
+const ParallelogramNodeTitle = ({ data }: NodeProps<EvaData>) => {
+  return (
+    <div
+      style={{
+        background: "#3270c1ff",
+        border: "2px solid #333",
+        fontWeight: "bold",
+        display: "inline-block",
+        padding: "0",
+        transform: "skew(-20deg)",
+      }}
+    >
+      <div style={{ padding: "10px 20px" }}>{data.label}</div>
+    </div>
+  );
+};
+
+const nodeTypes = {
+  parallelogram: ParallelogramNode,
+  parallelogramTitle: ParallelogramNodeTitle,
 };
 
 const title = {
@@ -118,15 +149,15 @@ export default function EvaDiagram({ data }: Props) {
       data: {
         label: `(+) Receitas Líquidas`,
       },
-      style: {...parallelogramStyle},
+      type: "parallelogramTitle",
     },
     {
       id: "1.1",
-      position: { x: 50, y: 0 },
+      position: { x: 220, y: 0 },
       data: {
-        label: `(+) Receitas Líquidas`,
+        label: `${formatValue(economicView.custoDespesaVariavel)}`,
       },
-      style: {...parallelogramStyle},
+      type: "parallelogram",
     },
     {
       id: "2",
@@ -380,6 +411,7 @@ export default function EvaDiagram({ data }: Props) {
   return (
     <div style={{ width: "100%", height: 600 }}>
       <ReactFlow
+        nodeTypes={nodeTypes}
         nodes={nodes}
         edges={edges}
         fitView

@@ -140,27 +140,25 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
   const formatValue = (classificationName: string, value: number): string => {
     if (value === 0) return "-";
 
-    let adjustedValue = Math.abs(value); // Remove sinal negativo sempre
+    const isNegative = value < 0;
+    let adjustedValue = Math.abs(value); // Sempre usa valor absoluto para formatação
 
     // Ajuste com base no modo selecionado
     if (valueMode === "MILHAR") {
-      adjustedValue = adjustedValue / 1000;
+      adjustedValue /= 1000;
     } else if (valueMode === "MILHARES") {
-      adjustedValue = adjustedValue / 1000000;
+      adjustedValue /= 1000000;
     }
 
     // Caso porcentagem
     if (classificationName.includes("%")) {
-      return `${adjustedValue.toFixed(2).replace(".", ",")}%`;
+      const formatted = `${adjustedValue.toFixed(2).replace(".", ",")}%`;
+      return isNegative ? `(${formatted})` : formatted;
     }
 
-    // Caso negativo contábil com parênteses
-    if (classificationName.startsWith("(-)")) {
-      return `(${Math.trunc(adjustedValue).toLocaleString("pt-BR")})`;
-    }
-
-    // Caso normal
-    return Math.trunc(adjustedValue).toLocaleString("pt-BR");
+    // Notação contábil para negativos
+    const formatted = Math.trunc(adjustedValue).toLocaleString("pt-BR");
+    return isNegative ? `(${formatted})` : formatted;
   };
 
   return (

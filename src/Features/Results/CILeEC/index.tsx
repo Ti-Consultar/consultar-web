@@ -66,7 +66,7 @@ export const CILeEC = () => {
     exigivelaLongoPrazoFinanceiro: "( - ) Passivo Não Circulante Financeiro",
     posicaoFinanceiraTerceiros: "( = ) Posição Financeira de Terceiros",
     patrimonioLiquido: "( - ) Patrimônio Liquido",
-    estruturaDeCapital: "Posição Financeira Líquida",
+    estruturaDeCapital: "( = ) Posição Financeira Líquida",
     cil: "Capital Investido Líquido",
   };
 
