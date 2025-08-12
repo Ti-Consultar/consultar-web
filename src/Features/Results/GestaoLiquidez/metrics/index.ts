@@ -34,7 +34,7 @@ export const metricLabels: Record<string, string> = {
   terceirosCurtoPrazo: "Endividamento de Terceiros de Curto Prazo",
   terceirosLongoPrazo: "Endividamento de Terceiros de Longo Prazo",
   participacaoCapitalTerceiros: "Participação de Capital de Terceiros",
-  participacaoCapitalProprio: "Participação de Capital Próprio",
+  participacaoCapitalProprio: "Participação de Capital Próprio (%)",
 };
 
 export const metricKeys: string[] = [

@@ -158,11 +158,11 @@ export const GestaoLiquidez = () => {
           ];
           labels = {
             ebitida: "EBITDA",
-            margemEBITIDA: "Margem EBITDA",
+            margemEBITIDA: "Margem EBITDA (%)",
             variacaoNCG: "Variação da NCG",
             fluxoCaixaOperacional: "Fluxo de Caixa Operacional",
-            geracaoCaixa: "Geração de Caixa",
-            aumentoReducaoFluxoCaixa: "Aumento/Redução do Fluxo de Caixa",
+            geracaoCaixa: "Geração de Caixa (%)",
+            aumentoReducaoFluxoCaixa: "Aumento/Redução do Fluxo de Caixa (%)",
           };
           break;
 
@@ -203,7 +203,7 @@ export const GestaoLiquidez = () => {
             terceirosLongoPrazo: "Endividamento de Terceiros de Longo Prazo",
             participacaoCapitalTerceiros:
               "Participação de Capital de Terceiros",
-            participacaoCapitalProprio: "Participação de Capital Próprio",
+            participacaoCapitalProprio: "Participação de Capital Próprio (%)",
           };
           break;
       }
