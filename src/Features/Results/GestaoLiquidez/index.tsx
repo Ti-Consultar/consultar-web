@@ -21,7 +21,6 @@ import { useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { toast } from "react-toastify";
-import { BarChartStackedBySign } from "../../../components/Charts/BarChartStackedBySign";
 import FleurietGestaoLiquidezChart from "../../../components/Charts/FleurietChart/FleurietGestaoLiquidezChart";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
@@ -48,6 +47,9 @@ export const GestaoLiquidez = () => {
     dayjs().startOf("year")
   );
   const [months, setMonths] = useState<any[]>([]);
+  const [valueMode, setValueMode] = useState<boolean>(true);
+  const [metricTypes, setMetricTypes] =
+    useState<Record<string, "number" | "percent">>();
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
   const { setLoading } = useLoading();
@@ -59,12 +61,6 @@ export const GestaoLiquidez = () => {
     companyid?: string;
     subCompanyId?: string;
   }>();
-
-  interface Metric {
-    key: string;
-    label: string;
-    color: string;
-  }
 
   useEffect(() => {
     if (!groupId || accountPlanId) return;
@@ -123,6 +119,7 @@ export const GestaoLiquidez = () => {
             cdg: "Capital de Giro (CDG)",
             indiceDeLiquidez: "Índice de Liquidez (%)",
           };
+          setValueMode(true);
           break;
 
         case 2:
@@ -143,6 +140,7 @@ export const GestaoLiquidez = () => {
               "Ciclo Financeiro das Operações",
             cicloFinanceiroNCG: "Ciclo Financeiro NCG",
           };
+          setValueMode(false);
           break;
 
         case 3:
@@ -164,6 +162,15 @@ export const GestaoLiquidez = () => {
             geracaoCaixa: "Geração de Caixa (%)",
             aumentoReducaoFluxoCaixa: "Aumento/Redução do Fluxo de Caixa (%)",
           };
+          setMetricTypes({
+            ebitida: "number",
+            margemEBITIDA: "percent",
+            variacaoNCG: "number",
+            fluxoCaixaOperacional: "number",
+            geracaoCaixa: "percent",
+            aumentoReducaoFluxoCaixa: "percent",
+          });
+          setValueMode(true);
           break;
 
         case 4:
@@ -176,6 +183,7 @@ export const GestaoLiquidez = () => {
             giroPMP: "Giro PMP",
             giroCaixa: "Giro Caixa",
           };
+          setValueMode(false);
           break;
 
         case 5:
@@ -187,6 +195,7 @@ export const GestaoLiquidez = () => {
             liquidezSeca: "Liquidez Seca",
             liquidezImediata: "Liquidez Geral",
           };
+          setValueMode(false);
           break;
 
         case 6:
@@ -203,8 +212,16 @@ export const GestaoLiquidez = () => {
             terceirosLongoPrazo: "Endividamento de Terceiros de Longo Prazo",
             participacaoCapitalTerceiros:
               "Participação de Capital de Terceiros",
-            participacaoCapitalProprio: "Participação de Capital Próprio (%)",
+            participacaoCapitalProprio: "Participação de Capital Próprio",
           };
+
+          setValueMode(false);
+          setMetricTypes({
+            terceirosCurtoPrazo: "percent",
+            terceirosLongoPrazo: "percent",
+            participacaoCapitalTerceiros: "percent",
+            participacaoCapitalProprio: "percent",
+          });
           break;
       }
 
@@ -212,7 +229,6 @@ export const GestaoLiquidez = () => {
       if (tabValue === 1 && extractedMonths.length > 0) {
         const lastMonth = extractedMonths[extractedMonths.length - 1];
         if (lastMonth.dateMonth) {
-          // Ajuste para criar um Dayjs com base no número do mês e ano selecionado
           const monthDate = dayjs()
             .year(Number(selectedYear.format("YYYY")))
             .month(lastMonth.dateMonth - 1)
@@ -227,52 +243,6 @@ export const GestaoLiquidez = () => {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getMetricsByTab = (tabValue: number): Metric[] => {
-    const colors = [
-      "#94191D",
-      "#3A5F9B",
-      "#F9A825",
-      "#43A047",
-      "#6A1B9A",
-      "#00ACC1",
-    ];
-
-    switch (tabValue) {
-      case 1:
-        return [
-          {
-            key: "saldoTesouraria",
-            label: "Saldo Tesouraria",
-            color: colors[0],
-          },
-          { key: "ncg", label: "NCG", color: colors[1] },
-          { key: "cdg", label: "CDG", color: colors[2] },
-          {
-            key: "indiceDeLiquidez",
-            label: "Índice de Liquidez (%)",
-            color: colors[3],
-          },
-        ];
-      case 2:
-        return [
-          {
-            key: "pme",
-            label: "PME",
-            color: colors[0],
-          },
-          { key: "pmr", label: "PMR", color: colors[1] },
-          {
-            key: "pmp",
-            label: "PMP",
-            color: colors[2],
-          },
-        ];
-      // E assim por diante pra cada tab
-      default:
-        return [];
     }
   };
 
@@ -326,7 +296,6 @@ export const GestaoLiquidez = () => {
       color: "var(--neutral-700)",
     },
   };
-  const metrics = getMetricsByTab(tabValue);
 
   const allowedMonths = useMemo(() => {
     if (tabValue !== 1 || !months) return [];
@@ -381,16 +350,7 @@ export const GestaoLiquidez = () => {
       case 5:
         return <Box></Box>;
       case 6:
-        return (
-          <>
-            <BarChartStackedBySign
-              data={months}
-              metrics={metrics}
-              width="100%"
-              height={300}
-            />
-          </>
-        );
+        return <Box></Box>;
       default:
         return null;
     }
@@ -470,6 +430,8 @@ export const GestaoLiquidez = () => {
               months={months}
               metricKeys={metricKeys}
               metricLabels={metricLabels}
+              enableValueMode={valueMode}
+              metricTypes={metricTypes}
             />
           </Box>
           <Box
