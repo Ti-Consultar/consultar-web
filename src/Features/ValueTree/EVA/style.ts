@@ -2,8 +2,9 @@ import styled from "styled-components";
 
 export const MainContainer = styled.div`
   display: flex;
+  background-color: #fff;
   flex-direction: column;
-  margin: 1.5rem;
+  padding: 1rem;
   @media (min-width: 768px) and (max-width: 1023px) {
     width: 85%;
   }
@@ -15,6 +16,7 @@ export const MainContainer = styled.div`
 `;
 
 export const Header = styled.div`
+  width: 20%;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -23,5 +25,5 @@ export const Header = styled.div`
   background-color: #fff;
   margin-bottom: 8px;
   border: 1px solid var(--neutral-200);
-  border-radius: 10px
+  border-radius: 10px;
 `;

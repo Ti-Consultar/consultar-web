@@ -3,44 +3,75 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
-  Edge,
   Node,
-  NodeProps,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import { useEffect } from "react";
+import {
+  IconNode,
+  LineNode,
+  ParallelogramNode,
+  ParallelogramNodeTitle,
+  TitleNode,
+} from "./NodeStyles";
 
 type EvaData = {
   label: string;
   economicView: {
     receitaLiquida?: number;
+    receitaLiquidaAcumulado?: number;
     custoDespesaVariavel?: number;
+    custoDespesaVariavelAcumulado?: number;
     margemContribuicao?: number;
+    margemContribuicaoAcumulado?: number;
     despesasOperacionais?: number;
+    despesasOperacionaisAcumulado?: number;
     outrosResultadosOperacionais?: number;
+    outrosResultadosOperacionaisAcumulado?: number;
     lajir?: number;
+    lajirAcumulado?: number;
     impostos?: number;
+    impostosAcumulado?: number;
     nopat?: number;
+    nopatAcumulado?: number;
   };
   financialView: {
     disponivel?: number;
+    disponivelAcumulado?: number;
     clientes?: number;
+    clientesAcumulado?: number;
     estoques?: number;
+    estoquesAcumulado?: number;
     outrosAtivosOperacionais?: number;
+    outrosAtivosOperacionaisAcumulado?: number;
     fornecedores?: number;
+    fornecedoresAcumulado?: number;
     outrosPassivosOperacionais?: number;
+    outrosPassivosOperacionaisAcumulado?: number;
     realizavelLongoPrazo?: number;
+    realizavelLongoPrazoAcumulado?: number;
     exigivelLongoPrazo?: number;
+    exigivelLongoPrazoAcumulado?: number;
     ativosFixos?: number;
+    ativosFixosAcumulado?: number;
     capitalDeGiro?: number;
+    capitalDeGiroAcumulado?: number;
     capitalInvestido?: number;
+    capitalInvestidoAcumulado?: number;
   };
   indicators: {
     nopat?: number;
+    nopatAcumulado?: number;
     capitalInvestido?: number;
+    capitalInvestidoAcumulado?: number;
     roic?: number;
+    roicAcumulado?: number;
     wacc?: number;
+    waccAcumulado?: number;
     spread?: number;
+    spreadAcumulado?: number;
     eva?: number;
+    evA_Acumulado?: number;
   };
 };
 
@@ -52,80 +83,12 @@ const formatValue = (value: number | undefined) => {
   });
 };
 
-const commonStyle = {
-  padding: "10px",
-  borderRadius: "8px",
-  backgroundColor: "#ffffffff",
-  whiteSpace: "pre-line" as const,
-  fontWeight: 500,
-  minWidth: "220px",
-  textAlign: "left" as const,
-  fontSize: "14px",
-};
-
-const ParallelogramNode = ({ data }: NodeProps<EvaData>) => {
-  return (
-    <div
-      style={{
-        background: "#ffffffff",
-        border: "2px solid #333",
-        fontWeight: "bold",
-        display: "inline-block",
-        padding: "0",
-        transform: "skew(-20deg)",
-      }}
-    >
-      <div style={{ padding: "10px 20px" }}>{data.label}</div>
-    </div>
-  );
-};
-
-const ParallelogramNodeTitle = ({ data }: NodeProps<EvaData>) => {
-  return (
-    <div
-      style={{
-        background: "#3270c1ff",
-        border: "2px solid #333",
-        fontWeight: "bold",
-        display: "inline-block",
-        padding: "0",
-        transform: "skew(-20deg)",
-      }}
-    >
-      <div style={{ padding: "10px 20px" }}>{data.label}</div>
-    </div>
-  );
-};
-
 const nodeTypes = {
   parallelogram: ParallelogramNode,
   parallelogramTitle: ParallelogramNodeTitle,
-};
-
-const title = {
-  padding: "10px",
-  border: "none",
-  backgroundColor: "transparent",
-  fontWeight: 700,
-  minWidth: "220px",
-  textAlign: "center" as const,
-  fontSize: "18px",
-  color: "#DC3545",
-};
-
-const mathOperator = {
-  border: "none",
-  backgroundColor: "transparent",
-  fontWeight: 500,
-  textAlign: "center" as const,
-  color: "var(--neutral-700)",
-};
-
-const highlightStyle = {
-  ...commonStyle,
-  backgroundColor: "#5c5c5c",
-  color: "#fff",
-  fontWeight: 600,
+  titleNode: TitleNode,
+  divisionSign: IconNode,
+  line: LineNode,
 };
 
 type Props = {
@@ -133,15 +96,40 @@ type Props = {
 };
 
 export default function EvaDiagram({ data }: Props) {
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
+
+  if (!data || !data.economicView || !data.financialView || !data.indicators) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          height: 600,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: "1.2rem",
+          color: "#666",
+          backgroundColor: "#f0f0f0",
+          border: "1px dashed #ccc",
+          borderRadius: 8,
+        }}
+      >
+        Nenhum dado disponível para exibir o diagrama.
+      </div>
+    );
+  }
+
   const { economicView, financialView, indicators } = data;
 
   const nodes: Node[] = [
     // VISÃO ECONÔMICA
     {
       id: "title1",
-      position: { x: 0, y: -80 },
-      data: { label: "VISÃO ECONÔMICA" },
-      style: title,
+      position: { x: -200, y: 50 },
+      data: { label: `VISÃO ECONÔMICA` },
+      type: "titleNode",
     },
     {
       id: "1",
@@ -153,7 +141,7 @@ export default function EvaDiagram({ data }: Props) {
     },
     {
       id: "1.1",
-      position: { x: 220, y: 0 },
+      position: { x: 280, y: 0 },
       data: {
         label: `${formatValue(economicView.custoDespesaVariavel)}`,
       },
@@ -161,251 +149,571 @@ export default function EvaDiagram({ data }: Props) {
     },
     {
       id: "2",
-      position: { x: 0, y: 80 },
+      position: { x: 0, y: 60 },
       data: {
-        label: `(-) Custos + Desp.Variáveis\n(${formatValue(
-          economicView.custoDespesaVariavel
-        )})`,
+        label: `(-) Custos + Desp.Variáveis`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "2.2",
+      position: { x: 280, y: 60 },
+      data: {
+        label: `(${formatValue(economicView.custoDespesaVariavel)})`,
+      },
+      type: "parallelogram",
     },
     {
       id: "3",
-      position: { x: 0, y: 160 },
+      position: { x: 0, y: 120 },
       data: {
-        label: `(=) Margem de Contribuição\n${formatValue(
-          economicView.margemContribuicao
-        )}`,
+        label: `(=) Margem de Contribuição`,
       },
-      style: highlightStyle,
+      type: "parallelogramTitle",
     },
-
+    {
+      id: "3.3",
+      position: { x: 280, y: 120 },
+      data: {
+        label: `${formatValue(economicView.margemContribuicao)}`,
+      },
+      type: "parallelogram",
+    },
     {
       id: "4",
-      position: { x: 300, y: 0 },
+      position: { x: 470, y: 0 },
       data: {
-        label: `(-) Despesas Operacionais\n(${formatValue(
-          economicView.despesasOperacionais
-        )})`,
+        label: `(-) Despesas Operacionais`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "4.4",
+      position: { x: 750, y: 0 },
+      data: {
+        label: `${formatValue(economicView.despesasOperacionais)}`,
+      },
+      type: "parallelogram",
     },
     {
       id: "5",
-      position: { x: 300, y: 80 },
+      position: { x: 470, y: 60 },
       data: {
-        label: `(+/-) Outros Res. Operacionais\n${formatValue(
-          economicView.outrosResultadosOperacionais
-        )}`,
+        label: `(+/-) Outros Resultados`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "5.5",
+      position: { x: 750, y: 60 },
+      data: {
+        label: `${formatValue(economicView.outrosResultadosOperacionais)}`,
+      },
+      type: "parallelogram",
     },
     {
       id: "6",
-      position: { x: 300, y: 180 },
-      data: { label: `(=) LAJIR\n${formatValue(economicView.lajir)}` },
-      style: highlightStyle,
+      position: { x: 470, y: 120 },
+      data: { label: `(=) LAJIR` },
+      type: "parallelogramTitle",
     },
-
+    {
+      id: "6.6",
+      position: { x: 750, y: 120 },
+      data: { label: `${formatValue(economicView.lajir)}` },
+      type: "parallelogram",
+    },
     {
       id: "7",
-      position: { x: 600, y: 0 },
+      position: { x: 950, y: 60 },
       data: {
-        label: `(+/-) Impostos\n(${formatValue(economicView.impostos)})`,
+        label: `(+/-) Impostos`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "7.7",
+      position: { x: 1230, y: 60 },
+      data: {
+        label: `${formatValue(economicView.impostos)}`,
+      },
+      type: "parallelogram",
     },
     {
       id: "8",
-      position: { x: 600, y: 100 },
-      data: { label: `(=) NOPAT\n${formatValue(economicView.nopat)}` },
-      style: highlightStyle,
+      position: { x: 950, y: 120 },
+      data: { label: `(=) NOPAT` },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "8.8",
+      position: { x: 1230, y: 120 },
+      data: { label: `${formatValue(economicView.nopat)}` },
+      type: "parallelogram",
     },
 
     // VISÃO FINANCEIRA
     {
       id: "title2",
-      position: { x: 0, y: 330 },
+      position: { x: -200, y: 360 },
       data: { label: "VISÃO FINANCEIRA" },
-      style: title,
+
+      type: "titleNode",
     },
     {
       id: "9",
-      position: { x: 0, y: 400 },
+      position: { x: 0, y: 230 },
       data: {
-        label: `(+) Disponível\n${formatValue(financialView.disponivel)}`,
+        label: `(+) Disponível`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "9.9",
+      position: { x: 280, y: 230 },
+      data: {
+        label: `${formatValue(financialView.disponivel)}`,
+      },
+      type: "parallelogram",
     },
     {
       id: "10",
-      position: { x: 0, y: 480 },
-      data: { label: `(+) Clientes\n${formatValue(financialView.clientes)}` },
-      style: commonStyle,
+      position: { x: 0, y: 290 },
+      data: { label: `(+) Clientes` },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "10.1",
+      position: { x: 280, y: 290 },
+      data: { label: `${formatValue(financialView.clientes)}` },
+      type: "parallelogram",
     },
     {
       id: "11",
-      position: { x: 0, y: 560 },
+      position: { x: 0, y: 350 },
       data: { label: `(+) Estoques\n${formatValue(financialView.estoques)}` },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "11.1",
+      position: { x: 280, y: 350 },
+      data: { label: `${formatValue(financialView.clientes)}` },
+      type: "parallelogram",
     },
     {
       id: "12",
-      position: { x: 0, y: 640 },
+      position: { x: 0, y: 410 },
       data: {
-        label: `(+) Outros Ativos Operacionais\n${formatValue(
-          financialView.outrosAtivosOperacionais
-        )}`,
+        label: `(+) Outros Ativos`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "12.1",
+      position: { x: 280, y: 410 },
+      data: {
+        label: `${formatValue(financialView.outrosAtivosOperacionais)}`,
+      },
+      type: "parallelogram",
     },
     {
       id: "13",
-      position: { x: 0, y: 740 },
+      position: { x: 0, y: 470 },
       data: {
-        label: `(-) Fornecedores\n${formatValue(financialView.fornecedores)}`,
+        label: `(-) Fornecedores`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "13.1",
+      position: { x: 280, y: 470 },
+      data: {
+        label: `${formatValue(financialView.fornecedores)}`,
+      },
+      type: "parallelogram",
     },
     {
       id: "14",
-      position: { x: 0, y: 820 },
+      position: { x: 0, y: 530 },
       data: {
-        label: `(-) Outros Passivos Operacionais\n${formatValue(
-          financialView.outrosPassivosOperacionais
-        )}`,
+        label: `(-) Outros Passivos`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
     },
-
+    {
+      id: "14.1",
+      position: { x: 280, y: 530 },
+      data: {
+        label: `${formatValue(financialView.outrosPassivosOperacionais)}`,
+      },
+      type: "parallelogram",
+    },
     {
       id: "15",
-      position: { x: 300, y: 450 },
+      position: { x: 470, y: 290 },
       data: {
-        label: `(=) Capital de Giro\n${formatValue(
-          financialView.capitalDeGiro
-        )}`,
+        label: `(=) Capital de Giro`,
       },
-      style: highlightStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "15.1",
+      position: { x: 750, y: 290 },
+      data: {
+        label: `${formatValue(financialView.capitalDeGiro)}`,
+      },
+      type: "parallelogram",
     },
     {
       id: "16",
-      position: { x: 300, y: 530 },
+      position: { x: 470, y: 350 },
       data: {
-        label: `(+) Realizável a Longo Prazo\n${formatValue(
-          financialView.realizavelLongoPrazo
-        )}`,
+        label: `(+) Realizável a Longo Prazo`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "16.1",
+      position: { x: 750, y: 350 },
+      data: {
+        label: `${formatValue(financialView.realizavelLongoPrazo)}`,
+      },
+      type: "parallelogram",
     },
     {
       id: "17",
-      position: { x: 300, y: 610 },
+      position: { x: 470, y: 410 },
       data: {
-        label: `(-) Exigível a Longo Prazo\n${formatValue(
-          financialView.exigivelLongoPrazo
-        )}`,
+        label: `(-) Exigível a Longo Prazo`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "17.1",
+      position: { x: 750, y: 410 },
+      data: {
+        label: `${formatValue(financialView.exigivelLongoPrazo)}`,
+      },
+      type: "parallelogram",
     },
     {
       id: "18",
-      position: { x: 300, y: 690 },
+      position: { x: 470, y: 470 },
       data: {
-        label: `(+) Ativos Fixos (Invest. Imob.)\n${formatValue(
-          financialView.ativosFixos
-        )}`,
+        label: `(+) Ativos Fixos`,
       },
-      style: commonStyle,
+      type: "parallelogramTitle",
     },
-
+    {
+      id: "18.1",
+      position: { x: 750, y: 470 },
+      data: {
+        label: `${formatValue(financialView.ativosFixos)}`,
+      },
+      type: "parallelogram",
+    },
     {
       id: "19",
-      position: { x: 600, y: 530 },
+      position: { x: 950, y: 380 },
       data: {
-        label: `(=) Capital Investido\n${formatValue(
-          financialView.capitalInvestido
-        )}`,
+        label: `(=) Cap. Investido Líquido`,
       },
-      style: highlightStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "19.1",
+      position: { x: 1230, y: 380 },
+      data: {
+        label: `${formatValue(indicators.capitalInvestido)}`,
+      },
+      type: "parallelogram",
     },
 
-    // INDICADORES
+    // // INDICADORES
     {
       id: "20",
-      position: { x: 850, y: 280 },
-      data: { label: `ROIC\n${formatValue(indicators.roic)}%` },
-      style: highlightStyle,
+      position: { x: 1600, y: 200 },
+      data: { label: `ROIC` },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "20.1",
+      position: { x: 1880, y: 200 },
+      data: { label: `${formatValue(indicators.roic)}%` },
+      type: "parallelogram",
     },
     {
       id: "21",
-      position: { x: 850, y: 360 },
-      data: { label: `WACC\n${formatValue(indicators.wacc)}%` },
-      style: commonStyle,
+      position: { x: 1600, y: 260 },
+      data: { label: `WACC` },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "21.1",
+      position: { x: 1880, y: 260 },
+      data: { label: `${formatValue(indicators.wacc)}%` },
+      type: "parallelogram",
     },
     {
       id: "22",
-      position: { x: 1150, y: 320 },
-      data: { label: `SPREAD\n${formatValue(indicators.spread)}%` },
-      style: commonStyle,
+      position: { x: 1600, y: 320 },
+      data: { label: `SPREAD` },
+      type: "parallelogramTitle",
     },
     {
-      id: "23",
-      position: { x: 1150, y: 400 },
-      data: {
-        label: `Capital Investido\n${formatValue(indicators.capitalInvestido)}`,
-      },
-      style: commonStyle,
+      id: "22.2",
+      position: { x: 1880, y: 320 },
+      data: { label: `\n${formatValue(indicators.spread)}%` },
+      type: "parallelogram",
     },
     {
       id: "24",
-      position: { x: 1420, y: 370 },
+      position: { x: 2050, y: 260 },
       data: {
-        label: `EVA Retorno do Acionista\n${formatValue(indicators.eva)}`,
+        label: `Árvore de Valor - EVA`,
       },
-      style: highlightStyle,
+      type: "parallelogramTitle",
+    },
+    {
+      id: "24.1",
+      position: { x: 2330, y: 260 },
+      data: {
+        label: `\n${formatValue(indicators.eva)}`,
+      },
+      type: "parallelogram",
+    },
+    {
+      id: "25",
+      position: { x: 0, y: 650 },
+      data: {
+        label: `(+) Receitas Líquidas`,
+      },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "title3",
+      position: { x: -200, y: 710 },
+      data: { label: "VISÃO ACUMULADA" },
+
+      type: "titleNode",
+    },
+    {
+      id: "25.1",
+      position: { x: 280, y: 650 },
+      data: {
+        label: `\n${formatValue(economicView.receitaLiquidaAcumulado)}`,
+      },
+      type: "parallelogram",
+    },
+    {
+      id: "26",
+      position: { x: 0, y: 710 },
+      data: {
+        label: `(-) Custos + Desp. Variáveis`,
+      },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "26.1",
+      position: { x: 280, y: 710 },
+      data: {
+        label: `\n${formatValue(economicView.receitaLiquidaAcumulado)}`,
+      },
+      type: "parallelogram",
+    },
+    {
+      id: "27",
+      position: { x: 0, y: 770 },
+      data: {
+        label: `(=) Margem de Contribuição`,
+      },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "27.1",
+      position: { x: 280, y: 770 },
+      data: {
+        label: `\n${formatValue(economicView.receitaLiquidaAcumulado)}`,
+      },
+      type: "parallelogram",
+    },
+    {
+      id: "28",
+      position: { x: 470, y: 650 },
+      data: {
+        label: `(-) Despesas Operacionais`,
+      },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "28.1",
+      position: { x: 750, y: 650 },
+      data: {
+        label: `${formatValue(economicView.despesasOperacionaisAcumulado)}`,
+      },
+      type: "parallelogram",
+    },
+    {
+      id: "29",
+      position: { x: 470, y: 710 },
+      data: {
+        label: `(+/-) Outros Resultados`,
+      },
+      type: "parallelogramTitle",
+    },
+
+    {
+      id: "29.1",
+      position: { x: 750, y: 710 },
+      data: {
+        label: `${formatValue(
+          economicView.outrosResultadosOperacionaisAcumulado
+        )}`,
+      },
+      type: "parallelogram",
+    },
+    {
+      id: "30",
+      position: { x: 470, y: 770 },
+      data: { label: `(=) LAJIR` },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "30.1",
+      position: { x: 750, y: 770 },
+      data: { label: `${formatValue(economicView.lajirAcumulado)}` },
+      type: "parallelogram",
+    },
+
+    {
+      id: "31",
+      position: { x: 950, y: 650 },
+      data: {
+        label: `(+/-) Impostos`,
+      },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "31.1",
+      position: { x: 1230, y: 650 },
+      data: {
+        label: `${formatValue(economicView.impostosAcumulado)}`,
+      },
+      type: "parallelogram",
+    },
+    {
+      id: "32",
+      position: { x: 950, y: 710 },
+      data: { label: `(=) NOPAT` },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "32.1",
+      position: { x: 1230, y: 710 },
+      data: { label: `${formatValue(economicView.nopatAcumulado)}` },
+      type: "parallelogram",
+    },
+
+    {
+      id: "33",
+      position: { x: 1600, y: 500 },
+      data: { label: `ROIC` },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "33.1",
+      position: { x: 1880, y: 500 },
+      data: { label: `${formatValue(indicators.roicAcumulado)}%` },
+      type: "parallelogram",
+    },
+    {
+      id: "34",
+      position: { x: 1600, y: 560 },
+      data: { label: `WACC` },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "34.1",
+      position: { x: 1880, y: 560 },
+      data: { label: `${formatValue(indicators.waccAcumulado)}%` },
+      type: "parallelogram",
+    },
+    {
+      id: "35",
+      position: { x: 1600, y: 620 },
+      data: { label: `SPREAD` },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "35.2",
+      position: { x: 1880, y: 620 },
+      data: { label: `\n${formatValue(indicators.spreadAcumulado)}%` },
+      type: "parallelogram",
+    },
+    {
+      id: "36",
+      position: { x: 2050, y: 560 },
+      data: {
+        label: `Árvore de Valor - EVA`,
+      },
+      type: "parallelogramTitle",
+    },
+    {
+      id: "36.1",
+      position: { x: 2330, y: 560 },
+      data: {
+        label: `\n${formatValue(indicators.evA_Acumulado)}`,
+      },
+      type: "parallelogram",
     },
 
     // Operadores
     {
-      id: "division",
-      position: { x: 700, y: 300 },
-      data: { label: "÷" },
-      style: { ...mathOperator, fontSize: "55px" },
+      id: "division1",
+      position: { x: 1480, y: 540 },
+      data: "",
+      type: "divisionSign",
     },
     {
-      id: "times",
-      position: { x: 1305, y: 360 },
-      data: { label: "x" },
-      style: { ...mathOperator, fontSize: "30px" },
+      id: "division2",
+      position: { x: 1480, y: 230 },
+      data: "",
+      type: "divisionSign",
     },
-  ];
 
-  const edges: Edge[] = [
-    // Caminho vertical Receitas > Custos > Margem
-    { id: "e1-2", source: "1", target: "2", type: "step" },
-    { id: "e2-3", source: "2", target: "3", type: "step" },
-    { id: "e1-6", source: "1", target: "6", type: "step" },
-    { id: "e4-5", source: "4", target: "5", type: "step" },
-    { id: "e5-8", source: "5", target: "8", type: "step" },
-    { id: "e8-19-1", source: "8", target: "19", type: "step" },
-    { id: "e8-19-2", source: "8", target: "19", type: "step" },
-    { id: "e8-20", source: "8", target: "20", type: "step" },
-    { id: "e20-21", source: "20", target: "21", type: "step" },
-    { id: "e20-22", source: "20", target: "22", type: "step" },
-    { id: "e22-23", source: "22", target: "23", type: "step" },
-    { id: "e23-24", source: "23", target: "24", type: "step" },
+    // Linhas 1
+    {
+      id: "linha-vertical-1",
+      type: "line",
+      position: { x: 1450, y: 100 },
+      data: { width: 4, height: 313 },
+    },
+    {
+      id: "linha-horizontal-1",
+      type: "line",
+      position: { x: 1402, y: 100 },
+      data: { width: 50, height: 4 },
+    },
+    {
+      id: "linha-horizontal-2",
+      type: "line",
+      position: { x: 1400, y: 410 },
+      data: { width: 53, height: 4 },
+    },
 
-    { id: "e9-10", source: "9", target: "10", type: "step" },
-    { id: "e10-11", source: "10", target: "11", type: "step" },
-    { id: "e11-12", source: "11", target: "12", type: "step" },
-    { id: "e12-13", source: "12", target: "13", type: "step" },
-    { id: "e13-14", source: "13", target: "14", type: "step" },
-    { id: "e10-15", source: "10", target: "15", type: "step" },
-    { id: "e15-16", source: "15", target: "16", type: "step" },
-    { id: "e16-17", source: "16", target: "17", type: "step" },
-    { id: "e17-18", source: "17", target: "18", type: "step" },
-    { id: "e16-19", source: "16", target: "19", type: "step" },
+    // Linhas 2
+    {
+      id: "linha-vertical-2",
+      type: "line",
+      position: { x: 1450, y: 300 },
+      data: { width: 4, height: 410 },
+    },
+    {
+      id: "linha-horizontal-2.1",
+      type: "line",
+      position: { x: 1400, y: 707 },
+      data: { width: 53, height: 4 },
+    },
   ];
 
   return (
@@ -413,9 +721,8 @@ export default function EvaDiagram({ data }: Props) {
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
-        edges={edges}
-        fitView
         proOptions={{ hideAttribution: true }}
+        fitView
       >
         <Background variant={BackgroundVariant.Dots} />
         <Controls />
