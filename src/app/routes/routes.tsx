@@ -24,7 +24,7 @@ import { EficienciaOperacional } from "../../Features/Results/EficienciaOperacio
 import { MrpHome } from "../../Features/Home";
 import { Params } from "../../Features/Params";
 import { CashFlow } from "../../Features/CashFlow";
-import { AgregadoMensal } from "../../Features/ValueTree/AgregadoMensal";
+import { AgregadoMensal } from "../../Features/ValueTree/EVA";
 
 export const AppRoutes = () => {
   return (
@@ -113,7 +113,7 @@ export const AppRoutes = () => {
           <Route key={path} path={path} element={<CashFlow />} />
         ))}{" "}
         {/* FEVA */}
-        {withScopes("eva/mensal").map((path) => (
+        {withScopes("eva").map((path) => (
           <Route key={path} path={path} element={<AgregadoMensal />} />
         ))}
       </Routes>
