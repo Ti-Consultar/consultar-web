@@ -143,7 +143,7 @@ export default function EvaDiagram({ data }: Props) {
       id: "1.1",
       position: { x: 280, y: 0 },
       data: {
-        label: `${formatValue(economicView.custoDespesaVariavel)}`,
+        label: `${formatValue(economicView.receitaLiquida)}`,
       },
       type: "parallelogram",
     },
