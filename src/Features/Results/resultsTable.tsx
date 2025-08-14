@@ -22,6 +22,9 @@ interface TabelaMetricasTranspostaProps {
   metricKeys: string[];
   metricLabels: Record<string, string>;
   nestedMetrics?: Record<string, string[]>;
+  enableValueMode?: boolean;
+  metricTypes?: Record<string, "number" | "percent">;
+  highlightRows?: Record<string, boolean>;
 }
 
 const monthNameToPTBR: Record<string, string> = {
@@ -44,6 +47,9 @@ export const ResultsTable = ({
   metricKeys,
   metricLabels,
   nestedMetrics = {},
+  enableValueMode = true,
+  metricTypes = {},
+  highlightRows = {},
 }: TabelaMetricasTranspostaProps) => {
   const translatedMonths: MonthData[] = useMemo(
     () =>
@@ -63,27 +69,28 @@ export const ResultsTable = ({
     return Object.keys(month).filter((key) => key in nestedMetrics);
   }, [months, nestedMetrics]);
 
-  // 🔹 Novo objeto para rótulos dos grupos
   const nestedGroupLabels: Record<string, string> = {
     estruturaDeCapital: "Estrutura de Capital",
     cil: "Capital Investido Líquido",
   };
 
-  const formatValue = (classificationName: string, value: number): string => {
+  const formatValue = (metricKey: string, value: number): string => {
     if (value === 0) return "-";
 
-    if (classificationName.includes("%")) {
+    if (metricTypes[metricKey] === "percent") {
       return `${value.toFixed(2).replace(".", ",")}%`;
     }
 
     let adjustedValue = Math.abs(value);
 
-    if (valueMode === "MILHAR") adjustedValue /= 1000;
-    else if (valueMode === "MILHARES") adjustedValue /= 1000000;
+    if (enableValueMode) {
+      if (valueMode === "MILHAR") adjustedValue /= 1000;
+      else if (valueMode === "MILHARES") adjustedValue /= 1000000;
+    }
 
     const formatted = adjustedValue.toLocaleString("pt-BR", {
-      minimumFractionDigits: adjustedValue < 1 ? 2 : 0,
-      maximumFractionDigits: adjustedValue < 1 ? 2 : 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
 
     if (value < 0) return `(${formatted})`;
@@ -133,7 +140,7 @@ export const ResultsTable = ({
         </TableHead>
 
         <TableBody>
-          {/* Renderizar grupos aninhados */}
+          {/* Grupos aninhados */}
           {nestedGroupOrder.map((groupKey) => {
             const metrics = nestedMetrics[groupKey];
             return (
@@ -151,94 +158,109 @@ export const ResultsTable = ({
                       groupKey}
                   </TableCell>
                 </TableRow>
-                {metrics.map((metric) => (
-                  <TableRow key={`${groupKey}-${metric}`}>
-                    <TableCell
+                {metrics.map((metric) => {
+                  const isHighlighted = !!highlightRows[metric];
+                  return (
+                    <TableRow
+                      key={`${groupKey}-${metric}`}
                       sx={{
-                        position: "sticky",
-                        left: 0,
-                        backgroundColor: "#fff",
-                        maxWidth: 180,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        fontWeight: 500,
+                        backgroundColor: isHighlighted ? "#f5f5f5" : "transparent",
+                        fontWeight: isHighlighted ? "bold" : "normal",
                       }}
                     >
-                      <Tooltip title={metricLabels[metric] || metric}>
-                        <span>{metricLabels[metric] || metric}</span>
-                      </Tooltip>
-                    </TableCell>
-                    {translatedMonths.map((month) => {
-                      const rawValue = month[groupKey]?.[metric];
-                      const value =
-                        typeof rawValue === "number"
-                          ? formatValue(
-                              metricLabels[metric] || metric,
-                              rawValue
-                            )
-                          : "-";
-                      return (
-                        <TableCell
-                          key={`${month.name}-${metric}`}
-                          align="right"
-                          sx={{
-                            borderLeft: "1px solid #e0e0e0",
-                            "&:hover": { backgroundColor: "#f0f0f0" },
-                          }}
-                        >
-                          {value}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
+                      <TableCell
+                        sx={{
+                          position: "sticky",
+                          left: 0,
+                          backgroundColor: isHighlighted ? "#f5f5f5" : "#fff",
+                          fontWeight: isHighlighted ? "bold" : 500,
+                          maxWidth: 180,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <Tooltip title={metricLabels[metric] || metric}>
+                          <span>{metricLabels[metric] || metric}</span>
+                        </Tooltip>
+                      </TableCell>
+                      {translatedMonths.map((month) => {
+                        const rawValue = month[groupKey]?.[metric];
+                        const value =
+                          typeof rawValue === "number"
+                            ? formatValue(metric, rawValue)
+                            : "-";
+                        return (
+                          <TableCell
+                            key={`${month.name}-${metric}`}
+                            align="right"
+                            sx={{
+                              borderLeft: "1px solid #e0e0e0",
+                              "&:hover": { backgroundColor: "#f0f0f0" },
+                            }}
+                          >
+                            {value}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
               </React.Fragment>
             );
           })}
 
-          {/* Renderizar métricas isoladas */}
+          {/* Métricas isoladas */}
           {metricKeys
             .filter((metric) => !allNestedKeys.includes(metric))
-            .map((metric) => (
-              <TableRow key={metric}>
-                <TableCell
+            .map((metric) => {
+              const isHighlighted = !!highlightRows[metric];
+              return (
+                <TableRow
+                  key={metric}
                   sx={{
-                    position: "sticky",
-                    left: 0,
-                    backgroundColor: "#fff",
-                    maxWidth: 180,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    fontWeight: 500,
+                    backgroundColor: isHighlighted ? "#f5f5f5" : "transparent",
+                    fontWeight: isHighlighted ? "bold" : "normal",
                   }}
                 >
-                  <Tooltip title={metricLabels[metric] || metric}>
-                    <span>{metricLabels[metric] || metric}</span>
-                  </Tooltip>
-                </TableCell>
-                {translatedMonths.map((month) => {
-                  const rawValue = month[metric];
-                  const value =
-                    typeof rawValue === "number"
-                      ? formatValue(metricLabels[metric] || metric, rawValue)
-                      : "-";
-                  return (
-                    <TableCell
-                      key={`${month.name}-${metric}`}
-                      align="right"
-                      sx={{
-                        borderLeft: "1px solid #e0e0e0",
-                        "&:hover": { backgroundColor: "#f0f0f0" },
-                      }}
-                    >
-                      {value}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      left: 0,
+                      backgroundColor: isHighlighted ? "#f5f5f5" : "#fff",
+                      fontWeight: isHighlighted ? "bold" : 500,
+                      maxWidth: 180,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    <Tooltip title={metricLabels[metric] || metric}>
+                      <span>{metricLabels[metric] || metric}</span>
+                    </Tooltip>
+                  </TableCell>
+                  {translatedMonths.map((month) => {
+                    const rawValue = month[metric];
+                    const value =
+                      typeof rawValue === "number"
+                        ? formatValue(metric, rawValue)
+                        : "-";
+                    return (
+                      <TableCell
+                        key={`${month.name}-${metric}`}
+                        align="right"
+                        sx={{
+                          borderLeft: "1px solid #e0e0e0",
+                          "&:hover": { backgroundColor: "#f0f0f0" },
+                        }}
+                      >
+                        {value}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
         </TableBody>
       </Table>
     </TableContainer>

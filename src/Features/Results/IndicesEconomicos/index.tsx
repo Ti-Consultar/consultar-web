@@ -21,7 +21,6 @@ import {
 } from "../../../services/apis/routes/economicIndices,service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
-// --- Main BalancoContabil Component (replicated structure) ---
 export const IndicesEconomicos = () => {
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
@@ -37,6 +36,12 @@ export const IndicesEconomicos = () => {
   const [months, setMonths] = useState<any[]>([]);
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
+  const [metricTypes, setMetricTypes] =
+    useState<Record<string, "number" | "percent">>();
+  const [highlightRows, setHighlightRows] = useState<Record<string, boolean>>(
+    {}
+  );
+  useState<Record<string, "number" | "percent">>();
 
   useEffect(() => {
     if (!groupId || accountPlanId) return;
@@ -102,10 +107,17 @@ export const IndicesEconomicos = () => {
           labels = {
             margemBruta: "Margem Bruta",
             margemEBITDA: "Margem EBITDA",
-            margemOperacional: "% Margem Operacional",
+            margemOperacional: "Margem Operacional",
             margemNOPAT: "Margem do NOPAT",
             margemLiquida: "Margem Líquida",
           };
+          setMetricTypes({
+            margemBruta: "percent",
+            margemEBITDA: "percent",
+            margemOperacional: "percent",
+            margemNOPAT: "percent",
+            margemLiquida: "percent",
+          });
           break;
 
         case 2:
@@ -117,6 +129,11 @@ export const IndicesEconomicos = () => {
             liquidoMensalROE: "Retorno do Patrimônio Líquido Mensal (ROE)",
             liquidoInicioROE: "Retorno do Patrimônio Líquido do Início (ROE)",
           };
+          setMetricTypes({
+            roi: "percent",
+            liquidoMensalROE: "percent",
+            liquidoInicioROE: "percent",
+          });
           break;
 
         case 3:
@@ -128,6 +145,11 @@ export const IndicesEconomicos = () => {
             ke: "Expectativa de Retorno",
             criacaoValor: "Criação de Valor (EVA)",
           };
+          setMetricTypes({
+            roic: "percent",
+            ke: "percent",
+            criacaoValor: "percent",
+          });
           break;
 
         case 4:
@@ -158,10 +180,22 @@ export const IndicesEconomicos = () => {
           labels = {
             lucroOperacionalAntes:
               "Lucro Operacional Antes do Resultado Financeiro (EBIT)",
-            margemOperacionalDRE: "% Margem Operacional",
+            margemOperacionalDRE: "Margem Operacional",
             provisaoIRPJCSLL: "Provisão IRPJ/CSLL	",
             nopat: "(=) Resultado Operacional Líquido Após Impostos (NOPAT)",
           };
+          setHighlightRows({
+            lucroOperacionalAntes: false,
+            margemOperacionalDRE: true,
+            provisaoIRPJCSLL: false,
+            nopat: false,
+          });
+          setMetricTypes({
+            lucroOperacionalAntes: "number",
+            margemOperacionalDRE: "percent",
+            provisaoIRPJCSLL: "number",
+            nopat: "number",
+          });
           break;
       }
 
@@ -311,6 +345,8 @@ export const IndicesEconomicos = () => {
             months={months}
             metricKeys={metricKeys}
             metricLabels={metricLabels}
+            metricTypes={metricTypes}
+            highlightRows={highlightRows}
           />
         </Paper>
       </MainContainer>

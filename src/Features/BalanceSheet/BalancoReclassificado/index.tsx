@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { MainTemplate } from "../../../components/AppLayout";
 import { Container, MainContainer, Title } from "./styles";
 import { Box, Tabs, Tab, Paper, Button } from "@mui/material";
@@ -34,8 +34,34 @@ export const BalancoReclassificado = () => {
     subCompanyId?: string;
   }>();
 
+  const highlightRows = useMemo(() => {
+    const ids: Record<number, boolean> = {};
+
+    const nomesParaDestacar = [
+      "Ativo Financeiro",
+      "Ativo Operacional",
+      "Ativo Não Circulante",
+      "Ativo Fixo",
+      "Passivo Financeiro",
+      "Passivo Operacional",
+      "Passivo Não Circulante",
+      "Outros Passivos Operacionais",
+      "Patrimônio Liquido",
+    ];
+
+    balanceteData.forEach((month) => {
+      month.totalizer.forEach((tot) => {
+        if (nomesParaDestacar.includes(tot.name)) {
+          ids[tot.id] = true;
+        }
+      });
+    });
+
+    return ids;
+  }, [balanceteData]);
+
   useEffect(() => {
-    if (!groupId || accountPlanId) return; // <-- impede loop se accountPlanId já está definido
+    if (!groupId || accountPlanId) return;
 
     const getAccountPlanId = async (
       groupId: number,
@@ -45,11 +71,8 @@ export const BalancoReclassificado = () => {
       try {
         setLoading(true, "Buscando Plano de Contas...");
         const response = await getAccountPlan(groupId, companyId, subCompanyId);
-
         const data = response.data;
-
         if (!Array.isArray(data) || data.length === 0) return;
-
         const lastItem = data[data.length - 1];
         setAccountPlanId(lastItem.id);
       } catch (error) {
@@ -216,9 +239,13 @@ export const BalancoReclassificado = () => {
               Pesquisar
             </Button>
           </Box>
+
           <Container>
             {tabValue === 1 || tabValue === 2 ? (
-              <BalancoReclassificadoTable months={balanceteData} />
+              <BalancoReclassificadoTable
+                months={balanceteData}
+                highlightRows={highlightRows}
+              />
             ) : (
               <BalancoContabilTable months={balanceteData} />
             )}
