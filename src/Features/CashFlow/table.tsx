@@ -69,7 +69,7 @@ export const CashFlowTable = ({
   const formatValue = (classificationName: string, value: number): string => {
     if (value === 0) return "-";
 
-    let adjustedValue = Math.abs(value); // Remove sinal negativo sempre
+    let adjustedValue = value; // mantém o valor original (positivo/negativo)
 
     // Ajuste com base no modo selecionado
     if (valueMode === "MILHAR") {
@@ -78,14 +78,16 @@ export const CashFlowTable = ({
       adjustedValue = adjustedValue / 1000000;
     }
 
+    const absValue = Math.abs(adjustedValue);
+
     // Caso porcentagem
     if (classificationName.includes("%")) {
       return `${adjustedValue.toFixed(2).replace(".", ",")}%`;
     }
 
-    // Caso negativo contábil com parênteses
-    if (classificationName.startsWith("(-)")) {
-      return `(${Math.trunc(adjustedValue).toLocaleString("pt-BR")})`;
+    // Caso negativo contábil
+    if (adjustedValue < 0 || classificationName.startsWith("(-)")) {
+      return `(${Math.trunc(absValue).toLocaleString("pt-BR")})`;
     }
 
     // Caso normal
