@@ -32,6 +32,8 @@ import { BreadcrumbItem } from "../../types/breadcrumb";
 import { Member } from "../../types/member";
 import { getUserPolicies } from "../../services/apis/routes/auth.service";
 import { useCompany } from "../../contexts/CompanyProvider";
+import { Dashboard } from "@mui/icons-material";
+import { DashboardPanel } from "../Dashboard";
 
 type Companies = {
   groupName: string;
@@ -362,6 +364,7 @@ export const Companies = () => {
             )}
           />
         </HeaderContainer>
+        <DashboardPanel />
         {isMobile ? (
           <MobileTableView
             companies={companiesData.companies}
