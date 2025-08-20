@@ -363,7 +363,6 @@ export const GestaoLiquidez = () => {
               alignItems: "center",
             }}
           >
-            <CapitalDynamicsChart></CapitalDynamicsChart>
           </Box>
         );
       case 3:
