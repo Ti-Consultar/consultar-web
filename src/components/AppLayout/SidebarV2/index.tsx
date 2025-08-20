@@ -22,6 +22,7 @@ import styled from "styled-components";
 //icons
 import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
 import HomeIcon from "../../../assets/icons/sidebar/dashboard.svg";
+import DashboardIcon from "../../../assets/icons/duo-icons_dashboard.svg";
 import BalanceFile from "../../../assets/icons/sidebar/balanco-dre.svg";
 import SidebarOpen from "../../../assets/icons/sidebar/sidebar-open.svg";
 import SidebarClose from "../../../assets/icons/sidebar/sidebar-close.svg";
@@ -305,6 +306,13 @@ export const Sidebar = () => {
             <img src={HomeIcon} alt="Home" style={{ width: 22, height: 22 }} />
           ),
           path: "/grupos",
+        },
+        {
+          title: "Dashboard",
+          icon: (
+            <img src={DashboardIcon} alt="Home" style={{ width: 22, height: 22 }} />
+          ),
+          path: buildNestedUrl(params, "empresas"),
         },
         ...(hasParams
           ? [
