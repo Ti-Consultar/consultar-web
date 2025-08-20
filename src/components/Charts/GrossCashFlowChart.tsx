@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import {
   ResponsiveContainer,
-  BarChart,
+  ComposedChart,
   Bar,
   XAxis,
   YAxis,
@@ -22,9 +23,13 @@ type Props = {
 };
 
 export const GrossCashFlowChart = ({ data }: Props) => {
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
+
   return (
     <ResponsiveContainer width="100%" height={400}>
-      <BarChart
+      <ComposedChart
         data={data}
         margin={{ top: 20, right: 50, left: 20, bottom: 20 }}
       >
@@ -33,17 +38,20 @@ export const GrossCashFlowChart = ({ data }: Props) => {
         <YAxis
           yAxisId="left"
           orientation="left"
-          tickFormatter={(value) => `R$ ${value / 1000}k`}
+          tickFormatter={(value) => `R$ ${(value / 1000).toFixed(1)}k`}
+          domain={["auto", "auto"]}
         />
         <YAxis
           yAxisId="right"
           orientation="right"
           tickFormatter={(value) => `${value.toFixed(1)}%`}
+          domain={["auto", "auto"]}
         />
         <Tooltip
           formatter={(value: any, name: string) => {
-            if (name === "margemEBITIDA") return [`${value.toFixed(2)}%`, name];
-            return [`R$ ${value.toLocaleString()}`, name];
+            if (name === "margemEBITIDA")
+              return [`${value.toFixed(2)}%`, "Margem EBITDA"];
+            return [`R$ ${value.toLocaleString("pt-BR")}`, name];
           }}
         />
         <Legend />
@@ -62,7 +70,7 @@ export const GrossCashFlowChart = ({ data }: Props) => {
           stroke="#ffc658"
           name="Fluxo de Caixa Operacional"
         />
-      </BarChart>
+      </ComposedChart>
     </ResponsiveContainer>
   );
 };

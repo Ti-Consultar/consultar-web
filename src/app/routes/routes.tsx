@@ -25,6 +25,7 @@ import { MrpHome } from "../../Features/Home";
 import { Params } from "../../Features/Params";
 import { CashFlow } from "../../Features/CashFlow";
 import { AgregadoMensal } from "../../Features/ValueTree/EVA";
+import { DashboardPanel } from "../../Features/Dashboard";
 
 export const AppRoutes = () => {
   return (
@@ -115,6 +116,10 @@ export const AppRoutes = () => {
         {/* FEVA */}
         {withScopes("eva").map((path) => (
           <Route key={path} path={path} element={<AgregadoMensal />} />
+        ))}
+        {/* DASBBOARD */}
+        {withScopes("dashboard").map((path) => (
+          <Route key={path} path={path} element={<DashboardPanel />} />
         ))}
       </Routes>
     </>

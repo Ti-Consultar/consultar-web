@@ -23,6 +23,8 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { toast } from "react-toastify";
 import FleurietGestaoLiquidezChart from "../../../components/Charts/FleurietChart/FleurietGestaoLiquidezChart";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import { GrossCashFlowChart } from "../../../components/Charts/GrossCashFlowChart";
+import CapitalDynamicsChart from "../../../components/Charts/CapitalDynamicsChart";
 
 interface LiquidityMonth {
   name: string;
@@ -56,6 +58,7 @@ export const GestaoLiquidez = () => {
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
   const [liquidityMonth, setLiquidityMonth] = useState<LiquidityData>();
+  const [grossCashFlowDashData, setGrossCashFlowDashData] = useState<any[]>([]);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -171,6 +174,14 @@ export const GestaoLiquidez = () => {
             aumentoReducaoFluxoCaixa: "percent",
           });
           setValueMode(true);
+          setGrossCashFlowDashData(
+            (response?.grossCashFlows?.months ?? []).map((month: any) => ({
+              name: month.name,
+              ebitida: month.ebitida,
+              margemEBITIDA: month.margemEBITIDA,
+              fluxoCaixaOperacional: month.fluxoCaixaOperacional,
+            }))
+          );
           break;
 
         case 4:
@@ -342,9 +353,39 @@ export const GestaoLiquidez = () => {
           </Box>
         );
       case 2:
-        return <Box></Box>;
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <CapitalDynamicsChart></CapitalDynamicsChart>
+          </Box>
+        );
       case 3:
-        return <Box></Box>;
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {grossCashFlowDashData.length > 0 ? (
+              <GrossCashFlowChart data={grossCashFlowDashData} />
+            ) : (
+              <Typography>
+                Nenhum dado disponível para o ano selecionado.
+              </Typography>
+            )}
+          </Box>
+        );
       case 4:
         return <Box></Box>;
       case 5:
