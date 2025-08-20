@@ -24,7 +24,6 @@ import { toast } from "react-toastify";
 import FleurietGestaoLiquidezChart from "../../../components/Charts/FleurietChart/FleurietGestaoLiquidezChart";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { GrossCashFlowChart } from "../../../components/Charts/GrossCashFlowChart";
-import CapitalDynamicsChart from "../../../components/Charts/CapitalDynamicsChart";
 
 interface LiquidityMonth {
   name: string;
