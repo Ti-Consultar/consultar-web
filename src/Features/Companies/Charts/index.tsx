@@ -23,9 +23,9 @@ type Props = {
 };
 
 const metrics = [
-  { key: "margemBruta", label: "Margem Bruta", color: "#2f6bbd" },
+  { key: "margemBruta", label: "Margem Bruta", color: "#f39c12" },
   { key: "margemEBITDA", label: "Margem EBITDA", color: "#27ae60" },
-  { key: "margemOperacional", label: "Margem Operacional", color: "#f39c12" },
+  { key: "margemOperacional", label: "Margem Operacional", color: "#2f6bbd" },
   { key: "margemNOPAT", label: "Margem NOPAT", color: "#8e44ad" },
   { key: "margemLiquida", label: "Margem Líquida", color: "#e74c3c" },
 ] as const;
@@ -44,7 +44,6 @@ export const MarginCarousel: React.FC<Props> = ({ data }) => {
   return (
     <CarouselContainer>
       <Button onClick={handlePrev}>‹</Button>
-
       <ChartWrapper>
         <MarginChart
           data={data}

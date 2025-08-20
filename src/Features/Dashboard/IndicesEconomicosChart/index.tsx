@@ -58,7 +58,7 @@ export const MarginChart: React.FC<Props> = ({
   }));
 
   return (
-    <div style={{ width: "100%", height: 200, backgroundColor: "#fff" }}>
+    <div style={{ width: "100%", height: 350, backgroundColor: "#fff" }}>
       <h3 style={{ textAlign: "center", marginBottom: 10 }}>
         {title ?? metricKey}
       </h3>

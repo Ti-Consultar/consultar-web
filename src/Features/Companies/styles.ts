@@ -20,19 +20,13 @@ export const HeaderContainer = styled.div`
   gap: 1rem;
 `;
 
-export const Title = styled.h1`
-  color: var(--neutral-800);
-  font-size: 32px;
-  font-weight: var(--fontWeightBold);
-  margin-bottom: 12px;
+export const Title = styled.h2`
+  font-size: 24px;
+  color: var(--neutral-700);
+`;
 
-  span {
-    font-weight: var(--fontWeightRegular);
-  }
-
-  @media (max-width: 1195px) {
-    font-size: 24px;
-  }
+export const Subtitle = styled.span`
+  font-size: 24px;
 `;
 
 export const PageTitle = styled.span`

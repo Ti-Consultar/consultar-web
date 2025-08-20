@@ -23,7 +23,7 @@ export const ChartContainer = styled.div`
 
 export const ChartCard = styled.div`
   background: #fff;
-  border: 1px solid #e0e0e0; 
+  border: 1px solid #e4e4e4ff; 
   border-radius: 12px;
   padding: 16px;
   display: flex;

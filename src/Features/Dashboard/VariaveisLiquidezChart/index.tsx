@@ -1,13 +1,13 @@
 import { useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { useLoading } from "../../contexts/LoadingProvider";
-import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { toast } from "react-toastify";
-import { getProfitability } from "../../services/apis/routes/economicIndices,service";
 import { Box } from "@mui/material";
-import { MarginCarousel } from "../Companies/Charts";
+import { LiquidityChart } from "../../Companies/Charts/VariaveisLiquidez";
+import { getLiquidityManagement } from "../../../services/apis/routes/gestaoLiquidez.service";
 
-export const DashboardPanel = () => {
+export const VariaveisLiquidezChart = () => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -54,8 +54,8 @@ export const DashboardPanel = () => {
     if (!accountPlanId) return;
     try {
       if (!accountPlanId) return;
-      const response = await getProfitability(accountPlanId, 2025);
-      setData(response.profitability?.months);
+      const response = await getLiquidityManagement(accountPlanId, 2025);
+      setData(response.liquidityVariables?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
     } finally {
@@ -69,9 +69,7 @@ export const DashboardPanel = () => {
 
   return (
     <Box>
-      <Box sx={{ width: "100%", mb: "1rem" }}>
-        <MarginCarousel data={data} />
-      </Box>
+      <LiquidityChart data={data} />
     </Box>
   );
 };
