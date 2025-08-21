@@ -32,9 +32,9 @@ type Props = {
 };
 
 const metrics = [
-  { key: "pme", label: "PME", color: "#2f6bbd" },
-  { key: "pmr", label: "PMR", color: "#27ae60" },
-  { key: "pmp", label: "PMP", color: "#f39c12" },
+  { key: "pme", label: "PME", color: "#27ae60" },
+  { key: "pmr", label: "PMR", color: "#2f6bbd" },
+  { key: "pmp", label: "PMP", color: "#C00000" },
 ] as const;
 
 export const CapitalDynamicsCarousel: React.FC<Props> = ({ data }) => {

@@ -30,13 +30,6 @@ export const CashFlow = () => {
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
 
   const metrics = [
-    "receitaLiquida",
-    "custosOperacionais",
-    "despesasVariaveis",
-    "despesasOperacionais",
-    "outrosResultados",
-    "resultadosFinanceiros",
-    "provisoes",
     "lucroOperacionalLiquido",
     "depreciacaoAmortizacao",
     "variacaoNCG",
@@ -64,16 +57,10 @@ export const CashFlow = () => {
     "fluxoDeCaixaOperacional",
     "fluxoDeCaixaLivre",
     "fluxoDeCaixaDaEmpresa",
+    "lucroOperacionalLiquido",
   ];
 
   const metricLabels: Record<string, string> = {
-    receitaLiquida: "(=) Receita Líquida",
-    custosOperacionais: "(+/-) Custos Operacionais",
-    despesasVariaveis: "(+/-) Despesas Variáveis",
-    despesasOperacionais: "(+/-) Despesas Operacionais",
-    outrosResultados: "(+/-) Outros Resultados",
-    resultadosFinanceiros: "(+/-) Resultados Financeiros",
-    provisoes: "(+/-) Provisões",
     lucroOperacionalLiquido: "(=) Lucro Operacional Líquido",
     depreciacaoAmortizacao: "(+) Depreciação e Amortização",
     variacaoNCG: "(+/-) Variação da NCG",

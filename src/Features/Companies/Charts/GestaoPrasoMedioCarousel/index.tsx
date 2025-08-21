@@ -32,7 +32,7 @@ type Props = {
 const metrics = [
   { key: "clientes", label: "Clientes", color: "#2f6bbd" },
   { key: "estoques", label: "Estoques", color: "#27ae60" },
-  { key: "fornecedores", label: "Fornecedores", color: "#f39c12" },
+  { key: "fornecedores", label: "Fornecedores", color: "#C00000" },
 ] as const;
 
 export const GestaoPrazoMedioCarousel: React.FC<Props> = ({ data }) => {
