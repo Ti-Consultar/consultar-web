@@ -20,7 +20,7 @@ import { DivSkeleton } from "../../styles/skeleton/skeleton";
 import { getGroupById } from "../../services/apis/routes/groups.service";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { GroupFormData } from "../../types/group";
-import { Box, Button, useMediaQuery } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import { MobileTableView } from "./CompanyTable/MobileTableView";
 import { useMainContext } from "../../contexts/mainContext";
 import { unlinkFromCompany } from "../../services/apis/routes/invitation.service";
