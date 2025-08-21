@@ -7,7 +7,13 @@ import { getCapitalDynamics } from "../../../services/apis/routes/gestaoLiquidez
 import { Box } from "@mui/material";
 import { CapitalDynamicsCarousel } from "../../Companies/Charts/CapitalDynamicsCarousel";
 
-export const DinamicaCapitalCarousel = () => {
+interface DinamicaCapitalCarouselProps {
+  year: number | null;
+}
+
+export const DinamicaCapitalCarousel = ({
+  year,
+}: DinamicaCapitalCarouselProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -54,7 +60,8 @@ export const DinamicaCapitalCarousel = () => {
     if (!accountPlanId) return;
     try {
       if (!accountPlanId) return;
-      const response = await getCapitalDynamics(accountPlanId, 2025);
+      if (!year) return;
+      const response = await getCapitalDynamics(accountPlanId, year);
       setData(response.capitalDynamics?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
@@ -65,7 +72,7 @@ export const DinamicaCapitalCarousel = () => {
 
   useEffect(() => {
     fetchData();
-  }, [accountPlanId]);
+  }, [accountPlanId, year]);
 
   return (
     <Box>

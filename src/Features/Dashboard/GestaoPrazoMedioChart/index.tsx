@@ -7,7 +7,13 @@ import { Box } from "@mui/material";
 import { getGestaoPrazoMedio } from "../../../services/apis/routes/dashboard.service";
 import { GestaoPrazoMedioCarousel } from "../../Companies/Charts/GestaoPrasoMedioCarousel";
 
-export const GestaoPrazoMedioDashboard = () => {
+interface GestaoPrazoMedioDashboardProps {
+  year: number | null;
+}
+
+export const GestaoPrazoMedioDashboard = ({
+  year,
+}: GestaoPrazoMedioDashboardProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -52,9 +58,10 @@ export const GestaoPrazoMedioDashboard = () => {
 
   const fetchData = async () => {
     if (!accountPlanId) return;
+    if (!year) return;
     try {
       if (!accountPlanId) return;
-      const response = await getGestaoPrazoMedio(2025, accountPlanId);
+      const response = await getGestaoPrazoMedio(year, accountPlanId);
       setData(response);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
@@ -65,7 +72,7 @@ export const GestaoPrazoMedioDashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, [accountPlanId]);
+  }, [accountPlanId, year]);
 
   return (
     <Box>

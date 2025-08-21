@@ -1,13 +1,17 @@
 import { useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { useLoading } from "../../contexts/LoadingProvider";
-import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
-import { toast } from "react-toastify";
-import { getProfitability } from "../../services/apis/routes/economicIndices,service";
+import { MarginCarousel } from "../../Companies/Charts";
 import { Box } from "@mui/material";
-import { MarginCarousel } from "../Companies/Charts";
+import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { getProfitability } from "../../../services/apis/routes/economicIndices,service";
+import { toast } from "react-toastify";
 
-export const DashboardPanel = () => {
+interface MarginsChartsProps {
+  year: number | null;
+}
+
+export const MarginsCharts = ({ year }: MarginsChartsProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -54,7 +58,8 @@ export const DashboardPanel = () => {
     if (!accountPlanId) return;
     try {
       if (!accountPlanId) return;
-      const response = await getProfitability(accountPlanId, 2025);
+      if (!year) return;
+      const response = await getProfitability(accountPlanId, year);
       setData(response.profitability?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
@@ -65,7 +70,7 @@ export const DashboardPanel = () => {
 
   useEffect(() => {
     fetchData();
-  }, [accountPlanId]);
+  }, [accountPlanId, year]);
 
   return (
     <Box>

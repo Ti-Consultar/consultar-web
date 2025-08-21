@@ -38,10 +38,6 @@ const metrics = [
 export const GestaoPrazoMedioCarousel: React.FC<Props> = ({ data }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!data || data.length === 0) {
-    return <div>Nenhum dado disponível</div>;
-  }
-
   const metric = metrics[currentIndex] || metrics[0];
 
   const translateMonth = (month: string) => {

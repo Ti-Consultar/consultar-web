@@ -20,7 +20,7 @@ import { DivSkeleton } from "../../styles/skeleton/skeleton";
 import { getGroupById } from "../../services/apis/routes/groups.service";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { GroupFormData } from "../../types/group";
-import { Box, useMediaQuery } from "@mui/material";
+import { Box, Button, useMediaQuery } from "@mui/material";
 import { MobileTableView } from "./CompanyTable/MobileTableView";
 import { useMainContext } from "../../contexts/mainContext";
 import { unlinkFromCompany } from "../../services/apis/routes/invitation.service";
@@ -29,7 +29,6 @@ import { BreadcrumbItem } from "../../types/breadcrumb";
 import { Member } from "../../types/member";
 import { getUserPolicies } from "../../services/apis/routes/auth.service";
 import { useCompany } from "../../contexts/CompanyProvider";
-import { DashboardPanel } from "../Dashboard";
 import { KpiCard } from "../../components/Card/KpiCard";
 import { CompanyForm } from "../GroupForm";
 import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
@@ -39,6 +38,11 @@ import DashboardIcon from "../../assets/icons/duo-icons_dashboard.svg";
 import { DinamicaCapitalCarousel } from "../Dashboard/DinamicaCapital";
 import { GestaoPrazoMedioDashboard } from "../Dashboard/GestaoPrazoMedioChart";
 import { VariaveisLiquidezChart } from "../Dashboard/VariaveisLiquidezChart";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { MarginsCharts } from "../Dashboard/MarginsChart";
 
 type Companies = {
   groupName: string;
@@ -77,6 +81,9 @@ export const Companies = () => {
     companyid?: string;
     subCompanyId?: string;
   }>();
+  const [selectedYear, setSelectedYear] = useState<number | null>(
+    new Date().getFullYear()
+  );
 
   const fetchAllData = async () => {
     try {
@@ -200,7 +207,7 @@ export const Companies = () => {
       fetchDeletedCompanies();
       getDashboardPanelData();
     }
-  }, [userData, groupId, accountPlanId]);
+  }, [userData, groupId, accountPlanId, selectedYear]);
 
   const handleEdit = async (company: Company) => {
     try {
@@ -423,12 +430,37 @@ export const Companies = () => {
           sx={{
             display: "flex",
             alignItems: "center",
-            marginBottom: "1rem",
-            gap: 0.5,
+            justifyContent: "space-between",
           }}
         >
-          <img src={DashboardIcon}></img>
-          <Title>Dashboard</Title>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "1rem",
+              gap: 0.5,
+            }}
+          >
+            <img src={DashboardIcon}></img>
+            <Title>Dashboard</Title>
+          </Box>
+          <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                views={["year"]}
+                label="Selecione a data"
+                value={selectedYear ? dayjs().year(selectedYear) : null}
+                onChange={(newValue) => {
+                  setSelectedYear(newValue ? newValue.year() : null);
+                }}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
         </Box>
         <Subtitle>Índices Econômicos</Subtitle>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -449,7 +481,7 @@ export const Companies = () => {
               variation={dashboardPanelData?.variacaoMargemLiquida}
             />
           </Box>
-          <DashboardPanel />
+          <MarginsCharts year={selectedYear} />
           <Subtitle>Gestão Prazo Médio</Subtitle>
           <Box
             sx={{
@@ -461,16 +493,16 @@ export const Companies = () => {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 300, maxWidth: "50%" }}>
-              <DinamicaCapitalCarousel />
+              <DinamicaCapitalCarousel year={selectedYear} />
             </Box>
 
             <Box sx={{ flex: 1, minWidth: 300, maxWidth: "50%" }}>
-              <GestaoPrazoMedioDashboard />
+              <GestaoPrazoMedioDashboard year={selectedYear} />
             </Box>
           </Box>
           <Subtitle>Gestão de Liquidez</Subtitle>
-          <Box sx={{mb: 3}}>
-            <VariaveisLiquidezChart />
+          <Box sx={{ mb: 3 }}>
+            <VariaveisLiquidezChart year={selectedYear} />
           </Box>
         </Box>
         {isMobile ? (

@@ -7,7 +7,11 @@ import { Box } from "@mui/material";
 import { LiquidityChart } from "../../Companies/Charts/VariaveisLiquidez";
 import { getLiquidityManagement } from "../../../services/apis/routes/gestaoLiquidez.service";
 
-export const VariaveisLiquidezChart = () => {
+interface VariaveisLiquidezChartProps {
+  year: number | null;
+}
+
+export const VariaveisLiquidezChart = ({year}: VariaveisLiquidezChartProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -52,9 +56,10 @@ export const VariaveisLiquidezChart = () => {
 
   const fetchData = async () => {
     if (!accountPlanId) return;
+    if (!year) return;
     try {
       if (!accountPlanId) return;
-      const response = await getLiquidityManagement(accountPlanId, 2025);
+      const response = await getLiquidityManagement(accountPlanId, year);
       setData(response.liquidityVariables?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
@@ -65,7 +70,7 @@ export const VariaveisLiquidezChart = () => {
 
   useEffect(() => {
     fetchData();
-  }, [accountPlanId]);
+  }, [accountPlanId, year]);
 
   return (
     <Box>
