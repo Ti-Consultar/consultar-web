@@ -24,6 +24,9 @@ import { toast } from "react-toastify";
 import FleurietGestaoLiquidezChart from "../../../components/Charts/FleurietChart/FleurietGestaoLiquidezChart";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { GrossCashFlowChart } from "../../../components/Charts/GrossCashFlowChart";
+import { CapitalDynamicsChart } from "./charts/CapitalDynamicsChart";
+import { CapitalStructureStackedBarChart } from "./charts/CapitalStructureStackedBarChart";
+import { useDrawer } from "../../../contexts/DrawerContext";
 
 interface LiquidityMonth {
   name: string;
@@ -57,12 +60,15 @@ export const GestaoLiquidez = () => {
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
   const [liquidityMonth, setLiquidityMonth] = useState<LiquidityData>();
+  const [capitalDynamicsData, setCapitalDynamicsData] = useState<any[]>([]);
   const [grossCashFlowDashData, setGrossCashFlowDashData] = useState<any[]>([]);
+  const [capitalStructuresData, setCapitalStructuresData] = useState<any[]>([]);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
+  const { isOpen } = useDrawer();
 
   useEffect(() => {
     if (!groupId || accountPlanId) return;
@@ -143,6 +149,7 @@ export const GestaoLiquidez = () => {
             cicloFinanceiroNCG: "Ciclo Financeiro NCG",
           };
           setValueMode(false);
+          setCapitalDynamicsData(response?.capitalDynamics?.months);
           break;
 
         case 3:
@@ -232,6 +239,7 @@ export const GestaoLiquidez = () => {
             participacaoCapitalTerceiros: "percent",
             participacaoCapitalProprio: "percent",
           });
+          setCapitalStructuresData(response?.capitalStructures?.months);
           break;
       }
 
@@ -297,7 +305,7 @@ export const GestaoLiquidez = () => {
       fetchFeurietData();
     }
   }, [selectedMonth, accountPlanId, selectedYear]);
-
+  
   const tabStyle = {
     color: "var(--neutral-700)",
     fontWeight: "bold",
@@ -362,6 +370,7 @@ export const GestaoLiquidez = () => {
               alignItems: "center",
             }}
           >
+            <CapitalDynamicsChart data={capitalDynamicsData} />
           </Box>
         );
       case 3:
@@ -389,7 +398,19 @@ export const GestaoLiquidez = () => {
       case 5:
         return <Box></Box>;
       case 6:
-        return <Box></Box>;
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <CapitalStructureStackedBarChart data={capitalStructuresData} />
+          </Box>
+        );
       default:
         return null;
     }
@@ -397,7 +418,7 @@ export const GestaoLiquidez = () => {
 
   return (
     <MainTemplate>
-      <MainContainer>
+      <MainContainer isOpen={isOpen}>
         <Title>Gestão da Liquidez</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box

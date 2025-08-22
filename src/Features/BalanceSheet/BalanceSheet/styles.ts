@@ -1,10 +1,16 @@
 import { TableCell, TableRow } from "@mui/material";
 import styled from "styled-components";
 
-export const MainContainer = styled.div`
+interface MainContainerProps {
+  isOpen: boolean;
+}
+
+export const MainContainer = styled.div<MainContainerProps>`
   display: flex;
   flex-direction: column;
   margin: 1.5rem;
+  width: 93%;
+  transition: max-width 0.3s ease;
   @media (min-width: 768px) and (max-width: 1023px) {
     width: 85%;
   }
@@ -18,7 +24,7 @@ export const MainContainer = styled.div`
 export const Title = styled.h2`
   font-size: 24px;
   color: var(--neutral-700);
-  margin-bottom: 1rem
+  margin-bottom: 1rem;
 `;
 
 export const Container = styled.div`
@@ -30,7 +36,6 @@ export const Container = styled.div`
   align-items: center;
   padding: 2rem;
 `;
-
 
 export const StickyTableCell = styled(TableCell)<{
   isHovered?: boolean;
@@ -68,7 +73,7 @@ export const StyledTableCell = styled(TableCell)<{
 export const StickyHeaderCell = styled(StickyTableCell)`
   z-index: 2;
   font-weight: bold;
-  background-color: #d7d9eeff
+  background-color: #d7d9eeff;
 `;
 
 export const HoverableTableRow = styled(TableRow)<{ isSection?: boolean }>`

@@ -19,6 +19,7 @@ import { BalancoResponse, Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import BalancoReclassificadoTable from "./table";
 import BalancoContabilTable from "../BalanceSheet/table";
+import { useDrawer } from "../../../contexts/DrawerContext";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
@@ -33,6 +34,7 @@ export const BalancoReclassificado = () => {
     companyid?: string;
     subCompanyId?: string;
   }>();
+  const { toggleDrawer } = useDrawer();
 
   const highlightRows = useMemo(() => {
     const ids: Record<number, boolean> = {};
@@ -44,6 +46,7 @@ export const BalancoReclassificado = () => {
       "Ativo Fixo",
       "Passivo Financeiro",
       "Passivo Operacional",
+      "Outros Ativos Operacionais Total",
       "Passivo Não Circulante",
       "Outros Passivos Operacionais",
       "Patrimônio Liquido",
@@ -227,7 +230,10 @@ export const BalancoReclassificado = () => {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => handleSearch()}
+              onClick={() => {
+                handleSearch();
+                toggleDrawer();
+              }}
               startIcon={<SearchIcon />}
               sx={{
                 borderRadius: "8px",
@@ -255,3 +261,4 @@ export const BalancoReclassificado = () => {
     </MainTemplate>
   );
 };
+

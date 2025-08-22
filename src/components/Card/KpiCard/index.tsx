@@ -6,14 +6,26 @@ interface KpiCardInterface {
   title?: string;
   value?: number;
   variation?: number;
+  percent?: boolean;
+  currency?: boolean
 }
 
 export const KpiCard = ({
   title = "-",
   value = 0,
   variation = 0,
+  percent = false,
+  currency = false,
 }: KpiCardInterface) => {
-  function formatCurrencyBR(value: number): string {
+  function formatCurrencyBR(value: number, currency: boolean = false): string {
+    if (currency) {
+      return value.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+      });
+    }
+
     return value.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -25,7 +37,7 @@ export const KpiCard = ({
       <Typography fontWeight={"bold"}>{title}</Typography>
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <Typography fontWeight={"medium"} fontSize={"2rem"}>
-          {formatCurrencyBR(value)}
+          {`${formatCurrencyBR(value, currency)}${percent ? "%" : ""}`}
         </Typography>
         <Chip
           label={`${variation}%`}

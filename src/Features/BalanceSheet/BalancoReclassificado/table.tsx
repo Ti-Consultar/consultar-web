@@ -49,7 +49,7 @@ interface Month {
 
 interface FinancialTableProps {
   months: Month[];
-  highlightRows?: Record<string, boolean>;
+  highlightRows?: Record<number, boolean>;
 }
 
 const BalancoReclassificadoTable = ({
@@ -102,33 +102,33 @@ const BalancoReclassificadoTable = ({
     if (valueMode === "MILHAR") adjustedValue /= 1000;
     else if (valueMode === "MILHARES") adjustedValue /= 1000000;
 
-    if (classificationName.includes("%"))
-      return `${adjustedValue.toFixed(2).replace(".", ",")}%`;
+    if (classificationName.includes("%")) {
+      const formatted = adjustedValue.toFixed(2).replace(".", ",");
+      return value < 0 ? `(${formatted}%)` : `${formatted}%`;
+    }
 
-    if (classificationName.startsWith("(-)"))
-      return `(${Math.trunc(adjustedValue).toLocaleString("pt-BR")})`;
-
-    return Math.trunc(adjustedValue).toLocaleString("pt-BR");
+    const formattedNumber = Math.trunc(adjustedValue).toLocaleString("pt-BR");
+    return value < 0 ? `(${formattedNumber})` : formattedNumber;
   };
 
   const stickyCellBase = {
     position: "sticky" as const,
     left: 0,
-    zIndex: 10,
     borderRight: `1px solid ${theme.palette.divider}`,
+    zIndex: 2,
   };
 
   const stickyHeaderStyle = {
     position: "sticky" as const,
     top: 0,
     backgroundColor: theme.palette.grey[200],
-    zIndex: 11,
+    zIndex: 3,
   };
 
   const stickyHeaderFirstCellStyle = {
     ...stickyHeaderStyle,
     left: 0,
-    zIndex: 12,
+    zIndex: 4,
   };
 
   const handleTotalizerClick = (totalizer: Totalizer, month: Month) => {
@@ -196,24 +196,19 @@ const BalancoReclassificadoTable = ({
               {allTotalizers.map((totalizer) => {
                 const isHighlighted = highlightRows[totalizer.id] || false;
                 const rowBg = isHighlighted
-                  ? theme.palette.action.hover
-                  : "inherit";
+                  ? theme.palette.grey[300]
+                  : "#fff";
 
                 return (
                   <React.Fragment key={totalizer.id}>
-                    <TableRow
-                      sx={{
-                        backgroundColor: rowBg,
-                        fontWeight: isHighlighted ? "bold" : "normal",
-                      }}
-                    >
+                    <TableRow sx={{ backgroundColor: rowBg }}>
                       <TableCell
                         component="th"
                         scope="row"
                         sx={{
                           ...stickyCellBase,
-                          backgroundColor: rowBg, // reaplica bg na sticky
-                          fontWeight: isHighlighted ? 600 : 400,
+                          backgroundColor: rowBg,
+                          fontWeight: isHighlighted ? "bold" : "normal",
                         }}
                       >
                         <Typography
@@ -235,6 +230,7 @@ const BalancoReclassificadoTable = ({
                               handleTotalizerClick(totalizer, month)
                             }
                             sx={{
+                              backgroundColor: rowBg,
                               cursor: monthTotalizer?.classifications?.length
                                 ? "pointer"
                                 : "default",
@@ -244,8 +240,6 @@ const BalancoReclassificadoTable = ({
                                   ? theme.palette.action.hover
                                   : rowBg,
                               },
-                              fontWeight: isHighlighted ? "bold" : "normal",
-                              backgroundColor: rowBg,
                             }}
                           >
                             <Typography
@@ -253,7 +247,7 @@ const BalancoReclassificadoTable = ({
                               fontFamily="monospace"
                               fontWeight={isHighlighted ? "bold" : "normal"}
                             >
-                              {monthTotalizer?.totalValue
+                              {monthTotalizer?.totalValue !== undefined
                                 ? formatValue(
                                     monthTotalizer.name,
                                     monthTotalizer.totalValue
@@ -268,6 +262,7 @@ const BalancoReclassificadoTable = ({
                 );
               })}
 
+              {/* Total do Painel Contábil */}
               {months[0]?.monthPainelContabilTotalizer && (
                 <TableRow sx={{ backgroundColor: theme.palette.grey[200] }}>
                   <TableCell

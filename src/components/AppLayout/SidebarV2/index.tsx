@@ -47,6 +47,7 @@ import { toast } from "react-toastify";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { acceptOrDeclineInvite } from "../../../services/apis/routes/invitation.service";
 import { useRefresh } from "../../../contexts/refreshContext";
+import { useDrawer } from "../../../contexts/DrawerContext";
 
 const SidebarContainer = styled.div<{ collapsed: boolean }>`
   width: ${({ collapsed }) => (collapsed ? "64px" : "240px")};
@@ -130,6 +131,7 @@ export const Sidebar = () => {
   const [sentNotifications, setSentNotifications] = useState<Invite[]>([]);
   const [notifications, setNotifications] = useState<Invite[]>([]);
   const [, triggerRefreshCompanies] = useRefresh("companies");
+  const { toggleDrawer } = useDrawer();
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -310,7 +312,11 @@ export const Sidebar = () => {
         {
           title: "Dashboard",
           icon: (
-            <img src={DashboardIcon} alt="Home" style={{ width: 22, height: 22 }} />
+            <img
+              src={DashboardIcon}
+              alt="Home"
+              style={{ width: 22, height: 22 }}
+            />
           ),
           path: buildNestedUrl(params, "empresas"),
         },
@@ -458,7 +464,10 @@ export const Sidebar = () => {
         )}
         <IconButton
           size="small"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => {
+            setCollapsed(!collapsed);
+            toggleDrawer();
+          }}
           sx={{ width: 28, height: 28, mt: 1 }}
         >
           <img src={!collapsed ? SidebarClose : SidebarOpen} />

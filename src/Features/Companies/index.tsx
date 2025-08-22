@@ -155,10 +155,6 @@ export const Companies = () => {
   };
 
   useEffect(() => {
-    console.log(dashboardPanelData);
-  }, [dashboardPanelData]);
-
-  useEffect(() => {
     const fetch = async () => {
       if (groupId) {
         const items = await getBreadcrumb({
@@ -208,6 +204,12 @@ export const Companies = () => {
       getDashboardPanelData();
     }
   }, [userData, groupId, accountPlanId, selectedYear]);
+
+  useEffect(() => {
+    if (userData && groupId) {
+      getDashboardPanelData();
+    }
+  }, [accountPlanId, selectedYear]);
 
   const handleEdit = async (company: Company) => {
     try {
@@ -469,16 +471,19 @@ export const Companies = () => {
               title="Margem Bruta"
               value={dashboardPanelData?.margemBruta}
               variation={dashboardPanelData?.variacaoMargemBruta}
+              percent
             />
             <KpiCard
               title="Receita Líquida"
               value={dashboardPanelData?.receitaLiquida}
               variation={dashboardPanelData?.variacaoReceitaLiquida}
+              currency
             />
             <KpiCard
               title="Margem Líquida"
               value={dashboardPanelData?.margemLiquida}
               variation={dashboardPanelData?.variacaoMargemLiquida}
+              percent
             />
           </Box>
           <MarginsCharts year={selectedYear} />
