@@ -48,7 +48,7 @@ export const BalancoReclassificado = () => {
       "Passivo Operacional",
       "Outros Ativos Operacionais Total",
       "Passivo Não Circulante",
-      "Outros Passivos Operacionais",
+      "Outros Passivos Operacionais Total",
       "Patrimônio Liquido",
     ];
 
