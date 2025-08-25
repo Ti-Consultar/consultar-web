@@ -9,10 +9,18 @@ import { GestaoPrazoMedioCarousel } from "../../Companies/Charts/GestaoPrasoMedi
 
 interface GestaoPrazoMedioDashboardProps {
   year: number | null;
+  currentIndex: number;
+  onNext: () => void;
+  onPrev: () => void;
+  onChangeIndex?: (index: number) => void;
 }
 
 export const GestaoPrazoMedioDashboard = ({
   year,
+  currentIndex,
+  onNext,
+  onPrev,
+  onChangeIndex,
 }: GestaoPrazoMedioDashboardProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
@@ -76,7 +84,13 @@ export const GestaoPrazoMedioDashboard = ({
 
   return (
     <Box>
-      <GestaoPrazoMedioCarousel data={data} />
+      <GestaoPrazoMedioCarousel
+        data={data}
+        onPrev={onPrev}
+        onNext={onNext}
+        currentIndex={currentIndex}
+        onChangeIndex={onChangeIndex}
+      />
     </Box>
   );
 };

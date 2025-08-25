@@ -84,6 +84,10 @@ export const Companies = () => {
   const [selectedYear, setSelectedYear] = useState<number | null>(
     new Date().getFullYear()
   );
+  const [index, setIndex] = useState(0);
+
+  const handleNext = () => setIndex((prev) => prev + 1);
+  const handlePrev = () => setIndex((prev) => prev - 1);
 
   const fetchAllData = async () => {
     try {
@@ -474,16 +478,16 @@ export const Companies = () => {
               percent
             />
             <KpiCard
-              title="Receita Líquida"
-              value={dashboardPanelData?.receitaLiquida}
-              variation={dashboardPanelData?.variacaoReceitaLiquida}
-              currency
-            />
-            <KpiCard
               title="Margem Líquida"
               value={dashboardPanelData?.margemLiquida}
               variation={dashboardPanelData?.variacaoMargemLiquida}
               percent
+            />
+            <KpiCard
+              title="Receita Líquida"
+              value={dashboardPanelData?.receitaLiquida}
+              variation={dashboardPanelData?.variacaoReceitaLiquida}
+              currency
             />
           </Box>
           <MarginsCharts year={selectedYear} />
@@ -498,11 +502,23 @@ export const Companies = () => {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 300, maxWidth: "50%" }}>
-              <DinamicaCapitalCarousel year={selectedYear} />
+              <DinamicaCapitalCarousel
+                year={selectedYear}
+                currentIndex={index}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                onChangeIndex={setIndex}
+              />
             </Box>
 
             <Box sx={{ flex: 1, minWidth: 300, maxWidth: "50%" }}>
-              <GestaoPrazoMedioDashboard year={selectedYear} />
+              <GestaoPrazoMedioDashboard
+                year={selectedYear}
+                currentIndex={index}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                onChangeIndex={setIndex}
+              />
             </Box>
           </Box>
           <Subtitle>Gestão de Liquidez</Subtitle>

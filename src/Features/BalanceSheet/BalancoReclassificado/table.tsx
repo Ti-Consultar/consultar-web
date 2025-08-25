@@ -195,9 +195,7 @@ const BalancoReclassificadoTable = ({
             <TableBody>
               {allTotalizers.map((totalizer) => {
                 const isHighlighted = highlightRows[totalizer.id] || false;
-                const rowBg = isHighlighted
-                  ? theme.palette.grey[300]
-                  : "#fff";
+                const rowBg = isHighlighted ? theme.palette.grey[300] : "#fff";
 
                 return (
                   <React.Fragment key={totalizer.id}>

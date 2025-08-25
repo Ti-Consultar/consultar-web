@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import {
   Button,
   CarouselContainer,
@@ -27,18 +27,28 @@ type MonthData = {
 
 type Props = {
   data: MonthData[];
+  currentIndex: number;
+  onNext: () => void;
+  onPrev: () => void;
+  onChangeIndex?: (index: number) => void;
 };
 
 const metrics = [
-  { key: "clientes", label: "Clientes", color: "#2f6bbd" },
   { key: "estoques", label: "Estoques", color: "#27ae60" },
+  { key: "clientes", label: "Clientes", color: "#2f6bbd" },
   { key: "fornecedores", label: "Fornecedores", color: "#C00000" },
 ] as const;
 
-export const GestaoPrazoMedioCarousel: React.FC<Props> = ({ data }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const metric = metrics[currentIndex] || metrics[0];
+export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
+  data,
+  currentIndex,
+  onNext,
+  onPrev,
+  onChangeIndex,
+}) => {
+  const safeIndex =
+    ((currentIndex % metrics.length) + metrics.length) % metrics.length;
+  const metric = metrics[safeIndex];
 
   const translateMonth = (month: string) => {
     const months: Record<string, string> = {
@@ -66,20 +76,18 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({ data }) => {
     fornecedores: item.fornecedores / 10000,
   }));
 
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? metrics.length - 1 : prev - 1));
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev === metrics.length - 1 ? 0 : prev + 1));
-  };
+  useEffect(() => {
+    if (currentIndex !== safeIndex) {
+      onChangeIndex?.(safeIndex);
+    }
+  }, [currentIndex, safeIndex, onChangeIndex]);
 
   const formatNumber = (value: number) =>
     new Intl.NumberFormat("pt-BR").format(value);
 
   return (
     <CarouselContainer>
-      <Button onClick={handlePrev}>‹</Button>
+      <Button onClick={onPrev}>‹</Button>
 
       <ChartWrapper>
         <div
@@ -146,14 +154,14 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({ data }) => {
         </div>
       </ChartWrapper>
 
-      <Button onClick={handleNext}>›</Button>
+      <Button onClick={onNext}>›</Button>
 
       <Indicators>
         {metrics.map((_, i) => (
           <Dot
             key={i}
             active={i === currentIndex}
-            onClick={() => setCurrentIndex(i)}
+            onClick={() => onChangeIndex?.(i)}
           />
         ))}
       </Indicators>

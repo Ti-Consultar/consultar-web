@@ -9,10 +9,18 @@ import { CapitalDynamicsCarousel } from "../../Companies/Charts/CapitalDynamicsC
 
 interface DinamicaCapitalCarouselProps {
   year: number | null;
+  currentIndex: number;
+  onNext: () => void;
+  onPrev: () => void;
+  onChangeIndex?: (index: number) => void;
 }
 
 export const DinamicaCapitalCarousel = ({
   year,
+  currentIndex,
+  onNext,
+  onPrev,
+  onChangeIndex,
 }: DinamicaCapitalCarouselProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
@@ -76,7 +84,13 @@ export const DinamicaCapitalCarousel = ({
 
   return (
     <Box>
-      <CapitalDynamicsCarousel data={data} />
+      <CapitalDynamicsCarousel
+        data={data}
+        currentIndex={currentIndex}
+        onNext={onNext}
+        onPrev={onPrev}
+        onChangeIndex={onChangeIndex}
+      />
     </Box>
   );
 };
