@@ -123,13 +123,13 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
               />
               <YAxis
                 domain={[0, "auto"]}
-                tickFormatter={(value) => `${Number(value).toFixed(1)}%`}
+                tickFormatter={(value) => `${Number(value).toFixed(1)}`}
                 tick={{ fill: "#555", fontSize: 12 }}
                 axisLine={{ stroke: "#ccc" }}
               />
               <Tooltip
                 contentStyle={{ backgroundColor: "#fff", borderRadius: 8 }}
-                formatter={(value) => `${Number(value).toFixed(2)}%`}
+                formatter={(value) => `${Number(value).toFixed(2)}`}
               />
               <Line
                 type="monotone"
@@ -152,7 +152,7 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
                         fill="#555"
                         fontSize={11}
                       >
-                        {Number(value).toFixed(2) + "%"}
+                        {Number(value).toFixed(2)}
                       </text>
                     );
                   }}
