@@ -23,14 +23,33 @@ type Props = {
 };
 
 export const GrossCashFlowChart = ({ data }: Props) => {
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
+  const translateMonth = (month: string) => {
+    const months: Record<string, string> = {
+      January: "Jan",
+      February: "Fev",
+      March: "Mar",
+      April: "Abr",
+      May: "Mai",
+      June: "Jun",
+      July: "Jul",
+      August: "Ago",
+      September: "Set",
+      October: "Out",
+      November: "Nov",
+      December: "Dez",
+    };
+    return months[month] ?? month;
+  };
+
+  const formattedData = data.map((item) => ({
+    ...item,
+    name: translateMonth(item.name),
+  }));
 
   return (
     <ResponsiveContainer width="100%" height={400}>
       <ComposedChart
-        data={data}
+        data={formattedData}
         margin={{ top: 20, right: 50, left: 20, bottom: 20 }}
       >
         <CartesianGrid strokeDasharray="3 3" />

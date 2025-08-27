@@ -22,7 +22,7 @@ import BalancoContabilTable from "../BalanceSheet/table";
 import { useDrawer } from "../../../contexts/DrawerContext";
 
 export const BalancoReclassificado = () => {
-  const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
+  const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
   );

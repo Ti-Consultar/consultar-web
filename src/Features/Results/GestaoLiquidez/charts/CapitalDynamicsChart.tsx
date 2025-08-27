@@ -27,10 +27,33 @@ type CapitalDynamicsProps = {
 export const CapitalDynamicsChart: React.FC<CapitalDynamicsProps> = ({
   data,
 }) => {
+  const translateMonth = (month: string) => {
+    const months: Record<string, string> = {
+      January: "Jan",
+      February: "Fev",
+      March: "Mar",
+      April: "Abr",
+      May: "Mai",
+      June: "Jun",
+      July: "Jul",
+      August: "Ago",
+      September: "Set",
+      October: "Out",
+      November: "Nov",
+      December: "Dez",
+    };
+    return months[month] ?? month;
+  };
+
+  const formattedData = data.map((item) => ({
+    ...item,
+    name: translateMonth(item.name),
+  }));
+
   return (
     <ResponsiveContainer width="100%" height={400}>
       <LineChart
-        data={data}
+        data={formattedData}
         margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" />
