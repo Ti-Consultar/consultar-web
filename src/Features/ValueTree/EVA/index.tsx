@@ -16,7 +16,64 @@ import { getValueTree } from "../../../services/apis/routes/valueTree";
 export const AgregadoMensal = () => {
   const [year, setYear] = useState<number>(dayjs().year());
   const [month, setMonth] = useState<number>(dayjs().month() + 1);
-  const [data, setData] = useState<any>();
+  const [data, setData] = useState<any>({
+    economicView: {
+      receitaLiquida: 0,
+      receitaLiquidaAcumulado: 0,
+      custoDespesaVariavel: 0,
+      custoDespesaVariavelAcumulado: 0,
+      margemContribuicao: 0,
+      margemContribuicaoAcumulado: 0,
+      despesasOperacionais: 0,
+      despesasOperacionaisAcumulado: 0,
+      outrosResultadosOperacionais: 0,
+      outrosResultadosOperacionaisAcumulado: 0,
+      lajir: 0,
+      lajirAcumulado: 0,
+      impostos: 0,
+      impostosAcumulado: 0,
+      nopat: 0,
+      nopatAcumulado: 0,
+    },
+    financialView: {
+      disponivel: 0,
+      disponivelAcumulado: 0,
+      clientes: 0,
+      clientesAcumulado: 0,
+      estoques: 0,
+      estoquesAcumulado: 0,
+      outrosAtivosOperacionais: 0,
+      outrosAtivosOperacionaisAcumulado: 0,
+      fornecedores: 0,
+      fornecedoresAcumulado: 0,
+      outrosPassivosOperacionais: 0,
+      outrosPassivosOperacionaisAcumulado: 0,
+      realizavelLongoPrazo: 0,
+      realizavelLongoPrazoAcumulado: 0,
+      exigivelLongoPrazo: 0,
+      exigivelLongoPrazoAcumulado: 0,
+      ativosFixos: 0,
+      ativosFixosAcumulado: 0,
+      capitalDeGiro: 0,
+      capitalDeGiroAcumulado: 0,
+      capitalInvestido: 0,
+      capitalInvestidoAcumulado: 0,
+    },
+    indicators: {
+      nopat: 0,
+      nopatAcumulado: 0,
+      capitalInvestido: 0,
+      capitalInvestidoAcumulado: 0,
+      roic: 0,
+      roicAcumulado: 0,
+      wacc: 0,
+      waccAcumulado: 0,
+      spread: 0,
+      spreadAcumulado: 0,
+      eva: 0,
+      evA_Acumulado: 0,
+    },
+  });
   const { setLoading } = useLoading();
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
@@ -101,7 +158,7 @@ export const AgregadoMensal = () => {
             justifyContent: "space-between",
           }}
         >
-          <Typography >Árvore de Valor - EVA</Typography>
+          <Typography>Árvore de Valor - EVA</Typography>
           <Box display="flex" flexDirection="column" gap={1} mb={2}>
             {/* Label separada */}
             <Typography

@@ -32,10 +32,12 @@
     "react-is": "^19.1.0",
     "react-router": "^7.4.0",
     "react-router-dom": "^7.4.0",
+    "react-slick": "^0.31.0",
     "react-toastify": "^11.0.5",
     "react-use": "^17.6.0",
     "reactflow": "^11.11.4",
     "recharts": "^3.0.0",
+    "slick-carousel": "^1.8.1",
     "styled-components": "^6.1.16",
     "victory": "^37.3.6",
     "xlsx": "^0.18.5"

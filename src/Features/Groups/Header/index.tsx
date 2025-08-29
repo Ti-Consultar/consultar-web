@@ -14,11 +14,14 @@ import GridViewIcon from "@mui/icons-material/GridView";
 import { useTheme } from "@mui/material/styles";
 import { Protected } from "../../../components/Protection";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   InactiveCompaniesModal,
   InactiveCompany,
 } from "../../Companies/InactiveCompaniesModal";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router";
 
 interface GroupsHeaderProps {
   onSearchChange: (value: string) => void;
@@ -28,6 +31,15 @@ interface GroupsHeaderProps {
   onChangeViewMode: (mode: "list" | "grid") => void;
   onReactivate: (selectedIds: number[]) => Promise<void>;
   deletedCompanies: InactiveCompany[];
+}
+
+interface UserData {
+  exp: number;
+  iat: number;
+  ip: string;
+  role: string;
+  unique_name: string;
+  userId: string;
 }
 
 export const GroupsHeader = ({
@@ -41,10 +53,40 @@ export const GroupsHeader = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [modalOpen, setModalOpen] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const navigate = useNavigate();
 
   const handleOpenModal = () => {
     setModalOpen(true);
   };
+
+  useEffect(() => {
+    const token = Cookies.get("token");
+
+    if (token) {
+      try {
+        const dataDecoded: UserData = jwtDecode(token);
+        setUserData(dataDecoded);
+      } catch (error) {
+        navigate("/");
+      }
+    } else {
+      navigate("/");
+    }
+  }, []);
+
+  function getGreeting(): string {
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 12) {
+      return "Bom dia";
+    } else if (hour >= 12 && hour < 18) {
+      return "Boa tarde";
+    } else {
+      return "Boa noite";
+    }
+  }
+  const greeting = getGreeting();
 
   return (
     <Box>
@@ -63,7 +105,7 @@ export const GroupsHeader = ({
           }}
         >
           <Typography variant="h5" fontWeight="bold">
-            Grupos
+            {greeting}, {userData?.unique_name}
           </Typography>
           <Box
             sx={{

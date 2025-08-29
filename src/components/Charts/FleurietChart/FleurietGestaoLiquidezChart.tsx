@@ -41,36 +41,6 @@ const normalizeNumber = (value: number | string): number => {
   return Number(cleaned);
 };
 
-// const CustomTooltip = ({ active, payload }: any) => {
-//   if (active && payload && payload.length) {
-//     const groups: { [key: string]: number } = {
-//       Tesouraria: 0,
-//       NCG: 0,
-//       CDG: 0,
-//     };
-
-//     payload.forEach((item: any) => {
-//       if (item.dataKey.includes("t")) groups["Tesouraria"] += item.value;
-//       if (item.dataKey.includes("ncg")) groups["NCG"] += item.value;
-//       if (item.dataKey.includes("cdg")) groups["CDG"] += item.value;
-//     });
-
-//     return (
-//       <div
-//         style={{ background: "white", border: "1px solid #ccc", padding: 10 }}
-//       >
-//         {Object.entries(groups).map(([label, value]) => (
-//           <p key={label} style={{ margin: 0 }}>
-//             <strong>{label}:</strong>{" "}
-//             {value.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}
-//           </p>
-//         ))}
-//       </div>
-//     );
-//   }
-//   return null;
-// };
-
 export default function FleurietGestaoLiquidezChart({
   propData,
 }: FleurietGestaoLiquidezChartProps) {

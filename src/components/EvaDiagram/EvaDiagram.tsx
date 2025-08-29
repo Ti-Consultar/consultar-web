@@ -143,7 +143,7 @@ export default function EvaDiagram({ data }: Props) {
       id: "1.1",
       position: { x: 280, y: 0 },
       data: {
-        label: `${formatValue(economicView.custoDespesaVariavel)}`,
+        label: `${formatValue(economicView.receitaLiquida)}`,
       },
       type: "parallelogram",
     },
@@ -159,7 +159,7 @@ export default function EvaDiagram({ data }: Props) {
       id: "2.2",
       position: { x: 280, y: 60 },
       data: {
-        label: `(${formatValue(economicView.custoDespesaVariavel)})`,
+        label: `${formatValue(economicView.custoDespesaVariavel)}`,
       },
       type: "parallelogram",
     },
@@ -291,13 +291,13 @@ export default function EvaDiagram({ data }: Props) {
     {
       id: "11",
       position: { x: 0, y: 350 },
-      data: { label: `(+) Estoques\n${formatValue(financialView.estoques)}` },
+      data: { label: `(+) Estoques` },
       type: "parallelogramTitle",
     },
     {
       id: "11.1",
       position: { x: 280, y: 350 },
-      data: { label: `${formatValue(financialView.clientes)}` },
+      data: { label: `${formatValue(financialView.estoques)}` },
       type: "parallelogram",
     },
     {
@@ -517,7 +517,7 @@ export default function EvaDiagram({ data }: Props) {
       id: "26.1",
       position: { x: 280, y: 710 },
       data: {
-        label: `\n${formatValue(economicView.receitaLiquidaAcumulado)}`,
+        label: `\n${formatValue(economicView.custoDespesaVariavelAcumulado)}`,
       },
       type: "parallelogram",
     },
@@ -533,7 +533,7 @@ export default function EvaDiagram({ data }: Props) {
       id: "27.1",
       position: { x: 280, y: 770 },
       data: {
-        label: `\n${formatValue(economicView.receitaLiquidaAcumulado)}`,
+        label: `\n${formatValue(economicView.margemContribuicaoAcumulado)}`,
       },
       type: "parallelogram",
     },

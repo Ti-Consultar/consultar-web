@@ -1,5 +1,7 @@
 import { createGlobalStyle } from "styled-components";
 import "react-toastify/dist/ReactToastify.css";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 export const GlobalStyle = createGlobalStyle`
  :root {

@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import BalancoContabilTable from "./table";
 import { BalancoResponse, Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import { useDrawer } from "../../../contexts/DrawerContext";
 
 export const BalancoContabil = () => {
   const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
@@ -29,6 +30,7 @@ export const BalancoContabil = () => {
     companyid?: string;
     subCompanyId?: string;
   }>();
+  const { isOpen } = useDrawer();
 
   useEffect(() => {
     if (!groupId || accountPlanId) return; // <-- impede loop se accountPlanId já está definido
@@ -108,7 +110,7 @@ export const BalancoContabil = () => {
 
   return (
     <MainTemplate>
-      <MainContainer>
+      <MainContainer isOpen={isOpen}>
         <Title>Balanço Contábil</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box

@@ -8,7 +8,8 @@ import {
 } from "./styles";
 import { Header } from "./Header";
 import { Content } from "./Content";
-import { useDrawer } from "../../contexts/SidebarProvider";
+import { useDrawer } from "../../contexts/DrawerContext";
+
 import SidebarV2 from "./SidebarV2";
 
 interface MainTemplateProps {
@@ -16,14 +17,14 @@ interface MainTemplateProps {
 }
 
 export const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
-  const { isDrawerOpen } = useDrawer();
+  const { isOpen } = useDrawer();
 
   return (
     <MainContainer>
       <DrawerContainer>
         <SidebarV2 />
       </DrawerContainer>
-      <ContentWrapper isDrawerOpen={isDrawerOpen}>
+      <ContentWrapper isDrawerOpen={isOpen}>
         <HeaderContainer>
           <Header />
         </HeaderContainer>

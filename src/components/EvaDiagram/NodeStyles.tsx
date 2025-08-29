@@ -18,6 +18,7 @@ export const ParallelogramNode = ({ data }: NodeProps<EvaData>) => {
         display: "inline-block",
         padding: "0",
         transform: "skew(-20deg)",
+        minWidth: "150px",
       }}
     >
       <div style={{ padding: "10px 20px" }}>{data.label}</div>

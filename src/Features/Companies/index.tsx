@@ -15,15 +15,12 @@ import { useLoading } from "../../contexts/LoadingProvider";
 import { toast } from "react-toastify";
 import { CompanyTable } from "./CompanyTable";
 import { Company } from "../../types/company";
-import { HeaderContainer, MainContainer } from "./styles";
+import { MainContainer, Subtitle, Title } from "./styles";
 import { DivSkeleton } from "../../styles/skeleton/skeleton";
 import { getGroupById } from "../../services/apis/routes/groups.service";
 import { useAuth } from "../../utils/hooks/useAuth";
-import { InfoCard } from "./InfoCard";
 import { GroupFormData } from "../../types/group";
-import { formatPhoneNumberSymbolized } from "../../utils/formatters";
-import { CompanyForm } from "../GroupForm";
-import { useMediaQuery } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import { MobileTableView } from "./CompanyTable/MobileTableView";
 import { useMainContext } from "../../contexts/mainContext";
 import { unlinkFromCompany } from "../../services/apis/routes/invitation.service";
@@ -32,6 +29,20 @@ import { BreadcrumbItem } from "../../types/breadcrumb";
 import { Member } from "../../types/member";
 import { getUserPolicies } from "../../services/apis/routes/auth.service";
 import { useCompany } from "../../contexts/CompanyProvider";
+import { KpiCard } from "../../components/Card/KpiCard";
+import { CompanyForm } from "../GroupForm";
+import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
+import { getDashboardData } from "../../services/apis/routes/dashboard.service";
+import { DashboardPanelData } from "../../types/dashboardPanel";
+import DashboardIcon from "../../assets/icons/duo-icons_dashboard.svg";
+import { DinamicaCapitalCarousel } from "../Dashboard/DinamicaCapital";
+import { GestaoPrazoMedioDashboard } from "../Dashboard/GestaoPrazoMedioChart";
+import { VariaveisLiquidezChart } from "../Dashboard/VariaveisLiquidezChart";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { MarginsCharts } from "../Dashboard/MarginsChart";
 
 type Companies = {
   groupName: string;
@@ -44,7 +55,6 @@ type RoleOption = {
 };
 
 export const Companies = () => {
-  const { groupId } = useParams();
   const { companyId } = useCompany();
   const [companiesData, setCompaniesData] = useState<Companies | null>(null);
   const [groupData, setGroupData] = useState<any>({} as any);
@@ -63,6 +73,21 @@ export const Companies = () => {
   const navigate = useNavigate();
   const [hasFetched, setHasFetched] = useState(false);
   const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
+  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const [dashboardPanelData, setDashboardPanelData] =
+    useState<DashboardPanelData>();
+  const { groupId, companyid, subCompanyId } = useParams<{
+    groupId: string;
+    companyid?: string;
+    subCompanyId?: string;
+  }>();
+  const [selectedYear, setSelectedYear] = useState<number | null>(
+    new Date().getFullYear()
+  );
+  const [index, setIndex] = useState(0);
+
+  const handleNext = () => setIndex((prev) => prev + 1);
+  const handlePrev = () => setIndex((prev) => prev - 1);
 
   const fetchAllData = async () => {
     try {
@@ -75,6 +100,59 @@ export const Companies = () => {
       setCompaniesData(companiesResponse.data);
     } catch (error) {
       toast.error("Erro ao buscar os dados.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!groupId || accountPlanId) return;
+
+    const getAccountPlanId = async (
+      groupId: number,
+      companyId?: number,
+      subCompanyId?: number
+    ): Promise<void> => {
+      try {
+        setLoading(true, "Buscando...");
+        const response = await getAccountPlan(groupId, companyId, subCompanyId);
+
+        const data = response.data;
+
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const lastItem = data[data.length - 1];
+        setAccountPlanId(lastItem.id);
+      } catch (error) {
+        console.error("Failed to fetch AccountPlanId", error);
+        toast.error("Erro ao buscar plano de contas");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAccountPlanId(
+      Number(groupId),
+      companyid ? Number(companyid) : undefined,
+      subCompanyId ? Number(subCompanyId) : undefined
+    );
+  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+
+  const getDashboardPanelData = async (): Promise<void> => {
+    try {
+      if (!accountPlanId) return;
+      setLoading(true);
+      const response = await getDashboardData(2025, accountPlanId);
+
+      const data = response;
+
+      if (!Array.isArray(data) || data.length === 0) return;
+
+      const lastItem = data[data.length - 1];
+      setDashboardPanelData(lastItem);
+    } catch (error) {
+      console.error("Failed to fetch Dashboard", error);
+      toast.error("Erro ao buscar dados do dashboard");
     } finally {
       setLoading(false);
     }
@@ -127,8 +205,15 @@ export const Companies = () => {
     if (userData && groupId) {
       fetchAllData();
       fetchDeletedCompanies();
+      getDashboardPanelData();
     }
-  }, [userData, groupId]);
+  }, [userData, groupId, accountPlanId, selectedYear]);
+
+  useEffect(() => {
+    if (userData && groupId) {
+      getDashboardPanelData();
+    }
+  }, [accountPlanId, selectedYear]);
 
   const handleEdit = async (company: Company) => {
     try {
@@ -330,7 +415,12 @@ export const Companies = () => {
             </>
           ) : (
             <>
-              <DivSkeleton width="100%" height="120px" />
+              <DivSkeleton width="30%" height="120px" />
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <DivSkeleton width="100%" height="120px" />
+                <DivSkeleton width="100%" height="120px" />
+                <DivSkeleton width="100%" height="120px" />
+              </div>
               <DivSkeleton width="100%" height="400px" />
             </>
           )}
@@ -342,26 +432,100 @@ export const Companies = () => {
   return (
     <MainTemplate>
       <MainContainer>
-        <HeaderContainer>
-          <CompanyForm
-            onSubmit={onSubmit}
-            isOpen={open}
-            onClose={() => {
-              setOpen(false);
-              setEditingCompany(undefined);
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "1rem",
+              gap: 0.5,
             }}
-            title="Adicionar empresa"
-            defaultValues={editingCompany}
-            externalActiveStep={activeStep}
-          />
-          <InfoCard
-            title={companiesData.groupName}
-            email={groupData.businessEntity.email}
-            phones={formatPhoneNumberSymbolized(
-              groupData.businessEntity.telefone
-            )}
-          />
-        </HeaderContainer>
+          >
+            <img src={DashboardIcon}></img>
+            <Title>Dashboard</Title>
+          </Box>
+          <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                views={["year"]}
+                label="Selecione a data"
+                value={selectedYear ? dayjs().year(selectedYear) : null}
+                onChange={(newValue) => {
+                  setSelectedYear(newValue ? newValue.year() : null);
+                }}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
+        </Box>
+        <Subtitle>Índices Econômicos</Subtitle>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <KpiCard
+              title="Margem Bruta"
+              value={dashboardPanelData?.margemBruta}
+              variation={dashboardPanelData?.variacaoMargemBruta}
+              percent
+            />
+            <KpiCard
+              title="Margem Líquida"
+              value={dashboardPanelData?.margemLiquida}
+              variation={dashboardPanelData?.variacaoMargemLiquida}
+              percent
+            />
+            <KpiCard
+              title="Receita Líquida"
+              value={dashboardPanelData?.receitaLiquida}
+              variation={dashboardPanelData?.variacaoReceitaLiquida}
+              currency
+            />
+          </Box>
+          <MarginsCharts year={selectedYear} />
+          <Subtitle>Gestão Prazo Médio</Subtitle>
+          <Box
+            sx={{
+              display: "flex",
+              gap: "1rem",
+              width: "100%",
+              mb: "1rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <Box sx={{ flex: 1, minWidth: 300, maxWidth: "50%" }}>
+              <DinamicaCapitalCarousel
+                year={selectedYear}
+                currentIndex={index}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                onChangeIndex={setIndex}
+              />
+            </Box>
+
+            <Box sx={{ flex: 1, minWidth: 300, maxWidth: "50%" }}>
+              <GestaoPrazoMedioDashboard
+                year={selectedYear}
+                currentIndex={index}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                onChangeIndex={setIndex}
+              />
+            </Box>
+          </Box>
+          <Subtitle>Gestão de Liquidez</Subtitle>
+          <Box sx={{ mb: 3 }}>
+            <VariaveisLiquidezChart year={selectedYear} />
+          </Box>
+        </Box>
         {isMobile ? (
           <MobileTableView
             companies={companiesData.companies}
@@ -390,6 +554,17 @@ export const Companies = () => {
             fetchCurrentUsers={fetchCurrentUsers}
           />
         )}
+        <CompanyForm
+          onSubmit={onSubmit}
+          isOpen={open}
+          onClose={() => {
+            setOpen(false);
+            setEditingCompany(undefined);
+          }}
+          title="Adicionar empresa"
+          defaultValues={editingCompany}
+          externalActiveStep={activeStep}
+        />
       </MainContainer>
     </MainTemplate>
   );

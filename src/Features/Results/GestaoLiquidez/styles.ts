@@ -1,9 +1,15 @@
 import styled from "styled-components";
 
-export const MainContainer = styled.div`
+interface MainContainerProps {
+  isOpen: boolean;
+}
+
+export const MainContainer = styled.div<MainContainerProps>`
   display: flex;
   flex-direction: column;
   margin: 1.5rem;
+  width: 93%;
+  transition: max-width 0.3s ease;
   @media (min-width: 768px) and (max-width: 1023px) {
     width: 85%;
   }
@@ -28,5 +34,5 @@ export const Container = styled.div`
 export const Title = styled.h2`
   font-size: 24px;
   color: var(--neutral-700);
-  margin-bottom: 1rem
+  margin-bottom: 1rem;
 `;

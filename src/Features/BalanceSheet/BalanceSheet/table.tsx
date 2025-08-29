@@ -55,9 +55,14 @@ interface Month {
 
 interface FinancialTableProps {
   months: Month[];
+  /** IDs dos totalizers que devem ser destacados (true = destaca) */
+  highlightRows?: Record<number, boolean>;
 }
 
-const BalancoContabilTable = ({ months }: FinancialTableProps) => {
+const BalancoContabilTable = ({
+  months,
+  highlightRows = {},
+}: FinancialTableProps) => {
   const theme = useTheme();
   const [openModal, setOpenModal] = useState(false);
   const [selectedData, setSelectedData] = useState<FinancialData[]>([]);
@@ -97,7 +102,7 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
     return meses[mesIngles] || mesIngles;
   }
 
-  // Modal
+  // Modal de detalhes
   const handleCellClick = (
     datas: FinancialData[] | undefined,
     title: string
@@ -115,48 +120,44 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
     setSelectedTitle("");
   };
 
-  // Estilos Sticky
-  const stickyCellStyle = {
-    position: "sticky",
+  const stickyCellBase = {
+    position: "sticky" as const,
     left: 0,
     backgroundColor: theme.palette.background.paper,
-    zIndex: 10,
+    zIndex: 1, 
     borderRight: `1px solid ${theme.palette.divider}`,
   };
 
   const stickyHeaderStyle = {
-    position: "sticky",
+    position: "sticky" as const,
     top: 0,
     backgroundColor: theme.palette.grey[200],
-    zIndex: 11,
+    zIndex: 2, 
   };
 
   const stickyHeaderFirstCellStyle = {
     ...stickyHeaderStyle,
     left: 0,
-    zIndex: 12,
+    zIndex: 3,
   };
 
   const formatValue = (classificationName: string, value: number): string => {
     if (value === 0) return "-";
 
     const isNegative = value < 0;
-    let adjustedValue = Math.abs(value); // Sempre usa valor absoluto para formatação
+    let adjustedValue = Math.abs(value);
 
-    // Ajuste com base no modo selecionado
     if (valueMode === "MILHAR") {
       adjustedValue /= 1000;
     } else if (valueMode === "MILHARES") {
       adjustedValue /= 1000000;
     }
 
-    // Caso porcentagem
     if (classificationName.includes("%")) {
       const formatted = `${adjustedValue.toFixed(2).replace(".", ",")}%`;
       return isNegative ? `(${formatted})` : formatted;
     }
 
-    // Notação contábil para negativos
     const formatted = Math.trunc(adjustedValue).toLocaleString("pt-BR");
     return isNegative ? `(${formatted})` : formatted;
   };
@@ -214,69 +215,69 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {allTotalizers.map((totalizer: Totalizer) => (
-                <React.Fragment key={totalizer.id}>
-                  {/* Linha de Totalizador */}
-                  <TableRow
-                    sx={{
-                      "&:last-child td, &:last-child th": { border: 0 },
-                      backgroundColor: theme.palette.grey[100],
-                    }}
-                  >
-                    <TableCell component="th" scope="row" sx={stickyCellStyle}>
-                      <Typography variant="body2" fontWeight="bold">
-                        {totalizer.name}
-                      </Typography>
-                    </TableCell>
-                    {months.map((month: Month) => {
-                      const monthTotalizer = month.totalizer.find(
-                        (t) => t.id === totalizer.id
-                      );
-                      return (
-                        <TableCell
-                          key={`${month.id}-${totalizer.id}`}
-                          align="right"
+              {allTotalizers.map((totalizer: Totalizer) => {
+                const isHighlighted = !!highlightRows[totalizer.id];
+                const rowBg = isHighlighted
+                  ? theme.palette.action.hover
+                  : theme.palette.grey[100];
+
+                return (
+                  <React.Fragment key={totalizer.id}>
+                    {/* Linha de Totalizador */}
+                    <TableRow
+                      sx={{
+                        backgroundColor: rowBg,
+                      }}
+                    >
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        sx={{
+                          ...stickyCellBase,
+                          backgroundColor: rowBg,
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          fontWeight="bold" 
                         >
-                          <Typography variant="body2" fontFamily="monospace">
-                            {monthTotalizer?.totalValue
-                              ? formatValue(
-                                  monthTotalizer.name,
-                                  monthTotalizer?.totalValue
-                                )
-                              : "-"}
-                          </Typography>
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                  {totalizer.classifications
-                    ?.filter((classification) => {
-                      return months.some((month) => {
+                          {totalizer.name}
+                        </Typography>
+                      </TableCell>
+                      {months.map((month: Month) => {
                         const monthTotalizer = month.totalizer.find(
                           (t) => t.id === totalizer.id
                         );
-                        const monthClassification =
-                          monthTotalizer?.classifications?.find(
-                            (c) => c.id === classification.id
-                          );
                         return (
-                          monthClassification?.datas &&
-                          monthClassification.datas.length > 0
+                          <TableCell
+                            key={`${month.id}-${totalizer.id}`}
+                            align="right"
+                            sx={{
+                              backgroundColor: rowBg,
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              fontFamily="monospace"
+                              fontWeight="bold" 
+                            >
+                              {monthTotalizer?.totalValue !== undefined
+                                ? formatValue(
+                                    monthTotalizer.name,
+                                    monthTotalizer.totalValue
+                                  )
+                                : "-"}
+                            </Typography>
+                          </TableCell>
                         );
-                      });
-                    })
-                    .map((classification: Classification) => (
-                      <TableRow key={classification.id}>
-                        <TableCell
-                          component="th"
-                          scope="row"
-                          sx={{ pl: 4, ...stickyCellStyle }}
-                        >
-                          <Typography variant="body2">
-                            {classification.name}
-                          </Typography>
-                        </TableCell>
-                        {months.map((month: Month) => {
+                      })}
+                    </TableRow>
+
+                    {/* Linhas de Classificação */}
+                    {totalizer.classifications
+                      ?.filter((classification) => {
+                        // Só renderiza se existir pelo menos um mês com dados
+                        return months.some((month) => {
                           const monthTotalizer = month.totalizer.find(
                             (t) => t.id === totalizer.id
                           );
@@ -285,57 +286,93 @@ const BalancoContabilTable = ({ months }: FinancialTableProps) => {
                               (c) => c.id === classification.id
                             );
                           return (
-                            <TableCell
-                              key={`${month.id}-${classification.id}`}
-                              align="right"
-                              onClick={() =>
-                                handleCellClick(
-                                  monthClassification?.datas,
-                                  `${classification.name} - ${monthTranslator(
-                                    month.name
-                                  )}`
-                                )
-                              }
-                              sx={{
-                                cursor: monthClassification?.datas?.length
-                                  ? "pointer"
-                                  : "default",
-                                "&:hover": {
-                                  backgroundColor: monthClassification?.datas
-                                    ?.length
-                                    ? theme.palette.action.hover
-                                    : "inherit",
-                                },
-                              }}
-                            >
-                              <Typography
-                                variant="body2"
-                                fontFamily="monospace"
-                              >
-                                {monthClassification
-                                  ? formatValue(
-                                      classification.name,
-                                      monthClassification.value
-                                    )
-                                  : "-"}
-                              </Typography>
-                            </TableCell>
+                            monthClassification?.datas &&
+                            monthClassification.datas.length > 0
                           );
-                        })}
-                      </TableRow>
-                    ))}
-                </React.Fragment>
-              ))}
+                        });
+                      })
+                      .map((classification: Classification) => (
+                        <TableRow key={classification.id}>
+                          <TableCell
+                            component="th"
+                            scope="row"
+                            sx={{
+                              ...stickyCellBase,
+                              // usa a cor padrão do fundo do Paper para linhas "normais"
+                              backgroundColor: theme.palette.background.paper,
+                            }}
+                          >
+                            <Typography variant="body2">
+                              {classification.name}
+                            </Typography>
+                          </TableCell>
+                          {months.map((month: Month) => {
+                            const monthTotalizer = month.totalizer.find(
+                              (t) => t.id === totalizer.id
+                            );
+                            const monthClassification =
+                              monthTotalizer?.classifications?.find(
+                                (c) => c.id === classification.id
+                              );
+                            const hasData =
+                              !!monthClassification?.datas?.length;
+
+                            return (
+                              <TableCell
+                                key={`${month.id}-${classification.id}`}
+                                align="right"
+                                onClick={() =>
+                                  handleCellClick(
+                                    monthClassification?.datas,
+                                    `${classification.name} - ${monthTranslator(
+                                      month.name
+                                    )}`
+                                  )
+                                }
+                                sx={{
+                                  cursor: hasData ? "pointer" : "default",
+                                  "&:hover": {
+                                    backgroundColor: hasData
+                                      ? theme.palette.action.hover
+                                      : "inherit",
+                                  },
+                                }}
+                              >
+                                <Typography
+                                  variant="body2"
+                                  fontFamily="monospace"
+                                >
+                                  {monthClassification
+                                    ? formatValue(
+                                        classification.name,
+                                        monthClassification.value
+                                      )
+                                    : "-"}
+                                </Typography>
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                  </React.Fragment>
+                );
+              })}
 
               {/* Total do Painel Contábil */}
               {months[0]?.monthPainelContabilTotalizer && (
                 <TableRow
                   sx={{
-                    "&:last-child td, &:last-child th": { border: 0 },
                     backgroundColor: theme.palette.grey[200],
                   }}
                 >
-                  <TableCell component="th" scope="row" sx={stickyCellStyle}>
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    sx={{
+                      ...stickyCellBase,
+                      backgroundColor: theme.palette.grey[200],
+                    }}
+                  >
                     <Typography variant="subtitle2" fontWeight="bold">
                       {months[0].monthPainelContabilTotalizer.name}
                     </Typography>
