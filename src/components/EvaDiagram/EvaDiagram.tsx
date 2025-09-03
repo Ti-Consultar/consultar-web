@@ -6,7 +6,6 @@ import ReactFlow, {
   Node,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { useEffect } from "react";
 import {
   IconNode,
   LineNode,
