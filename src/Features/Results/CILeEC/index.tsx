@@ -61,7 +61,7 @@ export const CILeEC = () => {
     ativosFixos:
       "( + ) Ativos Fixos (Investimentos, Imobilizados e Intangíveis)",
     capitalInvestidoLiquido: "( = ) Capital Investido Líquido",
-    emprestimos: "( - ) Empréstimos",
+    emprestimos: "( - ) Posição Financeira Líquida",
     posicaoFinanceiraCurtoPrazo: "( = ) Posição Financeira de Curto Prazo",
     exigivelaLongoPrazoFinanceiro: "( - ) Passivo Não Circulante Financeiro",
     posicaoFinanceiraTerceiros: "( = ) Posição Financeira de Terceiros",

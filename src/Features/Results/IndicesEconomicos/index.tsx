@@ -202,7 +202,6 @@ export const IndicesEconomicos = () => {
       setMonths(extractedMonths);
       setMetricKeys(metrics);
       setMetricLabels(labels);
-      console.log(extractedMonths);
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {

@@ -83,6 +83,32 @@ export const EficienciaOperacional = () => {
     eva: "EVA",
   };
 
+  const metricTypes: Record<string, "number" | "percent"> = {
+    receitasLiquidas: "number",
+    custosDespesas: "number",
+    ebitda: "number",
+    margemEBITDA: "percent",
+    lucroOperacionalAntesJurosImpostos: "number",
+    resultadoFinanceiro: "number",
+    impostos: "number",
+    lucroLiquido: "number",
+    nopat: "number",
+    margemNOPAT: "percent",
+    disponivel: "number",
+    clientes: "number",
+    estoques: "number",
+    fornecedores: "number",
+    ncgcef: "number",
+    ncgTotal: "number",
+    investimentosAtivosFixos: "number",
+    capitalInvestidoLiquido: "number",
+    capitalTurnover: "number",
+    roic: "number",
+    wacc: "number",
+    evaspread: "number",
+    eva: "number",
+  };
+
   useEffect(() => {
     if (!groupId || accountPlanId) return;
 
@@ -186,6 +212,7 @@ export const EficienciaOperacional = () => {
             metricKeys={metrics}
             metricLabels={metricLabels}
             months={data}
+            metricTypes={metricTypes}
           />
         </Paper>
       </MainContainer>

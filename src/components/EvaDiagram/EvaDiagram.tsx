@@ -96,9 +96,6 @@ type Props = {
 };
 
 export default function EvaDiagram({ data }: Props) {
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
 
   if (!data || !data.economicView || !data.financialView || !data.indicators) {
     return (

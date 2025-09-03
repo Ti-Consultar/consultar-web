@@ -472,16 +472,16 @@ export const Companies = () => {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Box sx={{ display: "flex", gap: 2 }}>
             <KpiCard
-              title="Margem Bruta"
-              value={dashboardPanelData?.margemBruta}
-              variation={dashboardPanelData?.variacaoMargemBruta}
-              percent
-            />
-            <KpiCard
               title="Receita Líquida"
               value={dashboardPanelData?.receitaLiquida}
               variation={dashboardPanelData?.variacaoReceitaLiquida}
               currency
+            />
+            <KpiCard
+              title="Margem Bruta"
+              value={dashboardPanelData?.margemBruta}
+              variation={dashboardPanelData?.variacaoMargemBruta}
+              percent
             />
             <KpiCard
               title="Margem Líquida"
