@@ -70,7 +70,7 @@ export const ResultsTable = ({
   }, [months, nestedMetrics]);
 
   const nestedGroupLabels: Record<string, string> = {
-    estruturaDeCapital: "Estrutura de Capital",
+    estruturaDeCapital: "Posição Financeira Líquida",
     cil: "Capital Investido Líquido",
   };
 
