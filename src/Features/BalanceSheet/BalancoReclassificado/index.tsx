@@ -49,7 +49,7 @@ export const BalancoReclassificado = () => {
       "Outros Ativos Operacionais Total",
       "Passivo Não Circulante",
       "Outros Passivos Operacionais Total",
-      "Patrimônio Liquido",
+      "Patrimônio Líquido",
     ];
 
     balanceteData.forEach((month) => {

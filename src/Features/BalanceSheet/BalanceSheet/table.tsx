@@ -10,6 +10,7 @@ import {
   Typography,
   useTheme,
   Box,
+  Tooltip,
 } from "@mui/material";
 import { TableDetailModal } from "./tableDetail";
 import InboxIcon from "@mui/icons-material/Inbox";
@@ -124,7 +125,7 @@ const BalancoContabilTable = ({
     position: "sticky" as const,
     left: 0,
     backgroundColor: theme.palette.background.paper,
-    zIndex: 1, 
+    zIndex: 1,
     borderRight: `1px solid ${theme.palette.divider}`,
   };
 
@@ -132,7 +133,7 @@ const BalancoContabilTable = ({
     position: "sticky" as const,
     top: 0,
     backgroundColor: theme.palette.grey[200],
-    zIndex: 2, 
+    zIndex: 2,
   };
 
   const stickyHeaderFirstCellStyle = {
@@ -167,10 +168,10 @@ const BalancoContabilTable = ({
       <TableContainer
         component={Paper}
         sx={{
-          maxWidth: "100%",
-          maxHeight: 600,
-          overflow: "auto",
           width: "100%",
+          maxHeight: 600,
+          overflowX: "auto",
+          overflowY: "auto",
         }}
       >
         {isEmpty ? (
@@ -195,7 +196,13 @@ const BalancoContabilTable = ({
             </Typography>
           </Box>
         ) : (
-          <Table size="small" aria-label="financial table">
+          <Table
+            size="small"
+            aria-label="financial table"
+            sx={{
+              minWidth: 650,
+            }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell
@@ -235,14 +242,21 @@ const BalancoContabilTable = ({
                         sx={{
                           ...stickyCellBase,
                           backgroundColor: rowBg,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          maxWidth: 220,
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          fontWeight="bold" 
+                        <Tooltip
+                          title={totalizer.name}
+                          arrow
+                          placement="top-start"
                         >
-                          {totalizer.name}
-                        </Typography>
+                          <Typography variant="body2" fontWeight="bold" noWrap>
+                            {totalizer.name}
+                          </Typography>
+                        </Tooltip>
                       </TableCell>
                       {months.map((month: Month) => {
                         const monthTotalizer = month.totalizer.find(
@@ -256,11 +270,7 @@ const BalancoContabilTable = ({
                               backgroundColor: rowBg,
                             }}
                           >
-                            <Typography
-                              variant="body2"
-                              fontFamily="monospace"
-                              fontWeight="bold" 
-                            >
+                            <Typography variant="body2" fontWeight="bold">
                               {monthTotalizer?.totalValue !== undefined
                                 ? formatValue(
                                     monthTotalizer.name,
@@ -276,7 +286,6 @@ const BalancoContabilTable = ({
                     {/* Linhas de Classificação */}
                     {totalizer.classifications
                       ?.filter((classification) => {
-                        // Só renderiza se existir pelo menos um mês com dados
                         return months.some((month) => {
                           const monthTotalizer = month.totalizer.find(
                             (t) => t.id === totalizer.id
@@ -298,13 +307,22 @@ const BalancoContabilTable = ({
                             scope="row"
                             sx={{
                               ...stickyCellBase,
-                              // usa a cor padrão do fundo do Paper para linhas "normais"
                               backgroundColor: theme.palette.background.paper,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              maxWidth: 220,
                             }}
                           >
-                            <Typography variant="body2">
-                              {classification.name}
-                            </Typography>
+                            <Tooltip
+                              title={classification.name}
+                              arrow
+                              placement="top-start"
+                            >
+                              <Typography variant="body2" noWrap>
+                                {classification.name}
+                              </Typography>
+                            </Tooltip>
                           </TableCell>
                           {months.map((month: Month) => {
                             const monthTotalizer = month.totalizer.find(
@@ -338,10 +356,7 @@ const BalancoContabilTable = ({
                                   },
                                 }}
                               >
-                                <Typography
-                                  variant="body2"
-                                  fontFamily="monospace"
-                                >
+                                <Typography variant="body2">
                                   {monthClassification
                                     ? formatValue(
                                         classification.name,
@@ -379,11 +394,7 @@ const BalancoContabilTable = ({
                   </TableCell>
                   {months.map((month: Month) => (
                     <TableCell key={`total-${month.id}`} align="right">
-                      <Typography
-                        variant="subtitle2"
-                        fontWeight="bold"
-                        fontFamily="monospace"
-                      >
+                      <Typography variant="subtitle2" fontWeight="bold">
                         {month.monthPainelContabilTotalizer
                           ? formatValue(
                               "Totalizador",

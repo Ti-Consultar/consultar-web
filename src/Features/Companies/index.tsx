@@ -478,16 +478,16 @@ export const Companies = () => {
               percent
             />
             <KpiCard
-              title="Margem Líquida"
-              value={dashboardPanelData?.margemLiquida}
-              variation={dashboardPanelData?.variacaoMargemLiquida}
-              percent
-            />
-            <KpiCard
               title="Receita Líquida"
               value={dashboardPanelData?.receitaLiquida}
               variation={dashboardPanelData?.variacaoReceitaLiquida}
               currency
+            />
+            <KpiCard
+              title="Margem Líquida"
+              value={dashboardPanelData?.margemLiquida}
+              variation={dashboardPanelData?.variacaoMargemLiquida}
+              percent
             />
           </Box>
           <MarginsCharts year={selectedYear} />
