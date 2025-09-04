@@ -1,3 +1,4 @@
+import { useMediaQuery, useTheme } from "@mui/material";
 import React from "react";
 import {
   LineChart,
@@ -24,6 +25,8 @@ type Props = {
 };
 
 export const LiquidityChart: React.FC<Props> = ({ data }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const translateMonth = (month: string): string => {
     const months: Record<string, string> = {
       January: "Jan",
@@ -55,7 +58,7 @@ export const LiquidityChart: React.FC<Props> = ({ data }) => {
     <div
       style={{
         width: "100%",
-        height: 300,
+        height: isMobile ? 220 : 300,
         backgroundColor: "#fff",
         padding: "10px",
         borderRadius: 5,

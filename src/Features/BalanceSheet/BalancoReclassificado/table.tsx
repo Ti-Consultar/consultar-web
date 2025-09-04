@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  Tooltip,
 } from "@mui/material";
 import InboxIcon from "@mui/icons-material/Inbox";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
@@ -207,14 +208,25 @@ const BalancoReclassificadoTable = ({
                           ...stickyCellBase,
                           backgroundColor: rowBg,
                           fontWeight: isHighlighted ? "bold" : "normal",
+                          maxWidth: 220,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          fontWeight={isHighlighted ? "bold" : "normal"}
+                        <Tooltip
+                          title={totalizer.name}
+                          arrow
+                          placement="top-start"
                         >
-                          {totalizer.name}
-                        </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={isHighlighted ? "bold" : "normal"}
+                            noWrap
+                          >
+                            {totalizer.name}
+                          </Typography>
+                        </Tooltip>
                       </TableCell>
                       {months.map((month) => {
                         const monthTotalizer = month.totalizer.find(
@@ -242,7 +254,6 @@ const BalancoReclassificadoTable = ({
                           >
                             <Typography
                               variant="body2"
-                              fontFamily="monospace"
                               fontWeight={isHighlighted ? "bold" : "normal"}
                             >
                               {monthTotalizer?.totalValue !== undefined
@@ -277,11 +288,7 @@ const BalancoReclassificadoTable = ({
                   </TableCell>
                   {months.map((month) => (
                     <TableCell key={`total-${month.id}`} align="right">
-                      <Typography
-                        variant="subtitle2"
-                        fontWeight="bold"
-                        fontFamily="monospace"
-                      >
+                      <Typography variant="subtitle2" fontWeight="bold">
                         {formatValue(
                           "Totalizador",
                           month.monthPainelContabilTotalizer.totalValue
