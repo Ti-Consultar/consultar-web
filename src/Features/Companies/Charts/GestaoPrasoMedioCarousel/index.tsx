@@ -16,6 +16,7 @@ import {
   LabelList,
   ResponsiveContainer,
 } from "recharts";
+import { useMediaQuery, useTheme } from "@mui/material";
 
 type MonthData = {
   name: string;
@@ -50,6 +51,9 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
     ((currentIndex % metrics.length) + metrics.length) % metrics.length;
   const metric = metrics[safeIndex];
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const translateMonth = (month: string) => {
     const months: Record<string, string> = {
       January: "Jan",
@@ -74,6 +78,11 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
     clientes: item.clientes / 10000,
     estoques: item.estoques / 10000,
     fornecedores: item.fornecedores / 10000,
+    _raw: {
+      clientes: item.clientes,
+      estoques: item.estoques,
+      fornecedores: item.fornecedores,
+    },
   }));
 
   useEffect(() => {
@@ -93,7 +102,7 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
         <div
           style={{
             width: "100%",
-            height: 350,
+            height: isMobile ? 170 : 350,
             backgroundColor: "#fff",
             borderRadius: 12,
             padding: 10,
@@ -111,7 +120,7 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
           >
             {metric.label}
           </h3>
-          <ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={formattedData}
               margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
@@ -133,21 +142,26 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
               />
               <Tooltip
                 contentStyle={{ backgroundColor: "#fff", borderRadius: 8 }}
-                formatter={(value: number) => formatNumber(value)}
+                formatter={(value: number, name: string, props: any) => {
+                  const rawValue = props.payload._raw?.[name] ?? value;
+                  return formatNumber(rawValue);
+                }}
               />
               <Bar
                 dataKey={metric.key}
                 fill={metric.color}
                 radius={[6, 6, 0, 0]}
               >
-                <LabelList
-                  dataKey={metric.key}
-                  position="top"
-                  formatter={(label) => {
-                    const value = typeof label === "number" ? label : 0;
-                    return formatNumber(value);
-                  }}
-                />
+                {!isMobile && (
+                  <LabelList
+                    dataKey={metric.key}
+                    position="top"
+                    formatter={(label) => {
+                      const value = typeof label === "number" ? label : 0;
+                      return formatNumber(value);
+                    }}
+                  />
+                )}
               </Bar>
             </BarChart>
           </ResponsiveContainer>

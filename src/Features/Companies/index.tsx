@@ -20,7 +20,7 @@ import { DivSkeleton } from "../../styles/skeleton/skeleton";
 import { getGroupById } from "../../services/apis/routes/groups.service";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { GroupFormData } from "../../types/group";
-import { Box, useMediaQuery } from "@mui/material";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import { MobileTableView } from "./CompanyTable/MobileTableView";
 import { useMainContext } from "../../contexts/mainContext";
 import { unlinkFromCompany } from "../../services/apis/routes/invitation.service";
@@ -55,6 +55,7 @@ type RoleOption = {
 };
 
 export const Companies = () => {
+  const theme = useTheme();
   const { companyId } = useCompany();
   const [companiesData, setCompaniesData] = useState<Companies | null>(null);
   const [groupData, setGroupData] = useState<any>({} as any);
@@ -68,7 +69,7 @@ export const Companies = () => {
   const [deletedCompanies, setDeletedCompanies] = useState<any[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [companyIdLocal, setCompanyId] = useState<number>();
-  const isMobile = useMediaQuery("(max-width: 600px)");
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { setBreadcrumbs } = useMainContext();
   const navigate = useNavigate();
   const [hasFetched, setHasFetched] = useState(false);
@@ -435,8 +436,9 @@ export const Companies = () => {
         <Box
           sx={{
             display: "flex",
-            alignItems: "center",
+            alignItems: isMobile ? "flex-start" : "center",
             justifyContent: "space-between",
+            flexDirection: isMobile ? "column" : "row",
           }}
         >
           <Box
@@ -470,7 +472,7 @@ export const Companies = () => {
         </Box>
         <Subtitle>Índices Econômicos</Subtitle>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Box sx={{ display: "flex", gap: 2 }}>
+          <Box sx={{ display: "flex", gap: 2, flexDirection: isMobile ? "column" : "row" }}>
             <KpiCard
               title="Receita Líquida"
               value={dashboardPanelData?.receitaLiquida}
@@ -501,7 +503,7 @@ export const Companies = () => {
               flexWrap: "wrap",
             }}
           >
-            <Box sx={{ flex: 1, minWidth: 300, maxWidth: "50%" }}>
+            <Box sx={{ flex: 1, minWidth: 300 }}>
               <DinamicaCapitalCarousel
                 year={selectedYear}
                 currentIndex={index}
@@ -511,7 +513,7 @@ export const Companies = () => {
               />
             </Box>
 
-            <Box sx={{ flex: 1, minWidth: 300, maxWidth: "50%" }}>
+            <Box sx={{ flex: 1, minWidth: 300 }}>
               <GestaoPrazoMedioDashboard
                 year={selectedYear}
                 currentIndex={index}

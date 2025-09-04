@@ -331,15 +331,6 @@ export const Groups = () => {
           deletedCompanies={deletedGroups}
           onReactivate={handleReactivate}
         />
-        {/* <Title>
-          {`Olá`}, <span>{userData?.unique_name}</span>.
-        </Title>
-        <SubTitle>Acesse e administre suas empresas abaixo:</SubTitle>
-        <Button
-          text="Criar Grupo"
-          variant="primary"
-          onClick={() => setOpen(true)}
-        /> */}
         <CompanyForm
           onSubmit={onSubmit}
           externalActiveStep={activeStep}
