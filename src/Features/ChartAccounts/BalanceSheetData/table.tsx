@@ -10,6 +10,8 @@ import {
   TablePagination,
   Box,
   Button,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { useState } from "react";
 import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
@@ -41,10 +43,12 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
 export const BalanceSheetDetailsTable = ({
   data,
   onViewDetailed,
-  onViewBalanceSheet
+  onViewBalanceSheet,
 }: BalanceSheetDetailsTableProps) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
 
@@ -93,7 +97,16 @@ export const BalanceSheetDetailsTable = ({
 
   return (
     <>
-      <Box display="flex" alignItems="flex-end" mb={2} sx={{ width: "100%", gap: 2 }}>
+      <Box
+        display="flex"
+        alignItems={isMobile ? "center" : "flex-end"}
+        mb={2}
+        sx={{
+          width: "100%",
+          gap: 2,
+          flexDirection: isMobile ? "column" : "row",
+        }}
+      >
         <Button
           variant="contained"
           sx={{
@@ -117,7 +130,7 @@ export const BalanceSheetDetailsTable = ({
       <TableContainer
         component={Paper}
         elevation={0}
-        sx={{ border: "1px solid var(--neutral-200)" }}
+        sx={{ border: "1px solid var(--neutral-200)", width: "100%" }}
       >
         <Table stickyHeader>
           <TableHead sx={{ backgroundColor: "var(--neutral-100)" }}>

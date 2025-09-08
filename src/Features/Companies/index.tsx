@@ -416,7 +416,7 @@ export const Companies = () => {
             </>
           ) : (
             <>
-              <DivSkeleton width="30%" height="120px" />
+              <Box sx={{width: "100%", height: "90px"}}></Box>
               <div style={{ display: "flex", gap: "1rem" }}>
                 <DivSkeleton width="100%" height="120px" />
                 <DivSkeleton width="100%" height="120px" />

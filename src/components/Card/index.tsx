@@ -1,11 +1,11 @@
 import { CardContent, IconButton, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { Header, StyledAvatar, StyledCard, CardActionsBox } from "./styles";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import { Protected } from "../Protection";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import { usePermission } from "../../contexts/PermissionsContext";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 
 interface GroupCardProps {
   fantasyName: string;
@@ -56,8 +56,8 @@ export const GroupCard = ({
             <IconButton onClick={onEdit} size="small" color="primary">
               <EditIcon fontSize="small" />
             </IconButton>
-            <IconButton onClick={onDelete} size="small" color="error">
-              <DeleteIcon fontSize="small" />
+            <IconButton onClick={onDelete} size="small" color="inherit">
+              <Inventory2OutlinedIcon fontSize="small" />
             </IconButton>
           </Protected>
         </CardActionsBox>

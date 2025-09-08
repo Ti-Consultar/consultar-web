@@ -126,10 +126,6 @@ export const BalanceSheetData = () => {
           </Box>
           <Subtitle>{date}</Subtitle>
         </HeaderContainer>
-        {/* <GroupedBarChart
-          data={balanceteCostCenterData}
-          title="Balanço por centro de custo"
-        /> */}
         <ListContainer>
           <BalanceSheetDetailsTable
             data={balanceteCostCenterData}

@@ -6,8 +6,8 @@ import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
 
 const OPTIONS = [
   { label: "Padrão (Total)", value: "TOTAL" },
-  { label: "Milhar", value: "MILHAR" },
-  { label: "Milhares", value: "MILHARES" }
+  { label: "Milhares", value: "MILHAR" },
+  { label: "Milhões", value: "MILHARES" }
 ];
 
 export const TableValueVisualization: React.FC = () => {

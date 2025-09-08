@@ -7,7 +7,7 @@ import {
   Subtitle,
   Title,
 } from "./styles";
-import { Alert, Box } from "@mui/material";
+import { Alert, Box, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Balancetes } from "../../../types/balancete";
 import { useLocation, useNavigate, useParams } from "react-router";
@@ -39,6 +39,8 @@ export const BalanceSheet = () => {
   const [month, setMonth] = useState<number>(1);
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [balancete, setBalancete] = useState<number>();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     const fetchAccountPlan = async () => {
@@ -239,7 +241,7 @@ export const BalanceSheet = () => {
             <Alert severity="info" sx={{ mb: 2 }}>
               Arquivos suportados: .CSV e .XLSX
             </Alert>
-            <img src={UploadIcon} style={{ width: "64px" }} />
+            <img src={UploadIcon} style={{ width: isMobile ? "52px" : "64px" }} />
             <Title>Envio do Balancete</Title>
             <Subtitle>Preencha a data do balancete e suba o arquivo.</Subtitle>
           </Box>

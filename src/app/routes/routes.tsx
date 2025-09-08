@@ -25,6 +25,7 @@ import { MrpHome } from "../../Features/Home";
 import { Params } from "../../Features/Params";
 import { CashFlow } from "../../Features/CashFlow";
 import { AgregadoMensal } from "../../Features/ValueTree/EVA";
+import { ProfileCustomizing } from "../../Features/Profile/ProfileCustomizing";
 
 export const AppRoutes = () => {
   return (
@@ -34,6 +35,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/perfil/informacoes" element={<ProfileInfo />} />
         <Route path="/perfil/seguranca" element={<ProfileSecurity />} />
+        <Route path="/perfil/personalizacao" element={<ProfileCustomizing />} />
         <Route path="/login" element={<Authentication />} />
         <Route path="/recuperar-senha" element={<ForgotPassword />} />
         <Route

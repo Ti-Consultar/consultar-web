@@ -102,10 +102,10 @@ export const EficienciaOperacional = () => {
     ncgTotal: "number",
     investimentosAtivosFixos: "number",
     capitalInvestidoLiquido: "number",
-    capitalTurnover: "number",
-    roic: "number",
-    wacc: "number",
-    evaspread: "number",
+    capitalTurnover: "percent",
+    roic: "percent",
+    wacc: "percent",
+    evaspread: "percent",
     eva: "number",
   };
 

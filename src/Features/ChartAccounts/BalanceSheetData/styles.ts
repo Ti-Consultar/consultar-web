@@ -9,7 +9,7 @@ export const MainContainer = styled.div`
     width: 85%;
   }
   @media (max-width: 767px) {
-    width: 100%;
+    width: 85%;
     padding: 0.7rem;
     margin: 0;
   }
