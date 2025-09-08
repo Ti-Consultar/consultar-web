@@ -11,6 +11,8 @@ import {
   TableRow,
   Typography,
   Button,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { useState } from "react";
 import ExcelExportIcon from "../../../assets/icons/csv_export.svg";
@@ -36,6 +38,8 @@ export const TableTabs = ({ ativos, passivos }: TableTabsProps) => {
   const [tabIndex, setTabIndex] = useState(0);
   const currentData = tabIndex === 0 ? ativos ?? [] : passivos ?? [];
   const tabLabel = tabIndex === 0 ? "Ativos" : "Passivos";
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleExportCSV = () => {
     const dataToExport = tabIndex === 0 ? ativos : passivos;
@@ -74,7 +78,7 @@ export const TableTabs = ({ ativos, passivos }: TableTabsProps) => {
   };
 
   const formatNumber = (value: number) => {
-    return value.toFixed(2).replace(".", ","); 
+    return value.toFixed(2).replace(".", ",");
   };
 
   // Utilitário para formatar como moeda
@@ -96,7 +100,13 @@ export const TableTabs = ({ ativos, passivos }: TableTabsProps) => {
           width: "100%",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: isMobile ? "flex-start" : "center",
+            flexDirection: isMobile ? "column" : "row",
+          }}
+        >
           <Tabs
             value={tabIndex}
             onChange={(_, newIndex) => setTabIndex(newIndex)}
@@ -145,8 +155,7 @@ export const TableTabs = ({ ativos, passivos }: TableTabsProps) => {
             sx={{
               color: "var(--neutral-700)",
               textTransform: "none",
-              ml: "auto",
-              mr: 2,
+              m: 2,
             }}
           >
             Exportar CSV

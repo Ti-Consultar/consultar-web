@@ -19,5 +19,8 @@ export const FormContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem
+  gap: 1rem;
+  @media (max-width: 767px) {
+    flex-direction: column;
+  }
 `;

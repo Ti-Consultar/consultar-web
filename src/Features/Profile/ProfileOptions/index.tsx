@@ -10,6 +10,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 const menuItems = [
   { label: "Informações do Perfil", path: "/perfil/informacoes" },
   { label: "Segurança", path: "/perfil/seguranca" },
+  { label: "Personalização", path: "/perfil/personalizacao" },
 ];
 
 export const ProfileOptions = () => {
@@ -24,7 +25,7 @@ export const ProfileOptions = () => {
     >
       <List>
         {menuItems.map((item) => {
-          const active = isActive(item.path); // Verifica se a rota atual é a mesma do item
+          const active = isActive(item.path);
           return (
             <ListItem
               disablePadding
