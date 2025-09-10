@@ -1,3 +1,4 @@
+import { useMediaQuery, useTheme } from "@mui/material";
 import {
   BarChart,
   Bar,
@@ -45,6 +46,8 @@ export default function FleurietGestaoLiquidezChart({
   propData,
 }: FleurietGestaoLiquidezChartProps) {
   const totalBase = 100;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const data = propData.map((month) => {
     const saldoTesouraria = normalizeNumber(month.saldoTesouraria);
@@ -89,7 +92,7 @@ export default function FleurietGestaoLiquidezChart({
   });
 
   return (
-    <ResponsiveContainer width="40%" height={350}>
+    <ResponsiveContainer width={isMobile ? "100%" : "40%"} height={isMobile ? 200 : 350}>
       <BarChart
         data={data}
         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}

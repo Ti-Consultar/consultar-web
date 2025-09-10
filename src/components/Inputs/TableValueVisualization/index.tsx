@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu, MenuItem, ListItemIcon, ListItemText, Button } from "@mui/material";
+import { Menu, MenuItem, ListItemIcon, ListItemText, Button, useTheme, useMediaQuery } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
@@ -11,6 +11,8 @@ const OPTIONS = [
 ];
 
 export const TableValueVisualization: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { valueMode, setValueMode } = useValueDisplay();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -45,7 +47,6 @@ export const TableValueVisualization: React.FC = () => {
           border: "2px solid var(--neutral-300)"
         }}
       >
-        <span style={{ color: "#888", marginRight: 8 }}>Valores em</span>
         <span>{selectedLabel?.split(" ")[0]}</span>
       </Button>
       <Menu
