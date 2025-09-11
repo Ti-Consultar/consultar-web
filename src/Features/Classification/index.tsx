@@ -138,7 +138,6 @@ export const ClassificationPage = () => {
   const handleClassificationChange = (classificationId: number) => {
     if (!classificationId) return;
     setSelectedKeys([]);
-    console.log(selectedKeys);
 
     setClassificationBonds((prev) => {
       // Clona bondList
@@ -293,7 +292,6 @@ export const ClassificationPage = () => {
   };
 
   const handleRemoveClassified = (costCentersToRemove: string[]) => {
-    console.log("Antes:", classificationBonds);
 
     const updated = {
       bondList: classificationBonds.bondList
@@ -305,13 +303,6 @@ export const ClassificationPage = () => {
         }))
         .filter((group) => group.costCenters.length > 0),
     };
-
-    console.log("Depois:", updated);
-    console.log("Mesma referência?", classificationBonds === updated);
-    console.log(
-      "Mesma referência bondList?",
-      classificationBonds.bondList === updated.bondList
-    );
 
     setClassificationBonds(updated);
   };

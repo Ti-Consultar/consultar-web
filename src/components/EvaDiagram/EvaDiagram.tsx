@@ -6,7 +6,6 @@ import ReactFlow, {
   Node,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { useEffect } from "react";
 import {
   IconNode,
   LineNode,
@@ -96,9 +95,6 @@ type Props = {
 };
 
 export default function EvaDiagram({ data }: Props) {
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
 
   if (!data || !data.economicView || !data.financialView || !data.indicators) {
     return (

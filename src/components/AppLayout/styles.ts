@@ -17,10 +17,6 @@ export const MainContainer = styled.div`
 `;
 
 export const ContentWrapper = styled.div<MainTemplateStyledProps>`
-  @media (max-width: 1200px) {
-    transition: opacity 0.3s ease;
-    opacity: ${(props) => (props.isDrawerOpen ? 0.2 : 1)};
-  }
 `;
 
 export const DrawerContainer = styled.div`

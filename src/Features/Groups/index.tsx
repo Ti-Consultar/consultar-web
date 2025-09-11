@@ -331,15 +331,6 @@ export const Groups = () => {
           deletedCompanies={deletedGroups}
           onReactivate={handleReactivate}
         />
-        {/* <Title>
-          {`Olá`}, <span>{userData?.unique_name}</span>.
-        </Title>
-        <SubTitle>Acesse e administre suas empresas abaixo:</SubTitle>
-        <Button
-          text="Criar Grupo"
-          variant="primary"
-          onClick={() => setOpen(true)}
-        /> */}
         <CompanyForm
           onSubmit={onSubmit}
           externalActiveStep={activeStep}
@@ -358,7 +349,7 @@ export const Groups = () => {
             handleConfirmDelete();
             setOpen(false);
           }}
-          title="Excluir Grupo"
+          title="Inativar Grupo"
           message={
             <div
               style={{
@@ -370,9 +361,9 @@ export const Groups = () => {
                 gap: "10px",
               }}
             >
-              <span>Tem certeza que deseja deletar este grupo?</span>
+              <span>Deseja inativar este grupo?</span>
               <Alert color="warning" severity="info">
-                Esta ação também irá deletar todas as empresas atreladas a ela.
+                Esta ação também irá inativar todas as empresas atreladas a ela.
               </Alert>
             </div>
           }

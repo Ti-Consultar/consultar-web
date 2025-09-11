@@ -17,7 +17,6 @@ import {
   getBalanceteByCostCenter,
 } from "../../../services/apis/routes/balancete.service";
 import { BalanceSheetDetailsTable } from "./table";
-import { GroupedBarChart } from "../../../components/Charts/GroupedBarChart";
 import { toast } from "react-toastify";
 
 export const BalanceSheetData = () => {
@@ -127,10 +126,6 @@ export const BalanceSheetData = () => {
           </Box>
           <Subtitle>{date}</Subtitle>
         </HeaderContainer>
-        <GroupedBarChart
-          data={balanceteCostCenterData}
-          title="Balanço por centro de custo"
-        />
         <ListContainer>
           <BalanceSheetDetailsTable
             data={balanceteCostCenterData}

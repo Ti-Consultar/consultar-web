@@ -143,11 +143,6 @@ export const AgregadoMensal = () => {
     }
   }, [selectedDate]);
 
-  useEffect(() => {
-    console.log("Ano:", year);
-    console.log("Mês:", month);
-  }, [year, month]);
-
   return (
     <MainTemplate>
       <MainContainer>

@@ -1,3 +1,4 @@
+import { useMediaQuery, useTheme } from "@mui/material";
 import React from "react";
 import {
   LineChart,
@@ -33,7 +34,10 @@ export const MarginChart: React.FC<Props> = ({
   title,
   stroke,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const translateMonth = (month: string): string => {
+
     const months: Record<string, string> = {
       January: "Jan",
       February: "Fev",
@@ -58,7 +62,13 @@ export const MarginChart: React.FC<Props> = ({
   }));
 
   return (
-    <div style={{ width: "100%", height: 350, backgroundColor: "#fff" }}>
+    <div
+      style={{
+        width: "100%",
+        height: isMobile ? 170 : 350,
+        backgroundColor: "#fff",
+      }}
+    >
       <h3 style={{ textAlign: "center", marginBottom: 10 }}>
         {title ?? metricKey}
       </h3>
@@ -79,7 +89,8 @@ export const MarginChart: React.FC<Props> = ({
             dot={{ r: 4, fill: stroke ? stroke : "#2f6bbd" }}
             activeDot={{ r: 6 }}
           >
-            <LabelList
+            {!isMobile && (
+              <LabelList
               dataKey={metricKey}
               position="top"
               content={({ value, x, y }) => {
@@ -97,6 +108,7 @@ export const MarginChart: React.FC<Props> = ({
                 );
               }}
             />
+            )}
           </Line>
         </LineChart>
       </ResponsiveContainer>

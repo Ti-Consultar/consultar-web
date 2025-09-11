@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Box, Tabs, Tab, Paper, Button, Typography } from "@mui/material";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Paper,
+  Button,
+  Typography,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -46,6 +55,8 @@ interface LiquidityData {
 }
 
 export const GestaoLiquidez = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
@@ -305,7 +316,7 @@ export const GestaoLiquidez = () => {
       fetchFeurietData();
     }
   }, [selectedMonth, accountPlanId, selectedYear]);
-  
+
   const tabStyle = {
     color: "var(--neutral-700)",
     fontWeight: "bold",
@@ -435,6 +446,8 @@ export const GestaoLiquidez = () => {
               aria-label="Tabs gestão"
               textColor="primary"
               indicatorColor="primary"
+              variant="scrollable"
+              scrollButtons="auto"
               sx={{
                 "& .MuiTabs-indicator": {
                   backgroundColor: "var(--neutral-700)",
@@ -481,7 +494,7 @@ export const GestaoLiquidez = () => {
                 px: 2,
               }}
             >
-              Buscar
+              {isMobile ?? "Buscar"}
             </Button>
           </Box>
 

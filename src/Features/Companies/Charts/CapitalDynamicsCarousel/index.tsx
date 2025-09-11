@@ -16,6 +16,7 @@ import {
   LabelList,
   ResponsiveContainer,
 } from "recharts";
+import { useMediaQuery, useTheme } from "@mui/material";
 
 type MonthData = {
   name: string;
@@ -48,6 +49,8 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
   onPrev,
   onChangeIndex,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const safeIndex =
     ((currentIndex % metrics.length) + metrics.length) % metrics.length;
   const metric = metrics[safeIndex];
@@ -88,7 +91,7 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
         <div
           style={{
             width: "100%",
-            height: 350,
+            height: isMobile ? 170 : 350,
             backgroundColor: "#fff",
             borderRadius: 12,
             padding: 10,
@@ -139,24 +142,26 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
                 dot={{ r: 3, fill: metric.color }}
                 activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
               >
-                <LabelList
-                  dataKey={metric.key}
-                  position="top"
-                  content={({ value, x, y }) => {
-                    if (value == null || x == null || y == null) return null;
-                    return (
-                      <text
-                        x={x}
-                        y={(y as number) - 10}
-                        textAnchor="middle"
-                        fill="#555"
-                        fontSize={11}
-                      >
-                        {Number(value).toFixed(2)}
-                      </text>
-                    );
-                  }}
-                />
+                {!isMobile && (
+                  <LabelList
+                    dataKey={metric.key}
+                    position="top"
+                    content={({ value, x, y }) => {
+                      if (value == null || x == null || y == null) return null;
+                      return (
+                        <text
+                          x={x}
+                          y={(y as number) - 10}
+                          textAnchor="middle"
+                          fill="#555"
+                          fontSize={11}
+                        >
+                          {Number(value).toFixed(2)}
+                        </text>
+                      );
+                    }}
+                  />
+                )}
               </Line>
             </LineChart>
           </ResponsiveContainer>

@@ -259,11 +259,6 @@ export const Sidebar = () => {
     }
   };
 
-  // Salvar estado do sidebar no localStorage
-  useEffect(() => {
-    localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
-  }, [collapsed]);
-
   useEffect(() => {
     if (drawerOpen) {
       fetchUserInvitesNotifications();

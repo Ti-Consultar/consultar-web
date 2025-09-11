@@ -8,7 +8,7 @@ export const MainContainer = styled.div`
     width: 85%;
   }
   @media (max-width: 767px) {
-    width: 100%;
+    width: 85%;
     padding: 0.7rem;
     margin: 0;
   }
@@ -28,5 +28,5 @@ export const Container = styled.div`
 export const Title = styled.h2`
   font-size: 24px;
   color: var(--neutral-700);
-  margin-bottom: 1rem
+  margin-bottom: 1rem;
 `;

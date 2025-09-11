@@ -9,7 +9,6 @@ export const MainContainer = styled.div`
     width: 85%;
   }
   @media (max-width: 767px) {
-    width: 100%;
     padding: 0.7rem;
     margin: 0;
   }
@@ -51,6 +50,7 @@ export const Subtitle = styled.span`
   font-size: 16px;
   color: var(--neutral-500);
   margin-bottom: 0.5rem;
+  text-align: center
 `;
 
 export const OptionsContainer = styled.div`

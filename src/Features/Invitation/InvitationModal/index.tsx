@@ -236,7 +236,7 @@ export const InvitationModal = ({
                 role={member.permission.name}
                 roles={userPolicies}
                 isCurrentUser={member.userLogado}
-                onRoleChange={(newRole) => console.log("Novo papel:", newRole)}
+                onRoleChange={(newRole) => (newRole)}
               />
             ))
           ) : (

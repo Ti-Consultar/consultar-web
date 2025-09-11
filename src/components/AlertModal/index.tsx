@@ -78,7 +78,7 @@ export const AlertModal = ({
           </Button>
         )}
         <Button
-          color="error"
+          color="primary"
           onClick={onConfirm}
           disableElevation
           sx={{

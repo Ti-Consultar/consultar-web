@@ -21,11 +21,11 @@ export const BalanceSheetForm = ({
   selectedYear,
   onMonthChange,
   onYearChange,
-  onSubmit
+  onSubmit,
 }: BalanceSheetFormProps) => {
   const handleDateChange = (date: Dayjs | null) => {
     if (date) {
-      onMonthChange(date.month() + 1); // month() is 0-indexed
+      onMonthChange(date.month() + 1);
       onYearChange(date.year());
     }
   };

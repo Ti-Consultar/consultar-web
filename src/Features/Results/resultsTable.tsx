@@ -70,7 +70,7 @@ export const ResultsTable = ({
   }, [months, nestedMetrics]);
 
   const nestedGroupLabels: Record<string, string> = {
-    estruturaDeCapital: "Estrutura de Capital",
+    estruturaDeCapital: "Posição Financeira Líquida",
     cil: "Capital Investido Líquido",
   };
 
@@ -143,28 +143,63 @@ export const ResultsTable = ({
           {/* Grupos aninhados */}
           {nestedGroupOrder.map((groupKey) => {
             const metrics = nestedMetrics[groupKey];
+            const stickyTop = 0;
+
             return (
               <React.Fragment key={groupKey}>
                 <TableRow>
+                  {/* Célula fixa à esquerda: O RÓTULO do grupo */}
                   <TableCell
-                    colSpan={translatedMonths.length + 1}
                     sx={{
+                      position: "sticky",
+                      left: 0,
+                      top: stickyTop,
+                      zIndex: 3,
                       fontWeight: "bold",
                       backgroundColor: "#fafafa",
+                      minWidth: 200,
+                      maxWidth: 280,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
-                    {nestedGroupLabels[groupKey] ||
-                      metricLabels[groupKey] ||
-                      groupKey}
+                    <Tooltip
+                      title={
+                        nestedGroupLabels[groupKey] ||
+                        metricLabels[groupKey] ||
+                        groupKey
+                      }
+                    >
+                      <span>
+                        {nestedGroupLabels[groupKey] ||
+                          metricLabels[groupKey] ||
+                          groupKey}
+                      </span>
+                    </Tooltip>
                   </TableCell>
+
+                  {/* Célula que "preenche" o resto da linha (meses) para manter o visual de linha inteira */}
+                  <TableCell
+                    colSpan={translatedMonths.length}
+                    sx={{
+                      backgroundColor: "#fafafa",
+                      borderLeft: "1px solid #e0e0e0",
+                      p: 0,
+                    }}
+                  />
                 </TableRow>
+
+                {/* linhas dos metrics do grupo */}
                 {metrics.map((metric) => {
                   const isHighlighted = !!highlightRows[metric];
                   return (
                     <TableRow
                       key={`${groupKey}-${metric}`}
                       sx={{
-                        backgroundColor: isHighlighted ? "#f5f5f5" : "transparent",
+                        backgroundColor: isHighlighted
+                          ? "#f5f5f5"
+                          : "transparent",
                         fontWeight: isHighlighted ? "bold" : "normal",
                       }}
                     >
@@ -184,6 +219,7 @@ export const ResultsTable = ({
                           <span>{metricLabels[metric] || metric}</span>
                         </Tooltip>
                       </TableCell>
+
                       {translatedMonths.map((month) => {
                         const rawValue = month[groupKey]?.[metric];
                         const value =

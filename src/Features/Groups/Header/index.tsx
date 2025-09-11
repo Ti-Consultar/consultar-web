@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  IconButton,
   InputAdornment,
   TextField,
   Typography,
@@ -9,8 +8,6 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
-import ViewListIcon from "@mui/icons-material/ViewList";
-import GridViewIcon from "@mui/icons-material/GridView";
 import { useTheme } from "@mui/material/styles";
 import { Protected } from "../../../components/Protection";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
@@ -45,8 +42,6 @@ interface UserData {
 export const GroupsHeader = ({
   onSearchChange,
   onAddGroupClick,
-  viewMode,
-  onChangeViewMode,
   onReactivate,
   deletedCompanies,
 }: GroupsHeaderProps) => {
@@ -56,18 +51,13 @@ export const GroupsHeader = ({
   const [userData, setUserData] = useState<UserData | null>(null);
   const navigate = useNavigate();
 
-  const handleOpenModal = () => {
-    setModalOpen(true);
-  };
-
   useEffect(() => {
     const token = Cookies.get("token");
-
     if (token) {
       try {
         const dataDecoded: UserData = jwtDecode(token);
         setUserData(dataDecoded);
-      } catch (error) {
+      } catch {
         navigate("/");
       }
     } else {
@@ -77,22 +67,21 @@ export const GroupsHeader = ({
 
   function getGreeting(): string {
     const hour = new Date().getHours();
-
-    if (hour >= 5 && hour < 12) {
-      return "Bom dia";
-    } else if (hour >= 12 && hour < 18) {
-      return "Boa tarde";
-    } else {
-      return "Boa noite";
-    }
+    if (hour >= 5 && hour < 12) return "Bom dia";
+    else if (hour >= 12 && hour < 18) return "Boa tarde";
+    return "Boa noite";
   }
   const greeting = getGreeting();
+  
+  const headerFlexDirection = isMobile ? "column" : "row";
+  const buttonsFlexDirection = isMobile ? "column" : "row";
+  const buttonsAlign = isMobile ? "stretch" : "flex-end";
 
   return (
     <Box>
       <Box
         display="flex"
-        flexDirection={isMobile ? "column" : "row"}
+        flexDirection={headerFlexDirection}
         alignItems={isMobile ? "stretch" : "center"}
         mb={2}
       >
@@ -102,16 +91,20 @@ export const GroupsHeader = ({
             width: "100%",
             gap: 1,
             justifyContent: "space-between",
+            flexDirection: headerFlexDirection,
           }}
         >
-          <Typography variant="h5" fontWeight="bold">
+          <Typography variant="h5" fontWeight="bold" mb={isMobile ? 1 : 0}>
             {greeting}, {userData?.unique_name}
           </Typography>
+
           <Box
             sx={{
-              gap: 2,
               display: "flex",
-              alignItems: "center",
+              flexDirection: buttonsFlexDirection,
+              gap: 1,
+              alignItems: isMobile ? "stretch" : "center",
+              justifyContent: buttonsAlign,
             }}
           >
             <Protected
@@ -120,11 +113,9 @@ export const GroupsHeader = ({
               <Button
                 variant="outlined"
                 color="warning"
-                onClick={handleOpenModal}
+                onClick={() => setModalOpen(true)}
                 startIcon={<Inventory2OutlinedIcon />}
-                sx={{
-                  textTransform: "none",
-                }}
+                sx={{ textTransform: "none" }}
               >
                 Inativos
               </Button>
@@ -137,7 +128,11 @@ export const GroupsHeader = ({
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={onAddGroupClick}
-                sx={{ backgroundColor: "#2F63A4" }}
+                sx={{
+                  backgroundColor: "#2F63A4",
+                  textTransform: "none",
+                  width: isMobile ? "100%" : "auto", // botão full width no mobile
+                }}
               >
                 Adicionar
               </Button>
@@ -145,8 +140,15 @@ export const GroupsHeader = ({
           </Box>
         </Box>
       </Box>
+
       <Box>
-        <Box display="flex" flex={1} justifyContent="space-between">
+        <Box
+          display="flex"
+          flexDirection={isMobile ? "column" : "row"}
+          gap={isMobile ? 1 : 0}
+          justifyContent="space-between"
+          alignItems={isMobile ? "stretch" : "center"}
+        >
           <TextField
             size="small"
             placeholder="Pesquisar"
@@ -164,10 +166,11 @@ export const GroupsHeader = ({
             }}
           />
 
-          <Box
+          {/* <Box
             display="flex"
             gap={1}
-            justifyContent={isMobile ? "center" : "flex-end"}
+            justifyContent={viewModeJustify}
+            mt={isMobile ? 1 : 0}
           >
             <Box display="flex" bgcolor="#F1F2F4" borderRadius={1}>
               <IconButton
@@ -183,9 +186,10 @@ export const GroupsHeader = ({
                 <GridViewIcon />
               </IconButton>
             </Box>
-          </Box>
+          </Box> */}
         </Box>
       </Box>
+
       <InactiveCompaniesModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
