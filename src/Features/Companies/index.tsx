@@ -69,7 +69,7 @@ export const Companies = () => {
   const [deletedCompanies, setDeletedCompanies] = useState<any[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [companyIdLocal, setCompanyId] = useState<number>();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { setBreadcrumbs } = useMainContext();
   const navigate = useNavigate();
   const [hasFetched, setHasFetched] = useState(false);
