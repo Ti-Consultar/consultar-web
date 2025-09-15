@@ -14,6 +14,7 @@ import { MainTemplate } from "../../components/AppLayout";
 import { getCashFlow } from "../../services/apis/routes/cashFlow.service";
 import { CashFlowTable } from "./table";
 import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
+import { MRPIconButton } from "../../components/Button/IconButton";
 
 export const CashFlow = () => {
   const [tabValue] = useState<number>(1);
@@ -166,20 +167,11 @@ export const CashFlow = () => {
                 }}
               />
             </LocalizationProvider>
-            <Button
-              variant="contained"
-              color="primary"
+            <MRPIconButton
+              title="Pesquisar"
               onClick={handleSearch}
               startIcon={<SearchIcon />}
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 500,
-                px: 2,
-              }}
-            >
-              Buscar
-            </Button>
+            />
           </Box>
 
           <CashFlowTable
