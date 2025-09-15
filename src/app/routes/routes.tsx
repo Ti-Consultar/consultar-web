@@ -9,7 +9,6 @@ import { SubCompanies } from "../../Features/SubCompanies";
 import { ProfileInfo } from "../../Features/Profile";
 import { Authentication } from "../../Features/Authentication";
 import { ProfileSecurity } from "../../Features/Profile/ProfileSecurity";
-import { BalanceSheet } from "../../Features/ChartAccounts/BalanceSheetList";
 import { BalanceSheetData } from "../../Features/ChartAccounts/BalanceSheetData";
 import { BalanceSheetDetailed } from "../../Features/ChartAccounts/BalanceSheetDetailed";
 import { BalanceAssetsLiabilities } from "../../Features/ChartAccounts/BalanceAssetsLiabilities";
@@ -26,6 +25,8 @@ import { Params } from "../../Features/Params";
 import { CashFlow } from "../../Features/CashFlow";
 import { AgregadoMensal } from "../../Features/ValueTree/EVA";
 import { ProfileCustomizing } from "../../Features/Profile/ProfileCustomizing";
+import { UploadBalanceSheet } from "../../Features/Upload/UploadBalanceSheet";
+import { UploadBudgetSheet } from "../../Features/Upload/UploadBudgetSheet";
 
 export const AppRoutes = () => {
   return (
@@ -53,13 +54,17 @@ export const AppRoutes = () => {
           path={`/grupos/:groupId/empresas/:companyId/filiais/:subCompanyId`}
           element={<SubCompanies />}
         />
-        {/* plano de contas */}
+        {/* Upload Balancete */}
         {withScopes("arquivos/upload/balancete").map((path) => (
-          <Route key={path} path={path} element={<BalanceSheet />} />
+          <Route key={path} path={path} element={<UploadBalanceSheet />} />
+        ))}
+        {/* Upload Orçamento */}
+        {withScopes("arquivos/upload/orcamento").map((path) => (
+          <Route key={path} path={path} element={<UploadBudgetSheet />} />
         ))}
         {/* balancetes */}
         {withScopes("balancetes").map((path) => (
-          <Route key={path} path={path} element={<BalanceSheet />} />
+          <Route key={path} path={path} element={<UploadBalanceSheet />} />
         ))}
         {/* balancetes data */}
         {withScopes("balancetes/:balanceteId").map((path) => (

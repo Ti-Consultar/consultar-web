@@ -1,4 +1,3 @@
-import { MainTemplate } from "../../../components/AppLayout";
 import {
   HeaderContainer,
   ListContainer,
@@ -9,24 +8,25 @@ import {
 } from "./styles";
 import { Alert, Box, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
-import { Balancetes } from "../../../types/balancete";
 import { useLocation, useNavigate, useParams } from "react-router";
-import { useLoading } from "../../../contexts/LoadingProvider";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import UploadIcon from "../../../assets/images/import-file.png";
 
+import { toast } from "react-toastify";
+import { BalanceSheetForm } from "./UploadForm";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import {
   deleteBalancete,
   getBalancetes,
   importAccounting,
   submitAccounting,
 } from "../../../services/apis/routes/balancete.service";
-import { AccountingTable } from "../BalanceSheetList/table";
-import { toast } from "react-toastify";
 import { BalancetePayload } from "../../../types/balancetePayload";
-import { BalanceSheetForm } from "./UploadForm";
+import { MainTemplate } from "../../../components/AppLayout";
+import { AccountingTable } from "./table";
+import { Balancetes } from "../../../types/balancete";
 
-export const BalanceSheet = () => {
+export const UploadBalanceSheet = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams();
@@ -241,7 +241,10 @@ export const BalanceSheet = () => {
             <Alert severity="info" sx={{ mb: 2 }}>
               Arquivos suportados: .CSV e .XLSX
             </Alert>
-            <img src={UploadIcon} style={{ width: isMobile ? "52px" : "64px" }} />
+            <img
+              src={UploadIcon}
+              style={{ width: isMobile ? "52px" : "64px" }}
+            />
             <Title>Envio do Balancete</Title>
             <Subtitle>Preencha a data do balancete e suba o arquivo.</Subtitle>
           </Box>
