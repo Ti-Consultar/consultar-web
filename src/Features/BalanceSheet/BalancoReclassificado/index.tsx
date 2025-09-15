@@ -20,6 +20,7 @@ import { TableValueVisualization } from "../../../components/Inputs/TableValueVi
 import BalancoReclassificadoTable from "./table";
 import BalancoContabilTable from "../BalanceSheet/table";
 import { useDrawer } from "../../../contexts/DrawerContext";
+import { MRPIconButton } from "../../../components/Button/IconButton";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1);
@@ -227,23 +228,11 @@ export const BalancoReclassificado = () => {
                 }}
               />
             </LocalizationProvider>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                handleSearch();
-                toggleDrawer();
-              }}
+            <MRPIconButton
+              title="Pesquisar"
+              onClick={handleSearch}
               startIcon={<SearchIcon />}
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 500,
-                px: 2,
-              }}
-            >
-              Pesquisar
-            </Button>
+            />
           </Box>
 
           <Container>
@@ -261,4 +250,3 @@ export const BalancoReclassificado = () => {
     </MainTemplate>
   );
 };
-

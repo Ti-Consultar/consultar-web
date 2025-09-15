@@ -6,6 +6,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import SearchIcon from "@mui/icons-material/Search";
 import dayjs, { Dayjs } from "dayjs";
 import { useState } from "react";
+import { MRPIconButton } from "../../../components/Button/IconButton";
 
 interface MonthYearPickerSearchProps {
   onSearch: (params: { month: number; year: number }) => void;
@@ -68,20 +69,11 @@ export const MonthYearPickerSearch = ({
           }}
         />
 
-        <Button
-          variant="contained"
-          color="primary"
+        <MRPIconButton
           onClick={handleSearch}
           startIcon={<SearchIcon />}
-          sx={{
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: 500,
-            px: 2,
-          }}
-        >
-          Buscar
-        </Button>
+          title="Pesquisar"
+        ></MRPIconButton>
       </Box>
     </LocalizationProvider>
   );

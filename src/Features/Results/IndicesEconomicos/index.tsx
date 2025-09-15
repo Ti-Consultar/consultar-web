@@ -20,6 +20,7 @@ import {
   getReturnExpectation,
 } from "../../../services/apis/routes/economicIndices,service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import { MRPIconButton } from "../../../components/Button/IconButton";
 
 export const IndicesEconomicos = () => {
   const theme = useTheme();
@@ -328,20 +329,11 @@ export const IndicesEconomicos = () => {
                 }}
               />
             </LocalizationProvider>
-            <Button
-              variant="contained"
-              color="primary"
+            <MRPIconButton
+              title="Pesquisar"
               onClick={handleSearch}
               startIcon={<SearchIcon />}
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 500,
-                px: 2,
-              }}
-            >
-              {isMobile ?? "Buscar"}
-            </Button>
+            />
           </Box>
 
           <ResultsTable

@@ -36,6 +36,7 @@ import { GrossCashFlowChart } from "../../../components/Charts/GrossCashFlowChar
 import { CapitalDynamicsChart } from "./charts/CapitalDynamicsChart";
 import { CapitalStructureStackedBarChart } from "./charts/CapitalStructureStackedBarChart";
 import { useDrawer } from "../../../contexts/DrawerContext";
+import { MRPIconButton } from "../../../components/Button/IconButton";
 
 interface LiquidityMonth {
   name: string;
@@ -482,20 +483,11 @@ export const GestaoLiquidez = () => {
                 slotProps={{ textField: { size: "small" } }}
               />
             </LocalizationProvider>
-            <Button
-              variant="contained"
-              color="primary"
+            <MRPIconButton
+              title="Pesquisar"
               onClick={handleSearch}
               startIcon={<SearchIcon />}
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 500,
-                px: 2,
-              }}
-            >
-              {isMobile ?? "Buscar"}
-            </Button>
+            />
           </Box>
 
           <Box>

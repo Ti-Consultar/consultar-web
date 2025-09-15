@@ -14,6 +14,7 @@ import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import { getCILeEC } from "../../../services/apis/routes/CILeEC.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import { MRPIconButton } from "../../../components/Button/IconButton";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const CILeEC = () => {
@@ -177,20 +178,11 @@ export const CILeEC = () => {
                 }}
               />
             </LocalizationProvider>
-            <Button
-              variant="contained"
-              color="primary"
+            <MRPIconButton
+              title="Pesquisar"
               onClick={handleSearch}
               startIcon={<SearchIcon />}
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 500,
-                px: 2,
-              }}
-            >
-              Buscar
-            </Button>
+            />
           </Box>
 
           <ResultsTable
