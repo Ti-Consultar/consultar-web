@@ -78,7 +78,10 @@ export const ResultsTable = ({
     if (value === 0) return "-";
 
     if (metricTypes[metricKey] === "percent") {
-      return `${value.toFixed(2).replace(".", ",")}%`;
+      const formattedPercent =
+        Math.abs(value).toFixed(2).replace(".", ",") + "%";
+
+      return value < 0 ? `(${formattedPercent})` : formattedPercent;
     }
 
     let adjustedValue = Math.abs(value);
