@@ -19,7 +19,6 @@ import { BalancoResponse, Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import BalancoReclassificadoTable from "./table";
 import BalancoContabilTable from "../BalanceSheet/table";
-import { useDrawer } from "../../../contexts/DrawerContext";
 import { MRPIconButton } from "../../../components/Button/IconButton";
 
 export const BalancoReclassificado = () => {
