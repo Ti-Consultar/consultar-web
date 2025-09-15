@@ -228,7 +228,7 @@ export const BalancoReclassificado = () => {
             </LocalizationProvider>
             <MRPIconButton
               title="Pesquisar"
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
               startIcon={<SearchIcon />}
             />
           </Box>

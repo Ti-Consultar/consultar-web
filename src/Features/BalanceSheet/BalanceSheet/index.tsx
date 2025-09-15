@@ -34,7 +34,7 @@ export const BalancoContabil = () => {
   const { isOpen } = useDrawer();
 
   useEffect(() => {
-    if (!groupId || accountPlanId) return; // <-- impede loop se accountPlanId já está definido
+    if (!groupId || accountPlanId) return;
 
     const getAccountPlanId = async (
       groupId: number,
@@ -178,7 +178,7 @@ export const BalancoContabil = () => {
             </LocalizationProvider>
             <MRPIconButton
               title="Pesquisar"
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
               startIcon={<SearchIcon />}
             />
           </Box>
