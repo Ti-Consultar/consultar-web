@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Tabs, Tab, Paper, Button, useTheme, useMediaQuery } from "@mui/material";
+import { Box, Tabs, Tab, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -23,8 +23,6 @@ import { TableValueVisualization } from "../../../components/Inputs/TableValueVi
 import { MRPIconButton } from "../../../components/Button/IconButton";
 
 export const IndicesEconomicos = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
