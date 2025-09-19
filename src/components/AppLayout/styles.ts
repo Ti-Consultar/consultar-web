@@ -17,6 +17,7 @@ export const MainContainer = styled.div`
 `;
 
 export const ContentWrapper = styled.div<MainTemplateStyledProps>`
+  overflow: hidden;
 `;
 
 export const DrawerContainer = styled.div`
