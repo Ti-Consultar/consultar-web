@@ -51,7 +51,7 @@ export const ResultsTable = ({
   metricTypes = {},
   highlightRows = {},
 }: TabelaMetricasTranspostaProps) => {
-  const [colWidth, setColWidth] = useState(220); 
+  const [colWidth, setColWidth] = useState(220);
   const [dragging, setDragging] = useState(false);
   const translatedMonths: MonthData[] = useMemo(
     () =>
@@ -106,7 +106,7 @@ export const ResultsTable = ({
 
   const handleMouseMove = (e: MouseEvent) => {
     if (dragging) {
-      setColWidth((prev) => Math.max(120, prev + e.movementX));
+      setColWidth((prev) => Math.min(450, Math.max(120, prev + e.movementX)));
     }
   };
 

@@ -8,7 +8,7 @@ import {
   Tooltip,
   Paper,
 } from "@mui/material";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useValueDisplay } from "../../contexts/ValueDisplayContext";
 
 interface MonthData {
@@ -47,6 +47,8 @@ export const CashFlowTable = ({
   nestedMetrics = {},
   highlightedMetrics = [],
 }: TabelaMetricasTranspostaProps) => {
+  const [colWidth, setColWidth] = useState(220);
+  const [dragging, setDragging] = useState(false);
   const translatedMonths: MonthData[] = useMemo(
     () =>
       months.map((month) => ({
@@ -94,6 +96,29 @@ export const CashFlowTable = ({
     return Math.trunc(adjustedValue).toLocaleString("pt-BR");
   };
 
+  const handleMouseDown = () => setDragging(true);
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (dragging) {
+      setColWidth(
+        (prev) => Math.min(450, Math.max(120, prev + e.movementX)) 
+      );
+    }
+  };
+
+  const handleMouseUp = () => setDragging(false);
+
+  React.useEffect(() => {
+    if (dragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragging]);
+
   return (
     <TableContainer
       component={Paper}
@@ -115,9 +140,26 @@ export const CashFlowTable = ({
                 position: "sticky",
                 left: 0,
                 zIndex: 1,
+                width: colWidth,
+                minWidth: colWidth,
+                maxWidth: colWidth,
+                userSelect: "none",
+                cursor: dragging ? "col-resize" : "default",
               }}
             >
-              Índice
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Índice</span>
+                <div
+                  onMouseDown={handleMouseDown}
+                  style={{
+                    cursor: "col-resize",
+                    padding: "0 4px",
+                    marginRight: -8,
+                  }}
+                >
+                  ⋮
+                </div>
+              </div>
             </TableCell>
             {translatedMonths.map((month) => (
               <TableCell
