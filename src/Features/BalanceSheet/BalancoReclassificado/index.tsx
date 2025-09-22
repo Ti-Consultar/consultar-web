@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { MainTemplate } from "../../../components/AppLayout";
 import { Container, MainContainer, Title } from "./styles";
-import { Box, Tabs, Tab, Paper, Button } from "@mui/material";
+import { Box, Tabs, Tab, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -19,7 +19,6 @@ import { BalancoResponse, Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import BalancoReclassificadoTable from "./table";
 import BalancoContabilTable from "../BalanceSheet/table";
-import { useDrawer } from "../../../contexts/DrawerContext";
 import { MRPIconButton } from "../../../components/Button/IconButton";
 
 export const BalancoReclassificado = () => {
@@ -35,7 +34,6 @@ export const BalancoReclassificado = () => {
     companyid?: string;
     subCompanyId?: string;
   }>();
-  const { toggleDrawer } = useDrawer();
 
   const highlightRows = useMemo(() => {
     const ids: Record<number, boolean> = {};
@@ -230,7 +228,7 @@ export const BalancoReclassificado = () => {
             </LocalizationProvider>
             <MRPIconButton
               title="Pesquisar"
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
               startIcon={<SearchIcon />}
             />
           </Box>

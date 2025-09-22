@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { MainTemplate } from "../../../components/AppLayout";
 import { Container, MainContainer, Title } from "./styles";
-import { Box, Tabs, Tab, Paper, Button } from "@mui/material";
+import { Box, Tabs, Tab, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -34,7 +34,7 @@ export const BalancoContabil = () => {
   const { isOpen } = useDrawer();
 
   useEffect(() => {
-    if (!groupId || accountPlanId) return; // <-- impede loop se accountPlanId já está definido
+    if (!groupId || accountPlanId) return;
 
     const getAccountPlanId = async (
       groupId: number,
@@ -178,7 +178,7 @@ export const BalancoContabil = () => {
             </LocalizationProvider>
             <MRPIconButton
               title="Pesquisar"
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
               startIcon={<SearchIcon />}
             />
           </Box>

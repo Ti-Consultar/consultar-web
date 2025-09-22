@@ -4,10 +4,7 @@ import {
   Tabs,
   Tab,
   Paper,
-  Button,
   Typography,
-  useTheme,
-  useMediaQuery,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
@@ -56,8 +53,6 @@ interface LiquidityData {
 }
 
 export const GestaoLiquidez = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
@@ -140,6 +135,12 @@ export const GestaoLiquidez = () => {
             indiceDeLiquidez: "Índice de Liquidez (%)",
           };
           setValueMode(true);
+          setMetricTypes({
+            saldoTesouraria: "number",
+            ncg: "number",
+            cdg: "number",
+            indiceDeLiquidez: "percent",
+          });
           break;
 
         case 2:

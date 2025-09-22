@@ -8,7 +8,7 @@ import {
   Tooltip,
   Paper,
 } from "@mui/material";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useValueDisplay } from "../../contexts/ValueDisplayContext";
 
 interface MonthData {
@@ -51,6 +51,8 @@ export const ResultsTable = ({
   metricTypes = {},
   highlightRows = {},
 }: TabelaMetricasTranspostaProps) => {
+  const [colWidth, setColWidth] = useState(220);
+  const [dragging, setDragging] = useState(false);
   const translatedMonths: MonthData[] = useMemo(
     () =>
       months.map((month) => ({
@@ -78,7 +80,10 @@ export const ResultsTable = ({
     if (value === 0) return "-";
 
     if (metricTypes[metricKey] === "percent") {
-      return `${value.toFixed(2).replace(".", ",")}%`;
+      const formattedPercent =
+        Math.abs(value).toFixed(2).replace(".", ",") + "%";
+
+      return value < 0 ? `(${formattedPercent})` : formattedPercent;
     }
 
     let adjustedValue = Math.abs(value);
@@ -96,6 +101,27 @@ export const ResultsTable = ({
     if (value < 0) return `(${formatted})`;
     return formatted;
   };
+
+  const handleMouseDown = () => setDragging(true);
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (dragging) {
+      setColWidth((prev) => Math.min(450, Math.max(120, prev + e.movementX)));
+    }
+  };
+
+  const handleMouseUp = () => setDragging(false);
+
+  useEffect(() => {
+    if (dragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragging]);
 
   return (
     <TableContainer
@@ -118,9 +144,25 @@ export const ResultsTable = ({
                 position: "sticky",
                 left: 0,
                 zIndex: 1,
+                width: colWidth,
+                minWidth: colWidth,
+                maxWidth: colWidth,
+                userSelect: "none",
               }}
             >
-              Índice
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Índice</span>
+                <div
+                  onMouseDown={handleMouseDown}
+                  style={{
+                    cursor: "col-resize",
+                    padding: "0 4px",
+                    marginRight: -8,
+                  }}
+                >
+                  ⋮
+                </div>
+              </div>
             </TableCell>
             {translatedMonths.map((month) => (
               <TableCell
@@ -148,7 +190,6 @@ export const ResultsTable = ({
             return (
               <React.Fragment key={groupKey}>
                 <TableRow>
-                  {/* Célula fixa à esquerda: O RÓTULO do grupo */}
                   <TableCell
                     sx={{
                       position: "sticky",
@@ -157,8 +198,9 @@ export const ResultsTable = ({
                       zIndex: 3,
                       fontWeight: "bold",
                       backgroundColor: "#fafafa",
-                      minWidth: 200,
-                      maxWidth: 280,
+                      width: colWidth,
+                      minWidth: colWidth,
+                      maxWidth: colWidth,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
@@ -179,7 +221,6 @@ export const ResultsTable = ({
                     </Tooltip>
                   </TableCell>
 
-                  {/* Célula que "preenche" o resto da linha (meses) para manter o visual de linha inteira */}
                   <TableCell
                     colSpan={translatedMonths.length}
                     sx={{
@@ -190,7 +231,6 @@ export const ResultsTable = ({
                   />
                 </TableRow>
 
-                {/* linhas dos metrics do grupo */}
                 {metrics.map((metric) => {
                   const isHighlighted = !!highlightRows[metric];
                   return (
@@ -209,7 +249,9 @@ export const ResultsTable = ({
                           left: 0,
                           backgroundColor: isHighlighted ? "#f5f5f5" : "#fff",
                           fontWeight: isHighlighted ? "bold" : 500,
-                          maxWidth: 180,
+                          width: colWidth,
+                          minWidth: colWidth,
+                          maxWidth: colWidth,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -265,7 +307,9 @@ export const ResultsTable = ({
                       left: 0,
                       backgroundColor: isHighlighted ? "#f5f5f5" : "#fff",
                       fontWeight: isHighlighted ? "bold" : 500,
-                      maxWidth: 180,
+                      width: colWidth,
+                      minWidth: colWidth,
+                      maxWidth: colWidth,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
