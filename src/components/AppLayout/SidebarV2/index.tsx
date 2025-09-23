@@ -322,13 +322,17 @@ export const Sidebar = () => {
                 icon: <CloudUploadOutlined />,
                 subItems: [
                   {
-                    title: "Balancete",
+                    title: "Balancetes",
                     path: buildNestedUrl(params, "arquivos/upload/balancete"),
+                  },
+                  {
+                    title: "Orçamentos",
+                    path: buildNestedUrl(params, "arquivos/upload/orcamento"),
                   },
                 ],
               },
               {
-                title: "Balanço e DR",
+                title: "Demonstrações Financeiras",
                 icon: (
                   <img
                     src={BalanceFile}

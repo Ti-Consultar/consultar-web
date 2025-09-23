@@ -12,7 +12,7 @@ export const metricLabels: Record<string, string> = {
   liquidoInicioROE: "Retorno do Patrimônio Líquido do Início (ROE)",
 
   // Expectativa de Retorno
-  roic: "ROIC - Retorno Capital Investido",
+  roic: "Retorno Capital Investido (",
   ke: "Expectativa de Retorno",
   criacaoValor: "Criação de Valor (EVA)",
 
