@@ -380,7 +380,7 @@ export default function EvaDiagram({ data }: Props) {
       id: "17",
       position: { x: 470, y: 410 },
       data: {
-        label: `(-) Exigível a Longo Prazo`,
+        label: `(-) Passivo Não Circulante`,
       },
       type: "parallelogramTitle",
     },
@@ -412,7 +412,7 @@ export default function EvaDiagram({ data }: Props) {
       id: "19",
       position: { x: 950, y: 380 },
       data: {
-        label: `(=) Cap. Investido Líquido`,
+        label: `(=) Capital Investido Líquido`,
       },
       type: "parallelogramTitle",
     },

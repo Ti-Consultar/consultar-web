@@ -174,7 +174,6 @@ export const GestaoLiquidez = () => {
             "variacaoNCG",
             "fluxoCaixaOperacional",
             "geracaoCaixa",
-            "aumentoReducaoFluxoCaixa",
           ];
           labels = {
             ebitida: "EBITDA",
@@ -182,7 +181,6 @@ export const GestaoLiquidez = () => {
             variacaoNCG: "Variação da NCG",
             fluxoCaixaOperacional: "Fluxo de Caixa Operacional",
             geracaoCaixa: "Geração de Caixa (%)",
-            aumentoReducaoFluxoCaixa: "Aumento/Redução do Fluxo de Caixa (%)",
           };
           setMetricTypes({
             ebitida: "number",
@@ -190,7 +188,6 @@ export const GestaoLiquidez = () => {
             variacaoNCG: "number",
             fluxoCaixaOperacional: "number",
             geracaoCaixa: "percent",
-            aumentoReducaoFluxoCaixa: "percent",
           });
           setValueMode(true);
           setGrossCashFlowDashData(
@@ -223,7 +220,7 @@ export const GestaoLiquidez = () => {
           labels = {
             liquidezCorrente: "Liquidez Corrente",
             liquidezSeca: "Liquidez Seca",
-            liquidezImediata: "Liquidez Geral",
+            liquidezImediata: "Liquidez Imediata",
           };
           setValueMode(false);
           break;

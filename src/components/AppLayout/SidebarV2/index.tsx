@@ -332,7 +332,7 @@ export const Sidebar = () => {
                 ],
               },
               {
-                title: "Balanço e DR",
+                title: "Demonstrações Financeiras",
                 icon: (
                   <img
                     src={BalanceFile}

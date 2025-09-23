@@ -17,7 +17,6 @@ export const metricLabels: Record<string, string> = {
   variacaoNCG: "Variação da NCG",
   fluxoCaixaOperacional: "Fluxo de Caixa Operacional",
   geracaoCaixa: "Geração de Caixa",
-  aumentoReducaoFluxoCaixa: "Aumento/Redução do Fluxo de Caixa",
 
   // Rotatividade
   giroPME: "Giro (PME)",
