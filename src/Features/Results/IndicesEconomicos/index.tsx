@@ -142,7 +142,7 @@ export const IndicesEconomicos = () => {
           extractedMonths = response?.returnExpectation?.months ?? [];
           metrics = ["roic", "ke", "criacaoValor"];
           labels = {
-            roic: "ROIC - Retorno Capital Investido",
+            roic: "Retorno Capital Investido (ROIC)",
             ke: "Expectativa de Retorno",
             criacaoValor: "Criação de Valor (EVA)",
           };
@@ -157,15 +157,15 @@ export const IndicesEconomicos = () => {
           response = await getEbitida(accountPlanId, year);
           extractedMonths = response?.ebitda?.months ?? [];
           metrics = [
-            "ebitda",
             "lucroOperacionalAntesDoResultadoFinanceiro",
             "despesasDepreciacao",
+            "ebitda",
           ];
           labels = {
-            ebitda: "EBITDA",
             lucroOperacionalAntesDoResultadoFinanceiro:
               "Lucro Operacional Antes do Resultado Financeiro (EBIT)",
             despesasDepreciacao: "( + ) Despesas com Depreciação",
+            ebitda: "EBITDA",
           };
           break;
 
