@@ -2,7 +2,10 @@ import { BondListWrapper } from "../../../types/classification";
 import { axiosInstanceWithToken } from "../config";
 const URL = import.meta.env.VITE_API_URL_MRP;
 
-export const getClassification = async (typeClassification: number, accountPlanId: number) => {
+export const getClassification = async (
+  typeClassification: number,
+  accountPlanId: number
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/Classification/accountPlan/${accountPlanId}/typeClassification`,
@@ -26,15 +29,10 @@ export const getClassificationTemplate = async (typeClassification: number) => {
   }
 };
 
-export const getBalancoContabil = async (accountPlanId: number, year: number, typeClassification: number) => {
+export const getClassifiedBonds = async (accountPlanId: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}/painel`,
-      { params: { 
-        accountPlanId,
-        year,
-        typeClassification
-       } }
+      `${URL}/api/Classification/bond-list/${accountPlanId}`
     );
     return response.data;
   } catch (error) {
@@ -42,15 +40,40 @@ export const getBalancoContabil = async (accountPlanId: number, year: number, ty
   }
 };
 
-export const getBalancoReclassificado = async (accountPlanId: number, year: number, typeClassification: number) => {
+export const getBalancoContabil = async (
+  accountPlanId: number,
+  year: number,
+  typeClassification: number
+) => {
+  try {
+    const response = await axiosInstanceWithToken.get(`${URL}/painel`, {
+      params: {
+        accountPlanId,
+        year,
+        typeClassification,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getBalancoReclassificado = async (
+  accountPlanId: number,
+  year: number,
+  typeClassification: number
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/painel-reclassificado`,
-      { params: { 
-        accountPlanId,
-        year,
-        typeClassification
-       } }
+      {
+        params: {
+          accountPlanId,
+          year,
+          typeClassification,
+        },
+      }
     );
     return response.data;
   } catch (error) {
@@ -86,10 +109,13 @@ export const sendAccountPlanId = async (data: SendAccountPlan) => {
   }
 };
 
-export const classify = async (data: BondListWrapper) => {
+export const sendClassification = async (
+  data: BondListWrapper,
+  accountPlanId: number
+) => {
   try {
     const response = await axiosInstanceWithToken.put(
-      `${URL}/create-bond-list`,
+      `${URL}/api/Classification/accountplan/${accountPlanId}/update-bond-list`,
       data
     );
     return response.data;
