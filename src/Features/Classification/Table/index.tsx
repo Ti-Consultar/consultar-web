@@ -140,14 +140,24 @@ export const AccountPlanTable = ({
                   </Tooltip>
                 )}
               </TableCell>
-              <TableCell onClick={() => onSort("costCenter")} align="center">Conta</TableCell>
-              <TableCell onClick={() => onSort("name")} align="center">Descrição</TableCell>
+              <TableCell onClick={() => onSort("costCenter")} align="center">
+                Conta
+              </TableCell>
+              <TableCell onClick={() => onSort("name")} align="center">
+                Descrição
+              </TableCell>
               <TableCell onClick={() => onSort("initialValue")} align="center">
                 Inicial
               </TableCell>
-              <TableCell onClick={() => onSort("credit")} align="center">Crédito</TableCell>
-              <TableCell onClick={() => onSort("debit")} align="center">Débito</TableCell>
-              <TableCell onClick={() => onSort("finalValue")} align="center">Final</TableCell>
+              <TableCell onClick={() => onSort("credit")} align="center">
+                Crédito
+              </TableCell>
+              <TableCell onClick={() => onSort("debit")} align="center">
+                Débito
+              </TableCell>
+              <TableCell onClick={() => onSort("finalValue")} align="center">
+                Final
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -169,6 +179,7 @@ export const AccountPlanTable = ({
                   const classificationId = (() => {
                     for (const group of classificationBonds.bondList) {
                       if (
+                        Array.isArray(group.costCenters) &&
                         group.costCenters.some(
                           (cc) => cc.costCenter === row.costCenter
                         )
@@ -182,6 +193,7 @@ export const AccountPlanTable = ({
                   const classificationName = (() => {
                     for (const group of classificationBonds.bondList) {
                       if (
+                        Array.isArray(group.costCenters) &&
                         group.costCenters.some(
                           (cc) => cc.costCenter === row.costCenter
                         )
@@ -196,7 +208,7 @@ export const AccountPlanTable = ({
                     <TableRow
                       key={row.id}
                       hover
-                      onClick={() => handleCheckboxToggle(row.costCenter)} // continua aqui
+                      onClick={() => handleCheckboxToggle(row.costCenter)}
                       sx={{
                         backgroundColor: isSelected ? "#f3f3f3" : "inherit",
                         cursor: "pointer",
@@ -216,9 +228,10 @@ export const AccountPlanTable = ({
                           </>
                         ) : (
                           <Checkbox
+                            sx={{ padding: "6px 16px" }}
                             checked={isSelected}
                             onClick={(e) => {
-                              e.stopPropagation(); // impede que o clique se propague para a linha
+                              e.stopPropagation();
                               handleCheckboxToggle(row.costCenter);
                             }}
                           />
