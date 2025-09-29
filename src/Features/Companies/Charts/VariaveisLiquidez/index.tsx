@@ -66,7 +66,7 @@ export const LiquidityChart: React.FC<Props> = ({ data }) => {
       }}
     >
       <h3 style={{ textAlign: "center", marginBottom: 10 }}>
-        Tesouraria x NCG x CDG (em milhares)
+        Tesouraria x NCG x CDG
       </h3>
       <ResponsiveContainer>
         <LineChart
