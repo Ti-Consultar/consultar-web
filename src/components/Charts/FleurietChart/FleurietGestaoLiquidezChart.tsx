@@ -1,12 +1,5 @@
 import { useMediaQuery, useTheme } from "@mui/material";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { BarChart, Bar, XAxis, CartesianGrid, Legend } from "recharts";
 
 interface MonthData {
   name: string;
