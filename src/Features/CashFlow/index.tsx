@@ -72,7 +72,7 @@ export const CashFlow = () => {
     obrigacoesTributariasTrabalhistas: "Obrigações Tributárias e Trabalhistas",
     outrosPassivosOperacionais: "Outros Passivos Operacionais",
     fluxoDeCaixaOperacional: "(=) Fluxo de Caixa Operacional",
-    ativoNaoCirculante: "(+) Ativo Não Circulante",
+    ativoNaoCirculante: "Ativo Não Circulante",
     variacaoInvestimento: "Variação Investimento",
     variacaoImobilizado: "Variação Imobilizado",
     fluxoDeCaixaLivre: "(=) Fluxo de Caixa Livre",
