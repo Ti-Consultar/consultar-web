@@ -73,19 +73,19 @@ export const GrossCashFlowChart = ({ data }: Props) => {
           }}
         />
         <Legend />
-        <Bar yAxisId="left" dataKey="ebitida" fill="#8884d8" name="EBITDA" />
+        <Bar yAxisId="left" dataKey="ebitida" fill="#0B4357" name="EBITDA" />
         <Line
           yAxisId="right"
           type="monotone"
           dataKey="margemEBITIDA"
-          stroke="#82ca9d"
+          stroke="#00FF29"
           name="Margem EBITDA"
         />
         <Line
           yAxisId="left"
           type="monotone"
           dataKey="fluxoCaixaOperacional"
-          stroke="#ffc658"
+          stroke="#00AABB"
           name="Fluxo de Caixa Operacional"
         />
       </ComposedChart>

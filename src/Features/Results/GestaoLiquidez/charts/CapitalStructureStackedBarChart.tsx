@@ -73,7 +73,6 @@ export const CapitalStructureStackedBarChart: React.FC<
         <YAxis />
         <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
 
-        {/* Legenda corrigida com cores fixas */}
         <Legend
           content={() => (
             <ul
