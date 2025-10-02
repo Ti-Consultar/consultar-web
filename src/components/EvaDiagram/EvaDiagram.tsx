@@ -78,7 +78,8 @@ const formatValue = (value: number | undefined) => {
   if (value === undefined || value === 0) return "-";
   return value.toLocaleString("pt-BR", {
     style: "decimal",
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   });
 };
 
@@ -95,7 +96,6 @@ type Props = {
 };
 
 export default function EvaDiagram({ data }: Props) {
-
   if (!data || !data.economicView || !data.financialView || !data.indicators) {
     return (
       <div

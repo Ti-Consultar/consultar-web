@@ -65,7 +65,7 @@ export const MarginChart: React.FC<Props> = ({
     <div
       style={{
         width: "100%",
-        height: isMobile ? 170 : 350,
+        height: isMobile ? 170 : 220,
         backgroundColor: "#fff",
       }}
     >
