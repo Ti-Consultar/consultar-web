@@ -15,11 +15,14 @@ import { toast } from "react-toastify";
 import { getCILeEC } from "../../../services/apis/routes/CILeEC.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { MRPIconButton } from "../../../components/Button/IconButton";
+import { ExportButton } from "../../../components/Button/ExportButton";
+import { ExportDialog } from "../../../components/ExportModal";
+import { monthTranslator } from "../../../utils/formatters/monthTranslator";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 
-// --- Main BalancoContabil Component (replicated structure) ---
 export const CILeEC = () => {
   const [tabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
+  const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
   );
   const [data, setData] = useState<any[]>([]);
@@ -30,6 +33,9 @@ export const CILeEC = () => {
     subCompanyId?: string;
   }>();
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const [entityName, setEntityName] = useState<string | null>(null);
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
 
   const metrics = [
     "disponibilidades",
@@ -114,6 +120,7 @@ export const CILeEC = () => {
 
         const lastItem = data[data.length - 1];
         setAccountPlanId(lastItem.id);
+        setEntityName(lastItem.group?.name);
       } catch (error) {
         console.error("Failed to fetch AccountPlanId", error);
         toast.error("Erro ao buscar plano de contas");
@@ -150,6 +157,90 @@ export const CILeEC = () => {
     fetchData();
   };
 
+  const buildExportData = (months: any[]) => {
+    if (!months.length) return { columns: [], rows: [] };
+
+    // Colunas: Conta + meses
+    const columns = [
+      { label: "", accessor: (row: any) => row.name },
+      ...months.map((m) => ({
+        label: monthTranslator[m.name] ?? m.name,
+        accessor: (row: any) => row.values[m.name] ?? "-",
+      })),
+    ];
+
+    // Função utilitária para formatar
+    const formatValue = (value: number) => {
+      const divided = value / 10000;
+      if (divided < 0) {
+        return `(${Math.abs(divided).toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })})`;
+      }
+      return divided.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    };
+
+    // Linhas: cada chave do objeto vira uma linha
+    const rows: any[] = [];
+
+    Object.keys(metricLabels).forEach((field) => {
+      const row: any = { name: metricLabels[field], values: {} };
+      months.forEach((m) => {
+        const rawValue = m[field];
+        row.values[m.name] =
+          typeof rawValue === "number" ? formatValue(rawValue) : "-";
+      });
+      rows.push(row);
+    });
+
+    return { columns, rows };
+  };
+
+  const handleExport = (format: string) => {
+    if (!data.length) {
+      toast.warning("Nenhum dado para exportar");
+      return;
+    }
+
+    const { columns, rows } = buildExportData(data);
+
+    switch (format) {
+      case "PDF":
+        exportPDF(
+          rows,
+          columns,
+          `cil-pfl - ${entityName} ${selectedYear.year()}`,
+          "landscape"
+        );
+        break;
+      case "CSV":
+        exportCSV(
+          rows,
+          columns,
+          `cil-pfl - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "EXCEL":
+        exportExcel(
+          rows,
+          columns,
+          `cil-pfl - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "PPT":
+        exportPPTX(
+          rows,
+          columns,
+          `cil-pfl - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+    }
+  };
+
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
@@ -169,7 +260,9 @@ export const CILeEC = () => {
                 label="Ano"
                 value={selectedYear}
                 onChange={(newValue) => {
-                  setSelectedYear(newValue);
+                  if (newValue) {
+                    setSelectedYear(newValue);
+                  }
                 }}
                 slotProps={{
                   textField: {
@@ -183,6 +276,7 @@ export const CILeEC = () => {
               onClick={handleSearch}
               startIcon={<SearchIcon />}
             />
+            <ExportButton onClick={() => setExportMenuOpen(true)} />
           </Box>
 
           <ResultsTable
@@ -192,7 +286,13 @@ export const CILeEC = () => {
             nestedMetrics={nestedMetrics}
           />
         </Paper>
-      </MainContainer>
+      </MainContainer>{" "}
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportMenuOpen(false)}
+        hasChart={false}
+        onExport={handleExport}
+      />
     </MainTemplate>
   );
 };

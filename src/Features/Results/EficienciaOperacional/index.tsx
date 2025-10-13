@@ -15,11 +15,15 @@ import { toast } from "react-toastify";
 import { getOperationalEfficieny } from "../../../services/apis/routes/operationalEfficiency.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { MRPIconButton } from "../../../components/Button/IconButton";
+import { ExportDialog } from "../../../components/ExportModal";
+import { ExportButton } from "../../../components/Button/ExportButton";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
+import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const EficienciaOperacional = () => {
   const [tabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
+  const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
   );
   const [data, setData] = useState<any[]>([]);
@@ -30,6 +34,9 @@ export const EficienciaOperacional = () => {
     subCompanyId?: string;
   }>();
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const [entityName, setEntityName] = useState<string | null>(null);
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
 
   const metrics = [
     "receitasLiquidas",
@@ -128,6 +135,7 @@ export const EficienciaOperacional = () => {
 
         const lastItem = data[data.length - 1];
         setAccountPlanId(lastItem.id);
+        setEntityName(lastItem.group?.name);
       } catch (error) {
         console.error("Failed to fetch AccountPlanId", error);
         toast.error("Erro ao buscar plano de contas");
@@ -165,6 +173,90 @@ export const EficienciaOperacional = () => {
     fetchData();
   };
 
+  const buildExportData = (months: any[]) => {
+    if (!months.length) return { columns: [], rows: [] };
+
+    // Colunas: Conta + meses
+    const columns = [
+      { label: "", accessor: (row: any) => row.name },
+      ...months.map((m) => ({
+        label: monthTranslator[m.name] ?? m.name,
+        accessor: (row: any) => row.values[m.name] ?? "-",
+      })),
+    ];
+
+    // Função utilitária para formatar
+    const formatValue = (value: number) => {
+      const divided = value / 10000;
+      if (divided < 0) {
+        return `(${Math.abs(divided).toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })})`;
+      }
+      return divided.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    };
+
+    // Linhas: cada chave do objeto vira uma linha
+    const rows: any[] = [];
+
+    Object.keys(metricLabels).forEach((field) => {
+      const row: any = { name: metricLabels[field], values: {} };
+      months.forEach((m) => {
+        const rawValue = m[field];
+        row.values[m.name] =
+          typeof rawValue === "number" ? formatValue(rawValue) : "-";
+      });
+      rows.push(row);
+    });
+
+    return { columns, rows };
+  };
+
+  const handleExport = (format: string) => {
+    if (!data.length) {
+      toast.warning("Nenhum dado para exportar");
+      return;
+    }
+
+    const { columns, rows } = buildExportData(data);
+
+    switch (format) {
+      case "PDF":
+        exportPDF(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`,
+          "landscape"
+        );
+        break;
+      case "CSV":
+        exportCSV(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "EXCEL":
+        exportExcel(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "PPT":
+        exportPPTX(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+    }
+  };
+
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
@@ -184,7 +276,9 @@ export const EficienciaOperacional = () => {
                 label="Ano"
                 value={selectedYear}
                 onChange={(newValue) => {
-                  setSelectedYear(newValue);
+                  if (newValue) {
+                    setSelectedYear(newValue);
+                  }
                 }}
                 slotProps={{
                   textField: {
@@ -198,6 +292,7 @@ export const EficienciaOperacional = () => {
               onClick={handleSearch}
               startIcon={<SearchIcon />}
             />
+            <ExportButton onClick={() => setExportMenuOpen(true)} />
           </Box>
 
           <ResultsTable
@@ -208,6 +303,12 @@ export const EficienciaOperacional = () => {
           />
         </Paper>
       </MainContainer>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportMenuOpen(false)}
+        hasChart={false}
+        onExport={handleExport}
+      />
     </MainTemplate>
   );
 };
