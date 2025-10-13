@@ -74,8 +74,16 @@ type EvaData = {
   };
 };
 
-const formatValue = (value: number | undefined) => {
+const formatValue = (
+  value: number | undefined,
+  isPercentage: boolean = false
+) => {
   if (value === undefined || value === 0) return "-";
+
+  if (isPercentage) {
+    return `${value.toFixed(2)}%`;
+  }
+
   return value.toLocaleString("pt-BR", {
     style: "decimal",
     minimumFractionDigits: 0,
@@ -435,7 +443,7 @@ export default function EvaDiagram({ data }: Props) {
     {
       id: "20.1",
       position: { x: 1880, y: 200 },
-      data: { label: `${formatValue(indicators.roic)}%` },
+      data: { label: `${formatValue(indicators.roic, true)}` },
       type: "parallelogram",
     },
     {
@@ -447,7 +455,7 @@ export default function EvaDiagram({ data }: Props) {
     {
       id: "21.1",
       position: { x: 1880, y: 260 },
-      data: { label: `${formatValue(indicators.wacc)}%` },
+      data: { label: `${formatValue(indicators.wacc, true)}` },
       type: "parallelogram",
     },
     {
@@ -459,7 +467,7 @@ export default function EvaDiagram({ data }: Props) {
     {
       id: "22.2",
       position: { x: 1880, y: 320 },
-      data: { label: `\n${formatValue(indicators.spread)}%` },
+      data: { label: `\n${formatValue(indicators.spread, true)}` },
       type: "parallelogram",
     },
     {
@@ -619,7 +627,7 @@ export default function EvaDiagram({ data }: Props) {
     {
       id: "33.1",
       position: { x: 1880, y: 500 },
-      data: { label: `${formatValue(indicators.roicAcumulado)}%` },
+      data: { label: `${formatValue(indicators.roicAcumulado, true)}` },
       type: "parallelogram",
     },
     {
@@ -631,7 +639,7 @@ export default function EvaDiagram({ data }: Props) {
     {
       id: "34.1",
       position: { x: 1880, y: 560 },
-      data: { label: `${formatValue(indicators.waccAcumulado)}%` },
+      data: { label: `${formatValue(indicators.waccAcumulado, true)}` },
       type: "parallelogram",
     },
     {
@@ -643,7 +651,7 @@ export default function EvaDiagram({ data }: Props) {
     {
       id: "35.2",
       position: { x: 1880, y: 620 },
-      data: { label: `\n${formatValue(indicators.spreadAcumulado)}%` },
+      data: { label: `\n${formatValue(indicators.spreadAcumulado, true)}` },
       type: "parallelogram",
     },
     {
