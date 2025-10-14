@@ -63,7 +63,6 @@ type RoleOption = {
 };
 
 export const CompanyTable = ({
-  fileName,
   companies,
   onAddCompany,
   onEdit,

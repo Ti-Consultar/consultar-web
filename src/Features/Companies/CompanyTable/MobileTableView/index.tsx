@@ -46,7 +46,6 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   onDelete,
   onReactivate,
   onRowClick,
-  fileName,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openDialog, setOpenDialog] = useState(false);
