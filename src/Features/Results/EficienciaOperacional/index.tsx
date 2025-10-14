@@ -169,31 +169,6 @@ export const EficienciaOperacional = () => {
     }
   };
 
-  const formatMetricValue = (value: number, type: "number" | "percent") => {
-    if (typeof value !== "number" || isNaN(value)) return "-";
-
-    if (type === "percent") {
-      const normalized = Math.abs(value) <= 1 ? value * 100 : value;
-      const formatted = normalized.toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-      return `${value < 0 ? `(${formatted})` : formatted}%`;
-    } else {
-      const divided = value / 10000;
-      if (divided < 0) {
-        return `(${Math.abs(divided).toLocaleString("pt-BR", {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        })})`;
-      }
-      return divided.toLocaleString("pt-BR", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      });
-    }
-  };
-
   const handleSearch = () => {
     fetchData();
   };

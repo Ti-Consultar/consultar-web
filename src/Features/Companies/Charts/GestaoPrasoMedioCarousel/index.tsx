@@ -13,7 +13,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  LabelList,
   ResponsiveContainer,
 } from "recharts";
 import { useMediaQuery, useTheme } from "@mui/material";
