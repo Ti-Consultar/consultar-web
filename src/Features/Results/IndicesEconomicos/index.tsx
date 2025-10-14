@@ -21,6 +21,10 @@ import {
 } from "../../../services/apis/routes/economicIndices,service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { MRPIconButton } from "../../../components/Button/IconButton";
+import { ExportButton } from "../../../components/Button/ExportButton";
+import { ExportDialog } from "../../../components/ExportModal";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
+import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 
 export const IndicesEconomicos = () => {
   const [tabValue, setTabValue] = useState<number>(1);
@@ -39,6 +43,9 @@ export const IndicesEconomicos = () => {
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
   const [metricTypes, setMetricTypes] =
     useState<Record<string, "number" | "percent">>();
+  const [entityName, setEntityName] = useState<string | null>(null);
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [highlightRows, setHighlightRows] = useState<Record<string, boolean>>(
     {}
   );
@@ -214,6 +221,88 @@ export const IndicesEconomicos = () => {
     fetchData();
   };
 
+  const buildExportData = (
+    months: any[],
+    metricKeys: string[],
+    metricLabels: Record<string, string>,
+    metricTypes?: Record<string, "number" | "percent">
+  ) => {
+    if (!months.length || !metricKeys.length) return { columns: [], rows: [] };
+
+    // Cria colunas
+    const columns = [
+      { label: "", accessor: (row: any) => row.label },
+      ...months.map((m) => ({
+        label: monthTranslator[m.name] ?? m.name,
+        accessor: (row: any) => row[m.name],
+      })),
+    ];
+
+    // Cria linhas
+    const rows = metricKeys.map((key) => {
+      const row: Record<string, any> = { label: metricLabels[key] ?? key };
+
+      months.forEach((month) => {
+        const value = month[key];
+
+        if (value == null) {
+          row[month.name] = "-";
+          return;
+        }
+
+        if (metricTypes?.[key] === "percent") {
+          const normalized = Math.abs(value) <= 1 ? value * 100 : value;
+          row[month.name] = `${normalized.toFixed(2).replace(".", ",")}%`;
+        } else {
+          row[month.name] = value.toLocaleString("pt-BR", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          });
+        }
+      });
+
+      return row;
+    });
+
+    return { columns, rows };
+  };
+
+  const handleExport = (format: string) => {
+    if (!months.length || !metricKeys.length) {
+      toast.warning("Nenhum dado para exportar");
+      return;
+    }
+
+    // Monta os dados tabulares
+    const { columns, rows } = buildExportData(
+      months,
+      metricKeys,
+      metricLabels,
+      metricTypes
+    );
+
+    const fileName = `indices-economicos - ${
+      entityName ?? "empresa"
+    } ${selectedYear?.year()}`;
+
+    switch (format) {
+      case "PDF":
+        exportPDF(rows, columns, fileName, "landscape");
+        break;
+      case "CSV":
+        exportCSV(rows, columns, fileName);
+        break;
+      case "EXCEL":
+        exportExcel(rows, columns, fileName);
+        break;
+      case "PPT":
+        exportPPTX(rows, columns, fileName);
+        break;
+      default:
+        toast.error("Formato de exportação inválido");
+    }
+  };
+
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
@@ -332,6 +421,7 @@ export const IndicesEconomicos = () => {
               onClick={handleSearch}
               startIcon={<SearchIcon />}
             />
+            <ExportButton onClick={() => setExportMenuOpen(true)} />
           </Box>
 
           <ResultsTable
@@ -343,6 +433,12 @@ export const IndicesEconomicos = () => {
           />
         </Paper>
       </MainContainer>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportMenuOpen(false)}
+        hasChart={false}
+        onExport={handleExport}
+      />
     </MainTemplate>
   );
 };

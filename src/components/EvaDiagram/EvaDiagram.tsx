@@ -80,15 +80,20 @@ const formatValue = (
 ) => {
   if (value === undefined || value === 0) return "-";
 
+  const absValue = Math.abs(value);
+
   if (isPercentage) {
-    return `${value.toFixed(2)}%`;
+    const formatted = `${absValue.toFixed(2)}%`;
+    return value < 0 ? `(${formatted})` : formatted;
   }
 
-  return value.toLocaleString("pt-BR", {
+  const formattedNumber = absValue.toLocaleString("pt-BR", {
     style: "decimal",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
+
+  return value < 0 ? `(${formattedNumber})` : formattedNumber;
 };
 
 const nodeTypes = {

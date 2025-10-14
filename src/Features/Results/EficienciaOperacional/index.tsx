@@ -169,6 +169,31 @@ export const EficienciaOperacional = () => {
     }
   };
 
+  const formatMetricValue = (value: number, type: "number" | "percent") => {
+    if (typeof value !== "number" || isNaN(value)) return "-";
+
+    if (type === "percent") {
+      const normalized = Math.abs(value) <= 1 ? value * 100 : value;
+      const formatted = normalized.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      return `${value < 0 ? `(${formatted})` : formatted}%`;
+    } else {
+      const divided = value / 10000;
+      if (divided < 0) {
+        return `(${Math.abs(divided).toLocaleString("pt-BR", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })})`;
+      }
+      return divided.toLocaleString("pt-BR", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    }
+  };
+
   const handleSearch = () => {
     fetchData();
   };
@@ -176,7 +201,7 @@ export const EficienciaOperacional = () => {
   const buildExportData = (months: any[]) => {
     if (!months.length) return { columns: [], rows: [] };
 
-    // Colunas: Conta + meses
+    // Colunas
     const columns = [
       { label: "", accessor: (row: any) => row.name },
       ...months.map((m) => ({
@@ -188,19 +213,21 @@ export const EficienciaOperacional = () => {
     // Função utilitária para formatar
     const formatValue = (value: number) => {
       const divided = value / 10000;
+
       if (divided < 0) {
         return `(${Math.abs(divided).toLocaleString("pt-BR", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
         })})`;
       }
+
       return divided.toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
       });
     };
 
-    // Linhas: cada chave do objeto vira uma linha
+    // Linhas
     const rows: any[] = [];
 
     Object.keys(metricLabels).forEach((field) => {

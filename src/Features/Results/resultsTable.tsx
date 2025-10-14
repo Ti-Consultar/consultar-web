@@ -23,7 +23,7 @@ interface TabelaMetricasTranspostaProps {
   metricLabels: Record<string, string>;
   nestedMetrics?: Record<string, string[]>;
   enableValueMode?: boolean;
-  metricTypes?: Record<string, "number" | "percent">;
+  metricTypes?: Record<string, "number" | "percent" | "indicator">;
   highlightRows?: Record<string, boolean>;
 }
 
@@ -86,6 +86,15 @@ export const ResultsTable = ({
       return value < 0 ? `(${formattedPercent})` : formattedPercent;
     }
 
+    if (metricTypes[metricKey] === "indicator") {
+      const formatted = value.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+      return value < 0 ? `(${formatted})` : formatted;
+    }
+
     let adjustedValue = Math.abs(value);
 
     if (enableValueMode) {
@@ -94,8 +103,8 @@ export const ResultsTable = ({
     }
 
     const formatted = adjustedValue.toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     });
 
     if (value < 0) return `(${formatted})`;

@@ -160,7 +160,6 @@ export const CILeEC = () => {
   const buildExportData = (months: any[]) => {
     if (!months.length) return { columns: [], rows: [] };
 
-    // Colunas: Conta + meses
     const columns = [
       { label: "", accessor: (row: any) => row.name },
       ...months.map((m) => ({
@@ -169,7 +168,6 @@ export const CILeEC = () => {
       })),
     ];
 
-    // Função utilitária para formatar
     const formatValue = (value: number) => {
       const divided = value / 10000;
       if (divided < 0) {
@@ -184,13 +182,38 @@ export const CILeEC = () => {
       });
     };
 
-    // Linhas: cada chave do objeto vira uma linha
     const rows: any[] = [];
 
-    Object.keys(metricLabels).forEach((field) => {
-      const row: any = { name: metricLabels[field], values: {} };
+    rows.push({ name: metricLabels["cil"], values: {} });
+
+    const cilFields = Object.keys(months[0].cil).filter((k) => k !== "name");
+    cilFields.forEach((field) => {
+      const row: any = {
+        name: metricLabels[field] ?? field,
+        values: {},
+      };
       months.forEach((m) => {
-        const rawValue = m[field];
+        const rawValue = m.cil[field];
+        row.values[m.name] =
+          typeof rawValue === "number" ? formatValue(rawValue) : "-";
+      });
+      rows.push(row);
+    });
+
+    rows.push({ name: "", values: {} });
+
+    rows.push({ name: metricLabels["estruturaDeCapital"], values: {} });
+
+    const ecFields = Object.keys(months[0].estruturaDeCapital).filter(
+      (k) => k !== "name"
+    );
+    ecFields.forEach((field) => {
+      const row: any = {
+        name: metricLabels[field] ?? field,
+        values: {},
+      };
+      months.forEach((m) => {
+        const rawValue = m.estruturaDeCapital[field];
         row.values[m.name] =
           typeof rawValue === "number" ? formatValue(rawValue) : "-";
       });
@@ -286,7 +309,7 @@ export const CILeEC = () => {
             nestedMetrics={nestedMetrics}
           />
         </Paper>
-      </MainContainer>{" "}
+      </MainContainer>
       <ExportDialog
         open={exportOpen}
         onClose={() => setExportMenuOpen(false)}
