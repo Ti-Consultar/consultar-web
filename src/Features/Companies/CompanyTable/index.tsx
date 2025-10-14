@@ -91,7 +91,7 @@ export const CompanyTable = ({
     handleSort,
   } = useTableUtils(companies, (company) => company.companyName);
 
-  const { exportPDF, exportCSV } = useExportUtils(`${fileName}-empresas`);
+  const { exportPDF, exportCSV } = useExportUtils();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
@@ -181,10 +181,10 @@ export const CompanyTable = ({
 
     switch (format) {
       case "CSV":
-        exportCSV(filteredCompanies, columns);
+        exportCSV(filteredCompanies, columns, "table");
         break;
       case "PDF":
-        exportPDF(filteredCompanies, columns);
+        exportPDF(filteredCompanies, columns, "landscape");
         break;
       default:
         break;

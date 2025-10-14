@@ -20,6 +20,10 @@ import { TableValueVisualization } from "../../../components/Inputs/TableValueVi
 import BalancoReclassificadoTable from "./table";
 import BalancoContabilTable from "../BalanceSheet/table";
 import { MRPIconButton } from "../../../components/Button/IconButton";
+import { ExportDialog } from "../../../components/ExportModal";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
+import { monthTranslator } from "../../../utils/formatters/monthTranslator";
+import { ExportButton } from "../../../components/Button/ExportButton";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1);
@@ -29,11 +33,14 @@ export const BalancoReclassificado = () => {
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const { setLoading } = useLoading();
   const [balanceteData, setBalanceteData] = useState<Month[]>([]);
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const [entityName, setEntityName] = useState<string | null>(null);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
 
   const highlightRows = useMemo(() => {
     const ids: Record<number, boolean> = {};
@@ -77,6 +84,7 @@ export const BalancoReclassificado = () => {
         if (!Array.isArray(data) || data.length === 0) return;
         const lastItem = data[data.length - 1];
         setAccountPlanId(lastItem.id);
+        setEntityName(lastItem.group?.name);
       } catch (error) {
         console.error("Failed to fetch AccountPlanId", error);
         toast.error("Erro ao buscar plano de contas");
@@ -142,11 +150,114 @@ export const BalancoReclassificado = () => {
     handleSearch(newValue);
   };
 
+  const buildExportData = (months: Month[]) => {
+    if (!months.length) return { columns: [], rows: [] };
+
+    // Colunas: "Conta / Classificação" + cada mês
+    const columns = [
+      { label: "Conta / Classificação", accessor: (row: any) => row.name },
+      ...months.map((m) => ({
+        label: monthTranslator[m.name] ?? m.name,
+        accessor: (row: any) => row.values[m.id] ?? "-",
+      })),
+    ];
+    // Linhas
+    const rows: any[] = [];
+
+    const addRow = (name: string, values: Record<number, number | string>) => {
+      rows.push({ name, values });
+    };
+
+    // Itera os meses
+    months.forEach((month) => {
+      // Totalizadores do mês
+      month.totalizer?.forEach((tot) => {
+        // Linha do totalizador
+        let existing = rows.find((r) => r.name === tot.name);
+        if (!existing) {
+          addRow(tot.name, {});
+          existing = rows.find((r) => r.name === tot.name);
+        }
+        existing.values[month.id] = tot.totalValue;
+
+        // Classificações
+        tot.classifications?.forEach((cls) => {
+          let existingCls = rows.find((r) => r.name === `   ${cls.name}`);
+          if (!existingCls) {
+            addRow(`   ${cls.name}`, {});
+            existingCls = rows.find((r) => r.name === `   ${cls.name}`);
+          }
+          existingCls.values[month.id] = cls.value;
+        });
+      });
+
+      // Total geral do mês
+      if (month.monthPainelContabilTotalizer) {
+        let existingTotGeral = rows.find(
+          (r) => r.name === month.monthPainelContabilTotalizer.name
+        );
+        if (!existingTotGeral) {
+          addRow(month.monthPainelContabilTotalizer.name, {});
+          existingTotGeral = rows.find(
+            (r) => r.name === month.monthPainelContabilTotalizer.name
+          );
+        }
+        existingTotGeral.values[month.id] =
+          month.monthPainelContabilTotalizer.totalValue;
+      }
+    });
+
+    return { columns, rows };
+  };
+
+  const handleExport = (format: string) => {
+    if (!balanceteData.length) {
+      toast.warning("Nenhum dado para exportar");
+      return;
+    }
+
+    const { columns, rows } = buildExportData(balanceteData);
+
+    switch (format) {
+      case "PDF":
+        exportPDF(
+          rows,
+          columns,
+          `demonstracoes-${entityName}-${selectedYear.year()}`,
+          "landscape"
+        );
+        break;
+      case "CSV":
+        exportCSV(rows, columns, `demonstracoes-${entityName}-${selectedYear.year()}`);
+        break;
+      case "EXCEL":
+        exportExcel(
+          rows,
+          columns,
+          `demonstracoes-${entityName}-${selectedYear.year()}`
+        );
+        break;
+      case "PPT":
+        exportPPTX(
+          rows,
+          columns,
+          `demonstracoes-${entityName}-${selectedYear.year()}`
+        );
+        break;
+    }
+  };
+
   useEffect(() => {
     if (accountPlanId) {
       handleSearch(1);
     }
   }, [accountPlanId]);
+
+  useEffect(() => {
+    if (selectedYear && accountPlanId) {
+      handleSearch();
+    }
+  }, [selectedYear]);
 
   return (
     <MainTemplate>
@@ -231,6 +342,7 @@ export const BalancoReclassificado = () => {
               onClick={() => handleSearch()}
               startIcon={<SearchIcon />}
             />
+            <ExportButton onClick={() => setExportMenuOpen(true)} />
           </Box>
 
           <Container>
@@ -245,6 +357,12 @@ export const BalancoReclassificado = () => {
           </Container>
         </Paper>
       </MainContainer>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportMenuOpen(false)}
+        hasChart={false}
+        onExport={handleExport}
+      />
     </MainTemplate>
   );
 };

@@ -92,7 +92,10 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
   }, [currentIndex, safeIndex, onChangeIndex]);
 
   const formatNumber = (value: number) =>
-    new Intl.NumberFormat("pt-BR").format(value);
+    new Intl.NumberFormat("pt-BR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
 
   return (
     <CarouselContainer>
@@ -107,6 +110,7 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
             borderRadius: 12,
             padding: 10,
             boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+            paddingRight: "36px",
           }}
         >
           <h3
@@ -132,14 +136,10 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
               />
               <XAxis
                 dataKey="name"
-                tick={{ fill: "#555", fontSize: 12 }}
+                tick={{ fill: "#000", fontSize: 12 }}
                 axisLine={{ stroke: "#ccc" }}
               />
-              <YAxis
-                tickFormatter={formatNumber}
-                tick={{ fill: "#555", fontSize: 12 }}
-                axisLine={{ stroke: "#ccc" }}
-              />
+              <YAxis tick={false} axisLine={{ stroke: "#ccc" }} />
               <Tooltip
                 contentStyle={{ backgroundColor: "#fff", borderRadius: 8 }}
                 formatter={(value: number, name: string, props: any) => {
@@ -151,18 +151,7 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
                 dataKey={metric.key}
                 fill={metric.color}
                 radius={[6, 6, 0, 0]}
-              >
-                {!isMobile && (
-                  <LabelList
-                    dataKey={metric.key}
-                    position="top"
-                    formatter={(label) => {
-                      const value = typeof label === "number" ? label : 0;
-                      return formatNumber(value);
-                    }}
-                  />
-                )}
-              </Bar>
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>

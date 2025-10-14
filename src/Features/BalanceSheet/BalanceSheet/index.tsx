@@ -17,6 +17,10 @@ import { BalancoResponse, Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { useDrawer } from "../../../contexts/DrawerContext";
 import { MRPIconButton } from "../../../components/Button/IconButton";
+import { ExportDialog } from "../../../components/ExportModal";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
+import { monthTranslator } from "../../../utils/formatters/monthTranslator";
+import { ExportButton } from "../../../components/Button/ExportButton";
 
 export const BalancoContabil = () => {
   const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
@@ -25,6 +29,7 @@ export const BalancoContabil = () => {
   );
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const { setLoading } = useLoading();
+  const [entityName, setEntityName] = useState<string | null>(null);
   const [balanceteData, setBalanceteData] = useState<Month[]>([]);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
@@ -32,6 +37,8 @@ export const BalancoContabil = () => {
     subCompanyId?: string;
   }>();
   const { isOpen } = useDrawer();
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
 
   useEffect(() => {
     if (!groupId || accountPlanId) return;
@@ -51,6 +58,7 @@ export const BalancoContabil = () => {
 
         const lastItem = data[data.length - 1];
         setAccountPlanId(lastItem.id);
+        setEntityName(lastItem.group?.name);
       } catch (error) {
         console.error("Failed to fetch AccountPlanId", error);
         toast.error("Erro ao buscar plano de contas");
@@ -108,6 +116,113 @@ export const BalancoContabil = () => {
       handleSearch(1);
     }
   }, [accountPlanId]);
+
+  const buildExportData = (months: Month[]) => {
+    if (!months.length) return { columns: [], rows: [] };
+
+    // Colunas: "Conta / Classificação" + cada mês
+    const columns = [
+      { label: "Conta / Classificação", accessor: (row: any) => row.name },
+      ...months.map((m) => ({
+        label: monthTranslator[m.name] ?? m.name,
+        accessor: (row: any) => row.values[m.id] ?? "-",
+      })),
+    ];
+    // Linhas
+    const rows: any[] = [];
+
+    const addRow = (name: string, values: Record<number, number | string>) => {
+      rows.push({ name, values });
+    };
+
+    // Itera os meses
+    months.forEach((month) => {
+      // Totalizadores do mês
+      month.totalizer?.forEach((tot) => {
+        // Linha do totalizador
+        let existing = rows.find((r) => r.name === tot.name);
+        if (!existing) {
+          addRow(tot.name, {});
+          existing = rows.find((r) => r.name === tot.name);
+        }
+        existing.values[month.id] = tot.totalValue;
+
+        // Classificações
+        tot.classifications?.forEach((cls) => {
+          let existingCls = rows.find((r) => r.name === `   ${cls.name}`);
+          if (!existingCls) {
+            addRow(`   ${cls.name}`, {});
+            existingCls = rows.find((r) => r.name === `   ${cls.name}`);
+          }
+          existingCls.values[month.id] = cls.value;
+        });
+      });
+
+      // Total geral do mês
+      if (month.monthPainelContabilTotalizer) {
+        let existingTotGeral = rows.find(
+          (r) => r.name === month.monthPainelContabilTotalizer.name
+        );
+        if (!existingTotGeral) {
+          addRow(month.monthPainelContabilTotalizer.name, {});
+          existingTotGeral = rows.find(
+            (r) => r.name === month.monthPainelContabilTotalizer.name
+          );
+        }
+        existingTotGeral.values[month.id] =
+          month.monthPainelContabilTotalizer.totalValue;
+      }
+    });
+
+    return { columns, rows };
+  };
+
+  const handleExport = (format: string) => {
+    if (!balanceteData.length) {
+      toast.warning("Nenhum dado para exportar");
+      return;
+    }
+
+    const { columns, rows } = buildExportData(balanceteData);
+
+    switch (format) {
+      case "PDF":
+        exportPDF(
+          rows,
+          columns,
+          `balanco-contabil-${entityName}-${selectedYear.year()}`,
+          "landscape"
+        );
+        break;
+      case "CSV":
+        exportCSV(
+          rows,
+          columns,
+          `balanco-contabil-${entityName}-${selectedYear.year()}`
+        );
+        break;
+      case "EXCEL":
+        exportExcel(
+          rows,
+          columns,
+          `balanco-contabil-${entityName}-${selectedYear.year()}`
+        );
+        break;
+      case "PPT":
+        exportPPTX(
+          rows,
+          columns,
+          `balanco-contabil-${entityName}-${selectedYear.year()}`
+        );
+        break;
+    }
+  };
+
+  useEffect(() => {
+    if (selectedYear && accountPlanId) {
+      handleSearch();
+    }
+  }, [selectedYear]);
 
   return (
     <MainTemplate>
@@ -167,7 +282,9 @@ export const BalancoContabil = () => {
                 label="Ano"
                 value={selectedYear}
                 onChange={(newValue: Dayjs | null) => {
-                  if (newValue) setSelectedYear(newValue);
+                  if (newValue) {
+                    setSelectedYear(newValue);
+                  }
                 }}
                 slotProps={{
                   textField: {
@@ -177,16 +294,23 @@ export const BalancoContabil = () => {
               />
             </LocalizationProvider>
             <MRPIconButton
-              title="Pesquisar"
+              title="Buscar"
               onClick={() => handleSearch()}
               startIcon={<SearchIcon />}
             />
+            <ExportButton onClick={() => setExportMenuOpen(true)} />
           </Box>
           <Container>
             <BalancoContabilTable months={balanceteData} />
           </Container>
         </Paper>
       </MainContainer>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportMenuOpen(false)}
+        hasChart={false}
+        onExport={handleExport}
+      />
     </MainTemplate>
   );
 };

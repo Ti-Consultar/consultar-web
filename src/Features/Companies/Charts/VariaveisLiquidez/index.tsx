@@ -62,6 +62,7 @@ export const LiquidityChart: React.FC<Props> = ({ data }) => {
         padding: "10px",
         borderRadius: 12,
         border: "1px solid var(--neutral-300)",
+        paddingRight: "26px"
       }}
     >
       <ResponsiveContainer>
@@ -86,13 +87,7 @@ export const LiquidityChart: React.FC<Props> = ({ data }) => {
 
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="name" />
-          <YAxis
-            tickFormatter={(value) =>
-              new Intl.NumberFormat("pt-BR", {
-                maximumFractionDigits: 0,
-              }).format(value)
-            }
-          />
+          <YAxis tick={false} />
           <Tooltip
             formatter={(value: number) =>
               new Intl.NumberFormat("pt-BR", {

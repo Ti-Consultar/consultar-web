@@ -58,7 +58,7 @@ export const GestaoLiquidez = () => {
   const [months, setMonths] = useState<any[]>([]);
   const [valueMode, setValueMode] = useState<boolean>(true);
   const [metricTypes, setMetricTypes] =
-    useState<Record<string, "number" | "percent">>();
+    useState<Record<string, "number" | "percent" | "indicator">>();
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
   const { setLoading } = useLoading();
@@ -163,6 +163,14 @@ export const GestaoLiquidez = () => {
               "Ciclo Financeiro das Operações",
             cicloFinanceiroNCG: "Ciclo Financeiro NCG",
           };
+          setMetricTypes({
+            pme: "indicator",
+            pmr: "indicator",
+            pmp: "indicator",
+            cicloFinanceiroDasOperacoesPrincipais: "indicator",
+            cicloFinanceiroNCG: "indicator",
+          });
+
           setValueMode(false);
           setCapitalDynamicsData(response?.capitalDynamics?.months);
           break;
@@ -213,6 +221,12 @@ export const GestaoLiquidez = () => {
             giroPMP: "Giro PMP",
             giroCaixa: "Giro Caixa",
           };
+          setMetricTypes({
+            giroPME: "indicator",
+            giroPMR: "indicator",
+            giroPMP: "indicator",
+            giroCaixa: "indicator",
+          });
           setValueMode(false);
           break;
 
@@ -226,6 +240,11 @@ export const GestaoLiquidez = () => {
             liquidezSeca: "Liquidez Seca",
             liquidezImediata: "Liquidez Imediata",
           };
+          setMetricTypes({
+            liquidezCorrente: "indicator",
+            liquidezSeca: "indicator",
+            liquidezImediata: "indicator",
+          });
           setValueMode(false);
           break;
 

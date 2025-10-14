@@ -96,6 +96,7 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
             borderRadius: 12,
             padding: 10,
             boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+            paddingRight: "36px",
           }}
         >
           <h3
@@ -104,7 +105,7 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
               marginBottom: 10,
               fontSize: 16,
               fontWeight: 600,
-              color: "#333",
+              color: "#000",
             }}
           >
             {metric.label}
@@ -121,15 +122,10 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
               />
               <XAxis
                 dataKey="name"
-                tick={{ fill: "#555", fontSize: 12 }}
+                tick={{ fill: "#000", fontSize: 12 }}
                 axisLine={{ stroke: "#ccc" }}
               />
-              <YAxis
-                domain={[0, "auto"]}
-                tickFormatter={(value) => `${Number(value).toFixed(1)}`}
-                tick={{ fill: "#555", fontSize: 12 }}
-                axisLine={{ stroke: "#ccc" }}
-              />
+              <YAxis tick={false} axisLine={{ stroke: "#ccc" }} />
               <Tooltip
                 contentStyle={{ backgroundColor: "#fff", borderRadius: 8 }}
                 formatter={(value) => `${Number(value).toFixed(2)}`}
@@ -153,7 +149,7 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
                           x={x}
                           y={(y as number) - 10}
                           textAnchor="middle"
-                          fill="#555"
+                          fill="#000"
                           fontSize={11}
                         >
                           {Number(value).toFixed(2)}

@@ -15,6 +15,7 @@ import {
 import { TableDetailModal } from "./tableDetail";
 import InboxIcon from "@mui/icons-material/Inbox";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
+import { monthTranslatorUtil } from "../../../utils/formatters/monthTranslator";
 
 // Type definitions
 interface FinancialData {
@@ -84,25 +85,6 @@ const BalancoContabilTable = ({
   allTotalizers.sort((a, b) => a.typeOrder - b.typeOrder);
 
   const isEmpty = !months.length || !allTotalizers.length;
-
-  // Tradutor de mês
-  function monthTranslator(mesIngles: string): string {
-    const meses: Record<string, string> = {
-      January: "Janeiro",
-      February: "Fevereiro",
-      March: "Março",
-      April: "Abril",
-      May: "Maio",
-      June: "Junho",
-      July: "Julho",
-      August: "Agosto",
-      September: "Setembro",
-      October: "Outubro",
-      November: "Novembro",
-      December: "Dezembro",
-    };
-    return meses[mesIngles] || mesIngles;
-  }
 
   // Modal de detalhes
   const handleCellClick = (
@@ -221,7 +203,7 @@ const BalancoContabilTable = ({
                     sx={{ ...stickyHeaderStyle, minWidth: 120 }}
                   >
                     <Typography variant="subtitle2" fontWeight="bold">
-                      {monthTranslator(month.name)}
+                      {monthTranslatorUtil(month.name)}
                     </Typography>
                   </TableCell>
                 ))}
@@ -348,7 +330,7 @@ const BalancoContabilTable = ({
                                 onClick={() =>
                                   handleCellClick(
                                     monthClassification?.datas,
-                                    `${classification.name} - ${monthTranslator(
+                                    `${classification.name} - ${monthTranslatorUtil(
                                       month.name
                                     )}`
                                   )
