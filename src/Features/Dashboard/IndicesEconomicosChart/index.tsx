@@ -101,7 +101,7 @@ export const MarginChart: React.FC<Props> = ({
                       y={(y as number) - 10}
                       textAnchor="middle"
                       fill="#000"
-                      fontSize={12}
+                      fontSize={15}
                     >
                       {(value as number).toFixed(2) + "%"}
                     </text>

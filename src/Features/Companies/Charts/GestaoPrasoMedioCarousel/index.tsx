@@ -14,6 +14,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  LabelList,
 } from "recharts";
 import { useMediaQuery, useTheme } from "@mui/material";
 
@@ -150,7 +151,19 @@ export const GestaoPrazoMedioCarousel: React.FC<Props> = ({
                 dataKey={metric.key}
                 fill={metric.color}
                 radius={[6, 6, 0, 0]}
-              />
+              >
+                {!isMobile && (
+                  <LabelList
+                    style={{ fill: "#000" }}
+                    dataKey={metric.key}
+                    position="top"
+                    formatter={(label) => {
+                      const value = typeof label === "number" ? label : 0;
+                      return formatNumber(value);
+                    }}
+                  />
+                )}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

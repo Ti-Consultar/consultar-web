@@ -150,7 +150,7 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
                           y={(y as number) - 10}
                           textAnchor="middle"
                           fill="#000"
-                          fontSize={11}
+                          fontSize={15}
                         >
                           {Number(value).toFixed(2)}
                         </text>
