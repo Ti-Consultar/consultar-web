@@ -68,6 +68,7 @@ export const IndicesEconomicos = () => {
         if (!Array.isArray(data) || data.length === 0) return;
 
         const lastItem = data[data.length - 1];
+        setEntityName(lastItem.group?.name);
         setAccountPlanId(lastItem.id);
       } catch (error) {
         console.error("Failed to fetch AccountPlanId", error);

@@ -51,7 +51,7 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const { exportPDF, exportCSV } = useExportUtils(`${fileName}-empresas`);
+  const { exportPDF, exportCSV } = useExportUtils();
   const { searchTerm, setSearchTerm, setPage, filteredItems } = useTableUtils(
     companies,
     (company) => company.companyName
@@ -110,10 +110,10 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
 
     switch (format) {
       case "CSV":
-        exportCSV(filteredItems, columns);
+        exportCSV(filteredItems, columns, "");
         break;
       case "PDF":
-        exportPDF(filteredItems, columns);
+        exportPDF(filteredItems, columns, "");
         break;
       default:
         break;
