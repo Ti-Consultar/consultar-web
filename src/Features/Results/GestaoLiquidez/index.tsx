@@ -300,7 +300,7 @@ export const GestaoLiquidez = () => {
   const fetchFeurietData = async () => {
     if (!accountPlanId || !selectedYear || !selectedMonth) return;
 
-    const year = Number(selectedYear.format("YYYY"));
+    const year = Number(selectedMonth.year());
     const selectedMonthNumber = selectedMonth.month() + 1;
 
     setLoading(true);
@@ -326,6 +326,10 @@ export const GestaoLiquidez = () => {
   const handleSearch = () => {
     fetchData();
   };
+
+  useEffect(() => {
+    console.log(selectedMonth?.year());
+  }, [selectedMonth]);
 
   useEffect(() => {
     if (accountPlanId) {

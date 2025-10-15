@@ -46,7 +46,7 @@ const TurnoverChart = ({ data }: { data: any[] }) => {
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
-        <YAxis />
+        <YAxis tick={false}/>
         <Tooltip formatter={(value: number) => `${value.toFixed(2)} dias`} />
         <Legend />
         <Bar

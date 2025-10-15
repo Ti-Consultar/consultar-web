@@ -53,7 +53,7 @@ export const LiquidityLineChart = ({ data }: Props) => {
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
-        <YAxis />
+        <YAxis tick={false} />
         <Tooltip
           formatter={(value: number) => value.toFixed(2)}
           labelFormatter={(label: string) => `Mês: ${label}`}

@@ -8,7 +8,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 type MonthNavigatorProps = {
   value: Dayjs | null;
-  onChange: (newValue: Dayjs | null) => void;
+  onChange: (newValue: Dayjs | null, month?: number, year?: number) => void;
   shouldDisableMonth?: (month: Dayjs) => boolean;
 };
 
@@ -18,6 +18,7 @@ export const MonthNavigator = ({
   shouldDisableMonth,
 }: MonthNavigatorProps) => {
   const [open, setOpen] = useState(false);
+  const [tempValue, setTempValue] = useState<Dayjs | null>(value);
   const anchorRef = useRef<HTMLSpanElement | null>(null);
 
   const prevMonth = value ? value.subtract(1, "month") : null;
@@ -28,17 +29,27 @@ export const MonthNavigator = ({
   const isNextDisabled =
     !nextMonth || (shouldDisableMonth ? shouldDisableMonth(nextMonth) : false);
 
+  const handleAccept = (newValue: Dayjs | null) => {
+    if (newValue) {
+      const month = newValue.month() + 1;
+      const year = newValue.year();
+      onChange(newValue, month, year);
+    } else {
+      onChange(null);
+    }
+    setOpen(false);
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <IconButton
-          onClick={() => prevMonth && onChange(prevMonth)}
+          onClick={() => prevMonth && handleAccept(prevMonth)}
           disabled={isPrevDisabled}
         >
           <ArrowBackIosNewIcon fontSize="small" />
         </IconButton>
 
-        {/* Âncora do calendário */}
         <Typography
           ref={anchorRef}
           variant="subtitle1"
@@ -49,26 +60,24 @@ export const MonthNavigator = ({
         </Typography>
 
         <IconButton
-          onClick={() => nextMonth && onChange(nextMonth)}
+          onClick={() => nextMonth && handleAccept(nextMonth)}
           disabled={isNextDisabled}
         >
           <ArrowForwardIosIcon fontSize="small" />
         </IconButton>
 
-        {/* Picker oculto */}
         <DatePicker
           open={open}
           onClose={() => setOpen(false)}
-          views={["month"]}
-          value={value}
-          onChange={(newValue) => {
-            onChange(newValue);
-            setOpen(false);
-          }}
+          views={["year", "month"]}
+          openTo="month"
+          value={tempValue}
+          onChange={(newValue) => setTempValue(newValue)} 
+          onAccept={handleAccept}
           shouldDisableMonth={shouldDisableMonth}
           slotProps={{
             textField: { style: { display: "none" } },
-            popper: { anchorEl: anchorRef.current }, // ✅ ancora no texto
+            popper: { anchorEl: anchorRef.current },
           }}
         />
       </Box>
