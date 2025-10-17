@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Box,
-  Tabs,
-  Tab,
-  Paper,
-  Typography,
-} from "@mui/material";
+import { Box, Tabs, Tab, Paper, Typography } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
@@ -34,6 +28,10 @@ import { CapitalDynamicsChart } from "./charts/CapitalDynamicsChart";
 import { CapitalStructureStackedBarChart } from "./charts/CapitalStructureStackedBarChart";
 import { useDrawer } from "../../../contexts/DrawerContext";
 import { MRPIconButton } from "../../../components/Button/IconButton";
+import TurnoverChart from "./charts/TurnoverChart";
+import { LiquidityLineChart } from "./charts/LiquidityLineChart";
+import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
+import { LiquidityChart } from "../../Companies/Charts/VariaveisLiquidez";
 
 interface LiquidityMonth {
   name: string;
@@ -60,7 +58,7 @@ export const GestaoLiquidez = () => {
   const [months, setMonths] = useState<any[]>([]);
   const [valueMode, setValueMode] = useState<boolean>(true);
   const [metricTypes, setMetricTypes] =
-    useState<Record<string, "number" | "percent">>();
+    useState<Record<string, "number" | "percent" | "indicator">>();
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
   const { setLoading } = useLoading();
@@ -70,6 +68,9 @@ export const GestaoLiquidez = () => {
   const [capitalDynamicsData, setCapitalDynamicsData] = useState<any[]>([]);
   const [grossCashFlowDashData, setGrossCashFlowDashData] = useState<any[]>([]);
   const [capitalStructuresData, setCapitalStructuresData] = useState<any[]>([]);
+  const [liquidityVariables, setLiquidityVariables] = useState<any[]>([]);
+  const [liquidez, setLiquidez] = useState<any[]>([]);
+  const [turnoverData, setTurnoverData] = useState<any[]>([]);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -127,6 +128,7 @@ export const GestaoLiquidez = () => {
         case 1:
           response = await getLiquidityManagement(accountPlanId, year);
           extractedMonths = response?.liquidityVariables?.months ?? [];
+          setLiquidityVariables(response?.liquidityVariables?.months);
           metrics = ["saldoTesouraria", "ncg", "cdg", "indiceDeLiquidez"];
           labels = {
             saldoTesouraria: "Saldo Tesouraria",
@@ -161,6 +163,14 @@ export const GestaoLiquidez = () => {
               "Ciclo Financeiro das Operações",
             cicloFinanceiroNCG: "Ciclo Financeiro NCG",
           };
+          setMetricTypes({
+            pme: "indicator",
+            pmr: "indicator",
+            pmp: "indicator",
+            cicloFinanceiroDasOperacoesPrincipais: "indicator",
+            cicloFinanceiroNCG: "indicator",
+          });
+
           setValueMode(false);
           setCapitalDynamicsData(response?.capitalDynamics?.months);
           break;
@@ -203,6 +213,7 @@ export const GestaoLiquidez = () => {
         case 4:
           response = await getTurnover(accountPlanId, year);
           extractedMonths = response?.turnovers?.months ?? [];
+          setTurnoverData(response?.turnovers?.months);
           metrics = ["giroPME", "giroPMR", "giroPMP", "giroCaixa"];
           labels = {
             giroPME: "Giro PME",
@@ -210,18 +221,30 @@ export const GestaoLiquidez = () => {
             giroPMP: "Giro PMP",
             giroCaixa: "Giro Caixa",
           };
+          setMetricTypes({
+            giroPME: "indicator",
+            giroPMR: "indicator",
+            giroPMP: "indicator",
+            giroCaixa: "indicator",
+          });
           setValueMode(false);
           break;
 
         case 5:
           response = await getLiquidity(accountPlanId, year);
           extractedMonths = response?.liquiditys?.months ?? [];
+          setLiquidez(response?.liquiditys?.months);
           metrics = ["liquidezCorrente", "liquidezSeca", "liquidezImediata"];
           labels = {
             liquidezCorrente: "Liquidez Corrente",
             liquidezSeca: "Liquidez Seca",
             liquidezImediata: "Liquidez Imediata",
           };
+          setMetricTypes({
+            liquidezCorrente: "indicator",
+            liquidezSeca: "indicator",
+            liquidezImediata: "indicator",
+          });
           setValueMode(false);
           break;
 
@@ -277,7 +300,7 @@ export const GestaoLiquidez = () => {
   const fetchFeurietData = async () => {
     if (!accountPlanId || !selectedYear || !selectedMonth) return;
 
-    const year = Number(selectedYear.format("YYYY"));
+    const year = Number(selectedMonth.year());
     const selectedMonthNumber = selectedMonth.month() + 1;
 
     setLoading(true);
@@ -303,6 +326,10 @@ export const GestaoLiquidez = () => {
   const handleSearch = () => {
     fetchData();
   };
+
+  useEffect(() => {
+    console.log(selectedMonth?.year());
+  }, [selectedMonth]);
 
   useEffect(() => {
     if (accountPlanId) {
@@ -340,33 +367,37 @@ export const GestaoLiquidez = () => {
               display: "flex",
               justifyContent: "center",
               flexDirection: "column",
-              alignItems: "center",
+              marginLeft: "1rem",
             }}
           >
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                views={["month"]}
-                label="Mês"
-                value={selectedMonth}
-                onChange={(newValue) => {
-                  setSelectedMonth(newValue);
+            <Box sx={{ display: "flex", width: "100%", alignItems: "center" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexDirection: "column",
                 }}
-                slotProps={{ textField: { size: "small" } }}
-                shouldDisableMonth={(date) => {
-                  const month = date.month() + 1; // dayjs usa 0-11
-                  return !allowedMonths.includes(month);
-                }}
-              />
-            </LocalizationProvider>
-            <Box sx={{ display: "flex", gap: 9, mt: 2 }}>
-              <Typography>ATIVO</Typography>
-              <Typography>PASSIVO</Typography>
+              >
+                <MonthNavigator
+                  value={selectedMonth}
+                  onChange={setSelectedMonth}
+                  shouldDisableMonth={(date) => {
+                    const month = date.month() + 1;
+                    return !allowedMonths.includes(month);
+                  }}
+                />
+                <Box sx={{ display: "flex", gap: 9, mt: 2 }}>
+                  <Typography>ATIVO</Typography>
+                  <Typography>PASSIVO</Typography>
+                </Box>
+                {selectedMonth && (
+                  <FleurietGestaoLiquidezChart
+                    propData={liquidityMonth?.liquidityVariables?.months || []}
+                  />
+                )}
+              </Box>
+              <LiquidityChart data={liquidityVariables} />
             </Box>
-            {selectedMonth && (
-              <FleurietGestaoLiquidezChart
-                propData={liquidityMonth?.liquidityVariables?.months || []}
-              />
-            )}
           </Box>
         );
       case 2:
@@ -397,16 +428,48 @@ export const GestaoLiquidez = () => {
             {grossCashFlowDashData.length > 0 ? (
               <GrossCashFlowChart data={grossCashFlowDashData} />
             ) : (
-              <Typography>
-                Nenhum dado disponível para o ano selecionado.
-              </Typography>
+              <Typography>Nenhum dado disponível.</Typography>
             )}
           </Box>
         );
       case 4:
-        return <Box></Box>;
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+              height: "auto",
+            }}
+          >
+            {turnoverData.length > 0 ? (
+              <TurnoverChart data={turnoverData} />
+            ) : (
+              <Typography>Nenhum dado disponível.</Typography>
+            )}
+          </Box>
+        );
       case 5:
-        return <Box></Box>;
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+              height: "auto",
+            }}
+          >
+            {liquidez.length > 0 ? (
+              <LiquidityLineChart data={liquidez} />
+            ) : (
+              <Typography>Nenhum dado disponível.</Typography>
+            )}
+          </Box>
+        );
       case 6:
         return (
           <Box

@@ -37,7 +37,6 @@ export const MarginChart: React.FC<Props> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const translateMonth = (month: string): string => {
-
     const months: Record<string, string> = {
       January: "Jan",
       February: "Fev",
@@ -65,8 +64,9 @@ export const MarginChart: React.FC<Props> = ({
     <div
       style={{
         width: "100%",
-        height: isMobile ? 170 : 350,
+        height: isMobile ? 170 : 220,
         backgroundColor: "#fff",
+        paddingRight: "36px",
       }}
     >
       <h3 style={{ textAlign: "center", marginBottom: 10 }}>
@@ -79,7 +79,7 @@ export const MarginChart: React.FC<Props> = ({
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="name" />
-          <YAxis domain={[0, "auto"]} tickFormatter={(value) => `${value}%`} />
+          <YAxis tick={false} />
           <Tooltip formatter={(value: number) => `${value.toFixed(2)}%`} />
           <Line
             type="monotone"
@@ -91,23 +91,23 @@ export const MarginChart: React.FC<Props> = ({
           >
             {!isMobile && (
               <LabelList
-              dataKey={metricKey}
-              position="top"
-              content={({ value, x, y }) => {
-                if (value == null || x == null || y == null) return null;
-                return (
-                  <text
-                    x={x as number}
-                    y={(y as number) - 10}
-                    textAnchor="middle"
-                    fill="#000"
-                    fontSize={12}
-                  >
-                    {(value as number).toFixed(2) + "%"}
-                  </text>
-                );
-              }}
-            />
+                dataKey={metricKey}
+                position="top"
+                content={({ value, x, y }) => {
+                  if (value == null || x == null || y == null) return null;
+                  return (
+                    <text
+                      x={x as number}
+                      y={(y as number) - 10}
+                      textAnchor="middle"
+                      fill="#000"
+                      fontSize={15}
+                    >
+                      {(value as number).toFixed(2) + "%"}
+                    </text>
+                  );
+                }}
+              />
             )}
           </Line>
         </LineChart>

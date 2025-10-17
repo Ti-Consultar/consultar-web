@@ -15,6 +15,7 @@ import {
 import { TableDetailModal } from "./tableDetail";
 import InboxIcon from "@mui/icons-material/Inbox";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
+import { monthTranslatorUtil } from "../../../utils/formatters/monthTranslator";
 
 // Type definitions
 interface FinancialData {
@@ -56,13 +57,14 @@ interface Month {
 
 interface FinancialTableProps {
   months: Month[];
-  /** IDs dos totalizers que devem ser destacados (true = destaca) */
   highlightRows?: Record<number, boolean>;
+  metricType?: Record<string, "PERCENT" | "VALUE">;
 }
 
 const BalancoContabilTable = ({
   months,
   highlightRows = {},
+  metricType = {},
 }: FinancialTableProps) => {
   const theme = useTheme();
   const [openModal, setOpenModal] = useState(false);
@@ -83,25 +85,6 @@ const BalancoContabilTable = ({
   allTotalizers.sort((a, b) => a.typeOrder - b.typeOrder);
 
   const isEmpty = !months.length || !allTotalizers.length;
-
-  // Tradutor de mês
-  function monthTranslator(mesIngles: string): string {
-    const meses: Record<string, string> = {
-      January: "Janeiro",
-      February: "Fevereiro",
-      March: "Março",
-      April: "Abril",
-      May: "Maio",
-      June: "Junho",
-      July: "Julho",
-      August: "Agosto",
-      September: "Setembro",
-      October: "Outubro",
-      November: "Novembro",
-      December: "Dezembro",
-    };
-    return meses[mesIngles] || mesIngles;
-  }
 
   // Modal de detalhes
   const handleCellClick = (
@@ -142,19 +125,24 @@ const BalancoContabilTable = ({
     zIndex: 3,
   };
 
-  const formatValue = (classificationName: string, value: number): string => {
+  const formatValue = (name: string, value: number): string => {
     if (value === 0) return "-";
 
     const isNegative = value < 0;
     let adjustedValue = Math.abs(value);
 
-    if (valueMode === "MILHAR") {
-      adjustedValue /= 1000;
-    } else if (valueMode === "MILHARES") {
-      adjustedValue /= 1000000;
+    const isPercent = metricType[name] === "PERCENT" || name.includes("%");
+
+    // Só aplica conversão se NÃO for percentual
+    if (!isPercent) {
+      if (valueMode === "MILHAR") {
+        adjustedValue /= 1000;
+      } else if (valueMode === "MILHARES") {
+        adjustedValue /= 1000000;
+      }
     }
 
-    if (classificationName.includes("%")) {
+    if (isPercent) {
       const formatted = `${adjustedValue.toFixed(2).replace(".", ",")}%`;
       return isNegative ? `(${formatted})` : formatted;
     }
@@ -215,7 +203,7 @@ const BalancoContabilTable = ({
                     sx={{ ...stickyHeaderStyle, minWidth: 120 }}
                   >
                     <Typography variant="subtitle2" fontWeight="bold">
-                      {monthTranslator(month.name)}
+                      {monthTranslatorUtil(month.name)}
                     </Typography>
                   </TableCell>
                 ))}
@@ -342,7 +330,7 @@ const BalancoContabilTable = ({
                                 onClick={() =>
                                   handleCellClick(
                                     monthClassification?.datas,
-                                    `${classification.name} - ${monthTranslator(
+                                    `${classification.name} - ${monthTranslatorUtil(
                                       month.name
                                     )}`
                                   )

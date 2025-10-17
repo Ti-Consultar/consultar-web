@@ -15,10 +15,14 @@ import { getCashFlow } from "../../services/apis/routes/cashFlow.service";
 import { CashFlowTable } from "./table";
 import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
 import { MRPIconButton } from "../../components/Button/IconButton";
+import { ExportDialog } from "../../components/ExportModal";
+import { useExportUtils } from "../../utils/hooks/useExportUtils";
+import { monthTranslator } from "../../utils/formatters/monthTranslator";
+import { ExportButton } from "../../components/Button/ExportButton";
 
 export const CashFlow = () => {
   const [tabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
+  const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
   );
   const [data, setData] = useState<any[]>([]);
@@ -29,6 +33,9 @@ export const CashFlow = () => {
     subCompanyId?: string;
   }>();
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const [entityName, setEntityName] = useState<string | null>(null);
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
 
   const metrics = [
     "lucroOperacionalLiquido",
@@ -44,6 +51,7 @@ export const CashFlow = () => {
     "ativoNaoCirculante",
     "variacaoInvestimento",
     "variacaoImobilizado",
+    "variacaoIntangivel",
     "fluxoDeCaixaLivre",
     "captacoesAmortizacoesFinanceira",
     "passivoNaoCirculante",
@@ -72,9 +80,10 @@ export const CashFlow = () => {
     obrigacoesTributariasTrabalhistas: "Obrigações Tributárias e Trabalhistas",
     outrosPassivosOperacionais: "Outros Passivos Operacionais",
     fluxoDeCaixaOperacional: "(=) Fluxo de Caixa Operacional",
-    ativoNaoCirculante: "(+) Ativo Não Circulante",
+    ativoNaoCirculante: "Ativo Não Circulante",
     variacaoInvestimento: "Variação Investimento",
     variacaoImobilizado: "Variação Imobilizado",
+    variacaoIntangivel: "Variação Intangível",
     fluxoDeCaixaLivre: "(=) Fluxo de Caixa Livre",
     captacoesAmortizacoesFinanceira: "Captações/Amort. Financeira",
     passivoNaoCirculante: "Passivo Não Circulante",
@@ -102,6 +111,7 @@ export const CashFlow = () => {
 
         const lastItem = data[data.length - 1];
         setAccountPlanId(lastItem.id);
+        setEntityName(lastItem.group?.name);
       } catch (error) {
         console.error("Failed to fetch AccountPlanId", error);
         toast.error("Erro ao buscar plano de contas");
@@ -139,6 +149,73 @@ export const CashFlow = () => {
     fetchData();
   };
 
+  const buildExportData = (months: any[]) => {
+    if (!months.length) return { columns: [], rows: [] };
+
+    // Colunas: Conta + meses
+    const columns = [
+      { label: "Conta", accessor: (row: any) => row.name },
+      ...months.map((m) => ({
+        label: monthTranslator[m.name] ?? m.name,
+        accessor: (row: any) => row.values[m.name] ?? "-",
+      })),
+    ];
+
+    // Linhas: cada chave do objeto vira uma linha
+    const rows: any[] = [];
+
+    Object.keys(metricLabels).forEach((field) => {
+      const row: any = { name: metricLabels[field], values: {} };
+      months.forEach((m) => {
+        row.values[m.name] = m[field] ?? "-";
+      });
+      rows.push(row);
+    });
+
+    return { columns, rows };
+  };
+
+  const handleExport = (format: string) => {
+    if (!data.length) {
+      toast.warning("Nenhum dado para exportar");
+      return;
+    }
+
+    const { columns, rows } = buildExportData(data);
+
+    switch (format) {
+      case "PDF":
+        exportPDF(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`,
+          "landscape"
+        );
+        break;
+      case "CSV":
+        exportCSV(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "EXCEL":
+        exportExcel(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "PPT":
+        exportPPTX(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+    }
+  };
+
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
@@ -157,8 +234,10 @@ export const CashFlow = () => {
                 views={["year"]}
                 label="Ano"
                 value={selectedYear}
-                onChange={(newValue) => {
-                  setSelectedYear(newValue);
+                onChange={(newValue: Dayjs | null) => {
+                  if (newValue) {
+                    setSelectedYear(newValue);
+                  }
                 }}
                 slotProps={{
                   textField: {
@@ -172,6 +251,7 @@ export const CashFlow = () => {
               onClick={handleSearch}
               startIcon={<SearchIcon />}
             />
+            <ExportButton onClick={() => setExportMenuOpen(true)} />
           </Box>
 
           <CashFlowTable
@@ -182,6 +262,12 @@ export const CashFlow = () => {
           />
         </Paper>
       </MainContainer>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportMenuOpen(false)}
+        hasChart={false}
+        onExport={handleExport}
+      />
     </MainTemplate>
   );
 };

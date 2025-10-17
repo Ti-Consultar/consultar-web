@@ -58,7 +58,7 @@ export const CapitalDynamicsChart: React.FC<CapitalDynamicsProps> = ({
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
-        <YAxis />
+        <YAxis tick={false} />
         <Tooltip formatter={(value: number) => value.toFixed(2)} />
         <Legend />
 
