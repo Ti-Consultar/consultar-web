@@ -160,15 +160,45 @@ export const Sidebar = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  type Params = {
+    groupId?: string | number;
+    companyId?: string | number;
+    subCompanyId?: string | number;
+  };
+
   const buildNestedUrl = (
-    { groupId, companyId, subCompanyId }: any,
+    { groupId, companyId, subCompanyId }: Params,
     finalPath: string
   ): string | null => {
-    if (!groupId) return null;
-    let url = `/grupos/${groupId}`;
-    if (companyId) url += `/empresas/${companyId}`;
-    if (subCompanyId) url += `/filiais/${subCompanyId}`;
-    return `${url}/${finalPath}`;
+    const path = location.pathname;
+    const parts = path.split("/").filter(Boolean);
+
+    const currentGroupId = groupId || parts[parts.indexOf("grupos") + 1];
+    const currentCompanyId =
+      companyId || parts.includes("empresas")
+        ? parts[parts.indexOf("empresas") + 1]
+        : undefined;
+    const currentSubCompanyId =
+      subCompanyId || parts.includes("filiais")
+        ? parts[parts.indexOf("filiais") + 1]
+        : undefined;
+
+    if (!currentGroupId) return null;
+
+    const isInGroupOnly = !currentCompanyId && !currentSubCompanyId;
+    const isInCompany = !!currentCompanyId && !currentSubCompanyId;
+    const isInFilial = !!currentSubCompanyId;
+
+    let base = `/grupos/${currentGroupId}`;
+
+    if (isInGroupOnly) {
+    } else if (isInCompany) {
+      base += `/empresas/${currentCompanyId}`;
+    } else if (isInFilial) {
+      base += `/empresas/${currentCompanyId}/filiais/${currentSubCompanyId}`;
+    }
+
+    return `${base}/${String(finalPath).replace(/^\/+/, "")}`;
   };
 
   const getInitials = (name: string) => {
