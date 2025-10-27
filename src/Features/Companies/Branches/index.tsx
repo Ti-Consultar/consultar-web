@@ -275,7 +275,7 @@ export const Branches = () => {
       const lastItem = data[data.length - 1];
       setDashboardPanelData(lastItem);
     } catch {
-      toast.error("Erro ao buscar dados do dashboard");
+      console.error("Erro ao buscar dados do dashboard");
     } finally {
       setLoading(false);
     }

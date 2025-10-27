@@ -165,7 +165,6 @@ export const Companies = () => {
       setDashboardPanelData(lastItem);
     } catch (error) {
       console.error("Failed to fetch Dashboard", error);
-      toast.error("Erro ao buscar dados do dashboard");
     } finally {
       setLoading(false);
     }
