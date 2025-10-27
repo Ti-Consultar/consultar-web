@@ -173,7 +173,7 @@ export const AccountingTable = ({
                   align="center"
                   sx={{ py: 5, color: "var(--neutral-400)" }}
                 >
-                  Nenhum balancete encontrado
+                  Nenhum resultado encontrado.
                 </TableCell>
               </TableRow>
             ) : (

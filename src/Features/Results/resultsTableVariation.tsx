@@ -8,24 +8,31 @@ import {
   Tooltip,
   Paper,
 } from "@mui/material";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useValueDisplay } from "../../contexts/ValueDisplayContext";
+
+interface MonthView {
+  [key: string]: number;
+}
 
 interface MonthData {
   name: string;
   translatedName?: string;
+  realizado?: MonthView;
+  orcado?: MonthView;
+  variacao?: MonthView;
   [key: string]: any;
 }
 
-interface TabelaMetricasTranspostaProps {
+interface ResultsTableProps {
   months: MonthData[];
   metricKeys: string[];
   metricLabels: Record<string, string>;
   nestedMetrics?: Record<string, string[]>;
-  highlightedMetrics?: string[];
+  enableValueMode?: boolean;
+  metricTypes?: Record<string, "number" | "percent" | "indicator">;
+  highlightRows?: Record<string, boolean>;
   showBudgetColumns?: boolean;
-  budgetMonths?: MonthData[];
-  variationMonths?: MonthData[];
 }
 
 const monthNameToPTBR: Record<string, string> = {
@@ -41,29 +48,34 @@ const monthNameToPTBR: Record<string, string> = {
   October: "Outubro",
   November: "Novembro",
   December: "Dezembro",
-  Acumulado: "Acumulado",
+  JANUARY: "Janeiro",
+  FEBRUARY: "Fevereiro",
+  MARCH: "Março",
+  APRIL: "Abril",
+  MAY: "Maio",
+  JUNE: "Junho",
+  JULY: "Julho",
+  AUGUST: "Agosto",
+  SEPTEMBER: "Setembro",
+  OCTOBER: "Outubro",
+  NOVEMBER: "Novembro",
+  DECEMBER: "Dezembro",
+  ACUMULADO: "Acumulado",
 };
 
-export const CashFlowTable = ({
+export const ResultsTableVariation = ({
   months,
   metricKeys,
   metricLabels,
   nestedMetrics = {},
-  highlightedMetrics = [],
+  enableValueMode = true,
+  metricTypes = {},
+  highlightRows = {},
   showBudgetColumns = false,
-  budgetMonths = [],
-  variationMonths = [],
-}: TabelaMetricasTranspostaProps) => {
+}: ResultsTableProps) => {
   const [colWidth, setColWidth] = useState(220);
   const [dragging, setDragging] = useState(false);
-
-  const baseCellStyle = {
-    borderLeft: "1px solid #e0e0e0",
-    transition: "background-color 0.15s ease",
-    "&:hover": {
-      backgroundColor: "#d6e9e0ff",
-    },
-  };
+  const { valueMode } = useValueDisplay();
 
   const translatedMonths: MonthData[] = useMemo(
     () =>
@@ -74,47 +86,71 @@ export const CashFlowTable = ({
     [months]
   );
 
-  const { valueMode } = useValueDisplay();
-
   const allNestedKeys = Object.values(nestedMetrics).flat();
 
   const nestedGroupOrder = useMemo(() => {
     const month = months?.[0];
     if (!month || !nestedMetrics) return [];
-    return Object.keys(month).filter((key) => key in nestedMetrics);
+    return Object.keys(nestedMetrics);
   }, [months, nestedMetrics]);
 
-  const formatValue = (classificationName: string, value: number): string => {
+  const nestedGroupLabels: Record<string, string> = {
+    estruturaDeCapital: "Posição Financeira Líquida",
+    cil: "Capital Investido Líquido",
+  };
+
+  const formatValue = (metricKey: string, value: number): string => {
     if (value === 0 || value === undefined || value === null) return "-";
 
-    let adjustedValue = value;
-    if (valueMode === "MILHAR") adjustedValue = adjustedValue / 1000;
-    else if (valueMode === "MILHARES") adjustedValue = adjustedValue / 1000000;
-
-    const absValue = Math.abs(adjustedValue);
-
-    if (classificationName.includes("%")) {
-      return `${adjustedValue.toFixed(2).replace(".", ",")}%`;
+    if (metricTypes[metricKey] === "percent") {
+      const formattedPercent =
+        Math.abs(value).toFixed(2).replace(".", ",") + "%";
+      return value < 0 ? `(${formattedPercent})` : formattedPercent;
     }
 
-    if (adjustedValue < 0 || classificationName.startsWith("(-)")) {
-      return `(${Math.trunc(absValue).toLocaleString("pt-BR")})`;
+    if (metricTypes[metricKey] === "indicator") {
+      const formatted = value.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      return value < 0 ? `(${formatted})` : formatted;
     }
 
-    return Math.trunc(adjustedValue).toLocaleString("pt-BR");
+    let adjustedValue = Math.abs(value);
+    if (enableValueMode) {
+      if (valueMode === "MILHAR") adjustedValue /= 1000;
+      else if (valueMode === "MILHARES") adjustedValue /= 1000000;
+    }
+
+    const formatted = adjustedValue.toLocaleString("pt-BR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+
+    return value < 0 ? `(${formatted})` : formatted;
+  };
+
+  // 🧩 Função central — busca valores considerando o novo formato
+  const getMetricValue = (
+    month: MonthData,
+    metric: string,
+    view: "realizado" | "orcado" | "variacao" = "realizado"
+  ) => {
+    const targetGroup = month[view];
+    if (!targetGroup) return "-";
+    const rawValue = targetGroup[metric];
+    return typeof rawValue === "number" ? formatValue(metric, rawValue) : "-";
   };
 
   const handleMouseDown = () => setDragging(true);
-
   const handleMouseMove = (e: MouseEvent) => {
     if (dragging) {
       setColWidth((prev) => Math.min(450, Math.max(120, prev + e.movementX)));
     }
   };
-
   const handleMouseUp = () => setDragging(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (dragging) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
@@ -125,17 +161,18 @@ export const CashFlowTable = ({
     };
   }, [dragging]);
 
-  const renderValueCells = (
-    month: MonthData,
-    metric: string,
-    groupKey?: string
-  ) => {
-    const rawValue = groupKey ? month[groupKey]?.[metric] : month[metric];
-    const value =
-      typeof rawValue === "number" ? formatValue(metric, rawValue) : "-";
+  const baseCellStyle = {
+    borderLeft: "1px solid #e0e0e0",
+    transition: "background-color 0.15s ease",
+    "&:hover": {
+      backgroundColor: "#d6e9e0ff",
+    },
+  };
 
-    // Se orçado estiver ativado, pegamos dados extras
+  // 🧱 Renderização com novo JSON
+  const renderValueCells = (month: MonthData, metric: string) => {
     if (!showBudgetColumns) {
+      const value = getMetricValue(month, metric, "realizado");
       return (
         <TableCell
           key={`${month.name}-${metric}`}
@@ -147,48 +184,32 @@ export const CashFlowTable = ({
       );
     }
 
-    // Dados de Orçado e Variação
-    const budgetMonth = budgetMonths.find((m) => m.name === month.name);
-    const variationMonth = variationMonths.find((m) => m.name === month.name);
-
-    const budgetValueRaw = groupKey
-      ? budgetMonth?.[groupKey]?.[metric]
-      : budgetMonth?.[metric];
-    const variationValueRaw = groupKey
-      ? variationMonth?.[groupKey]?.[metric]
-      : variationMonth?.[metric];
-
-    const budgetValue =
-      typeof budgetValueRaw === "number"
-        ? formatValue(metric, budgetValueRaw)
-        : "-";
-    const variationValue =
-      typeof variationValueRaw === "number"
-        ? formatValue(metric, variationValueRaw)
-        : "-";
+    const real = getMetricValue(month, metric, "realizado");
+    const orcado = getMetricValue(month, metric, "orcado");
+    const variacao = getMetricValue(month, metric, "variacao");
 
     return (
       <>
+        <TableCell
+          key={`${month.name}-${metric}-orcado`}
+          align="right"
+          sx={baseCellStyle}
+        >
+          {orcado}
+        </TableCell>
         <TableCell
           key={`${month.name}-${metric}-real`}
           align="right"
           sx={baseCellStyle}
         >
-          {value}
-        </TableCell>
-        <TableCell
-          key={`${month.name}-${metric}-budget`}
-          align="right"
-          sx={baseCellStyle}
-        >
-          {budgetValue}
+          {real}
         </TableCell>
         <TableCell
           key={`${month.name}-${metric}-var`}
           align="right"
           sx={baseCellStyle}
         >
-          {variationValue}
+          {variacao}
         </TableCell>
       </>
     );
@@ -214,7 +235,7 @@ export const CashFlowTable = ({
                 backgroundColor: "#f5f5f5",
                 position: "sticky",
                 left: 0,
-                zIndex: 1,
+                zIndex: 2,
                 width: colWidth,
                 minWidth: colWidth,
                 maxWidth: colWidth,
@@ -223,7 +244,7 @@ export const CashFlowTable = ({
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span></span>
+                <span>Índice</span>
                 <div
                   onMouseDown={handleMouseDown}
                   style={{
@@ -288,36 +309,66 @@ export const CashFlowTable = ({
               <React.Fragment key={groupKey}>
                 <TableRow>
                   <TableCell
-                    colSpan={
-                      translatedMonths.length * (showBudgetColumns ? 3 : 1) + 1
-                    }
                     sx={{
-                      fontWeight: "bold",
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 1,
                       backgroundColor: "#fafafa",
+                      fontWeight: "bold",
+                      width: colWidth,
+                      minWidth: colWidth,
+                      maxWidth: colWidth,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      borderRight: "1px solid #e0e0e0",
                     }}
                   >
-                    {metricLabels[groupKey] || groupKey}
+                    <Tooltip
+                      title={
+                        nestedGroupLabels[groupKey] ||
+                        metricLabels[groupKey] ||
+                        groupKey
+                      }
+                    >
+                      <span>
+                        {nestedGroupLabels[groupKey] ||
+                          metricLabels[groupKey] ||
+                          groupKey}
+                      </span>
+                    </Tooltip>
                   </TableCell>
+                  <TableCell
+                    colSpan={
+                      translatedMonths.length * (showBudgetColumns ? 3 : 1)
+                    }
+                    sx={{
+                      backgroundColor: "#fafafa",
+                      borderLeft: "1px solid #e0e0e0",
+                      p: 0,
+                    }}
+                  />
                 </TableRow>
+
                 {metrics.map((metric) => {
-                  const isHighlighted = highlightedMetrics.includes(metric);
+                  const isHighlighted = !!highlightRows[metric];
                   return (
                     <TableRow
                       key={`${groupKey}-${metric}`}
                       sx={{
-                        backgroundColor: isHighlighted ? "#f0f0f0" : undefined,
+                        backgroundColor: isHighlighted ? "#f5f5f5" : undefined,
                       }}
                     >
                       <TableCell
                         sx={{
                           position: "sticky",
                           left: 0,
-                          backgroundColor: isHighlighted ? "#f0f0f0" : "#fff",
+                          backgroundColor: isHighlighted ? "#f5f5f5" : "#fff",
+                          fontWeight: isHighlighted ? "bold" : 500,
                           maxWidth: 180,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
-                          fontWeight: isHighlighted ? "bold" : 500,
                         }}
                       >
                         <Tooltip title={metricLabels[metric] || metric}>
@@ -326,7 +377,7 @@ export const CashFlowTable = ({
                       </TableCell>
 
                       {translatedMonths.map((month) =>
-                        renderValueCells(month, metric, groupKey)
+                        renderValueCells(month, metric)
                       )}
                     </TableRow>
                   );
@@ -338,24 +389,24 @@ export const CashFlowTable = ({
           {metricKeys
             .filter((metric) => !allNestedKeys.includes(metric))
             .map((metric) => {
-              const isHighlighted = highlightedMetrics.includes(metric);
+              const isHighlighted = !!highlightRows[metric];
               return (
                 <TableRow
                   key={metric}
                   sx={{
-                    backgroundColor: isHighlighted ? "#f0f0f0" : undefined,
+                    backgroundColor: isHighlighted ? "#f5f5f5" : undefined,
                   }}
                 >
                   <TableCell
                     sx={{
                       position: "sticky",
                       left: 0,
-                      backgroundColor: isHighlighted ? "#f0f0f0" : "#fff",
+                      backgroundColor: isHighlighted ? "#f5f5f5" : "#fff",
+                      fontWeight: isHighlighted ? "bold" : 500,
                       maxWidth: 180,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
-                      fontWeight: isHighlighted ? "bold" : 500,
                     }}
                   >
                     <Tooltip title={metricLabels[metric] || metric}>

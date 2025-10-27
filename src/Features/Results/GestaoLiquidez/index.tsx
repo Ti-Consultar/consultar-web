@@ -71,12 +71,25 @@ export const GestaoLiquidez = () => {
   const [liquidityVariables, setLiquidityVariables] = useState<any[]>([]);
   const [liquidez, setLiquidez] = useState<any[]>([]);
   const [turnoverData, setTurnoverData] = useState<any[]>([]);
+  const [, setShowBudgetColumns] = useState(false);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
   const { isOpen } = useDrawer();
+
+  useEffect(() => {
+    const loadSetting = () => {
+      const savedSetting = localStorage.getItem("showBudgetColumns");
+      setShowBudgetColumns(savedSetting === "true");
+    };
+
+    loadSetting();
+
+    window.addEventListener("storage", loadSetting);
+    return () => window.removeEventListener("storage", loadSetting);
+  }, []);
 
   useEffect(() => {
     if (!groupId || accountPlanId) return;
@@ -533,22 +546,38 @@ export const GestaoLiquidez = () => {
             </Tabs>
           </Box>
 
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
-            <TableValueVisualization />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                views={["year"]}
-                label="Ano"
-                value={selectedYear}
-                onChange={(newValue) => setSelectedYear(newValue)}
-                slotProps={{ textField: { size: "small" } }}
+          <Box display="flex" justifyContent={"space-between"}>
+            <Box display="flex" gap={2} alignItems="center" mb={2}>
+              <TableValueVisualization />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  views={["year"]}
+                  label="Ano"
+                  value={selectedYear}
+                  onChange={(newValue: Dayjs | null) => {
+                    if (newValue) {
+                      setSelectedYear(newValue);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+              <MRPIconButton
+                title="Pesquisar"
+                onClick={handleSearch}
+                startIcon={<SearchIcon />}
               />
-            </LocalizationProvider>
-            <MRPIconButton
-              title="Pesquisar"
-              onClick={handleSearch}
-              startIcon={<SearchIcon />}
-            />
+            </Box>
+            <div>
+              {/* <BudgetToggleButton
+                showBudgetColumns={showBudgetColumns}
+                setShowBudgetColumns={setShowBudgetColumns}
+              /> */}
+            </div>
           </Box>
 
           <Box>

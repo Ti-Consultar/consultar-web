@@ -17,14 +17,12 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import {
   deleteBalancete,
-  getBalancetes,
-  importAccounting,
-  submitAccounting,
 } from "../../../services/apis/routes/balancete.service";
 import { BalancetePayload } from "../../../types/balancetePayload";
 import { MainTemplate } from "../../../components/AppLayout";
 import { AccountingTable } from "./table";
 import { Balancetes } from "../../../types/balancete";
+import { getBudgets, importBudgetSheet, submitBudget } from "../../../services/apis/routes/budget.service";
 
 export const UploadBudgetSheet = () => {
   const location = useLocation();
@@ -90,11 +88,11 @@ export const UploadBudgetSheet = () => {
     }
   };
 
-  const fetchBalancetes = async () => {
+  const fetchBudgets = async () => {
     setLoading(true, "Buscando orçamentos...");
     try {
       if (!accountPlanId) return;
-      const response = await getBalancetes(accountPlanId);
+      const response = await getBudgets(accountPlanId);
       if (response?.success === false) {
         toast.error(
           `Erro ao buscar os orçamentos, entre em contato com o suporte.`
@@ -113,7 +111,7 @@ export const UploadBudgetSheet = () => {
 
   useEffect(() => {
     if (accountPlanId) {
-      fetchBalancetes();
+      fetchBudgets();
     }
   }, [accountPlanId]);
 
@@ -187,20 +185,20 @@ export const UploadBudgetSheet = () => {
     setLoading(true, "Enviando dados e arquivo...");
 
     try {
-      const response = await submitAccounting(payload);
+      const response = await submitBudget(payload);
 
       if (response?.success) {
         const newBalanceteId = response.data?.id;
         setBalancete(newBalanceteId);
 
-        const uploadResponse = await importAccounting(file, newBalanceteId);
+        const uploadResponse = await importBudgetSheet(file, newBalanceteId);
 
         if (uploadResponse?.success) {
           toast.success("Arquivo enviado com sucesso!");
-          fetchBalancetes();
+          fetchBudgets();
         } else {
           toast.error(
-            "Erro ao enviar o balancete. Verifique o arquivo e tente novamente."
+            "Erro ao enviar o orçamento. Verifique o arquivo e tente novamente."
           );
         }
       } else {
@@ -215,9 +213,9 @@ export const UploadBudgetSheet = () => {
         }
       }
     } catch (error) {
-      console.error("Erro ao enviar balancete e arquivo:", error);
+      console.error("Erro ao enviar orçamento e arquivo:", error);
       toast.error(
-        "Erro ao enviar o balancete. Verifique os dados e tente novamente."
+        "Erro ao enviar o orçamento. Verifique os dados e tente novamente."
       );
     } finally {
       setLoading(false);

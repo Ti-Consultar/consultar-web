@@ -24,6 +24,7 @@ import { ExportDialog } from "../../../components/ExportModal";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { ExportButton } from "../../../components/Button/ExportButton";
+import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1);
@@ -41,6 +42,7 @@ export const BalancoReclassificado = () => {
     subCompanyId?: string;
   }>();
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
+  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
 
   const highlightRows = useMemo(() => {
     const ids: Record<number, boolean> = {};
@@ -68,6 +70,18 @@ export const BalancoReclassificado = () => {
 
     return ids;
   }, [balanceteData]);
+
+  useEffect(() => {
+    const loadSetting = () => {
+      const savedSetting = localStorage.getItem("showBudgetColumns");
+      setShowBudgetColumns(savedSetting === "true");
+    };
+
+    loadSetting();
+
+    window.addEventListener("storage", loadSetting);
+    return () => window.removeEventListener("storage", loadSetting);
+  }, []);
 
   useEffect(() => {
     if (!groupId || accountPlanId) return;
@@ -228,7 +242,11 @@ export const BalancoReclassificado = () => {
         );
         break;
       case "CSV":
-        exportCSV(rows, columns, `demonstracoes-${entityName}-${selectedYear.year()}`);
+        exportCSV(
+          rows,
+          columns,
+          `demonstracoes-${entityName}-${selectedYear.year()}`
+        );
         break;
       case "EXCEL":
         exportExcel(
@@ -320,29 +338,39 @@ export const BalancoReclassificado = () => {
             </Tabs>
           </Box>
 
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
-            <TableValueVisualization />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                views={["year"]}
-                label="Ano"
-                value={selectedYear}
-                onChange={(newValue: Dayjs | null) => {
-                  if (newValue) setSelectedYear(newValue);
-                }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                  },
-                }}
+          <Box display="flex" justifyContent={"space-between"}>
+            <Box display="flex" gap={2} alignItems="center" mb={2}>
+              <TableValueVisualization />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  views={["year"]}
+                  label="Ano"
+                  value={selectedYear}
+                  onChange={(newValue: Dayjs | null) => {
+                    if (newValue) {
+                      setSelectedYear(newValue);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+              <MRPIconButton
+                title="Pesquisar"
+                onClick={handleSearch}
+                startIcon={<SearchIcon />}
               />
-            </LocalizationProvider>
-            <MRPIconButton
-              title="Pesquisar"
-              onClick={() => handleSearch()}
-              startIcon={<SearchIcon />}
-            />
-            <ExportButton onClick={() => setExportMenuOpen(true)} />
+              <ExportButton onClick={() => setExportMenuOpen(true)} />
+            </Box>
+            <div>
+              <BudgetToggleButton
+                showBudgetColumns={showBudgetColumns}
+                setShowBudgetColumns={setShowBudgetColumns}
+              />
+            </div>
           </Box>
 
           <Container>
@@ -350,6 +378,7 @@ export const BalancoReclassificado = () => {
               <BalancoReclassificadoTable
                 months={balanceteData}
                 highlightRows={highlightRows}
+                showBudgetColumns={showBudgetColumns}
               />
             ) : (
               <BalancoContabilTable months={balanceteData} />

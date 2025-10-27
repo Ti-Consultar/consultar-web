@@ -7,7 +7,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { ResultsTable } from "../resultsTable";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useParams } from "react-router";
@@ -19,6 +18,7 @@ import { ExportButton } from "../../../components/Button/ExportButton";
 import { ExportDialog } from "../../../components/ExportModal";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
+import { ResultsTable } from "../resultsTable";
 
 export const CILeEC = () => {
   const [tabValue] = useState<number>(1);
@@ -36,6 +36,7 @@ export const CILeEC = () => {
   const [entityName, setEntityName] = useState<string | null>(null);
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
+  const [, setShowBudgetColumns] = useState(false);
 
   const metrics = [
     "disponibilidades",
@@ -101,6 +102,18 @@ export const CILeEC = () => {
       "capitalInvestidoLiquido",
     ],
   };
+
+  useEffect(() => {
+    const loadSetting = () => {
+      const savedSetting = localStorage.getItem("showBudgetColumns");
+      setShowBudgetColumns(savedSetting === "true");
+    };
+
+    loadSetting();
+
+    window.addEventListener("storage", loadSetting);
+    return () => window.removeEventListener("storage", loadSetting);
+  }, []);
 
   useEffect(() => {
     if (!groupId || accountPlanId) return;
@@ -275,31 +288,40 @@ export const CILeEC = () => {
       <MainContainer>
         <Title>CIL E PFL</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
-            <TableValueVisualization />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                views={["year"]}
-                label="Ano"
-                value={selectedYear}
-                onChange={(newValue) => {
-                  if (newValue) {
-                    setSelectedYear(newValue);
-                  }
-                }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                  },
-                }}
+          <Box display="flex" justifyContent={"space-between"}>
+            <Box display="flex" gap={2} alignItems="center" mb={2}>
+              <TableValueVisualization />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  views={["year"]}
+                  label="Ano"
+                  value={selectedYear}
+                  onChange={(newValue: Dayjs | null) => {
+                    if (newValue) {
+                      setSelectedYear(newValue);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+              <MRPIconButton
+                title="Pesquisar"
+                onClick={handleSearch}
+                startIcon={<SearchIcon />}
               />
-            </LocalizationProvider>
-            <MRPIconButton
-              title="Pesquisar"
-              onClick={handleSearch}
-              startIcon={<SearchIcon />}
-            />
-            <ExportButton onClick={() => setExportMenuOpen(true)} />
+
+              <ExportButton onClick={() => setExportMenuOpen(true)} />
+            </Box>
+            <div>
+              {/* <BudgetToggleButton
+                showBudgetColumns={showBudgetColumns}
+                setShowBudgetColumns={setShowBudgetColumns}
+              /> */}
+            </div>
           </Box>
 
           <ResultsTable
