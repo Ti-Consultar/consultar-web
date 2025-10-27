@@ -21,7 +21,6 @@ import { ExportDialog } from "../../../components/ExportModal";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { ExportButton } from "../../../components/Button/ExportButton";
-import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 
 export const BalancoContabil = () => {
   const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
@@ -40,7 +39,6 @@ export const BalancoContabil = () => {
   const { isOpen } = useDrawer();
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
-  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
 
   useEffect(() => {
     if (!groupId || accountPlanId) return;
