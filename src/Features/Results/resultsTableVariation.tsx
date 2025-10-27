@@ -33,6 +33,7 @@ interface ResultsTableProps {
   metricTypes?: Record<string, "number" | "percent" | "indicator">;
   highlightRows?: Record<string, boolean>;
   showBudgetColumns?: boolean;
+  metricNature?: Record<string, "receita" | "despesa">;
 }
 
 const monthNameToPTBR: Record<string, string> = {
@@ -72,6 +73,7 @@ export const ResultsTableVariation = ({
   metricTypes = {},
   highlightRows = {},
   showBudgetColumns = false,
+  metricNature,
 }: ResultsTableProps) => {
   const [colWidth, setColWidth] = useState(220);
   const [dragging, setDragging] = useState(false);
@@ -169,7 +171,32 @@ export const ResultsTableVariation = ({
     },
   };
 
-  // 🧱 Renderização com novo JSON
+  const getVariationIconAndColor = (
+    metric: string,
+    rawValue: number | undefined
+  ) => {
+    if (rawValue === undefined || rawValue === null || isNaN(rawValue)) {
+      return { icon: null, color: "inherit" };
+    }
+
+    const nature = metricNature?.[metric] ?? "receita";
+    const isPositive = rawValue > 0;
+
+    let color = "";
+    let icon = "";
+
+    if (nature === "receita") {
+      color = isPositive ? "green" : "red";
+      icon = isPositive ? "▲" : "▼";
+    } else {
+      // Despesa → lógica invertida
+      color = isPositive ? "red" : "green";
+      icon = isPositive ? "▲" : "▼";
+    }
+
+    return { icon, color };
+  };
+
   const renderValueCells = (month: MonthData, metric: string) => {
     if (!showBudgetColumns) {
       const value = getMetricValue(month, metric, "realizado");
@@ -186,7 +213,10 @@ export const ResultsTableVariation = ({
 
     const real = getMetricValue(month, metric, "realizado");
     const orcado = getMetricValue(month, metric, "orcado");
+    const rawVar = month?.variacao?.[metric];
     const variacao = getMetricValue(month, metric, "variacao");
+
+    const { icon, color } = getVariationIconAndColor(metric, rawVar);
 
     return (
       <>
@@ -207,9 +237,21 @@ export const ResultsTableVariation = ({
         <TableCell
           key={`${month.name}-${metric}-var`}
           align="right"
-          sx={baseCellStyle}
+          sx={{
+            ...baseCellStyle,
+            color,
+            fontWeight: 600,
+            minWidth: 110,
+            whiteSpace: "nowrap",
+          }}
         >
-          {variacao}
+          {variacao !== "-" ? (
+            <>
+              {variacao} <span style={{ fontSize: 12 }}>{icon}</span>
+            </>
+          ) : (
+            "-"
+          )}
         </TableCell>
       </>
     );
