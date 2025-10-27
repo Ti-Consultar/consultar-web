@@ -175,16 +175,27 @@ export const Sidebar = () => {
 
     const currentGroupId = groupId || parts[parts.indexOf("grupos") + 1];
     const currentCompanyId =
-      companyId || parts.includes("empresas")
+      companyId ||
+      (parts.includes("empresas")
         ? parts[parts.indexOf("empresas") + 1]
-        : undefined;
+        : undefined);
     const currentSubCompanyId =
-      subCompanyId || parts.includes("filiais")
+      subCompanyId ||
+      (parts.includes("filiais")
         ? parts[parts.indexOf("filiais") + 1]
-        : undefined;
+        : undefined);
 
     if (!currentGroupId) return null;
 
+    // Caso especial: Dashboard → sempre vai pro nível da empresa
+    if (finalPath === "empresas" || finalPath === "dashboard") {
+      if (currentCompanyId) {
+        return `/grupos/${currentGroupId}/empresas/${currentCompanyId}/filiais`;
+      }
+      return `/grupos/${currentGroupId}/empresas`;
+    }
+
+    // Lógica padrão
     const isInGroupOnly = !currentCompanyId && !currentSubCompanyId;
     const isInCompany = !!currentCompanyId && !currentSubCompanyId;
     const isInFilial = !!currentSubCompanyId;
@@ -192,6 +203,7 @@ export const Sidebar = () => {
     let base = `/grupos/${currentGroupId}`;
 
     if (isInGroupOnly) {
+      // grupo → não inclui /empresas
     } else if (isInCompany) {
       base += `/empresas/${currentCompanyId}`;
     } else if (isInFilial) {

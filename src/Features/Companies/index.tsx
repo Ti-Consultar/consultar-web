@@ -32,17 +32,25 @@ import { useCompany } from "../../contexts/CompanyProvider";
 import { KpiCard } from "../../components/Card/KpiCard";
 import { CompanyForm } from "../GroupForm";
 import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
-import { getDashboardData } from "../../services/apis/routes/dashboard.service";
+import {
+  getDashboardData,
+  getGestaoPrazoMedio,
+} from "../../services/apis/routes/dashboard.service";
 import { DashboardPanelData } from "../../types/dashboardPanel";
 import DashboardIcon from "../../assets/icons/duo-icons_dashboard.svg";
-import { DinamicaCapitalCarousel } from "../Dashboard/DinamicaCapital";
-import { GestaoPrazoMedioDashboard } from "../Dashboard/GestaoPrazoMedioChart";
-import { VariaveisLiquidezChart } from "../Dashboard/VariaveisLiquidezChart";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { MarginsCharts } from "../Dashboard/MarginsChart";
+import {
+  getCapitalDynamics,
+  getLiquidityManagement,
+} from "../../services/apis/routes/gestaoLiquidez.service";
+import { getProfitability } from "../../services/apis/routes/economicIndices,service";
+import { GestaoPrazoMedioCarousel } from "./Charts/GestaoPrasoMedioCarousel";
+import { CapitalDynamicsCarousel } from "./Charts/CapitalDynamicsCarousel";
+import { LiquidityChart } from "./Charts/VariaveisLiquidez";
+import { MarginCarousel } from "./Charts";
 
 type Companies = {
   groupName: string;
@@ -74,6 +82,10 @@ export const Companies = () => {
   const navigate = useNavigate();
   const [hasFetched, setHasFetched] = useState(false);
   const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
+  const [gestaoPrazoMedioData, setGestaoPrazoMedioData] = useState<any[]>([]);
+  const [dinamicaCapitalData, setDinamicaCapitalData] = useState<any[]>([]);
+  const [gestaoLiquidezData, setGestaoLiquidezData] = useState<any[]>([]);
+  const [marginsData, setMarginsData] = useState<any[]>([]);
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const [dashboardPanelData, setDashboardPanelData] =
     useState<DashboardPanelData>();
@@ -202,11 +214,74 @@ export const Companies = () => {
     }
   };
 
+  const fetchGestaoLiquidez = async () => {
+    if (!accountPlanId) return;
+    if (!selectedYear) return;
+    try {
+      if (!accountPlanId) return;
+      const response = await getLiquidityManagement(
+        accountPlanId,
+        selectedYear
+      );
+      setGestaoLiquidezData(response.liquidityVariables?.months);
+    } catch (error) {
+      console.error("Erro ao buscar dados ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMargins = async () => {
+    if (!accountPlanId) return;
+    try {
+      if (!accountPlanId) return;
+      if (!selectedYear) return;
+      const response = await getProfitability(accountPlanId, selectedYear);
+      setMarginsData(response.profitability?.months);
+    } catch (error) {
+      console.error("Erro ao buscar dados ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchGestaoPrazoMedio = async () => {
+    if (!accountPlanId) return;
+    if (!selectedYear) return;
+    try {
+      if (!accountPlanId) return;
+      const response = await getGestaoPrazoMedio(selectedYear, accountPlanId);
+      setGestaoPrazoMedioData(response);
+    } catch (error) {
+      console.error("Erro ao buscar dados ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDinamicaCapital = async () => {
+    if (!accountPlanId) return;
+    try {
+      if (!accountPlanId) return;
+      if (!selectedYear) return;
+      const response = await getCapitalDynamics(accountPlanId, selectedYear);
+      setDinamicaCapitalData(response.capitalDynamics?.months);
+    } catch (error) {
+      console.error("Erro ao buscar dados ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (userData && groupId) {
       fetchAllData();
       fetchDeletedCompanies();
       getDashboardPanelData();
+      fetchGestaoPrazoMedio();
+      fetchDinamicaCapital();
+      fetchMargins();
+      fetchGestaoLiquidez();
     }
   }, [userData, groupId, accountPlanId, selectedYear]);
 
@@ -416,7 +491,7 @@ export const Companies = () => {
             </>
           ) : (
             <>
-              <Box sx={{width: "100%", height: "90px"}}></Box>
+              <Box sx={{ width: "100%", height: "90px" }}></Box>
               <div style={{ display: "flex", gap: "1rem" }}>
                 <DivSkeleton width="100%" height="120px" />
                 <DivSkeleton width="100%" height="120px" />
@@ -472,7 +547,13 @@ export const Companies = () => {
         </Box>
         <Subtitle>Índices Econômicos</Subtitle>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Box sx={{ display: "flex", gap: 2, flexDirection: isMobile ? "column" : "row" }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexDirection: isMobile ? "column" : "row",
+            }}
+          >
             <KpiCard
               title="Receita Líquida"
               value={dashboardPanelData?.receitaLiquida}
@@ -492,7 +573,7 @@ export const Companies = () => {
               percent
             />
           </Box>
-          <MarginsCharts year={selectedYear} />
+          <MarginCarousel data={marginsData} />
           <Subtitle>Gestão Prazo Médio</Subtitle>
           <Box
             sx={{
@@ -504,28 +585,28 @@ export const Companies = () => {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 300 }}>
-              <DinamicaCapitalCarousel
-                year={selectedYear}
-                currentIndex={index}
-                onNext={handleNext}
+              <CapitalDynamicsCarousel
+                data={dinamicaCapitalData}
                 onPrev={handlePrev}
+                onNext={handleNext}
+                currentIndex={index}
                 onChangeIndex={setIndex}
               />
             </Box>
 
             <Box sx={{ flex: 1, minWidth: 300 }}>
-              <GestaoPrazoMedioDashboard
-                year={selectedYear}
-                currentIndex={index}
-                onNext={handleNext}
+              <GestaoPrazoMedioCarousel
+                data={gestaoPrazoMedioData}
                 onPrev={handlePrev}
+                onNext={handleNext}
+                currentIndex={index}
                 onChangeIndex={setIndex}
               />
             </Box>
           </Box>
           <Subtitle>Gestão de Liquidez</Subtitle>
           <Box sx={{ mb: 3 }}>
-            <VariaveisLiquidezChart year={selectedYear} />
+            <LiquidityChart data={gestaoLiquidezData} />
           </Box>
         </Box>
         {isMobile ? (
