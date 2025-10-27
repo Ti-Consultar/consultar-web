@@ -325,10 +325,10 @@ export const Sidebar = () => {
                     title: "Balancetes",
                     path: buildNestedUrl(params, "arquivos/upload/balancete"),
                   },
-                  // {
-                  //   title: "Orçamentos",
-                  //   path: buildNestedUrl(params, "arquivos/upload/orcamento"),
-                  // },
+                  {
+                    title: "Orçamentos",
+                    path: buildNestedUrl(params, "arquivos/upload/orcamento"),
+                  },
                 ],
               },
               {
