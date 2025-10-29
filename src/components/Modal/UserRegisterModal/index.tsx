@@ -8,20 +8,11 @@ import {
   Stack,
   Button,
   MenuItem,
-  IconButton,
-  InputAdornment,
-  Tooltip,
   CircularProgress,
   Box,
   Dialog as AlertDialog,
   DialogContentText,
 } from "@mui/material";
-import {
-  Visibility,
-  VisibilityOff,
-  Refresh,
-  ContentCopy,
-} from "@mui/icons-material";
 
 interface UserRegisterModalProps {
   open: boolean;
@@ -62,10 +53,6 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" })); // limpa erro ao digitar
-  };
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
   };
 
   const validateFields = () => {
