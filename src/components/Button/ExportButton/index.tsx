@@ -1,5 +1,5 @@
 import { Button } from "@mui/material";
-import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 interface ExportButtonProps {
   onClick: () => void;
@@ -11,7 +11,7 @@ export const ExportButton = ({ onClick }: ExportButtonProps) => {
       variant="outlined"
       color="inherit"
       onClick={onClick}
-      startIcon={<OpenInNewOutlinedIcon />}
+      startIcon={<FileDownloadOutlinedIcon />}
       sx={{
         borderRadius: "8px",
         textTransform: "none",

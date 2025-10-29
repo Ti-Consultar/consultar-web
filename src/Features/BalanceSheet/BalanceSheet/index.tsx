@@ -274,31 +274,39 @@ export const BalancoContabil = () => {
             </Tabs>
           </Box>
 
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
-            <TableValueVisualization />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                views={["year"]}
-                label="Ano"
-                value={selectedYear}
-                onChange={(newValue: Dayjs | null) => {
-                  if (newValue) {
-                    setSelectedYear(newValue);
-                  }
-                }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                  },
-                }}
+          <Box display="flex" justifyContent={"space-between"}>
+            <Box display="flex" gap={2} alignItems="center" mb={2}>
+              <TableValueVisualization />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  views={["year"]}
+                  label="Ano"
+                  value={selectedYear}
+                  onChange={(newValue: Dayjs | null) => {
+                    if (newValue) {
+                      setSelectedYear(newValue);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+              <MRPIconButton
+                title="Pesquisar"
+                onClick={handleSearch}
+                startIcon={<SearchIcon />}
               />
-            </LocalizationProvider>
-            <MRPIconButton
-              title="Buscar"
-              onClick={() => handleSearch()}
-              startIcon={<SearchIcon />}
-            />
-            <ExportButton onClick={() => setExportMenuOpen(true)} />
+              <ExportButton onClick={() => setExportMenuOpen(true)} />
+            </Box>
+            <div>
+              {/* <BudgetToggleButton
+                showBudgetColumns={showBudgetColumns}
+                setShowBudgetColumns={setShowBudgetColumns}
+              /> */}
+            </div>
           </Box>
           <Container>
             <BalancoContabilTable months={balanceteData} />
