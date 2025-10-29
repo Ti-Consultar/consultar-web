@@ -79,14 +79,28 @@ export const ResultsTableVariation = ({
   const [dragging, setDragging] = useState(false);
   const { valueMode } = useValueDisplay();
 
-  const translatedMonths: MonthData[] = useMemo(
-    () =>
-      months.map((month) => ({
+  const translatedMonths: MonthData[] = useMemo(() => {
+    const hasData = (
+      month: MonthData,
+      checkView: "realizado" | "orcado" | "variacao"
+    ) => {
+      const view = month[checkView];
+      if (!view) return false;
+      return Object.values(view).some((v) => typeof v === "number" && v !== 0);
+    };
+
+    return months
+      .filter((month) => {
+        if (showBudgetColumns) {
+          return hasData(month, "orcado") || hasData(month, "variacao");
+        }
+        return hasData(month, "realizado");
+      })
+      .map((month) => ({
         ...month,
         translatedName: monthNameToPTBR[month.name] || month.name,
-      })),
-    [months]
-  );
+      }));
+  }, [months, showBudgetColumns]);
 
   const allNestedKeys = Object.values(nestedMetrics).flat();
 
@@ -189,7 +203,6 @@ export const ResultsTableVariation = ({
       color = isPositive ? "green" : "red";
       icon = isPositive ? "▲" : "▼";
     } else {
-      // Despesa → lógica invertida
       color = isPositive ? "red" : "green";
       icon = isPositive ? "▲" : "▼";
     }
