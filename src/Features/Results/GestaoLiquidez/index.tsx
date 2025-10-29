@@ -341,10 +341,6 @@ export const GestaoLiquidez = () => {
   };
 
   useEffect(() => {
-    console.log(selectedMonth?.year());
-  }, [selectedMonth]);
-
-  useEffect(() => {
     if (accountPlanId) {
       fetchData();
     }

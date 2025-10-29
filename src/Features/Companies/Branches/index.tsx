@@ -92,7 +92,6 @@ export const Branches = () => {
   const handleNext = () => setIndex((prev) => prev + 1);
   const handlePrev = () => setIndex((prev) => prev - 1);
 
-  console.log({ groupId, companyId });
   if (!groupId || !companyId) return null;
 
   useEffect(() => {
