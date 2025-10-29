@@ -54,6 +54,7 @@ import { UserRegisterModal } from "../../Modal/UserRegisterModal";
 import { UserRegisterData } from "../../../types/userRegisterPayload";
 import { register } from "../../../services/apis/routes/auth.service";
 import { Role } from "../../../contexts/PermissionsContext";
+import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 
 const SidebarContainer = styled.div<{ collapsed: boolean }>`
   width: ${({ collapsed }) => (collapsed ? "64px" : "240px")};
@@ -393,19 +394,19 @@ export const Sidebar = () => {
           ),
           path: "/grupos",
         },
-        {
-          title: "Dashboard",
-          icon: (
-            <img
-              src={DashboardIcon}
-              alt="Home"
-              style={{ width: 22, height: 22 }}
-            />
-          ),
-          path: buildNestedUrl(params, "empresas"),
-        },
         ...(hasParams
           ? [
+              {
+                title: "Dashboard",
+                icon: (
+                  <img
+                    src={DashboardIcon}
+                    alt="Home"
+                    style={{ width: 22, height: 22 }}
+                  />
+                ),
+                path: buildNestedUrl(params, "empresas"),
+              },
               {
                 title: "Uploads",
                 icon: <CloudUploadOutlined />,
@@ -522,6 +523,20 @@ export const Sidebar = () => {
                   />
                 ),
                 path: buildNestedUrl(params, "parametros"),
+              },
+            ],
+          },
+        ]
+      : []),
+    ...(!hasParams
+      ? [
+          {
+            title: "Gestão",
+            items: [
+              {
+                title: "Gestão de Usuários",
+                icon: <PeopleAltOutlinedIcon />,
+                path: "/gestao",
               },
             ],
           },

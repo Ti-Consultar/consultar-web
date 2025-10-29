@@ -49,10 +49,8 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
     contact: "",
     role: "",
     email: "",
-    password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [createdUser, setCreatedUser] = useState<{
@@ -66,12 +64,6 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
     setErrors((prev) => ({ ...prev, [name]: "" })); // limpa erro ao digitar
   };
 
-  const handleGeneratePassword = () => {
-    const randomPassword = Math.random().toString(36).slice(-10);
-    setFormData((prev) => ({ ...prev, password: randomPassword }));
-    setErrors((prev) => ({ ...prev, password: "" }));
-  };
-
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
   };
@@ -80,13 +72,10 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) newErrors.name = "O nome é obrigatório.";
-    if (!formData.role)
-      newErrors.role = "A permissão é obrigatória.";
+    if (!formData.role) newErrors.role = "A permissão é obrigatória.";
     if (!formData.contact.trim())
       newErrors.contact = "O contato é obrigatório.";
     if (!formData.email.trim()) newErrors.email = "O email é obrigatório.";
-    if (!formData.password.trim())
-      newErrors.password = "A senha é obrigatória.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -185,34 +174,6 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
                 error={!!errors.email}
                 helperText={errors.email}
               />
-
-              <TextField
-                label="Senha"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={handleChange}
-                fullWidth
-                required
-                error={!!errors.password}
-                helperText={errors.password}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Tooltip title="Gerar senha aleatória">
-                        <IconButton onClick={handleGeneratePassword}>
-                          <Refresh fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
             </Stack>
           </form>
         </DialogContent>
@@ -238,14 +199,12 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
         maxWidth="xs"
         PaperProps={{ sx: { borderRadius: 2 } }}
       >
-        <DialogTitle sx={{ fontWeight: 600 }}>
-          Usuário Criado com Sucesso
-        </DialogTitle>
         <DialogContent>
           {createdUser && (
             <Stack spacing={1.5} mt={1}>
-              <DialogContentText>
-                Compartilhe as credenciais abaixo com o novo usuário.
+              <DialogContentText textAlign={"center"}>
+                Uma senha temporária foi enviada para o endereço de Email
+                cadastrado.
               </DialogContentText>
               <Box
                 sx={{
@@ -253,26 +212,11 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
                   p: 1.5,
                   borderRadius: 1.5,
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Box>
-                  <strong>Email:</strong> {createdUser.email}
-                  <br />
-                  <strong>Senha:</strong> {createdUser.password}
-                </Box>
-                <Tooltip title="Copiar credenciais">
-                  <IconButton
-                    onClick={() =>
-                      handleCopy(
-                        `Usuário: ${createdUser.email}\nSenha: ${createdUser.password}`
-                      )
-                    }
-                  >
-                    <ContentCopy />
-                  </IconButton>
-                </Tooltip>
+                <Box>{createdUser.email}</Box>
               </Box>
             </Stack>
           )}
