@@ -54,7 +54,6 @@ import { UserRegisterModal } from "../../Modal/UserRegisterModal";
 import { UserRegisterData } from "../../../types/userRegisterPayload";
 import { register } from "../../../services/apis/routes/auth.service";
 import { Role } from "../../../contexts/PermissionsContext";
-import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 
 const SidebarContainer = styled.div<{ collapsed: boolean }>`
   width: ${({ collapsed }) => (collapsed ? "64px" : "240px")};
