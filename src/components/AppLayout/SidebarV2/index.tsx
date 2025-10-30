@@ -528,20 +528,20 @@ export const Sidebar = () => {
           },
         ]
       : []),
-    ...(!hasParams
-      ? [
-          {
-            title: "Gestão",
-            items: [
-              {
-                title: "Gestão de Usuários",
-                icon: <PeopleAltOutlinedIcon />,
-                path: "/gestao",
-              },
-            ],
-          },
-        ]
-      : []),
+    // ...(!hasParams
+    //   ? [
+    //       {
+    //         title: "Gestão",
+    //         items: [
+    //           {
+    //             title: "Gestão de Usuários",
+    //             icon: <PeopleAltOutlinedIcon />,
+    //             path: "/gestao",
+    //           },
+    //         ],
+    //       },
+    //     ]
+    //   : []),
   ];
 
   const handleSubItemClick = (subItemPath: string, parentTitle: string) => {
