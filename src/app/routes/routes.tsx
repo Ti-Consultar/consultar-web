@@ -27,6 +27,7 @@ import { AgregadoMensal } from "../../Features/ValueTree/EVA";
 import { ProfileCustomizing } from "../../Features/Profile/ProfileCustomizing";
 import { UploadBalanceSheet } from "../../Features/Upload/UploadBalanceSheet";
 import { UploadBudgetSheet } from "../../Features/Upload/UploadBudgetSheet";
+import { UsersSettings } from "../../Features/Profile/UsersSettings";
 
 export const AppRoutes = () => {
   return (
@@ -37,6 +38,7 @@ export const AppRoutes = () => {
         <Route path="/perfil/informacoes" element={<ProfileInfo />} />
         <Route path="/perfil/seguranca" element={<ProfileSecurity />} />
         <Route path="/perfil/personalizacao" element={<ProfileCustomizing />} />
+        <Route path="/users" element={<UsersSettings />} />
         <Route path="/login" element={<Authentication />} />
         <Route path="/recuperar-senha" element={<ForgotPassword />} />
         <Route
@@ -94,7 +96,6 @@ export const AppRoutes = () => {
         {withScopes("demonstracoes-contabeis").map((path) => (
           <Route key={path} path={path} element={<BalancoReclassificado />} />
         ))}
-        {/* RESULTADOS */}
         {/* demonstrações contábeis */}
         {withScopes("resultados/gestao-liquidez").map((path) => (
           <Route key={path} path={path} element={<GestaoLiquidez />} />

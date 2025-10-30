@@ -37,7 +37,6 @@ import { jwtDecode } from "jwt-decode";
 import { NotificationDrawer } from "../../NoticationModal";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import { Invite } from "../../../types/notificationInvite";
 import {
   deleteNotification,
@@ -54,6 +53,7 @@ import { UserRegisterModal } from "../../Modal/UserRegisterModal";
 import { UserRegisterData } from "../../../types/userRegisterPayload";
 import { register } from "../../../services/apis/routes/auth.service";
 import { Role } from "../../../contexts/PermissionsContext";
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 
 const SidebarContainer = styled.div<{ collapsed: boolean }>`
   width: ${({ collapsed }) => (collapsed ? "64px" : "240px")};
@@ -745,8 +745,8 @@ export const Sidebar = () => {
           </MenuItem>
         </Protected>
         <MenuItem sx={{ display: "flex", gap: 1 }} onClick={handleOpenProfile}>
-          <AccountCircleOutlinedIcon sx={{ fontSize: "18px" }} />
-          Minha conta
+          <SettingsOutlinedIcon sx={{ fontSize: "18px" }} />
+          Configurações
         </MenuItem>
         <MenuItem
           onClick={handleLogout}

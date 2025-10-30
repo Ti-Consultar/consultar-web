@@ -10,6 +10,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 const menuItems = [
   { label: "Informações do Perfil", path: "/perfil/informacoes" },
   { label: "Segurança", path: "/perfil/seguranca" },
+  { label: "Usuários", path: "/users" },
   { label: "Personalização", path: "/perfil/personalizacao" },
 ];
 
