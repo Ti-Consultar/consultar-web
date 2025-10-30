@@ -393,19 +393,19 @@ export const Sidebar = () => {
           ),
           path: "/grupos",
         },
-        {
-          title: "Dashboard",
-          icon: (
-            <img
-              src={DashboardIcon}
-              alt="Home"
-              style={{ width: 22, height: 22 }}
-            />
-          ),
-          path: buildNestedUrl(params, "empresas"),
-        },
         ...(hasParams
           ? [
+              {
+                title: "Dashboard",
+                icon: (
+                  <img
+                    src={DashboardIcon}
+                    alt="Home"
+                    style={{ width: 22, height: 22 }}
+                  />
+                ),
+                path: buildNestedUrl(params, "empresas"),
+              },
               {
                 title: "Uploads",
                 icon: <CloudUploadOutlined />,
@@ -527,6 +527,20 @@ export const Sidebar = () => {
           },
         ]
       : []),
+    // ...(!hasParams
+    //   ? [
+    //       {
+    //         title: "Gestão",
+    //         items: [
+    //           {
+    //             title: "Gestão de Usuários",
+    //             icon: <PeopleAltOutlinedIcon />,
+    //             path: "/gestao",
+    //           },
+    //         ],
+    //       },
+    //     ]
+    //   : []),
   ];
 
   const handleSubItemClick = (subItemPath: string, parentTitle: string) => {
