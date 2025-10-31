@@ -40,6 +40,25 @@ export const register = async (data: UserRegisterData) => {
   }
 };
 
+export const registerFake = async (data: {
+  name: string;
+  contact: string;
+  role: string;
+  email: string;
+  senha: string;
+}) => {
+  try {
+    const response = await axiosInstanceWithToken.post(
+      `${BASE_URL}/register-fake`,
+      data
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const setNewPassword = async (email: string) => {
   await delay(1000);
   try {
@@ -75,6 +94,35 @@ export const getUserPolicies = async () => {
   try {
     const response = await axiosIntanceWithoutToken.get(
       `${MRP_URL}/api/Permission/permissions`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getUserBySearch = async (search: string) => {
+  try {
+    const encodedSearch = encodeURIComponent(search.trim());
+
+    const response = await axiosInstanceWithToken.get(
+      `${BASE_URL}/find/${encodedSearch}`
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const changeUserRole = async (data: {
+  userId: number;
+  role: string;
+}) => {
+  try {
+    const response = await axiosInstanceWithToken.put(
+      `${BASE_URL}/permission`,
+      data
     );
     return response.data;
   } catch (error) {
