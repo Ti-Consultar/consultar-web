@@ -20,7 +20,6 @@ export const Title = styled.h1`
 export const MainContainer = styled.div`
   display: flex;
   border-radius: 15px;
-  height: 100%;
   margin: 1rem;
   background-color: var(--neutral-white);
 
@@ -36,6 +35,7 @@ export const SectionContainer = styled.div`
   flex-direction: column;
   border-radius: 15px;
   width: 100%;
+  height: 80%;
   padding: 1.5rem;
   border: 1px solid var(--neutral-300);
   background-color: var(--neutral-white);

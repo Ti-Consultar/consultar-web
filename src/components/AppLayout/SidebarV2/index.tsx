@@ -25,7 +25,6 @@ import HomeIcon from "../../../assets/icons/sidebar/dashboard.svg";
 import DashboardIcon from "../../../assets/icons/duo-icons_dashboard.svg";
 import BalanceFile from "../../../assets/icons/sidebar/balanco-dre.svg";
 import SidebarOpen from "../../../assets/icons/sidebar/sidebar-open.svg";
-import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import SidebarClose from "../../../assets/icons/sidebar/sidebar-close.svg";
 import ClassificationIcon from "../../../assets/icons/sidebar/classification.svg";
 import FluxoIcon from "../../../assets/icons/sidebar/fluxo-caixa.svg";
@@ -747,17 +746,6 @@ export const Sidebar = () => {
           <NotificationsNoneIcon sx={{ fontSize: "18px" }} />
           Notificações
         </MenuItem>
-        <Protected
-          allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
-        >
-          <MenuItem
-            sx={{ display: "flex", gap: 1 }}
-            onClick={() => setOpen(true)}
-          >
-            <GroupAddOutlinedIcon sx={{ fontSize: "18px" }} />
-            Novo Usuário
-          </MenuItem>
-        </Protected>
         <MenuItem sx={{ display: "flex", gap: 1 }} onClick={handleOpenProfile}>
           <SettingsOutlinedIcon sx={{ fontSize: "18px" }} />
           Configurações
