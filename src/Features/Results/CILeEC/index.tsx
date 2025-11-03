@@ -11,14 +11,18 @@ import { getAccountPlan } from "../../../services/apis/routes/accountplan.servic
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
-import { getCILeEC } from "../../../services/apis/routes/CILeEC.service";
+import {
+  getCILeECWithBudget,
+} from "../../../services/apis/routes/CILeEC.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { MRPIconButton } from "../../../components/Button/IconButton";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { ExportDialog } from "../../../components/ExportModal";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
-import { ResultsTable } from "../resultsTable";
+import { BudgetToggleButton } from "../../../components/Button/TableOptions";
+import { ResultsTableVariation } from "../resultsTableVariation";
+import { normalizeCILECMonths } from "../../../utils/normalizeCILEECMonths";
 
 export const CILeEC = () => {
   const [tabValue] = useState<number>(1);
@@ -36,7 +40,7 @@ export const CILeEC = () => {
   const [entityName, setEntityName] = useState<string | null>(null);
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
-  const [, setShowBudgetColumns] = useState(false);
+  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
 
   const metrics = [
     "disponibilidades",
@@ -76,6 +80,30 @@ export const CILeEC = () => {
     patrimonioLiquido: "( - ) Patrimônio Líquido",
     estruturaDeCapital: "( = ) Posição Financeira Líquida",
     cil: "Capital Investido Líquido",
+  };
+
+  const metricNature: Record<string, "receita" | "despesa"> = {
+    disponibilidades: "receita",
+    clientes: "receita",
+    estoques: "receita",
+    outrosAtivosOperacionais: "receita",
+    fornecedores: "despesa",
+    obrigacoesTributariasTrabalhistas:
+      "despesa",
+    outrosPassivosOperacionais: "despesa",
+    ncg: "receita",
+    realizavelLongoPrazo: "receita",
+    exigivelALongoPrazoOperacional: "despesa",
+    ativosFixos:
+      "receita",
+    capitalInvestidoLiquido: "receita",
+    emprestimos: "despesa",
+    posicaoFinanceiraCurtoPrazo: "receita",
+    exigivelaLongoPrazoFinanceiro: "despesa",
+    posicaoFinanceiraTerceiros: "receita",
+    patrimonioLiquido: "despesa",
+    estruturaDeCapital: "receita",
+    cil: "receita",
   };
 
   const nestedMetrics = {
@@ -157,8 +185,8 @@ export const CILeEC = () => {
 
     try {
       if (!accountPlanId) return;
-      const response = await getCILeEC(accountPlanId, year);
-      setData(response.ciLeEC?.months);
+      const response = await getCILeECWithBudget(accountPlanId, year);
+      setData(normalizeCILECMonths(response?.months));
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {
@@ -317,18 +345,20 @@ export const CILeEC = () => {
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
             <div>
-              {/* <BudgetToggleButton
+              <BudgetToggleButton
                 showBudgetColumns={showBudgetColumns}
                 setShowBudgetColumns={setShowBudgetColumns}
-              /> */}
+              />
             </div>
           </Box>
 
-          <ResultsTable
+          <ResultsTableVariation
             metricKeys={metrics}
             metricLabels={metricLabels}
             months={data}
             nestedMetrics={nestedMetrics}
+            showBudgetColumns={showBudgetColumns}
+            metricNature={metricNature}
           />
         </Paper>
       </MainContainer>

@@ -103,10 +103,6 @@ export const IndicesEconomicos = () => {
     setTabValue(newValue);
   };
 
-  useEffect(() => {
-    console.log(months);
-  }, [months]);
-
   const fetchData = async () => {
     if (!selectedYear) return;
 

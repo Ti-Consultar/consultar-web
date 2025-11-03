@@ -7,18 +7,19 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { ResultsTable } from "../resultsTable";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
-import { getOperationalEfficieny } from "../../../services/apis/routes/operationalEfficiency.service";
+import { getOperationalEfficienyVariation } from "../../../services/apis/routes/operationalEfficiency.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { MRPIconButton } from "../../../components/Button/IconButton";
 import { ExportDialog } from "../../../components/ExportModal";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
+import { BudgetToggleButton } from "../../../components/Button/TableOptions";
+import { ResultsTableVariation } from "../resultsTableVariation";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const EficienciaOperacional = () => {
@@ -38,7 +39,7 @@ export const EficienciaOperacional = () => {
   const [entityName, setEntityName] = useState<string | null>(null);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
 
-  const [, setShowBudgetColumns] = useState(false);
+  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
 
   const metrics = [
     "receitasLiquidas",
@@ -174,8 +175,8 @@ export const EficienciaOperacional = () => {
     try {
       if (!accountPlanId) return;
 
-      const response = await getOperationalEfficieny(accountPlanId, year);
-      setData(response.operationalEfficiency?.months);
+      const response = await getOperationalEfficienyVariation(accountPlanId, year);
+      setData(response?.months);
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {
@@ -313,18 +314,19 @@ export const EficienciaOperacional = () => {
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
             <div>
-              {/* <BudgetToggleButton
+              <BudgetToggleButton
                 showBudgetColumns={showBudgetColumns}
                 setShowBudgetColumns={setShowBudgetColumns}
-              /> */}
+              />
             </div>
           </Box>
 
-          <ResultsTable
+          <ResultsTableVariation
             metricKeys={metrics}
             metricLabels={metricLabels}
             months={data}
             metricTypes={metricTypes}
+            showBudgetColumns={showBudgetColumns}
           />
         </Paper>
       </MainContainer>

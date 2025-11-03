@@ -14,3 +14,17 @@ export const getCILeEC = async (accountPlanId: number, year: number) => {
     throw error;
   }
 };
+
+export const getCILeECWithBudget = async (accountPlanId: number, year: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/CILeEC/cil-ec/variacao`,
+      {
+        params: { accountPlanId, year },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
