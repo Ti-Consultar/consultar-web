@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Box, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainContainer, Title } from "./styles";
@@ -14,7 +13,6 @@ import { MainTemplate } from "../../components/AppLayout";
 import { getCashFlow } from "../../services/apis/routes/cashFlow.service";
 import { CashFlowTable } from "./table";
 import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
-import { MRPIconButton } from "../../components/Button/IconButton";
 import { ExportDialog } from "../../components/ExportModal";
 import { useExportUtils } from "../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../utils/formatters/monthTranslator";
@@ -159,10 +157,6 @@ export const CashFlow = () => {
     }
   };
 
-  const handleSearch = () => {
-    fetchData();
-  };
-
   const buildExportData = (months: any[]) => {
     if (!months.length) return { columns: [], rows: [] };
 
@@ -261,11 +255,6 @@ export const CashFlow = () => {
                   }}
                 />
               </LocalizationProvider>
-              <MRPIconButton
-                title="Pesquisar"
-                onClick={handleSearch}
-                startIcon={<SearchIcon />}
-              />
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
             <div>

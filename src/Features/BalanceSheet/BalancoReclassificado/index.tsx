@@ -4,7 +4,6 @@ import { Container, MainContainer, Title } from "./styles";
 import { Box, Tabs, Tab, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useParams } from "react-router";
@@ -19,7 +18,6 @@ import { BalancoResponse, Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import BalancoReclassificadoTable from "./table";
 import BalancoContabilTable from "../BalanceSheet/table";
-import { MRPIconButton } from "../../../components/Button/IconButton";
 import { ExportDialog } from "../../../components/ExportModal";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
@@ -358,11 +356,6 @@ export const BalancoReclassificado = () => {
                   }}
                 />
               </LocalizationProvider>
-              <MRPIconButton
-                title="Pesquisar"
-                onClick={handleSearch}
-                startIcon={<SearchIcon />}
-              />
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
             <div>

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Box, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
@@ -15,7 +14,6 @@ import {
   getCILeECWithBudget,
 } from "../../../services/apis/routes/CILeEC.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
-import { MRPIconButton } from "../../../components/Button/IconButton";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { ExportDialog } from "../../../components/ExportModal";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
@@ -194,10 +192,6 @@ export const CILeEC = () => {
     }
   };
 
-  const handleSearch = () => {
-    fetchData();
-  };
-
   const buildExportData = (months: any[]) => {
     if (!months.length) return { columns: [], rows: [] };
 
@@ -336,11 +330,6 @@ export const CILeEC = () => {
                   }}
                 />
               </LocalizationProvider>
-              <MRPIconButton
-                title="Pesquisar"
-                onClick={handleSearch}
-                startIcon={<SearchIcon />}
-              />
 
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>

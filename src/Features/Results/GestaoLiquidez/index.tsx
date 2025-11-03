@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Box, Tabs, Tab, Paper, Typography } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
@@ -32,7 +31,6 @@ import { GrossCashFlowChart } from "../../../components/Charts/GrossCashFlowChar
 import { CapitalDynamicsChart } from "./charts/CapitalDynamicsChart";
 import { CapitalStructureStackedBarChart } from "./charts/CapitalStructureStackedBarChart";
 import { useDrawer } from "../../../contexts/DrawerContext";
-import { MRPIconButton } from "../../../components/Button/IconButton";
 import TurnoverChart from "./charts/TurnoverChart";
 import { LiquidityLineChart } from "./charts/LiquidityLineChart";
 import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
@@ -356,10 +354,6 @@ export const GestaoLiquidez = () => {
     setTabValue(newValue);
   };
 
-  const handleSearch = () => {
-    fetchData();
-  };
-
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
@@ -582,11 +576,6 @@ export const GestaoLiquidez = () => {
                   }}
                 />
               </LocalizationProvider>
-              <MRPIconButton
-                title="Pesquisar"
-                onClick={handleSearch}
-                startIcon={<SearchIcon />}
-              />
             </Box>
             <div>
               <BudgetToggleButton

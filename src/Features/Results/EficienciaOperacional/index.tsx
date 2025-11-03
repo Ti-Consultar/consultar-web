@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Box, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
@@ -13,7 +12,6 @@ import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import { getOperationalEfficienyVariation } from "../../../services/apis/routes/operationalEfficiency.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
-import { MRPIconButton } from "../../../components/Button/IconButton";
 import { ExportDialog } from "../../../components/ExportModal";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
@@ -184,10 +182,6 @@ export const EficienciaOperacional = () => {
     }
   };
 
-  const handleSearch = () => {
-    fetchData();
-  };
-
   const buildExportData = (months: any[]) => {
     if (!months.length) return { columns: [], rows: [] };
 
@@ -305,11 +299,6 @@ export const EficienciaOperacional = () => {
                   }}
                 />
               </LocalizationProvider>
-              <MRPIconButton
-                title="Pesquisar"
-                onClick={handleSearch}
-                startIcon={<SearchIcon />}
-              />
 
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
