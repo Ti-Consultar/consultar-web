@@ -80,35 +80,53 @@ export const ResultsTableVariation = ({
   const { valueMode } = useValueDisplay();
 
   const translatedMonths: MonthData[] = useMemo(() => {
-    const hasData = (
-      month: MonthData,
-      checkView: "realizado" | "orcado" | "variacao"
-    ) => {
-      const view = month[checkView];
-      if (!view) return false;
-      return Object.values(view).some((v) => typeof v === "number" && v !== 0);
+    // Conjunto de chaves que são MÉTRICAS válidas (ignora name/dateMonth)
+    const metricUniverse = new Set<string>([
+      ...metricKeys,
+      ...Object.values(nestedMetrics).flat(),
+    ]);
+
+    // Se quiser garantir que meta-campos nunca contem:
+    const isMetricKey = (k: string) =>
+      metricUniverse.has(k) && k !== "name" && k !== "dateMonth";
+
+    // Checa se há ALGUM valor (≠ 0) em realizado/orcado/variacao
+    const hasAnyValue = (month: MonthData) => {
+      const views = ["realizado", "orcado", "variacao"] as const;
+
+      return views.some((view) => {
+        const group = month[view];
+        if (!group || typeof group !== "object") return false;
+
+        // Verifica SOMENTE chaves de métricas conhecidas
+        for (const key of Object.keys(group)) {
+          if (!isMetricKey(key)) continue;
+          const val = (group as Record<string, unknown>)[key];
+
+          // Aceita apenas números finitos e diferentes de zero
+          if (typeof val === "number" && Number.isFinite(val) && val !== 0) {
+            return true;
+          }
+        }
+        return false;
+      });
     };
 
     return months
-      .filter((month) => {
-        if (showBudgetColumns) {
-          return hasData(month, "orcado") || hasData(month, "variacao");
-        }
-        return hasData(month, "realizado");
-      })
+      .filter((m) => hasAnyValue(m))
       .map((month) => ({
         ...month,
         translatedName: monthNameToPTBR[month.name] || month.name,
       }));
-  }, [months, showBudgetColumns]);
+  }, [months, metricKeys, nestedMetrics]);
+
 
   const allNestedKeys = Object.values(nestedMetrics).flat();
 
   const nestedGroupOrder = useMemo(() => {
-    const month = months?.[0];
-    if (!month || !nestedMetrics) return [];
-    return Object.keys(nestedMetrics);
-  }, [months, nestedMetrics]);
+    const order = ["cil", "estruturaDeCapital"];
+    return order.filter((key) => key in nestedMetrics);
+  }, [nestedMetrics]);
 
   const nestedGroupLabels: Record<string, string> = {
     estruturaDeCapital: "Posição Financeira Líquida",
@@ -146,7 +164,6 @@ export const ResultsTableVariation = ({
     return value < 0 ? `(${formatted})` : formatted;
   };
 
-  // 🧩 Função central — busca valores considerando o novo formato
   const getMetricValue = (
     month: MonthData,
     metric: string,

@@ -4,27 +4,22 @@ import { Container, MainContainer, Title } from "./styles";
 import { Box, Tabs, Tab, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import {
-  getBalancoContabil,
-  getBalancoReclassificado,
-} from "../../../services/apis/routes/classification.service";
+import { getBalancoReclassificadoVariation } from "../../../services/apis/routes/classification.service";
 import { toast } from "react-toastify";
-import { BalancoResponse, Month } from "../../../types/balanco";
+import { Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import BalancoReclassificadoTable from "./table";
-import BalancoContabilTable from "../BalanceSheet/table";
-import { MRPIconButton } from "../../../components/Button/IconButton";
 import { ExportDialog } from "../../../components/ExportModal";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
+import { metricNature } from "./metricNature";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1);
@@ -33,7 +28,9 @@ export const BalancoReclassificado = () => {
   );
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const { setLoading } = useLoading();
-  const [balanceteData, setBalanceteData] = useState<Month[]>([]);
+  const [realizadoMonths, setRealizadoMonths] = useState<Month[]>([]);
+  const [orcadoMonths, setOrcadoMonths] = useState<Month[]>([]);
+  const [variacaoMonths, setVariacaoMonths] = useState<Month[]>([]);
   const [exportOpen, setExportMenuOpen] = useState(false);
   const [entityName, setEntityName] = useState<string | null>(null);
   const { groupId, companyid, subCompanyId } = useParams<{
@@ -58,9 +55,29 @@ export const BalancoReclassificado = () => {
       "Passivo Não Circulante",
       "Outros Passivos Operacionais Total",
       "Patrimônio Liquido",
+      "Receita Operacional Bruta",
+      "(-) Deduções da Receita Bruta",
+      "(=) Receita Líquida de Vendas",
+      "Lucro Bruto",
+      "Margem Bruta %",
+      "Margem Contribuição",
+      "Margem Contribuição %",
+      "(-) Despesas Operacionais",
+      "Lucro Operacional",
+      "Margem Operacional %",
+      "Lucro Antes do Resultado Financeiro",
+      "Margem LAJIR %",
+      "Resultado do Exercício Antes do Imposto",
+      "Margem LAIR %",
+      "Lucro Líquido do Periodo",
+      "Margem Líquida %",
+      "EBITDA",
+      "Margem EBITDA %",
+      "NOPAT",
+      "Margem NOPAT %",
     ];
 
-    balanceteData.forEach((month) => {
+    realizadoMonths.forEach((month) => {
       month.totalizer.forEach((tot) => {
         if (nomesParaDestacar.includes(tot.name)) {
           ids[tot.id] = true;
@@ -69,7 +86,7 @@ export const BalancoReclassificado = () => {
     });
 
     return ids;
-  }, [balanceteData]);
+  }, [realizadoMonths]);
 
   useEffect(() => {
     const loadSetting = () => {
@@ -92,10 +109,13 @@ export const BalancoReclassificado = () => {
       subCompanyId?: number
     ): Promise<void> => {
       try {
-        setLoading(true, "Buscando Plano de Contas...");
+        setLoading(true, "Buscando...");
         const response = await getAccountPlan(groupId, companyId, subCompanyId);
+
         const data = response.data;
+
         if (!Array.isArray(data) || data.length === 0) return;
+
         const lastItem = data[data.length - 1];
         setAccountPlanId(lastItem.id);
         setEntityName(lastItem.group?.name);
@@ -114,7 +134,7 @@ export const BalancoReclassificado = () => {
     );
   }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
 
-  const handleSearch = async (tab?: number): Promise<void> => {
+  const handleSearch = async (explicitTab?: number): Promise<void> => {
     try {
       setLoading(true, "Buscando Balanço Contábil");
 
@@ -123,31 +143,17 @@ export const BalancoReclassificado = () => {
         return;
       }
 
-      const currentTab = tab ?? tabValue;
+      const tab = explicitTab ?? tabValue;
+      const response = await getBalancoReclassificadoVariation(
+        accountPlanId,
+        selectedYear.year(),
+        tab
+      );
 
-      let response: BalancoResponse;
-
-      if (currentTab === 1 || currentTab === 2) {
-        response = await getBalancoReclassificado(
-          accountPlanId,
-          selectedYear.year(),
-          currentTab
-        );
-      } else {
-        response = await getBalancoContabil(
-          accountPlanId,
-          selectedYear.year(),
-          currentTab
-        );
-      }
-
-      if (response.success && response.data?.months) {
-        setBalanceteData(response.data.months);
-      } else {
-        toast.warning(
-          response.message || "Não encontramos um balanço para esta data."
-        );
-      }
+      const data = response.data ?? {};
+      setRealizadoMonths(data.realizado?.months ?? []);
+      setOrcadoMonths(data.orcado?.months ?? []);
+      setVariacaoMonths(data.variacao?.months ?? []);
     } catch (err) {
       console.error(err);
       toast.error("Ocorreu um erro ao tentar buscar os dados");
@@ -161,7 +167,6 @@ export const BalancoReclassificado = () => {
     newValue: number
   ): void => {
     setTabValue(newValue);
-    handleSearch(newValue);
   };
 
   const buildExportData = (months: Month[]) => {
@@ -225,12 +230,12 @@ export const BalancoReclassificado = () => {
   };
 
   const handleExport = (format: string) => {
-    if (!balanceteData.length) {
+    if (!realizadoMonths.length) {
       toast.warning("Nenhum dado para exportar");
       return;
     }
 
-    const { columns, rows } = buildExportData(balanceteData);
+    const { columns, rows } = buildExportData(realizadoMonths);
 
     switch (format) {
       case "PDF":
@@ -266,16 +271,9 @@ export const BalancoReclassificado = () => {
   };
 
   useEffect(() => {
-    if (accountPlanId) {
-      handleSearch(1);
-    }
-  }, [accountPlanId]);
-
-  useEffect(() => {
-    if (selectedYear && accountPlanId) {
-      handleSearch();
-    }
-  }, [selectedYear]);
+    if (!accountPlanId) return;
+    handleSearch(tabValue);
+  }, [tabValue, selectedYear, accountPlanId]);
 
   return (
     <MainTemplate>
@@ -358,11 +356,6 @@ export const BalancoReclassificado = () => {
                   }}
                 />
               </LocalizationProvider>
-              <MRPIconButton
-                title="Pesquisar"
-                onClick={handleSearch}
-                startIcon={<SearchIcon />}
-              />
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
             <div>
@@ -374,15 +367,15 @@ export const BalancoReclassificado = () => {
           </Box>
 
           <Container>
-            {tabValue === 1 || tabValue === 2 ? (
-              <BalancoReclassificadoTable
-                months={balanceteData}
-                highlightRows={highlightRows}
-                showBudgetColumns={showBudgetColumns}
-              />
-            ) : (
-              <BalancoContabilTable months={balanceteData} />
-            )}
+            <BalancoReclassificadoTable
+              realizado={{ months: realizadoMonths }}
+              orcado={{ months: orcadoMonths }}
+              variacao={{ months: variacaoMonths }}
+              showBudgetColumns={showBudgetColumns}
+              highlightRows={highlightRows}
+              nestedMode={tabValue === 3 ? "DRE" : "NONE"}
+              metricNature={metricNature}
+            />
           </Container>
         </Paper>
       </MainContainer>

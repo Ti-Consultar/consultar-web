@@ -2,20 +2,24 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Box, Tabs, Tab, Paper, Typography } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { ResultsTable } from "../resultsTable";
 import {
   getCapitalDynamics,
+  getCapitalDynamicsVariation,
   getCapitalStructure,
+  getCapitalStructureVariation,
   getGrossCashFlow,
+  getGrossCashFlowVariation,
   getLiquidity,
   getLiquidityManagement,
+  getLiquidityManagementVariation,
   getLiquidityMonth,
+  getLiquidityVariation,
   getTurnover,
+  getTurnoverVariation,
 } from "../../../services/apis/routes/gestaoLiquidez.service";
 import { useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
@@ -27,11 +31,12 @@ import { GrossCashFlowChart } from "../../../components/Charts/GrossCashFlowChar
 import { CapitalDynamicsChart } from "./charts/CapitalDynamicsChart";
 import { CapitalStructureStackedBarChart } from "./charts/CapitalStructureStackedBarChart";
 import { useDrawer } from "../../../contexts/DrawerContext";
-import { MRPIconButton } from "../../../components/Button/IconButton";
 import TurnoverChart from "./charts/TurnoverChart";
 import { LiquidityLineChart } from "./charts/LiquidityLineChart";
 import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
 import { LiquidityChart } from "../../Companies/Charts/VariaveisLiquidez";
+import { BudgetToggleButton } from "../../../components/Button/TableOptions";
+import { ResultsTableVariation } from "../resultsTableVariation";
 
 interface LiquidityMonth {
   name: string;
@@ -71,7 +76,7 @@ export const GestaoLiquidez = () => {
   const [liquidityVariables, setLiquidityVariables] = useState<any[]>([]);
   const [liquidez, setLiquidez] = useState<any[]>([]);
   const [turnoverData, setTurnoverData] = useState<any[]>([]);
-  const [, setShowBudgetColumns] = useState(false);
+  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -133,15 +138,20 @@ export const GestaoLiquidez = () => {
     try {
       if (!accountPlanId) return;
       let response;
+      let dashboardResponse;
       let metrics: string[] = [];
       let labels: Record<string, string> = {};
       let extractedMonths: any[] = [];
+      let extractedMonthsFleuriet: any[] = [];
 
       switch (tabValue) {
         case 1:
-          response = await getLiquidityManagement(accountPlanId, year);
-          extractedMonths = response?.liquidityVariables?.months ?? [];
-          setLiquidityVariables(response?.liquidityVariables?.months);
+          response = await getLiquidityManagementVariation(accountPlanId, year);
+          dashboardResponse = await getLiquidityManagement(accountPlanId, year);
+          setLiquidityVariables(dashboardResponse?.liquidityVariables?.months);
+          extractedMonths = response?.months ?? [];
+          extractedMonthsFleuriet =
+            dashboardResponse?.liquidityVariables?.months ?? [];
           metrics = ["saldoTesouraria", "ncg", "cdg", "indiceDeLiquidez"];
           labels = {
             saldoTesouraria: "Saldo Tesouraria",
@@ -159,8 +169,9 @@ export const GestaoLiquidez = () => {
           break;
 
         case 2:
-          response = await getCapitalDynamics(accountPlanId, year);
-          extractedMonths = response?.capitalDynamics?.months ?? [];
+          response = await getCapitalDynamicsVariation(accountPlanId, year);
+          dashboardResponse = await getCapitalDynamics(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
           metrics = [
             "pme",
             "pmr",
@@ -185,12 +196,13 @@ export const GestaoLiquidez = () => {
           });
 
           setValueMode(false);
-          setCapitalDynamicsData(response?.capitalDynamics?.months);
+          setCapitalDynamicsData(dashboardResponse?.capitalDynamics?.months);
           break;
 
         case 3:
-          response = await getGrossCashFlow(accountPlanId, year);
-          extractedMonths = response?.grossCashFlows?.months ?? [];
+          response = await getGrossCashFlowVariation(accountPlanId, year);
+          dashboardResponse = await getGrossCashFlow(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
           metrics = [
             "ebitida",
             "margemEBITIDA",
@@ -214,19 +226,22 @@ export const GestaoLiquidez = () => {
           });
           setValueMode(true);
           setGrossCashFlowDashData(
-            (response?.grossCashFlows?.months ?? []).map((month: any) => ({
-              name: month.name,
-              ebitida: month.ebitida,
-              margemEBITIDA: month.margemEBITIDA,
-              fluxoCaixaOperacional: month.fluxoCaixaOperacional,
-            }))
+            (dashboardResponse?.grossCashFlows?.months ?? []).map(
+              (month: any) => ({
+                name: month.name,
+                ebitida: month.ebitida,
+                margemEBITIDA: month.margemEBITIDA,
+                fluxoCaixaOperacional: month.fluxoCaixaOperacional,
+              })
+            )
           );
           break;
 
         case 4:
-          response = await getTurnover(accountPlanId, year);
-          extractedMonths = response?.turnovers?.months ?? [];
-          setTurnoverData(response?.turnovers?.months);
+          response = await getTurnoverVariation(accountPlanId, year);
+          dashboardResponse = await getTurnover(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
+          setTurnoverData(dashboardResponse?.turnovers?.months);
           metrics = ["giroPME", "giroPMR", "giroPMP", "giroCaixa"];
           labels = {
             giroPME: "Giro PME",
@@ -244,9 +259,10 @@ export const GestaoLiquidez = () => {
           break;
 
         case 5:
-          response = await getLiquidity(accountPlanId, year);
-          extractedMonths = response?.liquiditys?.months ?? [];
-          setLiquidez(response?.liquiditys?.months);
+          response = await getLiquidityVariation(accountPlanId, year);
+          dashboardResponse = await getLiquidity(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
+          setLiquidez(dashboardResponse?.liquiditys?.months);
           metrics = ["liquidezCorrente", "liquidezSeca", "liquidezImediata"];
           labels = {
             liquidezCorrente: "Liquidez Corrente",
@@ -262,8 +278,9 @@ export const GestaoLiquidez = () => {
           break;
 
         case 6:
-          response = await getCapitalStructure(accountPlanId, year);
-          extractedMonths = response?.capitalStructures?.months ?? [];
+          response = await getCapitalStructureVariation(accountPlanId, year);
+          dashboardResponse = await getCapitalStructure(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
           metrics = [
             "terceirosCurtoPrazo",
             "terceirosLongoPrazo",
@@ -285,13 +302,14 @@ export const GestaoLiquidez = () => {
             participacaoCapitalTerceiros: "percent",
             participacaoCapitalProprio: "percent",
           });
-          setCapitalStructuresData(response?.capitalStructures?.months);
+          setCapitalStructuresData(dashboardResponse?.capitalStructures?.months);
           break;
       }
 
       setMonths(extractedMonths);
-      if (tabValue === 1 && extractedMonths.length > 0) {
-        const lastMonth = extractedMonths[extractedMonths.length - 1];
+      if (tabValue === 1 && extractedMonthsFleuriet.length > 0) {
+        const lastMonth =
+          extractedMonthsFleuriet[extractedMonthsFleuriet.length - 1];
         if (lastMonth.dateMonth) {
           const monthDate = dayjs()
             .year(Number(selectedYear.format("YYYY")))
@@ -334,10 +352,6 @@ export const GestaoLiquidez = () => {
 
   const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-  };
-
-  const handleSearch = () => {
-    fetchData();
   };
 
   useEffect(() => {
@@ -562,27 +576,23 @@ export const GestaoLiquidez = () => {
                   }}
                 />
               </LocalizationProvider>
-              <MRPIconButton
-                title="Pesquisar"
-                onClick={handleSearch}
-                startIcon={<SearchIcon />}
-              />
             </Box>
             <div>
-              {/* <BudgetToggleButton
+              <BudgetToggleButton
                 showBudgetColumns={showBudgetColumns}
                 setShowBudgetColumns={setShowBudgetColumns}
-              /> */}
+              />
             </div>
           </Box>
 
           <Box>
-            <ResultsTable
+            <ResultsTableVariation
               months={months}
               metricKeys={metricKeys}
               metricLabels={metricLabels}
               enableValueMode={valueMode}
               metricTypes={metricTypes}
+              showBudgetColumns={showBudgetColumns}
             />
           </Box>
           <Box

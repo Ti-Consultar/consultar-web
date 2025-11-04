@@ -11,21 +11,21 @@ import {
 import React, { useMemo, useState } from "react";
 import { useValueDisplay } from "../../contexts/ValueDisplayContext";
 
-interface MonthData {
+interface CashFlowMonth {
   name: string;
-  translatedName?: string;
-  [key: string]: any;
+  dateMonth: number;
+  [key: string]: number | string;
 }
 
-interface TabelaMetricasTranspostaProps {
-  months: MonthData[];
+interface CashFlowTableProps {
+  realizadoMonths: CashFlowMonth[];
+  budgetMonths: CashFlowMonth[];
+  variationMonths: CashFlowMonth[];
   metricKeys: string[];
   metricLabels: Record<string, string>;
-  nestedMetrics?: Record<string, string[]>;
   highlightedMetrics?: string[];
   showBudgetColumns?: boolean;
-  budgetMonths?: MonthData[];
-  variationMonths?: MonthData[];
+  metricNature?: Record<string, "receita" | "despesa">;
 }
 
 const monthNameToPTBR: Record<string, string> = {
@@ -41,77 +41,137 @@ const monthNameToPTBR: Record<string, string> = {
   October: "Outubro",
   November: "Novembro",
   December: "Dezembro",
-  Acumulado: "Acumulado",
+  ACUMULADO: "Acumulado",
 };
 
 export const CashFlowTable = ({
-  months,
+  realizadoMonths,
+  budgetMonths,
+  variationMonths,
   metricKeys,
   metricLabels,
-  nestedMetrics = {},
   highlightedMetrics = [],
   showBudgetColumns = false,
-  budgetMonths = [],
-  variationMonths = [],
-}: TabelaMetricasTranspostaProps) => {
+  metricNature,
+}: CashFlowTableProps) => {
   const [colWidth, setColWidth] = useState(220);
   const [dragging, setDragging] = useState(false);
+  const { valueMode } = useValueDisplay();
 
-  const baseCellStyle = {
-    borderLeft: "1px solid #e0e0e0",
-    transition: "background-color 0.15s ease",
-    "&:hover": {
-      backgroundColor: "#d6e9e0ff",
-    },
-  };
-
-  const translatedMonths: MonthData[] = useMemo(
+  const translatedMonths: CashFlowMonth[] = useMemo(
     () =>
-      months.map((month) => ({
+      realizadoMonths.map((month) => ({
         ...month,
         translatedName: monthNameToPTBR[month.name] || month.name,
       })),
-    [months]
+    [realizadoMonths]
   );
 
-  const { valueMode } = useValueDisplay();
+  const formatValue = (label: string, value: number | undefined): string => {
+    if (value === undefined || value === null) return "-";
+    if (value === 0) return "-";
 
-  const allNestedKeys = Object.values(nestedMetrics).flat();
+    let adjusted = value;
+    if (valueMode === "MILHAR") adjusted /= 1000;
+    if (valueMode === "MILHARES") adjusted /= 1000000;
 
-  const nestedGroupOrder = useMemo(() => {
-    const month = months?.[0];
-    if (!month || !nestedMetrics) return [];
-    return Object.keys(month).filter((key) => key in nestedMetrics);
-  }, [months, nestedMetrics]);
+    const abs = Math.abs(adjusted);
 
-  const formatValue = (classificationName: string, value: number): string => {
-    if (value === 0 || value === undefined || value === null) return "-";
-
-    let adjustedValue = value;
-    if (valueMode === "MILHAR") adjustedValue = adjustedValue / 1000;
-    else if (valueMode === "MILHARES") adjustedValue = adjustedValue / 1000000;
-
-    const absValue = Math.abs(adjustedValue);
-
-    if (classificationName.includes("%")) {
-      return `${adjustedValue.toFixed(2).replace(".", ",")}%`;
+    if (label.includes("%")) {
+      return `${adjusted.toFixed(2).replace(".", ",")}%`;
     }
 
-    if (adjustedValue < 0 || classificationName.startsWith("(-)")) {
-      return `(${Math.trunc(absValue).toLocaleString("pt-BR")})`;
+    if (adjusted < 0) {
+      return `(${Math.trunc(abs).toLocaleString("pt-BR")})`;
     }
 
-    return Math.trunc(adjustedValue).toLocaleString("pt-BR");
+    return Math.trunc(adjusted).toLocaleString("pt-BR");
+  };
+
+  const getVariationIconAndColor = (
+    metric: string,
+    rawValue: number | undefined
+  ) => {
+    if (rawValue === undefined || rawValue === null || isNaN(rawValue)) {
+      return { icon: null, color: "inherit" };
+    }
+
+    const nature = metricNature?.[metric] ?? "receita";
+    const isPositive = rawValue > 0;
+
+    let color = "";
+    let icon = "";
+
+    if (nature === "receita") {
+      color = isPositive ? "green" : "red";
+      icon = isPositive ? "▲" : "▼";
+    } else {
+      color = isPositive ? "red" : "green";
+      icon = isPositive ? "▲" : "▼";
+    }
+
+    return { icon, color };
+  };
+
+  const findMonth = (list: CashFlowMonth[], name: string, dateMonth: number) =>
+    list.find((m) => m.name === name) ||
+    list.find((m) => m.dateMonth === dateMonth) ||
+    list.find((m) => m.dateMonth === 13); // fallback for ACUMULADO
+
+  const renderValueCells = (month: CashFlowMonth, metric: string) => {
+    const realValue = formatValue(metric, month[metric] as number);
+
+    if (!showBudgetColumns) {
+      return (
+        <TableCell key={`${month.name}-${metric}`} align="right">
+          {realValue}
+        </TableCell>
+      );
+    }
+
+    const budgetMonth = findMonth(budgetMonths, month.name, month.dateMonth);
+    const variationMonth = findMonth(
+      variationMonths,
+      month.name,
+      month.dateMonth
+    );
+
+    const budgetValue = formatValue(
+      metric,
+      budgetMonth?.[metric] as number | undefined
+    );
+    const variationValue = formatValue(
+      metric,
+      variationMonth?.[metric] as number | undefined
+    );
+
+    return (
+      <>
+        <TableCell align="right">{budgetValue}</TableCell>
+        <TableCell align="right">{realValue}</TableCell>
+        <TableCell align="right">
+          {(() => {
+            const rawValue = variationMonth?.[metric] as number | undefined;
+            const { icon, color } = getVariationIconAndColor(metric, rawValue);
+
+            return (
+              <span style={{ color, fontWeight: 600 }}>
+                {variationValue}
+                {icon && `${icon} `}
+              </span>
+            );
+          })()}
+        </TableCell>
+      </>
+    );
   };
 
   const handleMouseDown = () => setDragging(true);
-
   const handleMouseMove = (e: MouseEvent) => {
     if (dragging) {
       setColWidth((prev) => Math.min(450, Math.max(120, prev + e.movementX)));
     }
   };
-
   const handleMouseUp = () => setDragging(false);
 
   React.useEffect(() => {
@@ -125,75 +185,6 @@ export const CashFlowTable = ({
     };
   }, [dragging]);
 
-  const renderValueCells = (
-    month: MonthData,
-    metric: string,
-    groupKey?: string
-  ) => {
-    const rawValue = groupKey ? month[groupKey]?.[metric] : month[metric];
-    const value =
-      typeof rawValue === "number" ? formatValue(metric, rawValue) : "-";
-
-    // Se orçado estiver ativado, pegamos dados extras
-    if (!showBudgetColumns) {
-      return (
-        <TableCell
-          key={`${month.name}-${metric}`}
-          align="right"
-          sx={baseCellStyle}
-        >
-          {value}
-        </TableCell>
-      );
-    }
-
-    // Dados de Orçado e Variação
-    const budgetMonth = budgetMonths.find((m) => m.name === month.name);
-    const variationMonth = variationMonths.find((m) => m.name === month.name);
-
-    const budgetValueRaw = groupKey
-      ? budgetMonth?.[groupKey]?.[metric]
-      : budgetMonth?.[metric];
-    const variationValueRaw = groupKey
-      ? variationMonth?.[groupKey]?.[metric]
-      : variationMonth?.[metric];
-
-    const budgetValue =
-      typeof budgetValueRaw === "number"
-        ? formatValue(metric, budgetValueRaw)
-        : "-";
-    const variationValue =
-      typeof variationValueRaw === "number"
-        ? formatValue(metric, variationValueRaw)
-        : "-";
-
-    return (
-      <>
-        <TableCell
-          key={`${month.name}-${metric}-real`}
-          align="right"
-          sx={baseCellStyle}
-        >
-          {value}
-        </TableCell>
-        <TableCell
-          key={`${month.name}-${metric}-budget`}
-          align="right"
-          sx={baseCellStyle}
-        >
-          {budgetValue}
-        </TableCell>
-        <TableCell
-          key={`${month.name}-${metric}-var`}
-          align="right"
-          sx={baseCellStyle}
-        >
-          {variationValue}
-        </TableCell>
-      </>
-    );
-  };
-
   return (
     <TableContainer
       component={Paper}
@@ -205,7 +196,7 @@ export const CashFlowTable = ({
         overflow: "auto",
       }}
     >
-      <Table size="small" sx={{ width: "100%" }}>
+      <Table size="small">
         <TableHead>
           <TableRow>
             <TableCell
@@ -214,42 +205,29 @@ export const CashFlowTable = ({
                 backgroundColor: "#f5f5f5",
                 position: "sticky",
                 left: 0,
-                zIndex: 1,
+                zIndex: 2,
                 width: colWidth,
-                minWidth: colWidth,
-                maxWidth: colWidth,
-                userSelect: "none",
-                cursor: dragging ? "col-resize" : "default",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span></span>
                 <div
                   onMouseDown={handleMouseDown}
-                  style={{
-                    cursor: "col-resize",
-                    padding: "0 4px",
-                    marginRight: -8,
-                  }}
+                  style={{ cursor: "col-resize", padding: "0 4px" }}
                 >
                   ⋮
                 </div>
               </div>
             </TableCell>
 
-            {translatedMonths.map((month) => (
+            {translatedMonths.map((m) => (
               <TableCell
-                key={month.name}
+                key={m.name}
                 align="center"
                 colSpan={showBudgetColumns ? 3 : 1}
-                sx={{
-                  fontWeight: "bold",
-                  backgroundColor: "#f5f5f5",
-                  borderLeft: "1px solid #e0e0e0",
-                  whiteSpace: "nowrap",
-                }}
+                sx={{ fontWeight: "bold", backgroundColor: "#f5f5f5" }}
               >
-                {month.translatedName}
+                {m.translatedName}
               </TableCell>
             ))}
           </TableRow>
@@ -257,15 +235,10 @@ export const CashFlowTable = ({
           {showBudgetColumns && (
             <TableRow>
               <TableCell
-                sx={{
-                  backgroundColor: "#fafafa",
-                  position: "sticky",
-                  left: 0,
-                  zIndex: 1,
-                }}
-              ></TableCell>
-              {translatedMonths.map((month) => (
-                <React.Fragment key={`${month.name}-sub`}>
+                sx={{ backgroundColor: "#fafafa", position: "sticky", left: 0 }}
+              />
+              {translatedMonths.map((m) => (
+                <React.Fragment key={m.name}>
                   <TableCell align="right" sx={{ fontWeight: "bold" }}>
                     Orçado
                   </TableCell>
@@ -282,93 +255,37 @@ export const CashFlowTable = ({
         </TableHead>
 
         <TableBody>
-          {nestedGroupOrder.map((groupKey) => {
-            const metrics = nestedMetrics[groupKey];
+          {metricKeys.map((metric) => {
+            const highlighted = highlightedMetrics.includes(metric);
             return (
-              <React.Fragment key={groupKey}>
-                <TableRow>
-                  <TableCell
-                    colSpan={
-                      translatedMonths.length * (showBudgetColumns ? 3 : 1) + 1
-                    }
-                    sx={{
-                      fontWeight: "bold",
-                      backgroundColor: "#fafafa",
-                    }}
-                  >
-                    {metricLabels[groupKey] || groupKey}
-                  </TableCell>
-                </TableRow>
-                {metrics.map((metric) => {
-                  const isHighlighted = highlightedMetrics.includes(metric);
-                  return (
-                    <TableRow
-                      key={`${groupKey}-${metric}`}
-                      sx={{
-                        backgroundColor: isHighlighted ? "#f0f0f0" : undefined,
-                      }}
-                    >
-                      <TableCell
-                        sx={{
-                          position: "sticky",
-                          left: 0,
-                          backgroundColor: isHighlighted ? "#f0f0f0" : "#fff",
-                          maxWidth: 180,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          fontWeight: isHighlighted ? "bold" : 500,
-                        }}
-                      >
-                        <Tooltip title={metricLabels[metric] || metric}>
-                          <span>{metricLabels[metric] || metric}</span>
-                        </Tooltip>
-                      </TableCell>
-
-                      {translatedMonths.map((month) =>
-                        renderValueCells(month, metric, groupKey)
-                      )}
-                    </TableRow>
-                  );
-                })}
-              </React.Fragment>
-            );
-          })}
-
-          {metricKeys
-            .filter((metric) => !allNestedKeys.includes(metric))
-            .map((metric) => {
-              const isHighlighted = highlightedMetrics.includes(metric);
-              return (
-                <TableRow
-                  key={metric}
+              <TableRow
+                key={metric}
+                sx={{
+                  backgroundColor: highlighted ? "#f0f0f0" : undefined,
+                }}
+              >
+                <TableCell
                   sx={{
-                    backgroundColor: isHighlighted ? "#f0f0f0" : undefined,
+                    position: "sticky",
+                    left: 0,
+                    backgroundColor: highlighted ? "#f0f0f0" : "#fff",
+                    fontWeight: highlighted ? "bold" : 500,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
-                  <TableCell
-                    sx={{
-                      position: "sticky",
-                      left: 0,
-                      backgroundColor: isHighlighted ? "#f0f0f0" : "#fff",
-                      maxWidth: 180,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      fontWeight: isHighlighted ? "bold" : 500,
-                    }}
-                  >
-                    <Tooltip title={metricLabels[metric] || metric}>
-                      <span>{metricLabels[metric] || metric}</span>
-                    </Tooltip>
-                  </TableCell>
+                  <Tooltip title={metricLabels[metric] || metric}>
+                    <span>{metricLabels[metric] || metric}</span>
+                  </Tooltip>
+                </TableCell>
 
-                  {translatedMonths.map((month) =>
-                    renderValueCells(month, metric)
-                  )}
-                </TableRow>
-              );
-            })}
+                {translatedMonths.map((month) =>
+                  renderValueCells(month, metric)
+                )}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </TableContainer>
