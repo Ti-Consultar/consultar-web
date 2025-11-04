@@ -81,6 +81,28 @@ export const getBalancoReclassificado = async (
   }
 };
 
+export const getBalancoReclassificadoVariation = async (
+  accountPlanId: number,
+  year: number,
+  typeClassification: number
+) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/painel-reclassificado/comparativo`,
+      {
+        params: {
+          accountPlanId,
+          year,
+          typeClassification
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const validateClassificationModel = async (accountPlanId: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
