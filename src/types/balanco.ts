@@ -1,4 +1,4 @@
-// Type definitions
+// FinancialData stays the same
 export interface FinancialData {
   id: number;
   typeOrder: number;
@@ -36,6 +36,18 @@ export interface Month {
   totalizer: Totalizer[];
 }
 
+// ✅ NEW — Format of the reclassified API response
+export interface BalancoReclassificadoResponse {
+  success: boolean;
+  data?: {
+    realizado: { months: Month[] };
+    orcado: { months: Month[] };
+    variacao: { months: Month[] };
+  };
+  message?: string;
+}
+
+// ✅ Old format stays for DRE and other screens
 export interface BalancoResponse {
   success: boolean;
   data?: {

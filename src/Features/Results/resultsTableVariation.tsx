@@ -164,7 +164,6 @@ export const ResultsTableVariation = ({
     return value < 0 ? `(${formatted})` : formatted;
   };
 
-  // 🧩 Função central — busca valores considerando o novo formato
   const getMetricValue = (
     month: MonthData,
     metric: string,
