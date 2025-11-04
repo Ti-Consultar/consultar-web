@@ -429,17 +429,7 @@ const BalancoReclassificadoTable = ({
 
                               return (
                                 <React.Fragment key={m.id}>
-                                  <TableCell
-                                    align="right"
-                                    sx={{
-                                      background: rowBg,
-                                      "&:hover": {
-                                        backgroundColor: hl
-                                          ? theme.palette.grey[400]
-                                          : theme.palette.grey[200],
-                                      },
-                                    }}
-                                  >
+                                  <TableCell align="right">
                                     {formatValue(vBud, c.name)}
                                   </TableCell>
                                   <TableCell
