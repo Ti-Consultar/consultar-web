@@ -14,3 +14,17 @@ export const getCashFlow = async (accountPlanId: number, year: number) => {
     throw error;
   }
 };
+
+export const getCashFlowVariation = async (accountPlanId: number, year: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/variacao`,
+      {
+        params: { accountPlanId, year },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

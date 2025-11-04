@@ -10,7 +10,9 @@ import { useParams } from "react-router";
 import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
 import { toast } from "react-toastify";
 import { MainTemplate } from "../../components/AppLayout";
-import { getCashFlow } from "../../services/apis/routes/cashFlow.service";
+import {
+  getCashFlowVariation,
+} from "../../services/apis/routes/cashFlow.service";
 import { CashFlowTable } from "./table";
 import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
 import { ExportDialog } from "../../components/ExportModal";
@@ -24,7 +26,9 @@ export const CashFlow = () => {
   const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
   );
-  const [data, setData] = useState<any[]>([]);
+  const [realizado, setRealizado] = useState<any[]>([]);
+  const [orcado, setOrcado] = useState<any[]>([]);
+  const [variacao, setVariacao] = useState<any[]>([]);
   const { setLoading } = useLoading();
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
@@ -147,9 +151,11 @@ export const CashFlow = () => {
 
     try {
       if (!accountPlanId) return;
+      const response = await getCashFlowVariation(accountPlanId, year);
 
-      const response = await getCashFlow(accountPlanId, year);
-      setData(response.cashFlow?.months);
+      setRealizado(response.realizado?.cashFlow?.months ?? []);
+      setOrcado(response.orcado?.cashFlow?.months ?? []);
+      setVariacao(response.variacao?.cashFlow?.months ?? []);
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {
@@ -184,12 +190,12 @@ export const CashFlow = () => {
   };
 
   const handleExport = (format: string) => {
-    if (!data.length) {
+    if (!realizado.length) {
       toast.warning("Nenhum dado para exportar");
       return;
     }
 
-    const { columns, rows } = buildExportData(data);
+    const { columns, rows } = buildExportData(realizado);
 
     switch (format) {
       case "PDF":
@@ -269,7 +275,9 @@ export const CashFlow = () => {
             metricKeys={metrics}
             metricLabels={metricLabels}
             highlightedMetrics={highlightedMetrics}
-            months={data}
+            realizadoMonths={realizado}
+            budgetMonths={orcado}
+            variationMonths={variacao}
             showBudgetColumns={showBudgetColumns}
           />
         </Paper>
