@@ -82,33 +82,87 @@ const BalancoReclassificadoTable = ({
   const [selectedTitle, setSelectedTitle] = useState("");
   const [selectedDetails, setSelectedDetails] = useState<any[]>([]);
 
-  const mergedMonths: MergedMonth[] = useMemo(() => {
-    const ids = Array.from(
-      new Set([
-        ...realizado.months.map((m) => m.id),
-        ...orcado.months.map((m) => m.id),
-        ...variacao.months.map((m) => m.id),
-      ])
+  const MONTH_NUM_BY_NAME: Record<string, number> = {
+    January: 1,
+    February: 2,
+    March: 3,
+    April: 4,
+    May: 5,
+    June: 6,
+    July: 7,
+    August: 8,
+    September: 9,
+    October: 10,
+    November: 11,
+    December: 12,
+    ACUMULADO: 13,
+  };
+
+  const canonicalMonthKey = (m: MonthRaw) => {
+    const dm = m.dateMonth ?? MONTH_NUM_BY_NAME[m.name];
+    const keyNum = dm ?? -1;
+    return String(keyNum);
+  };
+
+  const canonicalName = (m: MonthRaw) => {
+    if (m.name) return m.name;
+    const byNum = Object.entries(MONTH_NUM_BY_NAME).find(
+      ([, num]) => num === m.dateMonth
     );
+    return byNum?.[0] ?? "";
+  };
 
-    return ids.map((id) => {
-      const r = realizado.months.find((m) => m.id === id);
-      const o = orcado.months.find((m) => m.id === id);
-      const v = variacao.months.find((m) => m.id === id);
+  const mergedMonths: MergedMonth[] = useMemo(() => {
+    const map = new Map<string, MergedMonth>();
 
-      return {
-        id,
-        name: r?.name || o?.name || v?.name || "",
-        dateMonth: r?.dateMonth || o?.dateMonth || v?.dateMonth,
-        totalReal: r?.monthPainelContabilTotalizer?.totalValue ?? null,
-        totalBudget: o?.monthPainelContabilTotalizer?.totalValue ?? null,
-        totalVar: v?.monthPainelContabilTotalizer?.totalValue ?? null,
-        realRows: r?.totalizer ?? [],
-        budgetRows: o?.totalizer ?? [],
-        varRows: v?.totalizer ?? [],
-      };
+    const ensure = (m: MonthRaw) => {
+      const key = canonicalMonthKey(m);
+      if (!map.has(key)) {
+        map.set(key, {
+          id: Number.isFinite(m.dateMonth) ? (m.dateMonth as number) : m.id, // id só pra React key
+          name: canonicalName(m),
+          dateMonth: m.dateMonth ?? MONTH_NUM_BY_NAME[m.name],
+          totalReal: null,
+          totalBudget: null,
+          totalVar: null,
+          realRows: [],
+          budgetRows: [],
+          varRows: [],
+        });
+      }
+      return map.get(key)!;
+    };
+
+    realizado.months.forEach((m) => {
+      const entry = ensure(m);
+      entry.name ||= canonicalName(m);
+      entry.totalReal = m.monthPainelContabilTotalizer?.totalValue ?? null;
+      entry.realRows = m.totalizer ?? [];
+    });
+
+    orcado.months.forEach((m) => {
+      const entry = ensure(m);
+      entry.name ||= canonicalName(m);
+      entry.totalBudget = m.monthPainelContabilTotalizer?.totalValue ?? null;
+      entry.budgetRows = m.totalizer ?? [];
+    });
+
+    variacao.months.forEach((m) => {
+      const entry = ensure(m);
+      entry.name ||= canonicalName(m);
+      entry.totalVar = m.monthPainelContabilTotalizer?.totalValue ?? null;
+      entry.varRows = m.totalizer ?? [];
+    });
+
+    // ordena por dateMonth; desconhecidos vão pro fim
+    return Array.from(map.values()).sort((a, b) => {
+      const an = a.dateMonth ?? 999;
+      const bn = b.dateMonth ?? 999;
+      return an - bn;
     });
   }, [realizado, orcado, variacao]);
+
+  console.log(mergedMonths);
 
   const allTotalizers = useMemo(() => {
     const map = new Map<number, Totalizer>();
