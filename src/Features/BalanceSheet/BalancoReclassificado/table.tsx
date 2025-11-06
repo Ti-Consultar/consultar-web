@@ -248,12 +248,16 @@ const BalancoReclassificadoTable = ({
     fontWeight: "bold",
     minWidth: 260,
   };
+
   const stickyCell = {
     position: "sticky" as const,
     left: 0,
     backgroundColor: theme.palette.background.paper,
     zIndex: Z.bodyFirst,
+    borderRight: `1px solid ${theme.palette.divider}`,
+    backgroundClip: "padding-box", // evita sobrepor a borda
   };
+
   const dataCellHover = {
     cursor: "pointer",
     "&:hover": { backgroundColor: theme.palette.grey[200] },
@@ -270,12 +274,35 @@ const BalancoReclassificadoTable = ({
     setOpenModal(true);
   };
 
-  const getVarVisual = (value: number | undefined, name: string) => {
-    if (!value) return { arrow: "", color: "inherit" };
+  const getVarVisual = (
+    value: number | undefined,
+    name: string,
+    real?: number | null,
+    budget?: number | null
+  ) => {
+    if (value === undefined || value === null) {
+      return { arrow: "", color: "inherit" };
+    }
+
+    if (
+      real === undefined ||
+      real === null ||
+      budget === undefined ||
+      budget === null
+    ) {
+      return { arrow: "", color: "inherit" };
+    }
+
+    if (value === 0) {
+      return { arrow: "", color: "inherit" };
+    }
+
     const isPositive = value > 0;
     const nature = metricNature?.[name] ?? "receita";
     const isExpense = nature === "despesa";
+
     const good = isExpense ? !isPositive : isPositive;
+
     return {
       arrow: isPositive ? "▲" : "▼",
       color: good ? "#2e7d32" : "#d32f2f",
@@ -299,7 +326,13 @@ const BalancoReclassificadoTable = ({
     <>
       <TableContainer
         component={Paper}
-        sx={{ maxHeight: 650, position: "relative" }}
+        sx={{
+          maxHeight: 650,
+          position: "relative",
+          border: "1px solid #e0e0e0",
+          borderRadius: 3,
+          overflow: "auto",
+        }}
       >
         {isEmpty ? (
           <Box textAlign="center" p={4}>
@@ -309,16 +342,26 @@ const BalancoReclassificadoTable = ({
             <Typography>Nada a exibir</Typography>
           </Box>
         ) : (
-          <Table size="small">
+          <Table size="small" sx={{ borderCollapse: "collapse" }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={stickyHeadFirstCell}>Índice</TableCell>
+                <TableCell
+                  sx={{
+                    ...stickyHeadFirstCell,
+                    border: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  Índice
+                </TableCell>
                 {mergedMonths.map((m) => (
                   <TableCell
                     key={m.id}
                     align="center"
                     colSpan={showBudgetColumns ? 3 : 1}
-                    sx={stickyHead}
+                    sx={{
+                      ...stickyHead,
+                      border: `1px solid ${theme.palette.divider}`,
+                    }}
                   >
                     <b>{tMonth(m.name)}</b>
                   </TableCell>
@@ -327,16 +370,39 @@ const BalancoReclassificadoTable = ({
 
               {showBudgetColumns && (
                 <TableRow>
-                  <TableCell sx={stickyHeadFirstCell} />
+                  <TableCell
+                    sx={{
+                      ...stickyHeadFirstCell,
+                      border: `1px solid ${theme.palette.divider}`,
+                    }}
+                  />
                   {mergedMonths.map((m) => (
                     <React.Fragment key={m.id}>
-                      <TableCell align="right" sx={stickyHead}>
+                      <TableCell
+                        align="right"
+                        sx={{
+                          ...stickyHead,
+                          border: `1px solid ${theme.palette.divider}`,
+                        }}
+                      >
                         Orçado
                       </TableCell>
-                      <TableCell align="right" sx={stickyHead}>
+                      <TableCell
+                        align="right"
+                        sx={{
+                          ...stickyHead,
+                          border: `1px solid ${theme.palette.divider}`,
+                        }}
+                      >
                         Realizado
                       </TableCell>
-                      <TableCell align="right" sx={stickyHead}>
+                      <TableCell
+                        align="right"
+                        sx={{
+                          ...stickyHead,
+                          border: `1px solid ${theme.palette.divider}`,
+                        }}
+                      >
                         Variação
                       </TableCell>
                     </React.Fragment>
@@ -354,18 +420,17 @@ const BalancoReclassificadoTable = ({
 
                 return (
                   <React.Fragment key={t.id}>
-                    <TableRow sx={{ background: rowBg }}>
+                    {/* Linha de totalizador */}
+                    <TableRow
+                      sx={{
+                        background: rowBg,
+                        borderBottom: `1px solid ${theme.palette.divider}`,
+                      }}
+                    >
                       <TableCell
                         sx={{
-                          ...stickyCell,
-                          fontWeight: hl ? "bold" : 400,
-                          color: hl ? theme.palette.text.primary : "inherit",
                           background: rowBg,
-                          "&:hover": {
-                            backgroundColor: hl
-                              ? theme.palette.grey[400]
-                              : theme.palette.grey[200],
-                          },
+                          borderBottom: `1px solid ${theme.palette.divider}`,
                         }}
                       >
                         <Tooltip title={t.name}>
@@ -376,6 +441,7 @@ const BalancoReclassificadoTable = ({
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
+                              fontWeight: hl ? 600 : 400,
                             }}
                           >
                             {t.name}
@@ -390,7 +456,7 @@ const BalancoReclassificadoTable = ({
                             align="right"
                             sx={{
                               ...(hasDatasFor(m, t.id) ? dataCellHover : {}),
-                              borderLeft: `1px solid ${theme.palette.divider}`,
+                              border: `1px solid ${theme.palette.divider}`,
                               cursor: hasDatasFor(m, t.id)
                                 ? "pointer"
                                 : "default",
@@ -409,8 +475,8 @@ const BalancoReclassificadoTable = ({
                             <TableCell
                               align="right"
                               sx={{
-                                dataCellHover,
-                                borderLeft: `1px solid ${theme.palette.divider}`,
+                                ...dataCellHover,
+                                border: `1px solid ${theme.palette.divider}`,
                               }}
                             >
                               {formatValue(
@@ -419,11 +485,12 @@ const BalancoReclassificadoTable = ({
                                 t.name
                               )}
                             </TableCell>
+
                             <TableCell
                               align="right"
                               sx={{
-                                dataCellHover,
-                                borderLeft: `1px solid ${theme.palette.divider}`,
+                                ...dataCellHover,
+                                border: `1px solid ${theme.palette.divider}`,
                               }}
                             >
                               {formatValue(
@@ -432,21 +499,29 @@ const BalancoReclassificadoTable = ({
                                 t.name
                               )}
                             </TableCell>
+
                             <TableCell
                               align="right"
                               sx={{
-                                dataCellHover,
-                                borderLeft: `1px solid ${theme.palette.divider}`,
-                                borderRight: `1px solid ${theme.palette.divider}`,
+                                ...dataCellHover,
+                                border: `1px solid ${theme.palette.divider}`,
                               }}
                             >
                               {(() => {
                                 const v = m.varRows.find(
                                   (x) => x.id === t.id
                                 )?.totalValue;
+                                const real =
+                                  m.realRows.find((x) => x.id === t.id)
+                                    ?.totalValue ?? null;
+                                const budget =
+                                  m.budgetRows.find((x) => x.id === t.id)
+                                    ?.totalValue ?? null;
                                 const { arrow, color } = getVarVisual(
                                   v,
-                                  t.name
+                                  t.name,
+                                  real,
+                                  budget
                                 );
                                 return (
                                   <span
@@ -468,6 +543,7 @@ const BalancoReclassificadoTable = ({
                       )}
                     </TableRow>
 
+                    {/* Classificações (DRE) */}
                     {nestedMode === "DRE" &&
                       (t.classifications ?? [])
                         .filter((c) =>
@@ -476,8 +552,19 @@ const BalancoReclassificadoTable = ({
                           )
                         )
                         .map((c) => (
-                          <TableRow key={c.id}>
-                            <TableCell sx={{ ...stickyCell, pl: 4 }}>
+                          <TableRow
+                            key={c.id}
+                            sx={{
+                              borderBottom: `1px solid ${theme.palette.divider}`,
+                            }}
+                          >
+                            <TableCell
+                              sx={{
+                                ...stickyCell,
+                                pl: 4,
+                                border: `1px solid ${theme.palette.divider}`,
+                              }}
+                            >
                               <Tooltip title={c.name}>
                                 <span
                                   style={{
@@ -514,9 +601,13 @@ const BalancoReclassificadoTable = ({
                                     key={m.id}
                                     align="right"
                                     sx={{
-                                      borderLeft: `1px solid ${theme.palette.divider}`,
+                                      border: `1px solid ${theme.palette.divider}`,
                                       ...(datas?.length ? dataCellHover : {}),
                                     }}
+                                    onClick={() =>
+                                      datas?.length &&
+                                      openDetails(c.name, datas, m.name)
+                                    }
                                   >
                                     {formatValue(vReal, c.name)}
                                   </TableCell>
@@ -533,18 +624,25 @@ const BalancoReclassificadoTable = ({
                               const vVar = getClassValue(m, t.id, c.id, "var");
                               const { arrow, color } = getVarVisual(
                                 vVar,
-                                c.name
+                                c.name,
+                                vReal,
+                                vBud
                               );
 
                               return (
                                 <React.Fragment key={m.id}>
-                                  <TableCell align="right">
+                                  <TableCell
+                                    align="right"
+                                    sx={{
+                                      border: `1px solid ${theme.palette.divider}`,
+                                    }}
+                                  >
                                     {formatValue(vBud, c.name)}
                                   </TableCell>
                                   <TableCell
                                     align="right"
                                     sx={{
-                                      borderLeft: `1px solid ${theme.palette.divider}`,
+                                      border: `1px solid ${theme.palette.divider}`,
                                       ...(datas?.length ? dataCellHover : {}),
                                     }}
                                     onClick={() =>
@@ -554,7 +652,12 @@ const BalancoReclassificadoTable = ({
                                   >
                                     {formatValue(vReal, c.name)}
                                   </TableCell>
-                                  <TableCell align="right">
+                                  <TableCell
+                                    align="right"
+                                    sx={{
+                                      border: `1px solid ${theme.palette.divider}`,
+                                    }}
+                                  >
                                     <span
                                       style={{
                                         color,
@@ -580,7 +683,13 @@ const BalancoReclassificadoTable = ({
             {mergedMonths[0]?.totalReal !== null && (
               <TableBody>
                 <TableRow sx={{ backgroundColor: theme.palette.grey[200] }}>
-                  <TableCell sx={{ ...stickyCell, fontWeight: "bold" }}>
+                  <TableCell
+                    sx={{
+                      ...stickyCell,
+                      fontWeight: "bold",
+                      backgroundColor: theme.palette.grey[200],
+                    }}
+                  >
                     {realizado.months[0]?.monthPainelContabilTotalizer?.name ??
                       "Total"}
                   </TableCell>

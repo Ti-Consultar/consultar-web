@@ -120,7 +120,6 @@ export const ResultsTableVariation = ({
       }));
   }, [months, metricKeys, nestedMetrics]);
 
-
   const allNestedKeys = Object.values(nestedMetrics).flat();
 
   const nestedGroupOrder = useMemo(() => {
@@ -270,7 +269,6 @@ export const ResultsTableVariation = ({
           sx={{
             ...baseCellStyle,
             color,
-            fontWeight: 600,
             minWidth: 110,
             whiteSpace: "nowrap",
           }}
@@ -359,13 +357,31 @@ export const ResultsTableVariation = ({
               ></TableCell>
               {translatedMonths.map((month) => (
                 <React.Fragment key={`${month.name}-sub`}>
-                  <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: "bold",
+                      borderRight: "1px solid #e0e0e0",
+                      borderLeft: "1px solid #e0e0e0",
+                    }}
+                  >
                     Orçado
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: "bold",
+                      borderRight: "1px solid #e0e0e0",
+                    }}
+                  >
                     Realizado
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: "bold",
+                    }}
+                  >
                     Variação
                   </TableCell>
                 </React.Fragment>
