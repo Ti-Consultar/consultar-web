@@ -280,10 +280,12 @@ const BalancoReclassificadoTable = ({
     real?: number | null,
     budget?: number | null
   ) => {
+    // Caso não haja variação calculada
     if (value === undefined || value === null) {
       return { arrow: "", color: "inherit" };
     }
 
+    // Se não houver ambos (orçado e realizado), não há base pra comparação
     if (
       real === undefined ||
       real === null ||
@@ -293,6 +295,7 @@ const BalancoReclassificadoTable = ({
       return { arrow: "", color: "inherit" };
     }
 
+    // Se a variação for exatamente 0 (valores idênticos)
     if (value === 0) {
       return { arrow: "", color: "inherit" };
     }
@@ -301,6 +304,7 @@ const BalancoReclassificadoTable = ({
     const nature = metricNature?.[name] ?? "receita";
     const isExpense = nature === "despesa";
 
+    // Receita → positivo é bom / Despesa → negativo é bom
     const good = isExpense ? !isPositive : isPositive;
 
     return {
@@ -429,8 +433,16 @@ const BalancoReclassificadoTable = ({
                     >
                       <TableCell
                         sx={{
+                          ...stickyCell,
+                          fontWeight: hl ? "bold" : 400,
+                          color: hl ? theme.palette.text.primary : "inherit",
                           background: rowBg,
-                          borderBottom: `1px solid ${theme.palette.divider}`,
+                          border: `1px solid ${theme.palette.divider}`,
+                          "&:hover": {
+                            backgroundColor: hl
+                              ? theme.palette.grey[400]
+                              : theme.palette.grey[200],
+                          },
                         }}
                       >
                         <Tooltip title={t.name}>
@@ -441,7 +453,6 @@ const BalancoReclassificadoTable = ({
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
-                              fontWeight: hl ? 600 : 400,
                             }}
                           >
                             {t.name}
