@@ -19,30 +19,10 @@ import {
 } from "@mui/material";
 import InboxIcon from "@mui/icons-material/Inbox";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
-
-interface Classification {
-  id: number;
-  typeOrder: number;
-  name: string;
-  value: number;
-  datas?: any[];
-}
-
-interface Totalizer {
-  id: number;
-  typeOrder: number;
-  name: string;
-  totalValue: number;
-  classifications?: Classification[];
-}
-
-interface MonthRaw {
-  id: number;
-  name: string;
-  dateMonth: number;
-  monthPainelContabilTotalizer: { name: string; totalValue: number } | null;
-  totalizer: Totalizer[];
-}
+import { StickyCell, StickyHead, StickyHeadFirstCell } from "./styles";
+import { MergedMonth, MonthRaw } from "../../../types/BalancoReclassificado";
+import { Totalizer } from "../../../types/balanco";
+import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 
 interface FinancialTableProps {
   realizado: { months: MonthRaw[] };
@@ -54,19 +34,7 @@ interface FinancialTableProps {
   nestedMode?: "NONE" | "DRE";
 }
 
-type MergedMonth = {
-  id: number;
-  name: string;
-  dateMonth?: number;
-  totalReal: number | null;
-  totalBudget: number | null;
-  totalVar: number | null;
-  realRows: Totalizer[];
-  budgetRows: Totalizer[];
-  varRows: Totalizer[];
-};
-
-const BalancoReclassificadoTable = ({
+export const BalancoReclassificadoTable = ({
   realizado,
   orcado,
   variacao,
@@ -119,7 +87,7 @@ const BalancoReclassificadoTable = ({
       const key = canonicalMonthKey(m);
       if (!map.has(key)) {
         map.set(key, {
-          id: Number.isFinite(m.dateMonth) ? (m.dateMonth as number) : m.id, // id só pra React key
+          id: Number.isFinite(m.dateMonth) ? (m.dateMonth as number) : m.id,
           name: canonicalName(m),
           dateMonth: m.dateMonth ?? MONTH_NUM_BY_NAME[m.name],
           totalReal: null,
@@ -202,14 +170,13 @@ const BalancoReclassificadoTable = ({
   const isPercentageRow = (name: string) => name.trim().endsWith("%");
 
   const formatValue = (v: number | null | undefined, name?: string) => {
-    if (v === undefined || v === null) return "-";
+    if (v === undefined || v === null || v === 0) return "-";
     if (isPercentageRow(name ?? "")) {
       return `${v.toLocaleString("pt-BR", {
         minimumFractionDigits: 1,
         maximumFractionDigits: 1,
       })}%`;
     }
-    if (v === 0) return "-";
     let x = Math.abs(v);
     if (valueMode === "MILHAR") x /= 1000;
     if (valueMode === "MILHARES") x /= 1_000_000;
@@ -217,46 +184,7 @@ const BalancoReclassificadoTable = ({
     return v < 0 ? `(${txt})` : txt;
   };
 
-  const monthTranslator: Record<string, string> = {
-    January: "Janeiro",
-    February: "Fevereiro",
-    March: "Março",
-    April: "Abril",
-    May: "Maio",
-    June: "Junho",
-    July: "Julho",
-    August: "Agosto",
-    September: "Setembro",
-    October: "Outubro",
-    November: "Novembro",
-    December: "Dezembro",
-  };
   const tMonth = (name: string) => monthTranslator[name] ?? name;
-
-  const Z = { head: 200, headFirst: 260, bodyFirst: 150 };
-  const stickyHead = {
-    position: "sticky" as const,
-    top: 0,
-    backgroundColor: theme.palette.grey[200],
-    zIndex: Z.head,
-    fontWeight: "bold",
-  };
-  const stickyHeadFirstCell = {
-    ...stickyHead,
-    left: 0,
-    zIndex: Z.headFirst,
-    fontWeight: "bold",
-    minWidth: 260,
-  };
-
-  const stickyCell = {
-    position: "sticky" as const,
-    left: 0,
-    backgroundColor: theme.palette.background.paper,
-    zIndex: Z.bodyFirst,
-    borderRight: `1px solid ${theme.palette.divider}`,
-    backgroundClip: "padding-box", // evita sobrepor a borda
-  };
 
   const dataCellHover = {
     cursor: "pointer",
@@ -280,6 +208,11 @@ const BalancoReclassificadoTable = ({
     real?: number | null,
     budget?: number | null
   ) => {
+    // Se a tabela não estiver no modo DRE, não aplica setas nem cores
+    if (nestedMode !== "DRE") {
+      return { arrow: "", color: "inherit" };
+    }
+
     // Caso não haja variação calculada
     if (value === undefined || value === null) {
       return { arrow: "", color: "inherit" };
@@ -330,10 +263,10 @@ const BalancoReclassificadoTable = ({
     <>
       <TableContainer
         component={Paper}
+        elevation={0}
         sx={{
           maxHeight: 650,
           position: "relative",
-          border: "1px solid #e0e0e0",
           borderRadius: 3,
           overflow: "auto",
         }}
@@ -351,11 +284,11 @@ const BalancoReclassificadoTable = ({
               <TableRow>
                 <TableCell
                   sx={{
-                    ...stickyHeadFirstCell,
+                    ...StickyHeadFirstCell,
                     border: `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  Índice
+                  Descrição
                 </TableCell>
                 {mergedMonths.map((m) => (
                   <TableCell
@@ -363,7 +296,7 @@ const BalancoReclassificadoTable = ({
                     align="center"
                     colSpan={showBudgetColumns ? 3 : 1}
                     sx={{
-                      ...stickyHead,
+                      ...StickyHead,
                       border: `1px solid ${theme.palette.divider}`,
                     }}
                   >
@@ -376,7 +309,7 @@ const BalancoReclassificadoTable = ({
                 <TableRow>
                   <TableCell
                     sx={{
-                      ...stickyHeadFirstCell,
+                      ...StickyHeadFirstCell,
                       border: `1px solid ${theme.palette.divider}`,
                     }}
                   />
@@ -385,7 +318,7 @@ const BalancoReclassificadoTable = ({
                       <TableCell
                         align="right"
                         sx={{
-                          ...stickyHead,
+                          ...StickyHead,
                           border: `1px solid ${theme.palette.divider}`,
                         }}
                       >
@@ -394,7 +327,7 @@ const BalancoReclassificadoTable = ({
                       <TableCell
                         align="right"
                         sx={{
-                          ...stickyHead,
+                          ...StickyHead,
                           border: `1px solid ${theme.palette.divider}`,
                         }}
                       >
@@ -403,7 +336,7 @@ const BalancoReclassificadoTable = ({
                       <TableCell
                         align="right"
                         sx={{
-                          ...stickyHead,
+                          ...StickyHead,
                           border: `1px solid ${theme.palette.divider}`,
                         }}
                       >
@@ -433,7 +366,7 @@ const BalancoReclassificadoTable = ({
                     >
                       <TableCell
                         sx={{
-                          ...stickyCell,
+                          ...StickyCell,
                           fontWeight: hl ? "bold" : 400,
                           color: hl ? theme.palette.text.primary : "inherit",
                           background: rowBg,
@@ -571,7 +504,7 @@ const BalancoReclassificadoTable = ({
                           >
                             <TableCell
                               sx={{
-                                ...stickyCell,
+                                ...StickyCell,
                                 pl: 4,
                                 border: `1px solid ${theme.palette.divider}`,
                               }}
@@ -696,7 +629,7 @@ const BalancoReclassificadoTable = ({
                 <TableRow sx={{ backgroundColor: theme.palette.grey[200] }}>
                   <TableCell
                     sx={{
-                      ...stickyCell,
+                      ...StickyCell,
                       fontWeight: "bold",
                       backgroundColor: theme.palette.grey[200],
                     }}
@@ -822,5 +755,3 @@ const BalancoReclassificadoTable = ({
     </>
   );
 };
-
-export default BalancoReclassificadoTable;

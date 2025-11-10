@@ -13,13 +13,13 @@ import { getBalancoReclassificadoVariation } from "../../../services/apis/routes
 import { toast } from "react-toastify";
 import { Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
-import BalancoReclassificadoTable from "./table";
 import { ExportDialog } from "../../../components/ExportModal";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 import { metricNature } from "./metricNature";
+import { BalancoReclassificadoTable } from "./table";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1);
@@ -278,7 +278,7 @@ export const BalancoReclassificado = () => {
   return (
     <MainTemplate>
       <MainContainer>
-        <Title>Demonstrações Contábeis</Title>
+        <Title>Demonstrações Financeiras</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box
             sx={{
@@ -323,7 +323,7 @@ export const BalancoReclassificado = () => {
                 }}
               />
               <Tab
-                label="DRE"
+                label="Demonstrações Financeiras"
                 value={3}
                 sx={{
                   color: "var(--neutral-700)",
