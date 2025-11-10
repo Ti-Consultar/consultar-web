@@ -52,7 +52,6 @@ export const CashFlowTable = ({
   metricLabels,
   highlightedMetrics = [],
   showBudgetColumns = false,
-  metricNature,
 }: CashFlowTableProps) => {
   const [colWidth, setColWidth] = useState(220);
   const [dragging, setDragging] = useState(false);

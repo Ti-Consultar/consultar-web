@@ -73,7 +73,6 @@ export const ResultsTableVariation = ({
   metricTypes = {},
   highlightRows = {},
   showBudgetColumns = false,
-  metricNature,
 }: ResultsTableProps) => {
   const [colWidth, setColWidth] = useState(220);
   const [dragging, setDragging] = useState(false);
@@ -217,7 +216,6 @@ export const ResultsTableVariation = ({
 
     const real = getMetricValue(month, metric, "realizado");
     const orcado = getMetricValue(month, metric, "orcado");
-    const rawVar = month?.variacao?.[metric];
     const variacao = getMetricValue(month, metric, "variacao");
 
     return (
