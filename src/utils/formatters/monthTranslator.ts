@@ -11,6 +11,8 @@ export const monthTranslator: Record<string, string> = {
   October: "Outubro",
   November: "Novembro",
   December: "Dezembro",
+  Acumulado: "YTD",
+  ACUMULADO: "YTD",
 };
 
 // Tradutor de mês

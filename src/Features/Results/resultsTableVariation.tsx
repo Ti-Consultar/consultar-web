@@ -61,7 +61,7 @@ const monthNameToPTBR: Record<string, string> = {
   OCTOBER: "Outubro",
   NOVEMBER: "Novembro",
   DECEMBER: "Dezembro",
-  ACUMULADO: "Acumulado",
+  ACUMULADO: "YTD",
 };
 
 export const ResultsTableVariation = ({
