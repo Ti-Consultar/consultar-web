@@ -88,31 +88,6 @@ export const CashFlowTable = ({
     return Math.trunc(adjusted).toLocaleString("pt-BR");
   };
 
-  const getVariationIconAndColor = (
-    metric: string,
-    rawValue: number | undefined
-  ) => {
-    if (rawValue === undefined || rawValue === null || isNaN(rawValue)) {
-      return { icon: null, color: "inherit" };
-    }
-
-    const nature = metricNature?.[metric] ?? "receita";
-    const isPositive = rawValue > 0;
-
-    let color = "";
-    let icon = "";
-
-    if (nature === "receita") {
-      color = isPositive ? "green" : "red";
-      icon = isPositive ? "▲" : "▼";
-    } else {
-      color = isPositive ? "red" : "green";
-      icon = isPositive ? "▲" : "▼";
-    }
-
-    return { icon, color };
-  };
-
   const findMonth = (list: CashFlowMonth[], name: string, dateMonth: number) =>
     list.find((m) => m.name === name) ||
     list.find((m) => m.dateMonth === dateMonth) ||
@@ -149,19 +124,7 @@ export const CashFlowTable = ({
       <>
         <TableCell align="right">{budgetValue}</TableCell>
         <TableCell align="right">{realValue}</TableCell>
-        <TableCell align="right">
-          {(() => {
-            const rawValue = variationMonth?.[metric] as number | undefined;
-            const { icon, color } = getVariationIconAndColor(metric, rawValue);
-
-            return (
-              <span style={{ color, fontWeight: 600 }}>
-                {variationValue}
-                {icon && `${icon} `}
-              </span>
-            );
-          })()}
-        </TableCell>
+        <TableCell align="right"> {variationValue}</TableCell>
       </>
     );
   };

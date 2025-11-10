@@ -1,5 +1,7 @@
 import { TableCell, TableRow } from "@mui/material";
 import styled from "styled-components";
+import theme from "../../../styles/theme";
+const Z = { head: 200, headFirst: 260, bodyFirst: 150 };
 
 export const MainContainer = styled.div`
   display: flex;
@@ -31,7 +33,7 @@ export const Title = styled.h2`
   margin-bottom: 1rem;
 `;
 
-export const StickyTableCell = styled(TableCell)<{
+export const StickyTableCell = styled(TableCell) <{
   isHovered?: boolean;
   isSection?: boolean;
   isFocusedCell?: boolean;
@@ -49,7 +51,7 @@ export const StickyTableCell = styled(TableCell)<{
   border: 1px solid rgba(224, 224, 224, 1);
 `;
 
-export const StyledTableCell = styled(TableCell)<{
+export const StyledTableCell = styled(TableCell) <{
   isHovered?: boolean;
   isSection?: boolean;
   isFocusedCell?: boolean;
@@ -70,10 +72,37 @@ export const StickyHeaderCell = styled(StickyTableCell)`
   background-color: #d7d9eeff;
 `;
 
-export const HoverableTableRow = styled(TableRow)<{ isSection?: boolean }>`
+export const HoverableTableRow = styled(TableRow) <{ isSection?: boolean }>`
   background-color: ${({ isSection }) =>
     isSection ? "#d7d9eeff" : "transparent"};
   &:hover {
     background-color: #f9f9f9;
   }
 `;
+
+// Table Styles
+
+export const StickyHead = {
+  position: "sticky" as const,
+  top: 0,
+  backgroundColor: theme.palette.grey[200],
+  zIndex: Z.head,
+  fontWeight: "bold",
+};
+
+export const StickyHeadFirstCell = {
+  ...StickyHead,
+  left: 0,
+  zIndex: Z.headFirst,
+  fontWeight: "bold",
+  minWidth: 260,
+};
+
+export const StickyCell = {
+  position: "sticky" as const,
+  left: 0,
+  backgroundColor: theme.palette.background.paper,
+  zIndex: Z.bodyFirst,
+  borderRight: `1px solid ${theme.palette.divider}`,
+  backgroundClip: "padding-box",
+};

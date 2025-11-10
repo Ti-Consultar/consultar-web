@@ -201,31 +201,6 @@ export const ResultsTableVariation = ({
     },
   };
 
-  const getVariationIconAndColor = (
-    metric: string,
-    rawValue: number | undefined
-  ) => {
-    if (rawValue === undefined || rawValue === null || isNaN(rawValue)) {
-      return { icon: null, color: "inherit" };
-    }
-
-    const nature = metricNature?.[metric] ?? "receita";
-    const isPositive = rawValue > 0;
-
-    let color = "";
-    let icon = "";
-
-    if (nature === "receita") {
-      color = isPositive ? "green" : "red";
-      icon = isPositive ? "▲" : "▼";
-    } else {
-      color = isPositive ? "red" : "green";
-      icon = isPositive ? "▲" : "▼";
-    }
-
-    return { icon, color };
-  };
-
   const renderValueCells = (month: MonthData, metric: string) => {
     if (!showBudgetColumns) {
       const value = getMetricValue(month, metric, "realizado");
@@ -244,8 +219,6 @@ export const ResultsTableVariation = ({
     const orcado = getMetricValue(month, metric, "orcado");
     const rawVar = month?.variacao?.[metric];
     const variacao = getMetricValue(month, metric, "variacao");
-
-    const { icon, color } = getVariationIconAndColor(metric, rawVar);
 
     return (
       <>
@@ -268,18 +241,11 @@ export const ResultsTableVariation = ({
           align="right"
           sx={{
             ...baseCellStyle,
-            color,
             minWidth: 110,
             whiteSpace: "nowrap",
           }}
         >
-          {variacao !== "-" ? (
-            <>
-              {variacao} <span style={{ fontSize: 12 }}>{icon}</span>
-            </>
-          ) : (
-            "-"
-          )}
+          {variacao}
         </TableCell>
       </>
     );
