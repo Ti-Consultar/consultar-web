@@ -6,10 +6,23 @@ import {
   ListItemText,
 } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Role } from "../../../contexts/PermissionsContext";
+import { Protected } from "../../../components/Protection";
 
-const menuItems = [
-  { label: "Informações do Perfil", path: "/perfil/informacoes" },
+interface MenuItem {
+  label: string;
+  path: string;
+  allowedRoles?: Role[];
+}
+
+const menuItems: MenuItem[] = [
+  { label: "Perfil", path: "/perfil/informacoes" },
   { label: "Segurança", path: "/perfil/seguranca" },
+  {
+    label: "Usuários",
+    path: "/users",
+    allowedRoles: ["Gestor"],
+  },
   { label: "Personalização", path: "/perfil/personalizacao" },
 ];
 
@@ -21,17 +34,19 @@ export const ProfileOptions = () => {
 
   return (
     <Box
-      sx={{ height: "80vh", p: 2, borderRight: "1px solid var(--neutral-150)" }}
+      sx={{
+        height: "80vh",
+        p: 2,
+        borderRight: "1px solid var(--neutral-150)",
+        minWidth: "160px",
+      }}
     >
       <List>
         {menuItems.map((item) => {
           const active = isActive(item.path);
-          return (
-            <ListItem
-              disablePadding
-              key={item.path}
-              sx={{ marginBottom: "12px" }}
-            >
+
+          const row = (
+            <ListItem disablePadding key={item.path} sx={{ mb: "12px" }}>
               <ListItemButton
                 selected={active}
                 onClick={() => navigate(item.path)}
@@ -46,6 +61,14 @@ export const ProfileOptions = () => {
                 <ListItemText primary={item.label} />
               </ListItemButton>
             </ListItem>
+          );
+
+          return item.allowedRoles ? (
+            <Protected key={item.path} allowedRoles={item.allowedRoles}>
+              {row}
+            </Protected>
+          ) : (
+            row
           );
         })}
       </List>

@@ -6,9 +6,10 @@ import { ClassificationPanel } from "./ClassificationOptions";
 import { Box, Button, Card, Grid2 } from "@mui/material";
 import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import {
-  classify,
   getClassification,
+  getClassifiedBonds,
   sendAccountPlanId,
+  sendClassification,
   validateClassificationModel,
 } from "../../services/apis/routes/classification.service";
 import {
@@ -105,6 +106,29 @@ export const ClassificationPage = () => {
     }
   }, [groupId, companyid, subcompanyid]);
 
+  const loadExistingClassifications = async (accountPlanId: number) => {
+    try {
+      const response = await getClassifiedBonds(accountPlanId);
+      if (response.success) {
+        if (response.data === "Não encontrado") {
+          return;
+        } else {
+          const newBondList = { bondList: response.data || [] };
+
+          setClassificationBonds(newBondList);
+
+          localStorage.setItem(
+            "classification-bondList",
+            JSON.stringify(newBondList)
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar classificações existentes", error);
+      toast.error("Erro ao buscar classificações já salvas.");
+    }
+  };
+
   // Valida modelo de classificação
   const loadClassificationsFlow = async () => {
     if (!accountPlanId) return;
@@ -130,9 +154,19 @@ export const ClassificationPage = () => {
       setSkeleton(false);
     }
   };
+
   useEffect(() => {
     loadClassificationsFlow();
   }, [accountPlanId, selectedTab]);
+
+  const updateBondList = (bondList: BondListItem[]) => {
+    const newBondList = { bondList };
+    setClassificationBonds(newBondList);
+    localStorage.setItem(
+      "classification-bondList",
+      JSON.stringify(newBondList)
+    );
+  };
 
   // Atualiza bondList e salva localStorage no momento da seleção da classificação
   const handleClassificationChange = (classificationId: number) => {
@@ -140,10 +174,8 @@ export const ClassificationPage = () => {
     setSelectedKeys([]);
 
     setClassificationBonds((prev) => {
-      // Clona bondList
       let bondList = [...prev.bondList];
 
-      // Procura grupo com classificationId
       let group = bondList.find(
         (item) => item.accountPlanClassificationId === classificationId
       );
@@ -177,12 +209,8 @@ export const ClassificationPage = () => {
         return item;
       });
 
-      const newBondList = { bondList };
-      localStorage.setItem(
-        "classification-bondList",
-        JSON.stringify(newBondList)
-      );
-      return newBondList;
+      updateBondList(bondList);
+      return { bondList };
     });
 
     setSelectedClassificationId(classificationId);
@@ -225,6 +253,8 @@ export const ClassificationPage = () => {
       if (response.success === true) {
         setBalanceteData(response.data?.dataDto);
         setBalanceteId(response.data?.balancete?.id);
+
+        await loadExistingClassifications(accountPlanId);
       }
     } catch {
       toast.error("Erro ao buscar balancete por data.");
@@ -233,6 +263,7 @@ export const ClassificationPage = () => {
 
   const handleSaveClassification = async () => {
     try {
+      if (!accountPlanId) return;
       const saved = localStorage.getItem("classification-bondList");
       if (!saved) {
         toast.warning("Nenhuma classificação para enviar.");
@@ -248,7 +279,7 @@ export const ClassificationPage = () => {
 
       setLoading(true, "Enviando classificação...");
 
-      const response = await classify(parsed);
+      const response = await sendClassification(parsed, accountPlanId);
 
       if (response.success === true) {
         toast.success("Classificação enviada com sucesso!");
@@ -259,6 +290,7 @@ export const ClassificationPage = () => {
 
         handleRemoveClassified(allClassifiedCostCenters);
         setSelectedKeys([]);
+        loadExistingClassifications(accountPlanId);
       } else {
         toast.error("Erro ao classificar.");
       }
@@ -292,19 +324,16 @@ export const ClassificationPage = () => {
   };
 
   const handleRemoveClassified = (costCentersToRemove: string[]) => {
-
-    const updated = {
-      bondList: classificationBonds.bondList
-        .map((group) => ({
-          ...group,
-          costCenters: group.costCenters.filter(
-            (cc) => !costCentersToRemove.includes(cc.costCenter)
-          ),
-        }))
-        .filter((group) => group.costCenters.length > 0),
-    };
-
-    setClassificationBonds(updated);
+    setClassificationBonds((prev) => {
+      const bondList = prev.bondList.map((group) => ({
+        ...group,
+        costCenters: group.costCenters.filter(
+          (cc) => !costCentersToRemove.includes(cc.costCenter)
+        ),
+      }));
+      updateBondList(bondList);
+      return { bondList };
+    });
   };
 
   return (

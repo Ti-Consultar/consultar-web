@@ -1,24 +1,28 @@
 import { useEffect, useState } from "react";
-import { Box, Paper, Button } from "@mui/material";
+import { Box, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { ResultsTable } from "../resultsTable";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
-import { getOperationalEfficieny } from "../../../services/apis/routes/operationalEfficiency.service";
+import { getOperationalEfficienyVariation } from "../../../services/apis/routes/operationalEfficiency.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import { ExportDialog } from "../../../components/ExportModal";
+import { ExportButton } from "../../../components/Button/ExportButton";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
+import { monthTranslator } from "../../../utils/formatters/monthTranslator";
+import { BudgetToggleButton } from "../../../components/Button/TableOptions";
+import { ResultsTableVariation } from "../resultsTableVariation";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const EficienciaOperacional = () => {
   const [tabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
+  const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
   );
   const [data, setData] = useState<any[]>([]);
@@ -29,6 +33,11 @@ export const EficienciaOperacional = () => {
     subCompanyId?: string;
   }>();
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const [entityName, setEntityName] = useState<string | null>(null);
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
+
+  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
 
   const metrics = [
     "receitasLiquidas",
@@ -110,6 +119,18 @@ export const EficienciaOperacional = () => {
   };
 
   useEffect(() => {
+    const loadSetting = () => {
+      const savedSetting = localStorage.getItem("showBudgetColumns");
+      setShowBudgetColumns(savedSetting === "true");
+    };
+
+    loadSetting();
+
+    window.addEventListener("storage", loadSetting);
+    return () => window.removeEventListener("storage", loadSetting);
+  }, []);
+
+  useEffect(() => {
     if (!groupId || accountPlanId) return;
 
     const getAccountPlanId = async (
@@ -127,6 +148,7 @@ export const EficienciaOperacional = () => {
 
         const lastItem = data[data.length - 1];
         setAccountPlanId(lastItem.id);
+        setEntityName(lastItem.group?.name);
       } catch (error) {
         console.error("Failed to fetch AccountPlanId", error);
         toast.error("Erro ao buscar plano de contas");
@@ -151,8 +173,8 @@ export const EficienciaOperacional = () => {
     try {
       if (!accountPlanId) return;
 
-      const response = await getOperationalEfficieny(accountPlanId, year);
-      setData(response.operationalEfficiency?.months);
+      const response = await getOperationalEfficienyVariation(accountPlanId, year);
+      setData(response?.months);
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {
@@ -160,8 +182,90 @@ export const EficienciaOperacional = () => {
     }
   };
 
-  const handleSearch = () => {
-    fetchData();
+  const buildExportData = (months: any[]) => {
+    if (!months.length) return { columns: [], rows: [] };
+
+    // Colunas
+    const columns = [
+      { label: "", accessor: (row: any) => row.name },
+      ...months.map((m) => ({
+        label: monthTranslator[m.name] ?? m.name,
+        accessor: (row: any) => row.values[m.name] ?? "-",
+      })),
+    ];
+
+    // Função utilitária para formatar
+    const formatValue = (value: number) => {
+      const divided = value / 10000;
+
+      if (divided < 0) {
+        return `(${Math.abs(divided).toLocaleString("pt-BR", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })})`;
+      }
+
+      return divided.toLocaleString("pt-BR", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    };
+
+    // Linhas
+    const rows: any[] = [];
+
+    Object.keys(metricLabels).forEach((field) => {
+      const row: any = { name: metricLabels[field], values: {} };
+      months.forEach((m) => {
+        const rawValue = m[field];
+        row.values[m.name] =
+          typeof rawValue === "number" ? formatValue(rawValue) : "-";
+      });
+      rows.push(row);
+    });
+
+    return { columns, rows };
+  };
+
+  const handleExport = (format: string) => {
+    if (!data.length) {
+      toast.warning("Nenhum dado para exportar");
+      return;
+    }
+
+    const { columns, rows } = buildExportData(data);
+
+    switch (format) {
+      case "PDF":
+        exportPDF(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`,
+          "landscape"
+        );
+        break;
+      case "CSV":
+        exportCSV(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "EXCEL":
+        exportExcel(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "PPT":
+        exportPPTX(
+          rows,
+          columns,
+          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+    }
   };
 
   useEffect(() => {
@@ -175,47 +279,52 @@ export const EficienciaOperacional = () => {
       <MainContainer>
         <Title>Eficiência Operacional</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
-            <TableValueVisualization />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                views={["year"]}
-                label="Ano"
-                value={selectedYear}
-                onChange={(newValue) => {
-                  setSelectedYear(newValue);
-                }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                  },
-                }}
+          <Box display="flex" justifyContent={"space-between"}>
+            <Box display="flex" gap={2} alignItems="center" mb={2}>
+              <TableValueVisualization />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  views={["year"]}
+                  label="Ano"
+                  value={selectedYear}
+                  onChange={(newValue: Dayjs | null) => {
+                    if (newValue) {
+                      setSelectedYear(newValue);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+
+              <ExportButton onClick={() => setExportMenuOpen(true)} />
+            </Box>
+            <div>
+              <BudgetToggleButton
+                showBudgetColumns={showBudgetColumns}
+                setShowBudgetColumns={setShowBudgetColumns}
               />
-            </LocalizationProvider>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSearch}
-              startIcon={<SearchIcon />}
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 500,
-                px: 2,
-              }}
-            >
-              Buscar
-            </Button>
+            </div>
           </Box>
 
-          <ResultsTable
+          <ResultsTableVariation
             metricKeys={metrics}
             metricLabels={metricLabels}
             months={data}
             metricTypes={metricTypes}
+            showBudgetColumns={showBudgetColumns}
           />
         </Paper>
       </MainContainer>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportMenuOpen(false)}
+        hasChart={false}
+        onExport={handleExport}
+      />
     </MainTemplate>
   );
 };

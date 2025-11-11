@@ -1,8 +1,8 @@
 import { useMediaQuery, useTheme } from "@mui/material";
 import React from "react";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -17,7 +17,6 @@ type LiquidityMonth = {
   saldoTesouraria: number;
   ncg: number;
   cdg: number;
-  indiceDeLiquidez: number;
 };
 
 type Props = {
@@ -27,6 +26,7 @@ type Props = {
 export const LiquidityChart: React.FC<Props> = ({ data }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const translateMonth = (month: string): string => {
     const months: Record<string, string> = {
       January: "Jan",
@@ -45,7 +45,6 @@ export const LiquidityChart: React.FC<Props> = ({ data }) => {
     return months[month] ?? month;
   };
 
-  // Divide todos os valores por 1000
   const formattedData = data.map((item) => ({
     ...item,
     name: translateMonth(item.name),
@@ -61,27 +60,34 @@ export const LiquidityChart: React.FC<Props> = ({ data }) => {
         height: isMobile ? 220 : 300,
         backgroundColor: "#fff",
         padding: "10px",
-        borderRadius: 5,
-        border: "1px solid var(--neutral-300",
+        borderRadius: 12,
+        border: "1px solid var(--neutral-300)",
+        paddingRight: "26px"
       }}
     >
-      <h3 style={{ textAlign: "center", marginBottom: 10 }}>
-        Tesouraria x NCG x CDG (em milhares)
-      </h3>
       <ResponsiveContainer>
-        <LineChart
+        <AreaChart
           data={formattedData}
           margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
         >
+          <defs>
+            <linearGradient id="colorTesouraria" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#560BAD" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#560BAD" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorNCG" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#E80054" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#E80054" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorCDG" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#019FD3" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#019FD3" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="name" />
-          <YAxis
-            tickFormatter={(value) =>
-              new Intl.NumberFormat("pt-BR", {
-                maximumFractionDigits: 0,
-              }).format(value)
-            }
-          />
+          <YAxis tick={false} />
           <Tooltip
             formatter={(value: number) =>
               new Intl.NumberFormat("pt-BR", {
@@ -92,34 +98,35 @@ export const LiquidityChart: React.FC<Props> = ({ data }) => {
             labelFormatter={(label) => `Mês: ${label}`}
           />
           <Legend />
-          <Line
+
+          <Area
             type="monotone"
             dataKey="saldoTesouraria"
             name="Tesouraria"
             stroke="#2f6bbd"
             strokeWidth={3}
-            dot={{ r: 4, fill: "#2f6bbd" }}
+            fill="url(#colorTesouraria)"
             activeDot={{ r: 6 }}
           />
-          <Line
+          <Area
             type="monotone"
             dataKey="ncg"
             name="NCG"
-            stroke="#D14C6B"
+            stroke="#E80054"
             strokeWidth={3}
-            dot={{ r: 4, fill: "#D14C6B" }}
+            fill="url(#colorNCG)"
             activeDot={{ r: 6 }}
           />
-          <Line
+          <Area
             type="monotone"
             dataKey="cdg"
             name="CDG"
-            stroke="#4EB7AA"
+            stroke="#560BAD"
             strokeWidth={3}
-            dot={{ r: 4, fill: "#4EB7AA" }}
+            fill="url(#colorCDG)"
             activeDot={{ r: 6 }}
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

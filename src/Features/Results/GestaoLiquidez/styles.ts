@@ -8,8 +8,9 @@ export const MainContainer = styled.div<MainContainerProps>`
   display: flex;
   flex-direction: column;
   margin: 1.5rem;
-  width: 93%;
   transition: max-width 0.3s ease;
+  minWidth: 0ç
+  overflow-x: hiddenç
   @media (min-width: 768px) and (max-width: 1023px) {
     width: 85%;
   }

@@ -1,30 +1,25 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Box,
-  Tabs,
-  Tab,
-  Paper,
-  Button,
-  Typography,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, Tabs, Tab, Paper, Typography } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { ResultsTable } from "../resultsTable";
 import {
   getCapitalDynamics,
+  getCapitalDynamicsVariation,
   getCapitalStructure,
+  getCapitalStructureVariation,
   getGrossCashFlow,
+  getGrossCashFlowVariation,
   getLiquidity,
   getLiquidityManagement,
+  getLiquidityManagementVariation,
   getLiquidityMonth,
+  getLiquidityVariation,
   getTurnover,
+  getTurnoverVariation,
 } from "../../../services/apis/routes/gestaoLiquidez.service";
 import { useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
@@ -36,6 +31,12 @@ import { GrossCashFlowChart } from "../../../components/Charts/GrossCashFlowChar
 import { CapitalDynamicsChart } from "./charts/CapitalDynamicsChart";
 import { CapitalStructureStackedBarChart } from "./charts/CapitalStructureStackedBarChart";
 import { useDrawer } from "../../../contexts/DrawerContext";
+import TurnoverChart from "./charts/TurnoverChart";
+import { LiquidityLineChart } from "./charts/LiquidityLineChart";
+import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
+import { LiquidityChart } from "../../Companies/Charts/VariaveisLiquidez";
+import { BudgetToggleButton } from "../../../components/Button/TableOptions";
+import { ResultsTableVariation } from "../resultsTableVariation";
 
 interface LiquidityMonth {
   name: string;
@@ -55,8 +56,6 @@ interface LiquidityData {
 }
 
 export const GestaoLiquidez = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
@@ -64,7 +63,7 @@ export const GestaoLiquidez = () => {
   const [months, setMonths] = useState<any[]>([]);
   const [valueMode, setValueMode] = useState<boolean>(true);
   const [metricTypes, setMetricTypes] =
-    useState<Record<string, "number" | "percent">>();
+    useState<Record<string, "number" | "percent" | "indicator">>();
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
   const { setLoading } = useLoading();
@@ -74,12 +73,28 @@ export const GestaoLiquidez = () => {
   const [capitalDynamicsData, setCapitalDynamicsData] = useState<any[]>([]);
   const [grossCashFlowDashData, setGrossCashFlowDashData] = useState<any[]>([]);
   const [capitalStructuresData, setCapitalStructuresData] = useState<any[]>([]);
+  const [liquidityVariables, setLiquidityVariables] = useState<any[]>([]);
+  const [liquidez, setLiquidez] = useState<any[]>([]);
+  const [turnoverData, setTurnoverData] = useState<any[]>([]);
+  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
   const { isOpen } = useDrawer();
+
+  useEffect(() => {
+    const loadSetting = () => {
+      const savedSetting = localStorage.getItem("showBudgetColumns");
+      setShowBudgetColumns(savedSetting === "true");
+    };
+
+    loadSetting();
+
+    window.addEventListener("storage", loadSetting);
+    return () => window.removeEventListener("storage", loadSetting);
+  }, []);
 
   useEffect(() => {
     if (!groupId || accountPlanId) return;
@@ -123,14 +138,20 @@ export const GestaoLiquidez = () => {
     try {
       if (!accountPlanId) return;
       let response;
+      let dashboardResponse;
       let metrics: string[] = [];
       let labels: Record<string, string> = {};
       let extractedMonths: any[] = [];
+      let extractedMonthsFleuriet: any[] = [];
 
       switch (tabValue) {
         case 1:
-          response = await getLiquidityManagement(accountPlanId, year);
-          extractedMonths = response?.liquidityVariables?.months ?? [];
+          response = await getLiquidityManagementVariation(accountPlanId, year);
+          dashboardResponse = await getLiquidityManagement(accountPlanId, year);
+          setLiquidityVariables(dashboardResponse?.liquidityVariables?.months);
+          extractedMonths = response?.months ?? [];
+          extractedMonthsFleuriet =
+            dashboardResponse?.liquidityVariables?.months ?? [];
           metrics = ["saldoTesouraria", "ncg", "cdg", "indiceDeLiquidez"];
           labels = {
             saldoTesouraria: "Saldo Tesouraria",
@@ -139,11 +160,18 @@ export const GestaoLiquidez = () => {
             indiceDeLiquidez: "Índice de Liquidez (%)",
           };
           setValueMode(true);
+          setMetricTypes({
+            saldoTesouraria: "number",
+            ncg: "number",
+            cdg: "number",
+            indiceDeLiquidez: "percent",
+          });
           break;
 
         case 2:
-          response = await getCapitalDynamics(accountPlanId, year);
-          extractedMonths = response?.capitalDynamics?.months ?? [];
+          response = await getCapitalDynamicsVariation(accountPlanId, year);
+          dashboardResponse = await getCapitalDynamics(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
           metrics = [
             "pme",
             "pmr",
@@ -159,20 +187,28 @@ export const GestaoLiquidez = () => {
               "Ciclo Financeiro das Operações",
             cicloFinanceiroNCG: "Ciclo Financeiro NCG",
           };
+          setMetricTypes({
+            pme: "indicator",
+            pmr: "indicator",
+            pmp: "indicator",
+            cicloFinanceiroDasOperacoesPrincipais: "indicator",
+            cicloFinanceiroNCG: "indicator",
+          });
+
           setValueMode(false);
-          setCapitalDynamicsData(response?.capitalDynamics?.months);
+          setCapitalDynamicsData(dashboardResponse?.capitalDynamics?.months);
           break;
 
         case 3:
-          response = await getGrossCashFlow(accountPlanId, year);
-          extractedMonths = response?.grossCashFlows?.months ?? [];
+          response = await getGrossCashFlowVariation(accountPlanId, year);
+          dashboardResponse = await getGrossCashFlow(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
           metrics = [
             "ebitida",
             "margemEBITIDA",
             "variacaoNCG",
             "fluxoCaixaOperacional",
             "geracaoCaixa",
-            "aumentoReducaoFluxoCaixa",
           ];
           labels = {
             ebitida: "EBITDA",
@@ -180,7 +216,6 @@ export const GestaoLiquidez = () => {
             variacaoNCG: "Variação da NCG",
             fluxoCaixaOperacional: "Fluxo de Caixa Operacional",
             geracaoCaixa: "Geração de Caixa (%)",
-            aumentoReducaoFluxoCaixa: "Aumento/Redução do Fluxo de Caixa (%)",
           };
           setMetricTypes({
             ebitida: "number",
@@ -188,22 +223,25 @@ export const GestaoLiquidez = () => {
             variacaoNCG: "number",
             fluxoCaixaOperacional: "number",
             geracaoCaixa: "percent",
-            aumentoReducaoFluxoCaixa: "percent",
           });
           setValueMode(true);
           setGrossCashFlowDashData(
-            (response?.grossCashFlows?.months ?? []).map((month: any) => ({
-              name: month.name,
-              ebitida: month.ebitida,
-              margemEBITIDA: month.margemEBITIDA,
-              fluxoCaixaOperacional: month.fluxoCaixaOperacional,
-            }))
+            (dashboardResponse?.grossCashFlows?.months ?? []).map(
+              (month: any) => ({
+                name: month.name,
+                ebitida: month.ebitida,
+                margemEBITIDA: month.margemEBITIDA,
+                fluxoCaixaOperacional: month.fluxoCaixaOperacional,
+              })
+            )
           );
           break;
 
         case 4:
-          response = await getTurnover(accountPlanId, year);
-          extractedMonths = response?.turnovers?.months ?? [];
+          response = await getTurnoverVariation(accountPlanId, year);
+          dashboardResponse = await getTurnover(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
+          setTurnoverData(dashboardResponse?.turnovers?.months);
           metrics = ["giroPME", "giroPMR", "giroPMP", "giroCaixa"];
           labels = {
             giroPME: "Giro PME",
@@ -211,24 +249,38 @@ export const GestaoLiquidez = () => {
             giroPMP: "Giro PMP",
             giroCaixa: "Giro Caixa",
           };
+          setMetricTypes({
+            giroPME: "indicator",
+            giroPMR: "indicator",
+            giroPMP: "indicator",
+            giroCaixa: "indicator",
+          });
           setValueMode(false);
           break;
 
         case 5:
-          response = await getLiquidity(accountPlanId, year);
-          extractedMonths = response?.liquiditys?.months ?? [];
+          response = await getLiquidityVariation(accountPlanId, year);
+          dashboardResponse = await getLiquidity(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
+          setLiquidez(dashboardResponse?.liquiditys?.months);
           metrics = ["liquidezCorrente", "liquidezSeca", "liquidezImediata"];
           labels = {
             liquidezCorrente: "Liquidez Corrente",
             liquidezSeca: "Liquidez Seca",
-            liquidezImediata: "Liquidez Geral",
+            liquidezImediata: "Liquidez Imediata",
           };
+          setMetricTypes({
+            liquidezCorrente: "indicator",
+            liquidezSeca: "indicator",
+            liquidezImediata: "indicator",
+          });
           setValueMode(false);
           break;
 
         case 6:
-          response = await getCapitalStructure(accountPlanId, year);
-          extractedMonths = response?.capitalStructures?.months ?? [];
+          response = await getCapitalStructureVariation(accountPlanId, year);
+          dashboardResponse = await getCapitalStructure(accountPlanId, year);
+          extractedMonths = response?.months ?? [];
           metrics = [
             "terceirosCurtoPrazo",
             "terceirosLongoPrazo",
@@ -250,13 +302,14 @@ export const GestaoLiquidez = () => {
             participacaoCapitalTerceiros: "percent",
             participacaoCapitalProprio: "percent",
           });
-          setCapitalStructuresData(response?.capitalStructures?.months);
+          setCapitalStructuresData(dashboardResponse?.capitalStructures?.months);
           break;
       }
 
       setMonths(extractedMonths);
-      if (tabValue === 1 && extractedMonths.length > 0) {
-        const lastMonth = extractedMonths[extractedMonths.length - 1];
+      if (tabValue === 1 && extractedMonthsFleuriet.length > 0) {
+        const lastMonth =
+          extractedMonthsFleuriet[extractedMonthsFleuriet.length - 1];
         if (lastMonth.dateMonth) {
           const monthDate = dayjs()
             .year(Number(selectedYear.format("YYYY")))
@@ -278,7 +331,7 @@ export const GestaoLiquidez = () => {
   const fetchFeurietData = async () => {
     if (!accountPlanId || !selectedYear || !selectedMonth) return;
 
-    const year = Number(selectedYear.format("YYYY"));
+    const year = Number(selectedMonth.year());
     const selectedMonthNumber = selectedMonth.month() + 1;
 
     setLoading(true);
@@ -299,10 +352,6 @@ export const GestaoLiquidez = () => {
 
   const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-  };
-
-  const handleSearch = () => {
-    fetchData();
   };
 
   useEffect(() => {
@@ -341,33 +390,37 @@ export const GestaoLiquidez = () => {
               display: "flex",
               justifyContent: "center",
               flexDirection: "column",
-              alignItems: "center",
+              marginLeft: "1rem",
             }}
           >
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                views={["month"]}
-                label="Mês"
-                value={selectedMonth}
-                onChange={(newValue) => {
-                  setSelectedMonth(newValue);
+            <Box sx={{ display: "flex", width: "100%", alignItems: "center" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexDirection: "column",
                 }}
-                slotProps={{ textField: { size: "small" } }}
-                shouldDisableMonth={(date) => {
-                  const month = date.month() + 1; // dayjs usa 0-11
-                  return !allowedMonths.includes(month);
-                }}
-              />
-            </LocalizationProvider>
-            <Box sx={{ display: "flex", gap: 9, mt: 2 }}>
-              <Typography>ATIVO</Typography>
-              <Typography>PASSIVO</Typography>
+              >
+                <MonthNavigator
+                  value={selectedMonth}
+                  onChange={setSelectedMonth}
+                  shouldDisableMonth={(date) => {
+                    const month = date.month() + 1;
+                    return !allowedMonths.includes(month);
+                  }}
+                />
+                <Box sx={{ display: "flex", gap: 9, mt: 2 }}>
+                  <Typography>ATIVO</Typography>
+                  <Typography>PASSIVO</Typography>
+                </Box>
+                {selectedMonth && (
+                  <FleurietGestaoLiquidezChart
+                    propData={liquidityMonth?.liquidityVariables?.months || []}
+                  />
+                )}
+              </Box>
+              <LiquidityChart data={liquidityVariables} />
             </Box>
-            {selectedMonth && (
-              <FleurietGestaoLiquidezChart
-                propData={liquidityMonth?.liquidityVariables?.months || []}
-              />
-            )}
           </Box>
         );
       case 2:
@@ -398,16 +451,48 @@ export const GestaoLiquidez = () => {
             {grossCashFlowDashData.length > 0 ? (
               <GrossCashFlowChart data={grossCashFlowDashData} />
             ) : (
-              <Typography>
-                Nenhum dado disponível para o ano selecionado.
-              </Typography>
+              <Typography>Nenhum dado disponível.</Typography>
             )}
           </Box>
         );
       case 4:
-        return <Box></Box>;
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+              height: "auto",
+            }}
+          >
+            {turnoverData.length > 0 ? (
+              <TurnoverChart data={turnoverData} />
+            ) : (
+              <Typography>Nenhum dado disponível.</Typography>
+            )}
+          </Box>
+        );
       case 5:
-        return <Box></Box>;
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+              height: "auto",
+            }}
+          >
+            {liquidez.length > 0 ? (
+              <LiquidityLineChart data={liquidez} />
+            ) : (
+              <Typography>Nenhum dado disponível.</Typography>
+            )}
+          </Box>
+        );
       case 6:
         return (
           <Box
@@ -471,40 +556,43 @@ export const GestaoLiquidez = () => {
             </Tabs>
           </Box>
 
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
-            <TableValueVisualization />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                views={["year"]}
-                label="Ano"
-                value={selectedYear}
-                onChange={(newValue) => setSelectedYear(newValue)}
-                slotProps={{ textField: { size: "small" } }}
+          <Box display="flex" justifyContent={"space-between"}>
+            <Box display="flex" gap={2} alignItems="center" mb={2}>
+              <TableValueVisualization />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  views={["year"]}
+                  label="Ano"
+                  value={selectedYear}
+                  onChange={(newValue: Dayjs | null) => {
+                    if (newValue) {
+                      setSelectedYear(newValue);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+            </Box>
+            <div>
+              <BudgetToggleButton
+                showBudgetColumns={showBudgetColumns}
+                setShowBudgetColumns={setShowBudgetColumns}
               />
-            </LocalizationProvider>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSearch}
-              startIcon={<SearchIcon />}
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 500,
-                px: 2,
-              }}
-            >
-              {isMobile ?? "Buscar"}
-            </Button>
+            </div>
           </Box>
 
           <Box>
-            <ResultsTable
+            <ResultsTableVariation
               months={months}
               metricKeys={metricKeys}
               metricLabels={metricLabels}
               enableValueMode={valueMode}
               metricTypes={metricTypes}
+              showBudgetColumns={showBudgetColumns}
             />
           </Box>
           <Box

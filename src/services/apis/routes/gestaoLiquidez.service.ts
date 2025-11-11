@@ -18,6 +18,23 @@ export const getLiquidityManagement = async (
   }
 };
 
+export const getLiquidityManagementVariation = async (
+  accountPlanId: number,
+  year: number
+) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/LiquidManagement/liquidity-management/variacao`,
+      {
+        params: { accountPlanId, year },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getLiquidityMonth = async (
   accountPlanId: number,
   year: number,
@@ -53,10 +70,41 @@ export const getCapitalDynamics = async (
   }
 };
 
+export const getCapitalDynamicsVariation = async (
+  accountPlanId: number,
+  year: number
+) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/LiquidManagement/capital-dynamics/variacao`,
+      {
+        params: { accountPlanId, year },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getTurnover = async (accountPlanId: number, year: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/turnover`,
+      {
+        params: { accountPlanId, year },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getTurnoverVariation = async (accountPlanId: number, year: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/LiquidManagement/turnover/variacao`,
       {
         params: { accountPlanId, year },
       }
@@ -81,6 +129,20 @@ export const getLiquidity = async (accountPlanId: number, year: number) => {
   }
 };
 
+export const getLiquidityVariation = async (accountPlanId: number, year: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/LiquidManagement/liquidity/variacao`,
+      {
+        params: { accountPlanId, year },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getGrossCashFlow = async (accountPlanId: number, year: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
@@ -95,10 +157,44 @@ export const getGrossCashFlow = async (accountPlanId: number, year: number) => {
   }
 };
 
-export const getCapitalStructure = async (accountPlanId: number, year: number) => {
+export const getGrossCashFlowVariation = async (accountPlanId: number, year: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/LiquidManagement/gross-cash-flow/variacao`,
+      {
+        params: { accountPlanId, year },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getCapitalStructure = async (
+  accountPlanId: number,
+  year: number
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/capital-structure`,
+      {
+        params: { accountPlanId, year },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getCapitalStructureVariation = async (
+  accountPlanId: number,
+  year: number
+) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/LiquidManagement/capital-structure/variacao`,
       {
         params: { accountPlanId, year },
       }

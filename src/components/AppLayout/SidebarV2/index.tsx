@@ -36,7 +36,6 @@ import { jwtDecode } from "jwt-decode";
 import { NotificationDrawer } from "../../NoticationModal";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import { Invite } from "../../../types/notificationInvite";
 import {
   deleteNotification,
@@ -48,6 +47,12 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { acceptOrDeclineInvite } from "../../../services/apis/routes/invitation.service";
 import { useRefresh } from "../../../contexts/refreshContext";
 import { useDrawer } from "../../../contexts/DrawerContext";
+import { Protected } from "../../Protection";
+import { UserRegisterModal } from "../../Modal/UserRegisterModal";
+import { UserRegisterData } from "../../../types/userRegisterPayload";
+import { register } from "../../../services/apis/routes/auth.service";
+import { Role } from "../../../contexts/PermissionsContext";
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 
 const SidebarContainer = styled.div<{ collapsed: boolean }>`
   width: ${({ collapsed }) => (collapsed ? "64px" : "240px")};
@@ -79,6 +84,7 @@ const StyledList = styled(List)`
 interface SidebarSubItem {
   title: string;
   path?: string | null;
+  allowedRoles?: Role[];
 }
 
 interface SidebarItem {
@@ -86,11 +92,13 @@ interface SidebarItem {
   icon: React.ReactNode;
   path?: string | null;
   subItems?: SidebarSubItem[];
+  allowedRoles?: Role[];
 }
 
 interface SidebarSection {
   title: string;
   items: SidebarItem[];
+  allowedRoles?: Role[];
 }
 
 interface UserData {
@@ -132,6 +140,7 @@ export const Sidebar = () => {
   const [notifications, setNotifications] = useState<Invite[]>([]);
   const [, triggerRefreshCompanies] = useRefresh("companies");
   const { toggleDrawer } = useDrawer();
+  const [open, setOpen] = useState(false);
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -160,15 +169,57 @@ export const Sidebar = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  type Params = {
+    groupId?: string | number;
+    companyId?: string | number;
+    subCompanyId?: string | number;
+  };
+
   const buildNestedUrl = (
-    { groupId, companyId, subCompanyId }: any,
+    { groupId, companyId, subCompanyId }: Params,
     finalPath: string
   ): string | null => {
-    if (!groupId) return null;
-    let url = `/grupos/${groupId}`;
-    if (companyId) url += `/empresas/${companyId}`;
-    if (subCompanyId) url += `/filiais/${subCompanyId}`;
-    return `${url}/${finalPath}`;
+    const path = location.pathname;
+    const parts = path.split("/").filter(Boolean);
+
+    const currentGroupId = groupId || parts[parts.indexOf("grupos") + 1];
+    const currentCompanyId =
+      companyId ||
+      (parts.includes("empresas")
+        ? parts[parts.indexOf("empresas") + 1]
+        : undefined);
+    const currentSubCompanyId =
+      subCompanyId ||
+      (parts.includes("filiais")
+        ? parts[parts.indexOf("filiais") + 1]
+        : undefined);
+
+    if (!currentGroupId) return null;
+
+    // Caso especial: Dashboard → sempre vai pro nível da empresa
+    if (finalPath === "empresas" || finalPath === "dashboard") {
+      if (currentCompanyId) {
+        return `/grupos/${currentGroupId}/empresas/${currentCompanyId}/filiais`;
+      }
+      return `/grupos/${currentGroupId}/empresas`;
+    }
+
+    // Lógica padrão
+    const isInGroupOnly = !currentCompanyId && !currentSubCompanyId;
+    const isInCompany = !!currentCompanyId && !currentSubCompanyId;
+    const isInFilial = !!currentSubCompanyId;
+
+    let base = `/grupos/${currentGroupId}`;
+
+    if (isInGroupOnly) {
+      // grupo → não inclui /empresas
+    } else if (isInCompany) {
+      base += `/empresas/${currentCompanyId}`;
+    } else if (isInFilial) {
+      base += `/empresas/${currentCompanyId}/filiais/${currentSubCompanyId}`;
+    }
+
+    return `${base}/${String(finalPath).replace(/^\/+/, "")}`;
   };
 
   const getInitials = (name: string) => {
@@ -200,7 +251,7 @@ export const Sidebar = () => {
 
   const handleAccept = async (id: number) => {
     try {
-      setLoading(true, "Aceitando convite...");
+      setLoading(true, "Salvando novo usuário");
       const response = await acceptOrDeclineInvite(id, { status: 2 });
 
       if (response && (response.success || response.sucess)) {
@@ -215,6 +266,43 @@ export const Sidebar = () => {
       }
     } catch (error) {
       toast.error("Erro ao aceitar o convite.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveNewUser = async (
+    data: UserRegisterData
+  ): Promise<{ email: string; password: string }> => {
+    try {
+      setLoading(true, "Cadastrando usuário...");
+      const response = await register(data);
+
+      const message =
+        typeof response === "string"
+          ? response
+          : typeof response.data === "string"
+          ? response.data
+          : response?.data?.message ||
+            response?.message ||
+            JSON.stringify(response);
+
+      if (
+        message?.toLowerCase().includes("sucesso") ||
+        message?.toLowerCase().includes("inserido")
+      ) {
+        toast.success("Usuário cadastrado com sucesso.");
+        return { email: data.email, password: data.password };
+      } else {
+        toast.error("Ocorreu um erro ao cadastrar o usuário.");
+        throw new Error(message || "Erro ao cadastrar o usuário");
+      }
+    } catch (error: any) {
+      console.error("Erro ao cadastrar usuário:", error);
+      toast.error(
+        "Ocorreu um erro ao cadastrar o usuário. Tente novamente mais tarde."
+      );
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -304,19 +392,19 @@ export const Sidebar = () => {
           ),
           path: "/grupos",
         },
-        {
-          title: "Dashboard",
-          icon: (
-            <img
-              src={DashboardIcon}
-              alt="Home"
-              style={{ width: 22, height: 22 }}
-            />
-          ),
-          path: buildNestedUrl(params, "empresas"),
-        },
         ...(hasParams
           ? [
+              {
+                title: "Dashboard",
+                icon: (
+                  <img
+                    src={DashboardIcon}
+                    alt="Home"
+                    style={{ width: 22, height: 22 }}
+                  />
+                ),
+                path: buildNestedUrl(params, "empresas"),
+              },
               {
                 title: "Uploads",
                 icon: <CloudUploadOutlined />,
@@ -330,9 +418,10 @@ export const Sidebar = () => {
                     path: buildNestedUrl(params, "arquivos/upload/orcamento"),
                   },
                 ],
+                allowedRoles: ["Admin", "Desenvolvedor", "Gestor"] as Role[],
               },
               {
-                title: "Balanço e DR",
+                title: "Demonstrações Financeiras",
                 icon: (
                   <img
                     src={BalanceFile}
@@ -409,6 +498,7 @@ export const Sidebar = () => {
       ? [
           {
             title: "Administração",
+            allowedRoles: ["Admin", "Desenvolvedor", "Gestor"] as Role[],
             items: [
               {
                 title: "Classificação",
@@ -436,6 +526,20 @@ export const Sidebar = () => {
           },
         ]
       : []),
+    // ...(!hasParams
+    //   ? [
+    //       {
+    //         title: "Gestão",
+    //         items: [
+    //           {
+    //             title: "Gestão de Usuários",
+    //             icon: <PeopleAltOutlinedIcon />,
+    //             path: "/gestao",
+    //           },
+    //         ],
+    //       },
+    //     ]
+    //   : []),
   ];
 
   const handleSubItemClick = (subItemPath: string, parentTitle: string) => {
@@ -473,91 +577,129 @@ export const Sidebar = () => {
         </IconButton>
       </div>
 
-      {sidebarSections.map((section) => (
-        <div key={section.title}>
-          <SectionTitle collapsed={collapsed}>{section.title}</SectionTitle>
-          <StyledList dense>
-            {section.items.map((item) => {
-              if (!item.subItems) {
-                if (!item.path) return null;
+      {sidebarSections.map((section) => {
+        const SectionContent = (
+          <>
+            <SectionTitle collapsed={collapsed}>{section.title}</SectionTitle>
+            <StyledList dense>
+              {section.items.map((item) => {
+                const ItemContent = (
+                  <>
+                    {/* --- Item sem subitens --- */}
+                    {!item.subItems && item.path && (
+                      <ListItemButton
+                        key={item.title}
+                        selected={isActive(item.path)}
+                        onClick={() => navigate(item.path!)}
+                        sx={{ paddingLeft: collapsed ? `30%` : 2 }}
+                      >
+                        <ListItemIcon sx={{ minWidth: collapsed ? "0px" : 40 }}>
+                          {item.icon}
+                        </ListItemIcon>
+                        {!collapsed && <ListItemText primary={item.title} />}
+                      </ListItemButton>
+                    )}
 
-                return (
-                  <ListItemButton
-                    key={item.title}
-                    selected={isActive(item.path)}
-                    onClick={() => navigate(item.path!)}
-                    sx={{ paddingLeft: collapsed ? `30%` : 2 }}
-                  >
-                    <ListItemIcon sx={{ minWidth: collapsed ? "0px" : 40 }}>
-                      {item.icon}
-                    </ListItemIcon>
-                    {!collapsed && <ListItemText primary={item.title} />}
-                  </ListItemButton>
-                );
-              }
-
-              return (
-                <div key={item.title}>
-                  <ListItemButton
-                    onClick={() => {
-                      if (collapsed) {
-                        setCollapsed(false);
-                        setExpandedItems((prev) => ({
-                          ...prev,
-                          [item.title]: true,
-                        }));
-                      } else {
-                        toggleExpand(item.title);
-                      }
-                    }}
-                    sx={{ paddingLeft: collapsed ? `30%` : 2 }}
-                  >
-                    <ListItemIcon sx={{ minWidth: collapsed ? "0px" : 40 }}>
-                      {item.icon}
-                    </ListItemIcon>
-                    {!collapsed && <ListItemText primary={item.title} />}
-                    {!collapsed &&
-                      (expandedItems[item.title] ? (
-                        <ExpandLess />
-                      ) : (
-                        <ExpandMore />
-                      ))}
-                  </ListItemButton>
-                  <Collapse
-                    in={!collapsed && !!expandedItems[item.title]}
-                    timeout="auto"
-                    unmountOnExit
-                  >
-                    <List disablePadding>
-                      {item.subItems
-                        .filter((sub) => sub.path)
-                        .map((sub) => (
-                          <ListItemButton
-                            key={sub.title}
-                            sx={{ pl: 4 }}
-                            selected={isActive(sub.path!)}
-                            onClick={() =>
-                              handleSubItemClick(sub.path!, item.title)
+                    {/* --- Item com subitens --- */}
+                    {item.subItems && (
+                      <div key={item.title}>
+                        <ListItemButton
+                          onClick={() => {
+                            if (collapsed) {
+                              setCollapsed(false);
+                              setExpandedItems((prev) => ({
+                                ...prev,
+                                [item.title]: true,
+                              }));
+                            } else {
+                              toggleExpand(item.title);
                             }
+                          }}
+                          sx={{ paddingLeft: collapsed ? `30%` : 2 }}
+                        >
+                          <ListItemIcon
+                            sx={{ minWidth: collapsed ? "0px" : 40 }}
                           >
-                            <ListItemText
-                              slotProps={{
-                                primary: {
-                                  style: { fontSize: "0.875rem" },
-                                },
-                              }}
-                              primary={sub.title}
-                            />
-                          </ListItemButton>
-                        ))}
-                    </List>
-                  </Collapse>
-                </div>
-              );
-            })}
-          </StyledList>
-        </div>
-      ))}
+                            {item.icon}
+                          </ListItemIcon>
+                          {!collapsed && <ListItemText primary={item.title} />}
+                          {!collapsed &&
+                            (expandedItems[item.title] ? (
+                              <ExpandLess />
+                            ) : (
+                              <ExpandMore />
+                            ))}
+                        </ListItemButton>
+
+                        <Collapse
+                          in={!collapsed && !!expandedItems[item.title]}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <List disablePadding>
+                            {item.subItems
+                              .filter((sub) => sub.path)
+                              .map((sub) => {
+                                const SubContent = (
+                                  <ListItemButton
+                                    key={sub.title}
+                                    sx={{ pl: 4 }}
+                                    selected={isActive(sub.path!)}
+                                    onClick={() =>
+                                      handleSubItemClick(sub.path!, item.title)
+                                    }
+                                  >
+                                    <ListItemText
+                                      slotProps={{
+                                        primary: {
+                                          style: { fontSize: "0.875rem" },
+                                        },
+                                      }}
+                                      primary={sub.title}
+                                    />
+                                  </ListItemButton>
+                                );
+
+                                return sub.allowedRoles ? (
+                                  <Protected
+                                    key={sub.title}
+                                    allowedRoles={sub.allowedRoles}
+                                  >
+                                    {SubContent}
+                                  </Protected>
+                                ) : (
+                                  SubContent
+                                );
+                              })}
+                          </List>
+                        </Collapse>
+                      </div>
+                    )}
+                  </>
+                );
+
+                // aplica o Protected no item de nível superior, se tiver allowedRoles
+                return item.allowedRoles ? (
+                  <Protected key={item.title} allowedRoles={item.allowedRoles}>
+                    {ItemContent}
+                  </Protected>
+                ) : (
+                  <div key={item.title}>{ItemContent}</div>
+                );
+              })}
+            </StyledList>
+          </>
+        );
+
+        // 👇 aplica o Protected para esconder o título da seção e seus itens
+        return section.allowedRoles ? (
+          <Protected key={section.title} allowedRoles={section.allowedRoles}>
+            {SectionContent}
+          </Protected>
+        ) : (
+          <div key={section.title}>{SectionContent}</div>
+        );
+      })}
 
       <div style={{ marginTop: "auto", padding: collapsed ? 8 : 16 }}>
         <Divider sx={{ mb: 1 }} />
@@ -605,8 +747,8 @@ export const Sidebar = () => {
           Notificações
         </MenuItem>
         <MenuItem sx={{ display: "flex", gap: 1 }} onClick={handleOpenProfile}>
-          <AccountCircleOutlinedIcon sx={{ fontSize: "18px" }} />
-          Minha conta
+          <SettingsOutlinedIcon sx={{ fontSize: "18px" }} />
+          Configurações
         </MenuItem>
         <MenuItem
           onClick={handleLogout}
@@ -624,6 +766,11 @@ export const Sidebar = () => {
         onClose={() => setDrawerOpen(false)}
         onAccept={handleAccept}
         onReject={handleDecline}
+      />
+      <UserRegisterModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onSubmit={handleSaveNewUser}
       />
     </SidebarContainer>
   );

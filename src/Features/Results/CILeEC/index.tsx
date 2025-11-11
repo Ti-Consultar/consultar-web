@@ -1,24 +1,30 @@
 import { useEffect, useState } from "react";
-import { Box, Paper, Button } from "@mui/material";
+import { Box, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { ResultsTable } from "../resultsTable";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
-import { getCILeEC } from "../../../services/apis/routes/CILeEC.service";
+import {
+  getCILeECWithBudget,
+} from "../../../services/apis/routes/CILeEC.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import { ExportButton } from "../../../components/Button/ExportButton";
+import { ExportDialog } from "../../../components/ExportModal";
+import { monthTranslator } from "../../../utils/formatters/monthTranslator";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
+import { BudgetToggleButton } from "../../../components/Button/TableOptions";
+import { ResultsTableVariation } from "../resultsTableVariation";
+import { normalizeCILECMonths } from "../../../utils/normalizeCILEECMonths";
 
-// --- Main BalancoContabil Component (replicated structure) ---
 export const CILeEC = () => {
   const [tabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
+  const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
   );
   const [data, setData] = useState<any[]>([]);
@@ -29,6 +35,10 @@ export const CILeEC = () => {
     subCompanyId?: string;
   }>();
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const [entityName, setEntityName] = useState<string | null>(null);
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
+  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
 
   const metrics = [
     "disponibilidades",
@@ -70,6 +80,30 @@ export const CILeEC = () => {
     cil: "Capital Investido Líquido",
   };
 
+  const metricNature: Record<string, "receita" | "despesa"> = {
+    disponibilidades: "receita",
+    clientes: "receita",
+    estoques: "receita",
+    outrosAtivosOperacionais: "receita",
+    fornecedores: "despesa",
+    obrigacoesTributariasTrabalhistas:
+      "despesa",
+    outrosPassivosOperacionais: "despesa",
+    ncg: "receita",
+    realizavelLongoPrazo: "receita",
+    exigivelALongoPrazoOperacional: "despesa",
+    ativosFixos:
+      "receita",
+    capitalInvestidoLiquido: "receita",
+    emprestimos: "despesa",
+    posicaoFinanceiraCurtoPrazo: "receita",
+    exigivelaLongoPrazoFinanceiro: "despesa",
+    posicaoFinanceiraTerceiros: "receita",
+    patrimonioLiquido: "despesa",
+    estruturaDeCapital: "receita",
+    cil: "receita",
+  };
+
   const nestedMetrics = {
     estruturaDeCapital: [
       "emprestimos",
@@ -96,6 +130,18 @@ export const CILeEC = () => {
   };
 
   useEffect(() => {
+    const loadSetting = () => {
+      const savedSetting = localStorage.getItem("showBudgetColumns");
+      setShowBudgetColumns(savedSetting === "true");
+    };
+
+    loadSetting();
+
+    window.addEventListener("storage", loadSetting);
+    return () => window.removeEventListener("storage", loadSetting);
+  }, []);
+
+  useEffect(() => {
     if (!groupId || accountPlanId) return;
 
     const getAccountPlanId = async (
@@ -113,6 +159,7 @@ export const CILeEC = () => {
 
         const lastItem = data[data.length - 1];
         setAccountPlanId(lastItem.id);
+        setEntityName(lastItem.group?.name);
       } catch (error) {
         console.error("Failed to fetch AccountPlanId", error);
         toast.error("Erro ao buscar plano de contas");
@@ -136,8 +183,8 @@ export const CILeEC = () => {
 
     try {
       if (!accountPlanId) return;
-      const response = await getCILeEC(accountPlanId, year);
-      setData(response.ciLeEC?.months);
+      const response = await getCILeECWithBudget(accountPlanId, year);
+      setData(normalizeCILECMonths(response?.months));
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {
@@ -145,8 +192,111 @@ export const CILeEC = () => {
     }
   };
 
-  const handleSearch = () => {
-    fetchData();
+  const buildExportData = (months: any[]) => {
+    if (!months.length) return { columns: [], rows: [] };
+
+    const columns = [
+      { label: "", accessor: (row: any) => row.name },
+      ...months.map((m) => ({
+        label: monthTranslator[m.name] ?? m.name,
+        accessor: (row: any) => row.values[m.name] ?? "-",
+      })),
+    ];
+
+    const formatValue = (value: number) => {
+      const divided = value / 10000;
+      if (divided < 0) {
+        return `(${Math.abs(divided).toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })})`;
+      }
+      return divided.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    };
+
+    const rows: any[] = [];
+
+    rows.push({ name: metricLabels["cil"], values: {} });
+
+    const cilFields = Object.keys(months[0].cil).filter((k) => k !== "name");
+    cilFields.forEach((field) => {
+      const row: any = {
+        name: metricLabels[field] ?? field,
+        values: {},
+      };
+      months.forEach((m) => {
+        const rawValue = m.cil[field];
+        row.values[m.name] =
+          typeof rawValue === "number" ? formatValue(rawValue) : "-";
+      });
+      rows.push(row);
+    });
+
+    rows.push({ name: "", values: {} });
+
+    rows.push({ name: metricLabels["estruturaDeCapital"], values: {} });
+
+    const ecFields = Object.keys(months[0].estruturaDeCapital).filter(
+      (k) => k !== "name"
+    );
+    ecFields.forEach((field) => {
+      const row: any = {
+        name: metricLabels[field] ?? field,
+        values: {},
+      };
+      months.forEach((m) => {
+        const rawValue = m.estruturaDeCapital[field];
+        row.values[m.name] =
+          typeof rawValue === "number" ? formatValue(rawValue) : "-";
+      });
+      rows.push(row);
+    });
+
+    return { columns, rows };
+  };
+
+  const handleExport = (format: string) => {
+    if (!data.length) {
+      toast.warning("Nenhum dado para exportar");
+      return;
+    }
+
+    const { columns, rows } = buildExportData(data);
+
+    switch (format) {
+      case "PDF":
+        exportPDF(
+          rows,
+          columns,
+          `cil-pfl - ${entityName} ${selectedYear.year()}`,
+          "landscape"
+        );
+        break;
+      case "CSV":
+        exportCSV(
+          rows,
+          columns,
+          `cil-pfl - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "EXCEL":
+        exportExcel(
+          rows,
+          columns,
+          `cil-pfl - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+      case "PPT":
+        exportPPTX(
+          rows,
+          columns,
+          `cil-pfl - ${entityName} ${selectedYear.year()}`
+        );
+        break;
+    }
   };
 
   useEffect(() => {
@@ -160,47 +310,53 @@ export const CILeEC = () => {
       <MainContainer>
         <Title>CIL E PFL</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
-            <TableValueVisualization />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                views={["year"]}
-                label="Ano"
-                value={selectedYear}
-                onChange={(newValue) => {
-                  setSelectedYear(newValue);
-                }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                  },
-                }}
+          <Box display="flex" justifyContent={"space-between"}>
+            <Box display="flex" gap={2} alignItems="center" mb={2}>
+              <TableValueVisualization />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  views={["year"]}
+                  label="Ano"
+                  value={selectedYear}
+                  onChange={(newValue: Dayjs | null) => {
+                    if (newValue) {
+                      setSelectedYear(newValue);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+
+              <ExportButton onClick={() => setExportMenuOpen(true)} />
+            </Box>
+            <div>
+              <BudgetToggleButton
+                showBudgetColumns={showBudgetColumns}
+                setShowBudgetColumns={setShowBudgetColumns}
               />
-            </LocalizationProvider>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSearch}
-              startIcon={<SearchIcon />}
-              sx={{
-                borderRadius: "8px",
-                textTransform: "none",
-                fontWeight: 500,
-                px: 2,
-              }}
-            >
-              Buscar
-            </Button>
+            </div>
           </Box>
 
-          <ResultsTable
+          <ResultsTableVariation
             metricKeys={metrics}
             metricLabels={metricLabels}
             months={data}
             nestedMetrics={nestedMetrics}
+            showBudgetColumns={showBudgetColumns}
+            metricNature={metricNature}
           />
         </Paper>
       </MainContainer>
+      <ExportDialog
+        open={exportOpen}
+        onClose={() => setExportMenuOpen(false)}
+        hasChart={false}
+        onExport={handleExport}
+      />
     </MainTemplate>
   );
 };

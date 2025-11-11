@@ -54,12 +54,14 @@ export const GrossCashFlowChart = ({ data }: Props) => {
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
         <YAxis
+          tick={false}
           yAxisId="left"
           orientation="left"
           tickFormatter={(value) => `R$ ${(value / 1000).toFixed(1)}k`}
           domain={["auto", "auto"]}
         />
         <YAxis
+          tick={false}
           yAxisId="right"
           orientation="right"
           tickFormatter={(value) => `${value.toFixed(1)}%`}
@@ -69,23 +71,23 @@ export const GrossCashFlowChart = ({ data }: Props) => {
           formatter={(value: any, name: string) => {
             if (name === "margemEBITIDA")
               return [`${value.toFixed(2)}%`, "Margem EBITDA"];
-            return [`R$ ${value.toLocaleString("pt-BR")}`, name];
+            return [`${value.toLocaleString("pt-BR")}`, name];
           }}
         />
         <Legend />
-        <Bar yAxisId="left" dataKey="ebitida" fill="#8884d8" name="EBITDA" />
+        <Bar yAxisId="left" dataKey="ebitida" fill="#0B4357" name="EBITDA" />
         <Line
           yAxisId="right"
           type="monotone"
           dataKey="margemEBITIDA"
-          stroke="#82ca9d"
+          stroke="#00FF29"
           name="Margem EBITDA"
         />
         <Line
           yAxisId="left"
           type="monotone"
           dataKey="fluxoCaixaOperacional"
-          stroke="#ffc658"
+          stroke="#00AABB"
           name="Fluxo de Caixa Operacional"
         />
       </ComposedChart>

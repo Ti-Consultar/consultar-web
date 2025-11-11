@@ -1,12 +1,5 @@
 import { useMediaQuery, useTheme } from "@mui/material";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { BarChart, Bar, XAxis, CartesianGrid, Legend } from "recharts";
 
 interface MonthData {
   name: string;
@@ -92,37 +85,37 @@ export default function FleurietGestaoLiquidezChart({
   });
 
   return (
-    <ResponsiveContainer width={isMobile ? "100%" : "40%"} height={isMobile ? 200 : 350}>
-      <BarChart
-        data={data}
-        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-        barCategoryGap={80}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        {/* <Tooltip content={<CustomTooltip />} /> */}
-        <Legend
-          content={() => (
-            <div style={{ display: "flex", gap: 16, paddingLeft: 24 }}>
-              <span style={{ color: "#A9D0F5" }}>⬤ Tesouraria</span>
-              <span style={{ color: "#6C8EBF" }}>⬤ NCG</span>
-              <span style={{ color: "#0B3861" }}>⬤ CDG</span>
-            </div>
-          )}
-        />
+    <BarChart
+      data={data}
+      width={isMobile ? 300 : 500}
+      height={isMobile ? 200 : 350}
+      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      barCategoryGap={80}
+    >
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
+      {/* <Tooltip content={<CustomTooltip />} /> */}
+      <Legend
+        content={() => (
+          <div style={{ display: "flex", gap: 16, paddingLeft: 24 }}>
+            <span style={{ color: "#48CAE4" }}>⬤ Tesouraria</span>
+            <span style={{ color: "#0077B6" }}>⬤ NCG</span>
+            <span style={{ color: "#023E8A" }}>⬤ CDG</span>
+          </div>
+        )}
+      />
 
-        {/* ATIVO */}
-        <Bar dataKey="ativo_t" stackId="ativo" fill="#A9D0F5" />
-        <Bar dataKey="ativo_ncg" stackId="ativo" fill="#6C8EBF" />
-        <Bar dataKey="ativo_cdg" stackId="ativo" fill="#0B3861" />
-        <Bar dataKey="ativo_espelho" stackId="ativo" fill="transparent" />
+      {/* ATIVO */}
+      <Bar dataKey="ativo_t" stackId="ativo" fill="#48CAE4" />
+      <Bar dataKey="ativo_ncg" stackId="ativo" fill="#0077B6" />
+      <Bar dataKey="ativo_cdg" stackId="ativo" fill="#023E8A" />
+      <Bar dataKey="ativo_espelho" stackId="ativo" fill="transparent" />
 
-        {/* PASSIVO */}
-        <Bar dataKey="passivo_t" stackId="passivo" fill="#A9D0F5" />
-        <Bar dataKey="passivo_ncg" stackId="passivo" fill="#6C8EBF" />
-        <Bar dataKey="passivo_cdg" stackId="passivo" fill="#0B3861" />
-        <Bar dataKey="passivo_espelho" stackId="passivo" fill="transparent" />
-      </BarChart>
-    </ResponsiveContainer>
+      {/* PASSIVO */}
+      <Bar dataKey="passivo_t" stackId="passivo" fill="#48CAE4" />
+      <Bar dataKey="passivo_ncg" stackId="passivo" fill="#0077B6" />
+      <Bar dataKey="passivo_cdg" stackId="passivo" fill="#023E8A" />
+      <Bar dataKey="passivo_espelho" stackId="passivo" fill="transparent" />
+    </BarChart>
   );
 }
