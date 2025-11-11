@@ -8,7 +8,7 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { toast } from "react-toastify";
-import { getValueTree } from "../../../services/apis/routes/valueTree";
+import { getValueTreeBudget } from "../../../services/apis/routes/valueTree";
 import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
 
 export const AgregadoMensal = () => {
@@ -61,7 +61,7 @@ export const AgregadoMensal = () => {
       const y = fetchYear ?? year;
       const m = fetchMonth ?? month;
 
-      const response = await getValueTree(accountPlanId, m, y);
+      const response = await getValueTreeBudget(accountPlanId, m, y);
       setData(response);
 
       if (!selectedDate && response?.valueTreeYearMonth) {

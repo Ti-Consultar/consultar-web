@@ -12,13 +12,53 @@ export const ParallelogramNode = ({ data }: NodeProps<EvaData>) => {
   return (
     <div
       style={{
-        background: "#ffffffff",
-        border: "2px solid #333",
+        backgroundColor: "#1E293B",
+        color: "#e4eefdff",
+        border: "2px solid #121221ff",
         fontWeight: "bold",
         display: "inline-block",
         padding: "0",
         transform: "skew(-20deg)",
         minWidth: "150px",
+        borderRadius: "6px",
+      }}
+    >
+      <div style={{ padding: "10px 20px" }}>{data.label}</div>
+    </div>
+  );
+};
+
+export const ParallelogramBudgetNode = ({ data }: NodeProps<EvaData>) => {
+  return (
+    <div
+      style={{
+        background: "#ffffffff",
+        border: "2px solid #909295ff",
+        fontWeight: "bold",
+        display: "inline-block",
+        padding: "0",
+        transform: "skew(-20deg)",
+        minWidth: "150px",
+        borderRadius: "6px",
+      }}
+    >
+      <div style={{ padding: "10px 20px" }}>{data.label}</div>
+    </div>
+  );
+};
+
+export const ParallelogramEVA = ({ data }: NodeProps<EvaData>) => {
+  return (
+    <div
+      style={{
+        background: "#004cbdff",
+        border: "2px solid #909295ff",
+        fontWeight: "bold",
+        display: "inline-block",
+        padding: "0",
+        transform: "skew(-20deg)",
+        minWidth: "150px",
+        borderRadius: "6px",
       }}
     >
       <div style={{ padding: "10px 20px" }}>{data.label}</div>
@@ -64,13 +104,14 @@ export const ParallelogramNodeTitle = ({ data }: NodeProps<EvaData>) => {
     <div
       style={{
         width: "270px",
-        background: "#3270c1ff",
-        color: "white",
-        border: "2px solid #333",
+        background: "#dcdcdcff",
+        color: "#2a2a2aff",
+        border: "1px solid #5a5a5aff",
         fontWeight: "bold",
         display: "inline-block",
         padding: "0",
         transform: "skew(-20deg)",
+        borderRadius: "6px",
       }}
     >
       <div style={{ padding: "10px 20px" }}>{data.label}</div>
