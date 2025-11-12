@@ -87,17 +87,38 @@ export const CashFlowTable = ({
     return Math.trunc(adjusted).toLocaleString("pt-BR");
   };
 
-  const findMonth = (list: CashFlowMonth[], name: string, dateMonth: number) =>
-    list.find((m) => m.name === name) ||
-    list.find((m) => m.dateMonth === dateMonth) ||
-    list.find((m) => m.dateMonth === 13); // fallback for ACUMULADO
+  const findMonth = (
+    list: CashFlowMonth[],
+    name: string,
+    dateMonth: number
+  ) => {
+    // Tenta encontrar pelo nome
+    let month = list.find((m) => m.name === name);
+
+    // Se não encontrou pelo nome, tenta pelo número do mês
+    if (!month) {
+      month = list.find((m) => m.dateMonth === dateMonth);
+    }
+
+    // Só retorna o acumulado se o mês também for "ACUMULADO"
+    // (ou se quiser explicitamente que o acumulado substitua o último)
+    if (!month && name === "ACUMULADO") {
+      month = list.find((m) => m.dateMonth === 13);
+    }
+
+    return month;
+  };
 
   const renderValueCells = (month: CashFlowMonth, metric: string) => {
     const realValue = formatValue(metric, month[metric] as number);
 
     if (!showBudgetColumns) {
       return (
-        <TableCell key={`${month.name}-${metric}`} align="right">
+        <TableCell
+          key={`${month.name}-${metric}`}
+          align="right"
+          sx={{ borderRight: "1px solid #e0e0e0" }}
+        >
           {realValue}
         </TableCell>
       );
@@ -121,9 +142,16 @@ export const CashFlowTable = ({
 
     return (
       <>
-        <TableCell align="right">{budgetValue}</TableCell>
-        <TableCell align="right">{realValue}</TableCell>
-        <TableCell align="right"> {variationValue}</TableCell>
+        <TableCell align="right" sx={{ borderRight: "1px solid #e0e0e0" }}>
+          {budgetValue}
+        </TableCell>
+        <TableCell align="right" sx={{ borderRight: "1px solid #e0e0e0" }}>
+          {realValue}
+        </TableCell>
+        <TableCell align="right" sx={{ borderRight: "1px solid #e0e0e0" }}>
+          {" "}
+          {variationValue}
+        </TableCell>
       </>
     );
   };
@@ -187,7 +215,11 @@ export const CashFlowTable = ({
                 key={m.name}
                 align="center"
                 colSpan={showBudgetColumns ? 3 : 1}
-                sx={{ fontWeight: "bold", backgroundColor: "#f5f5f5" }}
+                sx={{
+                  fontWeight: "bold",
+                  backgroundColor: "#f5f5f5",
+                  borderLeft: "1px solid #e0e0e0",
+                }}
               >
                 {m.translatedName}
               </TableCell>
@@ -197,7 +229,12 @@ export const CashFlowTable = ({
           {showBudgetColumns && (
             <TableRow>
               <TableCell
-                sx={{ backgroundColor: "#fafafa", position: "sticky", left: 0 }}
+                sx={{
+                  backgroundColor: "#fafafa",
+                  position: "sticky",
+                  left: 0,
+                  borderLeft: "1px solid #e0e0e0",
+                }}
               />
               {translatedMonths.map((m) => (
                 <React.Fragment key={m.name}>
@@ -207,7 +244,13 @@ export const CashFlowTable = ({
                   <TableCell align="right" sx={{ fontWeight: "bold" }}>
                     Realizado
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: "bold",
+                      borderRight: "1px solid #e0e0e0",
+                    }}
+                  >
                     Variação
                   </TableCell>
                 </React.Fragment>
@@ -235,6 +278,7 @@ export const CashFlowTable = ({
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
+                    borderRight: "1px solid #e0e0e0",
                   }}
                 >
                   <Tooltip title={metricLabels[metric] || metric}>
