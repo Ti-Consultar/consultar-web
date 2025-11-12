@@ -22,7 +22,7 @@ import { BalancetePayload } from "../../../types/balancetePayload";
 import { MainTemplate } from "../../../components/AppLayout";
 import { AccountingTable } from "./table";
 import { Balancetes } from "../../../types/balancete";
-import { getBudgets, importBudgetSheet, submitBudget } from "../../../services/apis/routes/budget.service";
+import { deleteBudget, getBudgets, importBudgetSheet, submitBudget } from "../../../services/apis/routes/budget.service";
 
 export const UploadBudgetSheet = () => {
   const location = useLocation();
@@ -71,7 +71,7 @@ export const UploadBudgetSheet = () => {
   const handleDeleteBalancete = async (id: number) => {
     setLoading(true, "Excluindo orçamento...");
     try {
-      const response = await deleteBalancete(id);
+      const response = await deleteBudget(id);
       if (response?.success === true) {
         toast.success("Orçamento excluído!");
         setBalanceteList((prev) => ({
