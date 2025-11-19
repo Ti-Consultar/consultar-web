@@ -29,5 +29,5 @@ export const ChartCard = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  height: 300px
+  height: 300px;
 `;

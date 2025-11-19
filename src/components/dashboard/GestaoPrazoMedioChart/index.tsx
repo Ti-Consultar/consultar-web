@@ -5,7 +5,7 @@ import { getAccountPlan } from "../../../services/apis/routes/accountplan.servic
 import { toast } from "react-toastify";
 import { Box } from "@mui/material";
 import { getGestaoPrazoMedio } from "../../../services/apis/routes/dashboard.service";
-import { GestaoPrazoMedioCarousel } from "../../Companies/Charts/GestaoPrasoMedioCarousel";
+import { GestaoPrazoMedioCarousel } from "../../../Features/Companies/Charts/GestaoPrasoMedioCarousel";
 
 interface GestaoPrazoMedioDashboardProps {
   year: number | null;

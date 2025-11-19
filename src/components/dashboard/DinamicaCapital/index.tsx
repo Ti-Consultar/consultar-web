@@ -5,7 +5,7 @@ import { getAccountPlan } from "../../../services/apis/routes/accountplan.servic
 import { toast } from "react-toastify";
 import { getCapitalDynamics } from "../../../services/apis/routes/gestaoLiquidez.service";
 import { Box } from "@mui/material";
-import { CapitalDynamicsCarousel } from "../../Companies/Charts/CapitalDynamicsCarousel";
+import { CapitalDynamicsCarousel } from "../../../Features/Companies/Charts/CapitalDynamicsCarousel";
 
 interface DinamicaCapitalCarouselProps {
   year: number | null;

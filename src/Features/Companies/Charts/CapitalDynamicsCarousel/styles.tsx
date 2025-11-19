@@ -9,6 +9,7 @@ export const CarouselContainer = styled.div`
   border: 1px solid var(--neutral-300);
   padding: 16px;
   position: relative;
+  width: 100%
 `;
 
 export const ChartWrapper = styled.div`

@@ -1,6 +1,6 @@
 import { useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { MarginCarousel } from "../../Companies/Charts";
+import { MarginCarousel } from "../../../Features/Companies/Charts";
 import { Box } from "@mui/material";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";

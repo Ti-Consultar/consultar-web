@@ -6,7 +6,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getBalancoReclassificadoVariation } from "../../../services/apis/routes/classification.service";
@@ -20,6 +20,10 @@ import { ExportButton } from "../../../components/Button/ExportButton";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 import { metricNature } from "./metricNature";
 import { BalancoReclassificadoTable } from "./table";
+import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
+import { CompanyResponse } from "../../../types/companyDropdown";
+import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import { ModernTextField } from "../../../styles/DatePicker";
 
 export const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1);
@@ -40,6 +44,10 @@ export const BalancoReclassificado = () => {
   }>();
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
+  const navigate = useNavigate();
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null
+  );
 
   const highlightRows = useMemo(() => {
     const ids: Record<number, boolean> = {};
@@ -87,6 +95,16 @@ export const BalancoReclassificado = () => {
 
     return ids;
   }, [realizadoMonths]);
+
+  const fetchDropdown = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getDropdownNavigation(Number(groupId));
+      setDropdownData(response);
+    } catch {
+      console.error("Erro ao buscar dropdown");
+    }
+  };
 
   useEffect(() => {
     const loadSetting = () => {
@@ -273,7 +291,8 @@ export const BalancoReclassificado = () => {
   useEffect(() => {
     if (!accountPlanId) return;
     handleSearch(tabValue);
-  }, [tabValue, selectedYear, accountPlanId]);
+    fetchDropdown();
+  }, [tabValue, selectedYear, accountPlanId, groupId, companyid, subCompanyId]);
 
   return (
     <MainTemplate>
@@ -338,7 +357,26 @@ export const BalancoReclassificado = () => {
 
           <Box display="flex" justifyContent={"space-between"}>
             <Box display="flex" gap={2} alignItems="center" mb={2}>
-              <TableValueVisualization />
+              {dropdownData && (
+                <Box sx={{ width: "30%" }}>
+                  <CompanyNavigationDropdown
+                    data={dropdownData.data}
+                    selectedId={companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type }) => {
+                      if (type === "group")
+                        return navigate(`/grupos/${id}/contabil`);
+                      if (type === "filial")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${id}/contabil`
+                        );
+                      if (type === "sub")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/contabil`
+                        );
+                    }}
+                  />
+                </Box>
+              )}
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   views={["year"]}
@@ -349,13 +387,16 @@ export const BalancoReclassificado = () => {
                       setSelectedYear(newValue);
                     }
                   }}
+                  enableAccessibleFieldDOMStructure={false}
+                  slots={{
+                    textField: ModernTextField,
+                  }}
                   slotProps={{
-                    textField: {
-                      size: "small",
-                    },
+                    textField: { size: "medium" },
                   }}
                 />
               </LocalizationProvider>
+              <TableValueVisualization />
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
             <div>

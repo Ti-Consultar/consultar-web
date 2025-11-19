@@ -10,6 +10,7 @@ export const CarouselContainer = styled.div`
   border: 1px solid var(--neutral-300);
   padding: 16px;
   position: relative;
+  margin-bottom: 1.5rem
 `;
 
 export const ChartWrapper = styled.div`

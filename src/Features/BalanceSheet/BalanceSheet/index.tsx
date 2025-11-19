@@ -6,7 +6,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getBalancoContabil } from "../../../services/apis/routes/classification.service";
@@ -19,6 +19,10 @@ import { ExportDialog } from "../../../components/ExportModal";
 import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { ExportButton } from "../../../components/Button/ExportButton";
+import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import { CompanyResponse } from "../../../types/companyDropdown";
+import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
+import { ModernTextField } from "../../../styles/DatePicker";
 
 export const BalancoContabil = () => {
   const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
@@ -37,9 +41,13 @@ export const BalancoContabil = () => {
   const { isOpen } = useDrawer();
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null
+  );
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!groupId || accountPlanId) return;
+    if (!groupId) return;
 
     const getAccountPlanId = async (
       groupId: number,
@@ -70,7 +78,13 @@ export const BalancoContabil = () => {
       companyid ? Number(companyid) : undefined,
       subCompanyId ? Number(subCompanyId) : undefined
     );
-  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+  }, [groupId, companyid, subCompanyId]);
+
+  useEffect(() => {
+    setAccountPlanId(null);
+    setEntityName(null);
+    setBalanceteData([]);
+  }, [groupId, companyid, subCompanyId]);
 
   const handleSearch = async (tab?: number): Promise<void> => {
     try {
@@ -101,6 +115,16 @@ export const BalancoContabil = () => {
     }
   };
 
+  const fetchDropdown = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getDropdownNavigation(Number(groupId));
+      setDropdownData(response);
+    } catch {
+      console.error("Erro ao buscar dropdown");
+    }
+  };
+
   const handleChangeTab = (
     _event: React.SyntheticEvent,
     newValue: number
@@ -111,9 +135,10 @@ export const BalancoContabil = () => {
 
   useEffect(() => {
     if (accountPlanId) {
-      handleSearch(1);
+      handleSearch(tabValue);
+      fetchDropdown();
     }
-  }, [accountPlanId]);
+  }, [accountPlanId, groupId, companyid, subCompanyId]);
 
   const buildExportData = (months: Month[]) => {
     if (!months.length) return { columns: [], rows: [] };
@@ -274,7 +299,26 @@ export const BalancoContabil = () => {
 
           <Box display="flex" justifyContent={"space-between"}>
             <Box display="flex" gap={2} alignItems="center" mb={2}>
-              <TableValueVisualization />
+              {dropdownData && (
+                <Box sx={{ width: "30%" }}>
+                  <CompanyNavigationDropdown
+                    data={dropdownData.data}
+                    selectedId={companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type }) => {
+                      if (type === "group")
+                        return navigate(`/grupos/${id}/contabil`);
+                      if (type === "filial")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${id}/contabil`
+                        );
+                      if (type === "sub")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/contabil`
+                        );
+                    }}
+                  />
+                </Box>
+              )}
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   views={["year"]}
@@ -285,13 +329,16 @@ export const BalancoContabil = () => {
                       setSelectedYear(newValue);
                     }
                   }}
+                  enableAccessibleFieldDOMStructure={false}
+                  slots={{
+                    textField: ModernTextField,
+                  }}
                   slotProps={{
-                    textField: {
-                      size: "small",
-                    },
+                    textField: { size: "medium" },
                   }}
                 />
               </LocalizationProvider>
+              <TableValueVisualization />
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
             <div>
