@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Select,
   MenuItem,
@@ -6,6 +6,8 @@ import {
   FormControl,
   Typography,
   SelectChangeEvent,
+  TextField,
+  Box,
 } from "@mui/material";
 
 interface Permission {
@@ -51,6 +53,8 @@ const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
   selectedId,
   onChange,
 }) => {
+  const [search, setSearch] = useState("");
+
   const handleSelect = (e: SelectChangeEvent) => {
     const [idStr, accountPlanIdStr, type] = e.target.value.split("|");
 
@@ -72,6 +76,13 @@ const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
 
     return "Selecionar nível";
   }, [selectedId, data]);
+
+  // Filtragem
+  const filteredFiliais = useMemo(() => {
+    return data.filiais.filter((f) =>
+      f.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [data.filiais, search]);
 
   return (
     <FormControl fullWidth size="small">
@@ -97,22 +108,50 @@ const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
             sx: {
               borderRadius: "12px",
               border: "1px solid #f1f1f1",
-              boxShadow: "0 4px 12px rgba(255, 0, 0, 0.08)",
+              boxShadow: "0 4px 18px rgba(0,0,0,0.08)",
             },
           },
         }}
       >
-        <ListSubheader>Grupo</ListSubheader>
-        <MenuItem
-          value={`${data.id}|${data.accountPlanId}|group`}
-          sx={{ mx: 1, borderRadius: "8px" }}
-        >
-          {data.name}
-        </MenuItem>
+        {/* Campo de busca */}
+        <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
+          <TextField
+            autoFocus
+            placeholder="Buscar..."
+            size="small"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            fullWidth
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "8px",
+              },
+            }}
+          />
+        </Box>
 
-        {data.filiais.length > 0 && <ListSubheader>Filiais</ListSubheader>}
+        {/* Grupo */}
+        <ListSubheader disableSticky sx={{ bgcolor: "#fafafa" }}>
+          Grupo
+        </ListSubheader>
+        {(data.name.toLowerCase().includes(search.toLowerCase()) ||
+          search === "") && (
+          <MenuItem
+            value={`${data.id}|${data.accountPlanId}|group`}
+            sx={{ mx: 1, borderRadius: "8px" }}
+          >
+            {data.name}
+          </MenuItem>
+        )}
 
-        {data.filiais.map((f) => (
+        {/* Empresas */}
+        {filteredFiliais.length > 0 && (
+          <ListSubheader disableSticky sx={{ bgcolor: "#fafafa" }}>
+            Empresas
+          </ListSubheader>
+        )}
+
+        {filteredFiliais.map((f) => (
           <MenuItem
             key={f.id}
             value={`${f.id}|${f.accountPlanId}|filial`}

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import { toast } from "react-toastify";
 
 import { MainTemplate } from "../../../components/AppLayout";
-import { MainContainer } from "../styles";
+import { MainContainer, Title } from "../styles";
 
 import {
   getBranches,
@@ -12,7 +12,10 @@ import {
   updateSubCompany,
 } from "../../../services/apis/routes/subcompanies.service";
 
-import { getCompanyById, getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import {
+  getCompanyById,
+  getDropdownNavigation,
+} from "../../../services/apis/routes/companies.service";
 import { CompanyForm } from "../../GroupForm";
 
 import { useLoading } from "../../../contexts/LoadingProvider";
@@ -24,9 +27,15 @@ import { GroupFormData } from "../../../types/group";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { DashboardPage } from "../../Dashboard";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { ModernTextField } from "../../../styles/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import DashboardIcon from "../../../assets/icons/duo-icons_dashboard.svg";
+import dayjs from "dayjs";
+import theme from "../../../styles/theme";
+import { CompanyMenu } from "../../../components/Inputs/CompanyActionsDropdown";
 
 export const Branches = () => {
-
   const navigate = useNavigate();
   const { setLoading } = useLoading();
   const { setBreadcrumbs } = useMainContext();
@@ -37,11 +46,15 @@ export const Branches = () => {
   }>();
 
   const [, setBranches] = useState<any[]>([]);
-  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(null);
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null
+  );
 
   const [editingBranch, setEditingBranch] = useState<GroupFormData>();
   const [open, setOpen] = useState(false);
   const [editingBranchId, setEditingBranchId] = useState<number | null>(null);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // ============================
   // FETCH BRANCHES
@@ -125,7 +138,6 @@ export const Branches = () => {
       setEditingBranch(undefined);
       setEditingBranchId(null);
       fetchData();
-
     } catch {
       toast.error("Erro ao salvar filial");
     } finally {
@@ -168,20 +180,57 @@ export const Branches = () => {
   return (
     <MainTemplate>
       <MainContainer>
-
-        {/* Dropdown */}
-        {dropdownData && (
-          <Box sx={{ width: "20%", mb: 3 }}>
-            <CompanyNavigationDropdown
-              data={dropdownData.data}
-              selectedId={Number(companyId)}
-              onChange={handleNavigation}
-            />
+        <Box
+          sx={{
+            display: "flchex",
+            justifyContent: "space-between",
+            flexDirection: isMobile ? "column" : "row",
+            ml: 2,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
+            <img src={DashboardIcon} alt="" />
+            <Title>Dashboard</Title>
           </Box>
-        )}
+        </Box>
+        <Box sx={{ display: "flex", gap: 2, ml: 2 }}>
+          {/* Dropdown */}
+          {dropdownData && (
+            <Box sx={{ width: "20%", mb: 3 }}>
+              <CompanyNavigationDropdown
+                data={dropdownData.data}
+                selectedId={Number(companyId)}
+                onChange={handleNavigation}
+              />
+            </Box>
+          )}
+
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DatePicker
+              views={["year"]}
+              label="Ano"
+              value={dayjs().year(year)}
+              onChange={(v) => setYear(v?.year() ?? year)}
+              enableAccessibleFieldDOMStructure={false}
+              slots={{
+                textField: ModernTextField,
+              }}
+              slotProps={{
+                textField: { size: "medium" },
+              }}
+            />
+          </LocalizationProvider>
+
+          <CompanyMenu
+            onAddCompany={() => setOpen(true)}
+            onEditCompany={() => {}}
+            onInviteMembers={() => console.log("Convidar membros")}
+            onDeactivateCompany={() => console.log("Inativar")}
+          />
+        </Box>
 
         {/* DASHBOARD */}
-        <DashboardPage />
+        <DashboardPage year={year} />
 
         {/* FORM */}
         <CompanyForm

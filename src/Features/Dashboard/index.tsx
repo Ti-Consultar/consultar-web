@@ -1,21 +1,18 @@
 import { Box, useMediaQuery, useTheme } from "@mui/material";
 import { useParams } from "react-router";
-import DashboardIcon from "../../assets/icons/duo-icons_dashboard.svg";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
-import { useState } from "react";
 import { useDashboardData } from "./useDashboardData";
 import { KpiCard } from "../../components/Card/KpiCard";
 import { CapitalDynamicsCarousel } from "../Companies/Charts/CapitalDynamicsCarousel";
 import { MarginCarousel } from "../Companies/Charts";
 import { LiquidityChart } from "../Companies/Charts/VariaveisLiquidez";
 import { GestaoPrazoMedioCarousel } from "../Companies/Charts/GestaoPrasoMedioCarousel";
-import { MainContainer, Subtitle, Title } from "./styles";
-import { ModernTextField } from "../../styles/DatePicker";
+import { MainContainer, Subtitle } from "./styles";
 
-export function DashboardPage() {
+interface DashboardPageProps {
+  year: number;
+}
+
+export function DashboardPage({year}: DashboardPageProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { groupId, companyId, subCompanyId } = useParams<{
@@ -23,8 +20,6 @@ export function DashboardPage() {
     companyId?: string;
     subCompanyId?: string;
   }>();
-
-  const [year, setYear] = useState(new Date().getFullYear());
   const {
     panel,
     liquidity,
@@ -45,33 +40,7 @@ export function DashboardPage() {
   return (
     <MainContainer>
       {/* HEADER */}
-      <Box
-        sx={{
-          display: "flchex",
-          justifyContent: "space-between",
-          flexDirection: isMobile ? "column" : "row",
-        }}
-      >
-        <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
-          <img src={DashboardIcon} alt="" />
-          <Title>Dashboard</Title>
-        </Box>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DatePicker
-            views={["year"]}
-            label="Ano"
-            value={dayjs().year(year)}
-            onChange={(v) => setYear(v?.year() ?? year)}
-            enableAccessibleFieldDOMStructure={false}
-            slots={{
-              textField: ModernTextField,
-            }}
-            slotProps={{
-              textField: { size: "medium" },
-            }}
-          />
-        </LocalizationProvider>
-      </Box>
+      
 
       <Subtitle>Índices Econômicos</Subtitle>
 

@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { MainTemplate } from "../../components/AppLayout";
-import { MainContainer } from "./styles";
-import { Box } from "@mui/material";
+import { MainContainer, Title } from "./styles";
+import { Box, useMediaQuery } from "@mui/material";
 import { useEffect, useState } from "react";
 
 import { CompanyForm } from "../GroupForm";
@@ -25,6 +25,13 @@ import CompanyNavigationDropdown from "../../components/Inputs/CompanyNavigation
 import { getDropdownNavigation } from "../../services/apis/routes/companies.service";
 import { CompanyResponse } from "../../types/companyDropdown";
 import { DashboardPage } from "../Dashboard";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { ModernTextField } from "../../styles/DatePicker";
+import DashboardIcon from "../../assets/icons/duo-icons_dashboard.svg";
+import theme from "../../styles/theme";
+import dayjs from "dayjs";
+import { CompanyMenu } from "../../components/Inputs/CompanyActionsDropdown";
 
 export const Companies = () => {
   const { groupId, companyid } = useParams<{
@@ -46,6 +53,8 @@ export const Companies = () => {
 
   const [editingCompany, setEditingCompany] = useState<GroupFormData>();
   const [open, setOpen] = useState(false);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const fetchData = async () => {
     try {
@@ -131,26 +140,68 @@ export const Companies = () => {
   return (
     <MainTemplate>
       <MainContainer>
-        {/* Company dropdown */}
-        {dropdownData && (
-          <Box sx={{ width: "20%", mb: 3 }}>
-            <CompanyNavigationDropdown
-              data={dropdownData.data}
-              selectedId={companyid ? Number(companyid) : Number(groupId)}
-              onChange={({ id, type }) => {
-                if (type === "group") return navigate(`/grupos/${id}/empresas`);
-                if (type === "filial")
-                  return navigate(`/grupos/${groupId}/empresas/${id}/filiais`);
-                if (type === "sub")
-                  return navigate(
-                    `/grupos/${groupId}/empresas/${companyid}/filiais/${id}`
-                  );
+        <Box
+          sx={{
+            display: "flchex",
+            justifyContent: "space-between",
+            flexDirection: isMobile ? "column" : "row",
+            ml: 2,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
+            <img src={DashboardIcon} alt="" />
+            <Title>Dashboard</Title>
+          </Box>
+        </Box>
+
+        <Box sx={{ display: "flex", gap: 2, ml: 2 }}>
+          {/* Company dropdown */}
+          {dropdownData && (
+            <Box sx={{ width: "20%", mb: 3 }}>
+              <CompanyNavigationDropdown
+                data={dropdownData.data}
+                selectedId={companyid ? Number(companyid) : Number(groupId)}
+                onChange={({ id, type }) => {
+                  if (type === "group")
+                    return navigate(`/grupos/${id}/empresas`);
+                  if (type === "filial")
+                    return navigate(
+                      `/grupos/${groupId}/empresas/${id}/filiais`
+                    );
+                  if (type === "sub")
+                    return navigate(
+                      `/grupos/${groupId}/empresas/${companyid}/filiais/${id}`
+                    );
+                }}
+              />
+            </Box>
+          )}
+
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DatePicker
+              views={["year"]}
+              label="Ano"
+              value={dayjs().year(year)}
+              onChange={(v) => setYear(v?.year() ?? year)}
+              enableAccessibleFieldDOMStructure={false}
+              slots={{
+                textField: ModernTextField,
+              }}
+              slotProps={{
+                textField: { size: "medium" },
               }}
             />
-          </Box>
-        )}
+          </LocalizationProvider>
 
-        <DashboardPage />
+          <CompanyMenu
+            onAddCompany={() => setOpen(true)}
+            onEditCompany={() => {}}
+            onInviteMembers={() => console.log("Convidar membros")}
+            onDeactivateCompany={() => console.log("Inativar")}
+          />
+        </Box>
+
+        <DashboardPage year={year} />
 
         <CompanyForm
           isOpen={open}
