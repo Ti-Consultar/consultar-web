@@ -10,7 +10,7 @@ import {
   getCapitalDynamics,
   getLiquidityManagement,
 } from "../../services/apis/routes/gestaoLiquidez.service";
-import { getProfitability } from "../../services/apis/routes/economicIndices,service";
+import { getProfitability } from "../../services/apis/routes/economicIndices.service";
 import { DashboardPanelData } from "../../types/dashboardPanel";
 
 interface useDashboardDataProps {

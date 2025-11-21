@@ -4,7 +4,7 @@ import { MarginCarousel } from "../../../Features/Companies/Charts";
 import { Box } from "@mui/material";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { getProfitability } from "../../../services/apis/routes/economicIndices,service";
+import { getProfitability } from "../../../services/apis/routes/economicIndices.service";
 import { toast } from "react-toastify";
 
 interface MarginsChartsProps {

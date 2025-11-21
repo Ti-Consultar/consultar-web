@@ -16,7 +16,7 @@ import {
   getProfitabilityBudget,
   getRentability,
   getReturnExpectation,
-} from "../../../services/apis/routes/economicIndices,service";
+} from "../../../services/apis/routes/economicIndices.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { ExportDialog } from "../../../components/ExportModal";

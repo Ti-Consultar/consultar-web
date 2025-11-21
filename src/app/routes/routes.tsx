@@ -4,8 +4,6 @@ import { ForgotPassword } from "../../Features/Authentication/forgot-password";
 import { PasswordSent } from "../../Features/Authentication/forgot-password/password-sent";
 import { Groups } from "../../Features/Groups";
 import { Companies } from "../../Features/Companies";
-import { Branches } from "../../Features/Companies/Branches";
-import { SubCompanies } from "../../Features/SubCompanies";
 import { ProfileInfo } from "../../Features/Profile";
 import { Authentication } from "../../Features/Authentication";
 import { ProfileSecurity } from "../../Features/Profile/ProfileSecurity";
@@ -50,12 +48,12 @@ export const AppRoutes = () => {
         <Route path={`/grupos/:groupId/empresas`} element={<Companies />} />
         <Route
           path={`/grupos/:groupId/empresas/:companyId/filiais`}
-          element={<Branches />}
+          element={<Companies />}
         />
-        <Route
+        {/* <Route
           path={`/grupos/:groupId/empresas/:companyId/filiais/:subCompanyId`}
           element={<SubCompanies />}
-        />
+        /> */}
         {/* Upload Balancete */}
         {withScopes("arquivos/upload/balancete").map((path) => (
           <Route key={path} path={path} element={<UploadBalanceSheet />} />
