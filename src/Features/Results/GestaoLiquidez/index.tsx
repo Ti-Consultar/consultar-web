@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+/** --------------------------- IMPORTS --------------------------- */
+import { useState, useEffect, useMemo } from "react";
 import { Box, Tabs, Tab, Paper, Typography } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
@@ -6,6 +7,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
+
 import {
   getCapitalDynamics,
   getCapitalDynamicsVariation,
@@ -21,10 +23,12 @@ import {
   getTurnover,
   getTurnoverVariation,
 } from "../../../services/apis/routes/gestaoLiquidez.service";
-import { useParams } from "react-router";
+
+import { useNavigate, useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { toast } from "react-toastify";
+
 import FleurietGestaoLiquidezChart from "../../../components/Charts/FleurietChart/FleurietGestaoLiquidezChart";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { GrossCashFlowChart } from "../../../components/Charts/GrossCashFlowChart";
@@ -37,121 +41,207 @@ import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
 import { LiquidityChart } from "../../Companies/Charts/VariaveisLiquidez";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 import { ResultsTableVariation } from "../resultsTableVariation";
+import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
+import { CompanyResponse } from "../../../types/companyDropdown";
+import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import { ModernTextField } from "../../../styles/DatePicker";
 
-interface LiquidityMonth {
-  name: string;
-  dateMonth: number;
-  saldoTesouraria: number;
-  ncg: number;
-  cdg: number;
-  indiceDeLiquidez: number;
-}
+/** --------------------------- CACHE --------------------------- */
+const apiCache = new Map();
 
-interface LiquidityVariables {
-  months: LiquidityMonth[];
-}
-
-interface LiquidityData {
-  liquidityVariables: LiquidityVariables;
-}
-
+/** --------------------------- COMPONENT --------------------------- */
 export const GestaoLiquidez = () => {
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
   );
+
   const [months, setMonths] = useState<any[]>([]);
-  const [valueMode, setValueMode] = useState<boolean>(true);
+
   const [metricTypes, setMetricTypes] =
     useState<Record<string, "number" | "percent" | "indicator">>();
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
-  const { setLoading } = useLoading();
+
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null
+  );
+
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
-  const [liquidityMonth, setLiquidityMonth] = useState<LiquidityData>();
+  const [liquidityMonth, setLiquidityMonth] = useState<any>();
+
+  /** Dashboard data (gráficos) */
+  const [liquidityVariables, setLiquidityVariables] = useState<any[]>([]);
   const [capitalDynamicsData, setCapitalDynamicsData] = useState<any[]>([]);
   const [grossCashFlowDashData, setGrossCashFlowDashData] = useState<any[]>([]);
-  const [capitalStructuresData, setCapitalStructuresData] = useState<any[]>([]);
-  const [liquidityVariables, setLiquidityVariables] = useState<any[]>([]);
-  const [liquidez, setLiquidez] = useState<any[]>([]);
   const [turnoverData, setTurnoverData] = useState<any[]>([]);
+  const [liquidez, setLiquidez] = useState<any[]>([]);
+  const [capitalStructuresData, setCapitalStructuresData] = useState<any[]>([]);
+
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
+
+  const { setLoading } = useLoading();
+  const { isOpen } = useDrawer();
+  const navigate = useNavigate();
+
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
-  const { isOpen } = useDrawer();
 
   useEffect(() => {
     const loadSetting = () => {
-      const savedSetting = localStorage.getItem("showBudgetColumns");
-      setShowBudgetColumns(savedSetting === "true");
+      const saved = localStorage.getItem("showBudgetColumns");
+      setShowBudgetColumns(saved === "true");
     };
-
     loadSetting();
-
     window.addEventListener("storage", loadSetting);
     return () => window.removeEventListener("storage", loadSetting);
   }, []);
 
   useEffect(() => {
-    if (!groupId || accountPlanId) return;
+    if (!groupId) return;
 
-    const getAccountPlanId = async (
-      groupId: number,
-      companyId?: number,
-      subCompanyId?: number
-    ): Promise<void> => {
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true, "Buscando...");
+
       try {
-        setLoading(true, "Buscando data...");
-        const response = await getAccountPlan(groupId, companyId, subCompanyId);
+        const cacheKey = `dropdown-ap-${groupId}-${companyid}-${subCompanyId}`;
 
-        const data = response.data;
+        if (apiCache.has(cacheKey)) {
+          const cached = apiCache.get(cacheKey);
+          setAccountPlanId(cached.accountPlanId);
+          setDropdownData(cached.dropdown);
+          return;
+        }
 
-        if (!Array.isArray(data) || data.length === 0) return;
+        const [apRes, dropdownRes] = await Promise.all([
+          getAccountPlan(
+            Number(groupId),
+            companyid ? Number(companyid) : undefined,
+            subCompanyId ? Number(subCompanyId) : undefined
+          ),
+          getDropdownNavigation(Number(groupId)),
+        ]);
 
-        const lastItem = data[data.length - 1];
-        setAccountPlanId(lastItem.id);
-      } catch (error) {
-        console.error("Failed to fetch AccountPlanId", error);
-        toast.error("Erro ao buscar plano de contas");
+        if (cancelled) return;
+
+        const list = apRes.data;
+        const lastId = list?.[list.length - 1]?.id ?? null;
+
+        setAccountPlanId(lastId);
+        setDropdownData(dropdownRes);
+
+        apiCache.set(cacheKey, {
+          accountPlanId: lastId,
+          dropdown: dropdownRes,
+        });
+      } catch (err) {
+        console.error(err);
+        toast.error("Erro ao carregar informações da empresa");
       } finally {
         setLoading(false);
       }
     };
 
-    getAccountPlanId(
-      Number(groupId),
-      companyid ? Number(companyid) : undefined,
-      subCompanyId ? Number(subCompanyId) : undefined
-    );
-  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [groupId, companyid, subCompanyId]);
 
+  useEffect(() => {
+    if (tabValue !== 1) return; // Apenas na aba 1
+    if (!months || months.length === 0) return;
+
+    if (selectedMonth) return;
+
+    const validMonths = [...months]
+      .filter((m) => {
+        const r = m.realizado;
+        if (!r) return false;
+
+        const hasValidData =
+          (typeof r.saldoTesouraria === "number" && r.saldoTesouraria !== 0) ||
+          (typeof r.ncg === "number" && r.ncg !== 0) ||
+          (typeof r.cdg === "number" && r.cdg !== 0) ||
+          (typeof r.indiceDeLiquidez === "number" &&
+            r.indiceDeLiquidez !== null);
+
+        return hasValidData;
+      })
+      .sort((a, b) => a.dateMonth - b.dateMonth);
+
+    if (validMonths.length === 0) return;
+
+    const lastValid = validMonths[validMonths.length - 1];
+
+    if (!lastValid?.dateMonth) return;
+
+    const autoMonth = dayjs()
+      .year(Number(selectedYear?.format("YYYY")))
+      .month(lastValid.dateMonth - 1)
+      .startOf("month");
+
+    setSelectedMonth(autoMonth);
+  }, [months, tabValue, selectedYear]);
+
+  /** --------------------------- FetchData (tabelas + gráficos) --------------------------- */
   const fetchData = async () => {
-    if (!selectedYear) return;
+    if (!selectedYear || !accountPlanId) return;
 
-    setLoading(true);
     const year = Number(selectedYear.format("YYYY"));
+    const cacheKey = `tab-${tabValue}-ap-${accountPlanId}-year-${year}`;
+
+    /** ------------------ RESTAURAR DO CACHE ------------------ */
+    if (apiCache.has(cacheKey)) {
+      const cached = apiCache.get(cacheKey);
+
+      setMonths(cached.months);
+      setMetricKeys(cached.metricKeys);
+      setMetricLabels(cached.metricLabels);
+      setMetricTypes(cached.metricTypes);
+
+      if (cached.liquidityVariables)
+        setLiquidityVariables(cached.liquidityVariables);
+      if (cached.capitalDynamicsData)
+        setCapitalDynamicsData(cached.capitalDynamicsData);
+      if (cached.grossCashFlowDashData)
+        setGrossCashFlowDashData(cached.grossCashFlowDashData);
+      if (cached.turnoverData) setTurnoverData(cached.turnoverData);
+      if (cached.liquidez) setLiquidez(cached.liquidez);
+      if (cached.capitalStructuresData)
+        setCapitalStructuresData(cached.capitalStructuresData);
+
+      return;
+    }
+
+    /** ------------------ FETCH REAL ------------------ */
+    setLoading(true);
 
     try {
-      if (!accountPlanId) return;
-      let response;
-      let dashboardResponse;
       let metrics: string[] = [];
       let labels: Record<string, string> = {};
+      let types: Record<string, "number" | "percent" | "indicator"> = {};
       let extractedMonths: any[] = [];
-      let extractedMonthsFleuriet: any[] = [];
 
+      let dashboard: any = null;
+      let variation: any = null;
+
+      /** ------------------ SWITCH TABS ------------------ */
       switch (tabValue) {
-        case 1:
-          response = await getLiquidityManagementVariation(accountPlanId, year);
-          dashboardResponse = await getLiquidityManagement(accountPlanId, year);
-          setLiquidityVariables(dashboardResponse?.liquidityVariables?.months);
-          extractedMonths = response?.months ?? [];
-          extractedMonthsFleuriet =
-            dashboardResponse?.liquidityVariables?.months ?? [];
+        case 1: {
+          [variation, dashboard] = await Promise.all([
+            getLiquidityManagementVariation(accountPlanId, year),
+            getLiquidityManagement(accountPlanId, year),
+          ]);
+
+          extractedMonths = variation?.months ?? [];
+
           metrics = ["saldoTesouraria", "ncg", "cdg", "indiceDeLiquidez"];
           labels = {
             saldoTesouraria: "Saldo Tesouraria",
@@ -159,19 +249,34 @@ export const GestaoLiquidez = () => {
             cdg: "Capital de Giro (CDG)",
             indiceDeLiquidez: "Índice de Liquidez (%)",
           };
-          setValueMode(true);
-          setMetricTypes({
+          types = {
             saldoTesouraria: "number",
             ncg: "number",
             cdg: "number",
             indiceDeLiquidez: "percent",
+          };
+
+          const localVars = dashboard?.liquidityVariables?.months ?? [];
+          setLiquidityVariables(localVars);
+
+          apiCache.set(cacheKey, {
+            months: extractedMonths,
+            metricKeys: metrics,
+            metricLabels: labels,
+            metricTypes: types,
+            liquidityVariables: localVars,
           });
           break;
+        }
 
-        case 2:
-          response = await getCapitalDynamicsVariation(accountPlanId, year);
-          dashboardResponse = await getCapitalDynamics(accountPlanId, year);
-          extractedMonths = response?.months ?? [];
+        case 2: {
+          [variation, dashboard] = await Promise.all([
+            getCapitalDynamicsVariation(accountPlanId, year),
+            getCapitalDynamics(accountPlanId, year),
+          ]);
+
+          extractedMonths = variation?.months ?? [];
+
           metrics = [
             "pme",
             "pmr",
@@ -187,22 +292,34 @@ export const GestaoLiquidez = () => {
               "Ciclo Financeiro das Operações",
             cicloFinanceiroNCG: "Ciclo Financeiro NCG",
           };
-          setMetricTypes({
+          types = {
             pme: "indicator",
             pmr: "indicator",
             pmp: "indicator",
             cicloFinanceiroDasOperacoesPrincipais: "indicator",
             cicloFinanceiroNCG: "indicator",
+          };
+
+          const localData = dashboard?.capitalDynamics?.months ?? [];
+          setCapitalDynamicsData(localData);
+
+          apiCache.set(cacheKey, {
+            months: extractedMonths,
+            metricKeys: metrics,
+            metricLabels: labels,
+            metricTypes: types,
+            capitalDynamicsData: localData,
           });
-
-          setValueMode(false);
-          setCapitalDynamicsData(dashboardResponse?.capitalDynamics?.months);
           break;
+        }
 
-        case 3:
-          response = await getGrossCashFlowVariation(accountPlanId, year);
-          dashboardResponse = await getGrossCashFlow(accountPlanId, year);
-          extractedMonths = response?.months ?? [];
+        case 3: {
+          [variation, dashboard] = await Promise.all([
+            getGrossCashFlowVariation(accountPlanId, year),
+            getGrossCashFlow(accountPlanId, year),
+          ]);
+          extractedMonths = variation?.months ?? [];
+
           metrics = [
             "ebitida",
             "margemEBITIDA",
@@ -217,31 +334,42 @@ export const GestaoLiquidez = () => {
             fluxoCaixaOperacional: "Fluxo de Caixa Operacional",
             geracaoCaixa: "Geração de Caixa (%)",
           };
-          setMetricTypes({
+          types = {
             ebitida: "number",
             margemEBITIDA: "percent",
             variacaoNCG: "number",
             fluxoCaixaOperacional: "number",
             geracaoCaixa: "percent",
-          });
-          setValueMode(true);
-          setGrossCashFlowDashData(
-            (dashboardResponse?.grossCashFlows?.months ?? []).map(
-              (month: any) => ({
-                name: month.name,
-                ebitida: month.ebitida,
-                margemEBITIDA: month.margemEBITIDA,
-                fluxoCaixaOperacional: month.fluxoCaixaOperacional,
-              })
-            )
-          );
-          break;
+          };
 
-        case 4:
-          response = await getTurnoverVariation(accountPlanId, year);
-          dashboardResponse = await getTurnover(accountPlanId, year);
-          extractedMonths = response?.months ?? [];
-          setTurnoverData(dashboardResponse?.turnovers?.months);
+          const localData = (dashboard?.grossCashFlows?.months ?? []).map(
+            (m: any) => ({
+              name: m.name,
+              ebitida: m.ebitida,
+              margemEBITIDA: m.margemEBITIDA,
+              fluxoCaixaOperacional: m.fluxoCaixaOperacional,
+            })
+          );
+
+          setGrossCashFlowDashData(localData);
+
+          apiCache.set(cacheKey, {
+            months: extractedMonths,
+            metricKeys: metrics,
+            metricLabels: labels,
+            metricTypes: types,
+            grossCashFlowDashData: localData,
+          });
+          break;
+        }
+
+        case 4: {
+          [variation, dashboard] = await Promise.all([
+            getTurnoverVariation(accountPlanId, year),
+            getTurnover(accountPlanId, year),
+          ]);
+          extractedMonths = variation?.months ?? [];
+
           metrics = ["giroPME", "giroPMR", "giroPMP", "giroCaixa"];
           labels = {
             giroPME: "Giro PME",
@@ -249,38 +377,65 @@ export const GestaoLiquidez = () => {
             giroPMP: "Giro PMP",
             giroCaixa: "Giro Caixa",
           };
-          setMetricTypes({
+          types = {
             giroPME: "indicator",
             giroPMR: "indicator",
             giroPMP: "indicator",
             giroCaixa: "indicator",
-          });
-          setValueMode(false);
-          break;
+          };
 
-        case 5:
-          response = await getLiquidityVariation(accountPlanId, year);
-          dashboardResponse = await getLiquidity(accountPlanId, year);
-          extractedMonths = response?.months ?? [];
-          setLiquidez(dashboardResponse?.liquiditys?.months);
+          const localData = dashboard?.turnovers?.months ?? [];
+          setTurnoverData(localData);
+
+          apiCache.set(cacheKey, {
+            months: extractedMonths,
+            metricKeys: metrics,
+            metricLabels: labels,
+            metricTypes: types,
+            turnoverData: localData,
+          });
+          break;
+        }
+
+        case 5: {
+          [variation, dashboard] = await Promise.all([
+            getLiquidityVariation(accountPlanId, year),
+            getLiquidity(accountPlanId, year),
+          ]);
+          extractedMonths = variation?.months ?? [];
+
           metrics = ["liquidezCorrente", "liquidezSeca", "liquidezImediata"];
           labels = {
             liquidezCorrente: "Liquidez Corrente",
             liquidezSeca: "Liquidez Seca",
             liquidezImediata: "Liquidez Imediata",
           };
-          setMetricTypes({
+          types = {
             liquidezCorrente: "indicator",
             liquidezSeca: "indicator",
             liquidezImediata: "indicator",
-          });
-          setValueMode(false);
-          break;
+          };
 
-        case 6:
-          response = await getCapitalStructureVariation(accountPlanId, year);
-          dashboardResponse = await getCapitalStructure(accountPlanId, year);
-          extractedMonths = response?.months ?? [];
+          const localData = dashboard?.liquiditys?.months ?? [];
+          setLiquidez(localData);
+
+          apiCache.set(cacheKey, {
+            months: extractedMonths,
+            metricKeys: metrics,
+            metricLabels: labels,
+            metricTypes: types,
+            liquidez: localData,
+          });
+          break;
+        }
+
+        case 6: {
+          [variation, dashboard] = await Promise.all([
+            getCapitalStructureVariation(accountPlanId, year),
+            getCapitalStructure(accountPlanId, year),
+          ]);
+          extractedMonths = variation?.months ?? [];
+
           metrics = [
             "terceirosCurtoPrazo",
             "terceirosLongoPrazo",
@@ -290,44 +445,43 @@ export const GestaoLiquidez = () => {
           labels = {
             terceirosCurtoPrazo: "Endividamento de Terceiros de Curto Prazo",
             terceirosLongoPrazo: "Endividamento de Terceiros de Longo Prazo",
-            participacaoCapitalTerceiros:
-              "Participação de Capital de Terceiros",
-            participacaoCapitalProprio: "Participação de Capital Próprio",
+            participacaoCapitalTerceiros: "Participação Capital Terceiros",
+            participacaoCapitalProprio: "Participação Capital Próprio",
           };
-
-          setValueMode(false);
-          setMetricTypes({
+          types = {
             terceirosCurtoPrazo: "percent",
             terceirosLongoPrazo: "percent",
             participacaoCapitalTerceiros: "percent",
             participacaoCapitalProprio: "percent",
+          };
+
+          const localData = dashboard?.capitalStructures?.months ?? [];
+          setCapitalStructuresData(localData);
+
+          apiCache.set(cacheKey, {
+            months: extractedMonths,
+            metricKeys: metrics,
+            metricLabels: labels,
+            metricTypes: types,
+            capitalStructuresData: localData,
           });
-          setCapitalStructuresData(dashboardResponse?.capitalStructures?.months);
           break;
-      }
-
-      setMonths(extractedMonths);
-      if (tabValue === 1 && extractedMonthsFleuriet.length > 0) {
-        const lastMonth =
-          extractedMonthsFleuriet[extractedMonthsFleuriet.length - 1];
-        if (lastMonth.dateMonth) {
-          const monthDate = dayjs()
-            .year(Number(selectedYear.format("YYYY")))
-            .month(lastMonth.dateMonth - 1)
-            .startOf("month");
-
-          setSelectedMonth(monthDate);
         }
       }
+
+      /** Atualiza o restante dos estados */
+      setMonths(extractedMonths);
       setMetricKeys(metrics);
       setMetricLabels(labels);
-    } catch (error) {
-      console.error("Erro ao buscar dados da aba:", error);
+      setMetricTypes(types);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  /** --------------------------- Fleuriet --------------------------- */
   const fetchFeurietData = async () => {
     if (!accountPlanId || !selectedYear || !selectedMonth) return;
 
@@ -350,10 +504,17 @@ export const GestaoLiquidez = () => {
     }
   };
 
-  const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const fetchDropdown = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getDropdownNavigation(Number(groupId));
+      setDropdownData(response);
+    } catch {
+      console.error("Erro ao buscar dropdown");
+    }
   };
 
+  /** --------------------------- Effects --------------------------- */
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
@@ -361,11 +522,16 @@ export const GestaoLiquidez = () => {
   }, [tabValue, selectedYear, accountPlanId]);
 
   useEffect(() => {
+    fetchDropdown();
+  }, [groupId]);
+
+  useEffect(() => {
     if (selectedMonth && accountPlanId && selectedYear) {
       fetchFeurietData();
     }
   }, [selectedMonth, accountPlanId, selectedYear]);
 
+  /** --------------------------- TABS STYLE --------------------------- */
   const tabStyle = {
     color: "var(--neutral-700)",
     fontWeight: "bold",
@@ -380,6 +546,7 @@ export const GestaoLiquidez = () => {
     return months.map((m) => m.dateMonth);
   }, [months, tabValue]);
 
+  /** --------------------------- RENDER CHARTS --------------------------- */
   const renderChartByTab = () => {
     switch (tabValue) {
       case 1:
@@ -404,25 +571,28 @@ export const GestaoLiquidez = () => {
                 <MonthNavigator
                   value={selectedMonth}
                   onChange={setSelectedMonth}
-                  shouldDisableMonth={(date) => {
-                    const month = date.month() + 1;
-                    return !allowedMonths.includes(month);
-                  }}
+                  shouldDisableMonth={(date) =>
+                    !allowedMonths.includes(date.month() + 1)
+                  }
                 />
+
                 <Box sx={{ display: "flex", gap: 9, mt: 2 }}>
                   <Typography>ATIVO</Typography>
                   <Typography>PASSIVO</Typography>
                 </Box>
+
                 {selectedMonth && (
                   <FleurietGestaoLiquidezChart
                     propData={liquidityMonth?.liquidityVariables?.months || []}
                   />
                 )}
               </Box>
+
               <LiquidityChart data={liquidityVariables} />
             </Box>
           </Box>
         );
+
       case 2:
         return (
           <Box
@@ -437,6 +607,7 @@ export const GestaoLiquidez = () => {
             <CapitalDynamicsChart data={capitalDynamicsData} />
           </Box>
         );
+
       case 3:
         return (
           <Box
@@ -455,6 +626,7 @@ export const GestaoLiquidez = () => {
             )}
           </Box>
         );
+
       case 4:
         return (
           <Box
@@ -464,7 +636,6 @@ export const GestaoLiquidez = () => {
               justifyContent: "center",
               flexDirection: "column",
               alignItems: "center",
-              height: "auto",
             }}
           >
             {turnoverData.length > 0 ? (
@@ -474,6 +645,7 @@ export const GestaoLiquidez = () => {
             )}
           </Box>
         );
+
       case 5:
         return (
           <Box
@@ -483,7 +655,6 @@ export const GestaoLiquidez = () => {
               justifyContent: "center",
               flexDirection: "column",
               alignItems: "center",
-              height: "auto",
             }}
           >
             {liquidez.length > 0 ? (
@@ -493,6 +664,7 @@ export const GestaoLiquidez = () => {
             )}
           </Box>
         );
+
       case 6:
         return (
           <Box
@@ -507,15 +679,15 @@ export const GestaoLiquidez = () => {
             <CapitalStructureStackedBarChart data={capitalStructuresData} />
           </Box>
         );
-      default:
-        return null;
     }
   };
 
+  /** --------------------------- RENDER --------------------------- */
   return (
     <MainTemplate>
       <MainContainer isOpen={isOpen}>
         <Title>Gestão da Liquidez</Title>
+
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box
             sx={{
@@ -527,7 +699,7 @@ export const GestaoLiquidez = () => {
           >
             <Tabs
               value={tabValue}
-              onChange={handleChangeTab}
+              onChange={(_e, v) => setTabValue(v)}
               aria-label="Tabs gestão"
               textColor="primary"
               indicatorColor="primary"
@@ -558,31 +730,52 @@ export const GestaoLiquidez = () => {
 
           <Box display="flex" justifyContent={"space-between"}>
             <Box display="flex" gap={2} alignItems="center" mb={2}>
-              <TableValueVisualization />
+              {dropdownData && (
+                <Box sx={{ width: "30%" }}>
+                  <CompanyNavigationDropdown
+                    data={dropdownData.data}
+                    selectedId={companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type }) => {
+                      if (type === "group")
+                        return navigate(
+                          `/grupos/${id}/resultados/gestao-liquidez`
+                        );
+                      if (type === "filial")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${id}/resultados/gestao-liquidez`
+                        );
+                      if (type === "sub")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/gestao-liquidez`
+                        );
+                    }}
+                  />
+                </Box>
+              )}
+
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   views={["year"]}
                   label="Ano"
                   value={selectedYear}
-                  onChange={(newValue: Dayjs | null) => {
-                    if (newValue) {
-                      setSelectedYear(newValue);
-                    }
+                  onChange={(newValue) => newValue && setSelectedYear(newValue)}
+                  enableAccessibleFieldDOMStructure={false}
+                  slots={{
+                    textField: ModernTextField,
                   }}
                   slotProps={{
-                    textField: {
-                      size: "small",
-                    },
+                    textField: { size: "medium" },
                   }}
                 />
               </LocalizationProvider>
+
+              <TableValueVisualization />
             </Box>
-            <div>
-              <BudgetToggleButton
-                showBudgetColumns={showBudgetColumns}
-                setShowBudgetColumns={setShowBudgetColumns}
-              />
-            </div>
+
+            <BudgetToggleButton
+              showBudgetColumns={showBudgetColumns}
+              setShowBudgetColumns={setShowBudgetColumns}
+            />
           </Box>
 
           <Box>
@@ -590,11 +783,11 @@ export const GestaoLiquidez = () => {
               months={months}
               metricKeys={metricKeys}
               metricLabels={metricLabels}
-              enableValueMode={valueMode}
               metricTypes={metricTypes}
               showBudgetColumns={showBudgetColumns}
             />
           </Box>
+
           <Box
             sx={{
               mt: 4,

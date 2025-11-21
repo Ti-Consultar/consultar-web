@@ -1,17 +1,27 @@
 import { useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { MarginCarousel } from "../../Companies/Charts";
-import { Box } from "@mui/material";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { getProfitability } from "../../../services/apis/routes/economicIndices,service";
+import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { toast } from "react-toastify";
+import { getCapitalDynamics } from "../../../services/apis/routes/gestaoLiquidez.service";
+import { Box } from "@mui/material";
+import { CapitalDynamicsCarousel } from "../../../Features/Companies/Charts/CapitalDynamicsCarousel";
 
-interface MarginsChartsProps {
+interface DinamicaCapitalCarouselProps {
   year: number | null;
+  currentIndex: number;
+  onNext: () => void;
+  onPrev: () => void;
+  onChangeIndex?: (index: number) => void;
 }
 
-export const MarginsCharts = ({ year }: MarginsChartsProps) => {
+export const DinamicaCapitalCarousel = ({
+  year,
+  currentIndex,
+  onNext,
+  onPrev,
+  onChangeIndex,
+}: DinamicaCapitalCarouselProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -59,8 +69,8 @@ export const MarginsCharts = ({ year }: MarginsChartsProps) => {
     try {
       if (!accountPlanId) return;
       if (!year) return;
-      const response = await getProfitability(accountPlanId, year);
-      setData(response.profitability?.months);
+      const response = await getCapitalDynamics(accountPlanId, year);
+      setData(response.capitalDynamics?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
     } finally {
@@ -74,9 +84,13 @@ export const MarginsCharts = ({ year }: MarginsChartsProps) => {
 
   return (
     <Box>
-      <Box sx={{ width: "100%", mb: "1rem" }}>
-        <MarginCarousel data={data} />
-      </Box>
+      <CapitalDynamicsCarousel
+        data={data}
+        currentIndex={currentIndex}
+        onNext={onNext}
+        onPrev={onPrev}
+        onChangeIndex={onChangeIndex}
+      />
     </Box>
   );
 };

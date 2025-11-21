@@ -6,7 +6,7 @@ import {
   Dot,
   Indicators,
 } from "./styles";
-import { MarginChart } from "../../Dashboard/IndicesEconomicosChart";
+import { MarginChart } from "../../../components/dashboard/IndicesEconomicosChart";
 
 type ProfitabilityMonth = {
   name: string;

@@ -4,24 +4,14 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { toast } from "react-toastify";
 import { Box } from "@mui/material";
-import { getGestaoPrazoMedio } from "../../../services/apis/routes/dashboard.service";
-import { GestaoPrazoMedioCarousel } from "../../Companies/Charts/GestaoPrasoMedioCarousel";
+import { LiquidityChart } from "../../../Features/Companies/Charts/VariaveisLiquidez";
+import { getLiquidityManagement } from "../../../services/apis/routes/gestaoLiquidez.service";
 
-interface GestaoPrazoMedioDashboardProps {
+interface VariaveisLiquidezChartProps {
   year: number | null;
-  currentIndex: number;
-  onNext: () => void;
-  onPrev: () => void;
-  onChangeIndex?: (index: number) => void;
 }
 
-export const GestaoPrazoMedioDashboard = ({
-  year,
-  currentIndex,
-  onNext,
-  onPrev,
-  onChangeIndex,
-}: GestaoPrazoMedioDashboardProps) => {
+export const VariaveisLiquidezChart = ({year}: VariaveisLiquidezChartProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -69,8 +59,8 @@ export const GestaoPrazoMedioDashboard = ({
     if (!year) return;
     try {
       if (!accountPlanId) return;
-      const response = await getGestaoPrazoMedio(year, accountPlanId);
-      setData(response);
+      const response = await getLiquidityManagement(accountPlanId, year);
+      setData(response.liquidityVariables?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
     } finally {
@@ -84,13 +74,7 @@ export const GestaoPrazoMedioDashboard = ({
 
   return (
     <Box>
-      <GestaoPrazoMedioCarousel
-        data={data}
-        onPrev={onPrev}
-        onNext={onNext}
-        currentIndex={currentIndex}
-        onChangeIndex={onChangeIndex}
-      />
+      <LiquidityChart data={data} />
     </Box>
   );
 };

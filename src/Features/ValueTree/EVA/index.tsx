@@ -5,11 +5,14 @@ import { MainContainer } from "./style";
 import { useEffect, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { toast } from "react-toastify";
 import { getValueTreeBudget } from "../../../services/apis/routes/valueTree";
 import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
+import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
+import { CompanyResponse } from "../../../types/companyDropdown";
+import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 
 export const AgregadoMensal = () => {
   const [year, setYear] = useState<number>(dayjs().year());
@@ -22,10 +25,14 @@ export const AgregadoMensal = () => {
     companyid?: string;
     subCompanyId?: string;
   }>();
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null
+  );
+  const navigate = useNavigate();
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!groupId || accountPlanId) return;
+    if (!groupId) return;
 
     const getAccountPlanId = async (
       groupId: number,
@@ -51,7 +58,7 @@ export const AgregadoMensal = () => {
       companyid ? Number(companyid) : undefined,
       subCompanyId ? Number(subCompanyId) : undefined
     );
-  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+  }, [groupId, companyid, subCompanyId]);
 
   const fetchData = async (fetchYear?: number, fetchMonth?: number) => {
     setLoading(true);
@@ -67,7 +74,9 @@ export const AgregadoMensal = () => {
       if (!selectedDate && response?.valueTreeYearMonth) {
         const { year: backendYear, month: backendMonth } =
           response.valueTreeYearMonth;
-        const initialDate = dayjs().year(backendYear).month(backendMonth - 1);
+        const initialDate = dayjs()
+          .year(backendYear)
+          .month(backendMonth - 1);
         setSelectedDate(initialDate);
         setYear(backendYear);
         setMonth(backendMonth + 1);
@@ -79,9 +88,20 @@ export const AgregadoMensal = () => {
     }
   };
 
+  const fetchDropdown = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getDropdownNavigation(Number(groupId));
+      setDropdownData(response);
+    } catch {
+      console.error("Erro ao buscar dropdown");
+    }
+  };
+
   useEffect(() => {
     if (accountPlanId) {
       fetchData(year, 0);
+      fetchDropdown()
     }
   }, [accountPlanId]);
 
@@ -90,6 +110,23 @@ export const AgregadoMensal = () => {
       <MainContainer>
         <Box sx={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
           <Typography>Árvore de Valor - EVA</Typography>
+          {dropdownData && (
+            <Box sx={{ width: "18%" }}>
+              <CompanyNavigationDropdown
+                data={dropdownData.data}
+                selectedId={companyid ? Number(companyid) : Number(groupId)}
+                onChange={({ id, type }) => {
+                  if (type === "group") return navigate(`/grupos/${id}/eva`);
+                  if (type === "filial")
+                    return navigate(`/grupos/${groupId}/empresas/${id}/eva`);
+                  if (type === "sub")
+                    return navigate(
+                      `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/eva`
+                    );
+                }}
+              />
+            </Box>
+          )}
 
           <MonthNavigator
             value={selectedDate}

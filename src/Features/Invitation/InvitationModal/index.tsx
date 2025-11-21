@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { MemberCard } from "./MemberInfo";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MultiEmailEditableInput } from "./InvitateInput";
 import { Member } from "../../../types/member";
 import { useParams } from "react-router";
@@ -21,11 +21,13 @@ import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { Protected } from "../../../components/Protection";
 import { usePermission } from "../../../contexts/PermissionsContext";
 
+import { getUserPolicies } from "../../../services/apis/routes/auth.service";
+import { getCompanyUsers } from "../../../services/apis/routes/companies.service";
+import { getGroupUsers } from "../../../services/apis/routes/groups.service";
+
 interface InvitationModalProps {
   open: boolean;
   onClose: () => void;
-  members: Member[];
-  userPolicies: RoleOption[];
   groupToBeInvited?: number;
   companyId?: number;
   subCompanyId?: number;
@@ -39,25 +41,70 @@ type RoleOption = {
 export const InvitationModal = ({
   open,
   onClose,
-  members,
-  userPolicies,
+  groupToBeInvited,
   companyId,
   subCompanyId,
-  groupToBeInvited,
 }: InvitationModalProps) => {
+
   const [emails, setEmails] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<number>(1);
+
+  const [members, setMembers] = useState<Member[]>([]);
+  const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const { groupId } = useParams();
   const { role } = usePermission();
+
+  // ----- TODO: Externalizar regras de negócio -----
+
+  useEffect(() => {
+    if (!open) return;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+
+        const parsedGroupId =
+          groupId !== undefined && !isNaN(Number(groupId))
+            ? Number(groupId)
+            : groupToBeInvited;
+
+        if (!parsedGroupId) {
+          console.error("ID do grupo é inválido.");
+          return;
+        }
+
+        const membersReq = companyId
+          ? getCompanyUsers(Number(companyId), parsedGroupId)
+          : getGroupUsers(parsedGroupId);
+
+        const [membersRes, policiesRes] = await Promise.all([
+          membersReq,
+          getUserPolicies(),
+        ]);
+
+        setMembers(membersRes?.data ?? []);
+        setUserPolicies(policiesRes?.data ?? []);
+
+      } catch (error) {
+        toast.error("Erro ao carregar membros ou permissões.");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [open]);
 
   const sendInvitation = async () => {
     const parsedGroupId =
       groupId !== undefined && !isNaN(Number(groupId))
         ? Number(groupId)
-        : undefined;
-    const rawGroupId = parsedGroupId ?? groupToBeInvited;
+        : groupToBeInvited;
 
-    if (rawGroupId === undefined) {
+    if (parsedGroupId === undefined) {
       console.error("ID do grupo é inválido.");
       return;
     }
@@ -72,7 +119,7 @@ export const InvitationModal = ({
 
     const payload: invitations = {
       invitations: emails.map((email) => ({
-        groupId: rawGroupId,
+        groupId: parsedGroupId,
         companyId: companyId,
         subCompanyId: adjustedSubCompanyId,
         emailInvitedByUser: email,
@@ -130,12 +177,7 @@ export const InvitationModal = ({
       }}
     >
       <DialogTitle>
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          gap={1}
-        >
+        <Box display="flex" alignItems="center" justifyContent="space-between" gap={1}>
           <Typography
             variant="h5"
             fontWeight={600}
@@ -144,6 +186,7 @@ export const InvitationModal = ({
           >
             Membros
           </Typography>
+
           <CloseRoundedIcon
             onClick={onClose}
             sx={{
@@ -153,32 +196,25 @@ export const InvitationModal = ({
             }}
           />
         </Box>
-        <Box>
-          <Typography sx={{ color: "var(--neutral-500)" }}>
-            {["Admin", "Gestor", "Desenvolvedor", "Consultor"].includes(
-              role ?? ""
-            )
-              ? "Convide novos membros para participar da empresa"
-              : "Veja quem está participando dessa empresa."}
-          </Typography>
-        </Box>
+
+        <Typography sx={{ color: "var(--neutral-500)" }}>
+          {["Admin", "Gestor", "Desenvolvedor", "Consultor"].includes(role ?? "")
+            ? "Convide novos membros para participar da empresa"
+            : "Veja quem está participando dessa empresa."}
+        </Typography>
       </DialogTitle>
+
       <DialogContent>
-        <Protected
-          allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
-        >
-          <Box>
-            <Typography sx={{ color: "var(--neutral-500)" }}>
-              Insira os emails
-            </Typography>
-          </Box>
+
+        {/* ENTRADA DE EMAILS */}
+        <Protected allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}>
+          <Typography sx={{ color: "var(--neutral-500)" }}>Insira os emails</Typography>
+
           <Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 2 }}>
             <Box sx={{ width: "80%" }}>
-              <MultiEmailEditableInput
-                emails={emails}
-                onEmailsChange={setEmails}
-              />
+              <MultiEmailEditableInput emails={emails} onEmailsChange={setEmails} />
             </Box>
+
             <Button
               variant="outlined"
               fullWidth
@@ -196,6 +232,7 @@ export const InvitationModal = ({
               Convidar
             </Button>
           </Box>
+
           <Box sx={{ gap: 2, alignItems: "center", display: "flex", mt: 1 }}>
             <span>Os usuários acima terão a permissão de: </span>
             <Select
@@ -218,6 +255,8 @@ export const InvitationModal = ({
             </Select>
           </Box>
         </Protected>
+
+        {/* LISTA DE MEMBROS */}
         <Box sx={{ gap: 2, alignItems: "center", mt: 3 }}>
           <Typography
             variant="h6"
@@ -227,7 +266,10 @@ export const InvitationModal = ({
           >
             Nesta empresa
           </Typography>
-          {Array.isArray(members) && members.length > 0 ? (
+
+          {loading ? (
+            <p>Carregando...</p>
+          ) : Array.isArray(members) && members.length > 0 ? (
             members.map((member) => (
               <MemberCard
                 key={member.id}
@@ -236,7 +278,7 @@ export const InvitationModal = ({
                 role={member.permission.name}
                 roles={userPolicies}
                 isCurrentUser={member.userLogado}
-                onRoleChange={(newRole) => (newRole)}
+                onRoleChange={(newRole) => newRole}
               />
             ))
           ) : (

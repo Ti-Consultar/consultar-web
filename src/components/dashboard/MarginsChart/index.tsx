@@ -1,17 +1,17 @@
 import { useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { useLoading } from "../../../contexts/LoadingProvider";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
-import { toast } from "react-toastify";
+import { MarginCarousel } from "../../../Features/Companies/Charts";
 import { Box } from "@mui/material";
-import { LiquidityChart } from "../../Companies/Charts/VariaveisLiquidez";
-import { getLiquidityManagement } from "../../../services/apis/routes/gestaoLiquidez.service";
+import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { getProfitability } from "../../../services/apis/routes/economicIndices.service";
+import { toast } from "react-toastify";
 
-interface VariaveisLiquidezChartProps {
+interface MarginsChartsProps {
   year: number | null;
 }
 
-export const VariaveisLiquidezChart = ({year}: VariaveisLiquidezChartProps) => {
+export const MarginsCharts = ({ year }: MarginsChartsProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -56,11 +56,11 @@ export const VariaveisLiquidezChart = ({year}: VariaveisLiquidezChartProps) => {
 
   const fetchData = async () => {
     if (!accountPlanId) return;
-    if (!year) return;
     try {
       if (!accountPlanId) return;
-      const response = await getLiquidityManagement(accountPlanId, year);
-      setData(response.liquidityVariables?.months);
+      if (!year) return;
+      const response = await getProfitability(accountPlanId, year);
+      setData(response.profitability?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
     } finally {
@@ -74,7 +74,9 @@ export const VariaveisLiquidezChart = ({year}: VariaveisLiquidezChartProps) => {
 
   return (
     <Box>
-      <LiquidityChart data={data} />
+      <Box sx={{ width: "100%", mb: "1rem" }}>
+        <MarginCarousel data={data} />
+      </Box>
     </Box>
   );
 };

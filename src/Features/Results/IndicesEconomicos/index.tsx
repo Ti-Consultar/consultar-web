@@ -9,14 +9,14 @@ import { MainContainer, Title } from "./styles";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { toast } from "react-toastify";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
   getEbitidaBudget,
   getNopat,
   getProfitabilityBudget,
   getRentability,
   getReturnExpectation,
-} from "../../../services/apis/routes/economicIndices,service";
+} from "../../../services/apis/routes/economicIndices.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { ExportDialog } from "../../../components/ExportModal";
@@ -24,6 +24,10 @@ import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { ResultsTableVariation } from "../resultsTableVariation";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
+import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
+import { CompanyResponse } from "../../../types/companyDropdown";
+import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import { ModernTextField } from "../../../styles/DatePicker";
 
 export const IndicesEconomicos = () => {
   const [tabValue, setTabValue] = useState<number>(1);
@@ -50,6 +54,10 @@ export const IndicesEconomicos = () => {
     {}
   );
   useState<Record<string, "number" | "percent">>();
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null
+  );
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadSetting = () => {
@@ -64,7 +72,7 @@ export const IndicesEconomicos = () => {
   }, []);
 
   useEffect(() => {
-    if (!groupId || accountPlanId) return;
+    if (!groupId) return;
 
     const getAccountPlanId = async (
       groupId: number,
@@ -95,7 +103,7 @@ export const IndicesEconomicos = () => {
       companyid ? Number(companyid) : undefined,
       subCompanyId ? Number(subCompanyId) : undefined
     );
-  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+  }, [groupId, companyid, subCompanyId, accountPlanId]);
 
   const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -176,11 +184,7 @@ export const IndicesEconomicos = () => {
         case 4:
           response = await getEbitidaBudget(accountPlanId, year);
           extractedMonths = response?.months ?? [];
-          metrics = [
-            "lucroAntesFinanceiro",
-            "depreciacao",
-            "ebitda",
-          ];
+          metrics = ["lucroAntesFinanceiro", "depreciacao", "ebitda"];
           labels = {
             lucroAntesFinanceiro:
               "Lucro Operacional Antes do Resultado Financeiro (EBIT)",
@@ -229,10 +233,6 @@ export const IndicesEconomicos = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    console.log("Antes de entrar no componente", months)
-  }, [months])
 
   const buildExportData = (
     months: any[],
@@ -316,9 +316,20 @@ export const IndicesEconomicos = () => {
     }
   };
 
+  const fetchDropdown = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getDropdownNavigation(Number(groupId));
+      setDropdownData(response);
+    } catch {
+      console.error("Erro ao buscar dropdown");
+    }
+  };
+
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
+      fetchDropdown();
     }
   }, [tabValue, selectedYear, accountPlanId]);
 
@@ -414,7 +425,28 @@ export const IndicesEconomicos = () => {
 
           <Box display="flex" justifyContent={"space-between"}>
             <Box display="flex" gap={2} alignItems="center" mb={2}>
-              <TableValueVisualization />
+              {dropdownData && (
+                <Box sx={{ width: "30%" }}>
+                  <CompanyNavigationDropdown
+                    data={dropdownData.data}
+                    selectedId={companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type }) => {
+                      if (type === "group")
+                        return navigate(
+                          `/grupos/${id}/resultados/indices-economicos`
+                        );
+                      if (type === "filial")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${id}/resultados/indices-economicos`
+                        );
+                      if (type === "sub")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/indices-economicos`
+                        );
+                    }}
+                  />
+                </Box>
+              )}
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   views={["year"]}
@@ -425,13 +457,16 @@ export const IndicesEconomicos = () => {
                       setSelectedYear(newValue);
                     }
                   }}
+                  enableAccessibleFieldDOMStructure={false}
+                  slots={{
+                    textField: ModernTextField,
+                  }}
                   slotProps={{
-                    textField: {
-                      size: "small",
-                    },
+                    textField: { size: "medium" },
                   }}
                 />
               </LocalizationProvider>
+              <TableValueVisualization />
 
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>

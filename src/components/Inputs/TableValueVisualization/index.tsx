@@ -42,7 +42,7 @@ export const TableValueVisualization: React.FC = () => {
           display: "flex",
           alignItems: "center",
           fontSize: "14px",
-          border: "2px solid var(--neutral-300)"
+          border: "1px solid var(--neutral-200)"
         }}
       >
         <span>{selectedLabel?.split(" ")[0]}</span>

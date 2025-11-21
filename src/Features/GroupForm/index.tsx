@@ -291,7 +291,7 @@ export const CompanyForm = ({
       open={isOpen}
       onClose={handleCancel}
       title={title}
-      width={"95%"}
+      width={"80%"}
       onSubmit={handleSubmit}
       hasSaveCancel={false}
     >

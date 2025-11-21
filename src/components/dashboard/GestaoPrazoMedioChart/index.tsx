@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { toast } from "react-toastify";
-import { getCapitalDynamics } from "../../../services/apis/routes/gestaoLiquidez.service";
 import { Box } from "@mui/material";
-import { CapitalDynamicsCarousel } from "../../Companies/Charts/CapitalDynamicsCarousel";
+import { getGestaoPrazoMedio } from "../../../services/apis/routes/dashboard.service";
+import { GestaoPrazoMedioCarousel } from "../../../Features/Companies/Charts/GestaoPrasoMedioCarousel";
 
-interface DinamicaCapitalCarouselProps {
+interface GestaoPrazoMedioDashboardProps {
   year: number | null;
   currentIndex: number;
   onNext: () => void;
@@ -15,13 +15,13 @@ interface DinamicaCapitalCarouselProps {
   onChangeIndex?: (index: number) => void;
 }
 
-export const DinamicaCapitalCarousel = ({
+export const GestaoPrazoMedioDashboard = ({
   year,
   currentIndex,
   onNext,
   onPrev,
   onChangeIndex,
-}: DinamicaCapitalCarouselProps) => {
+}: GestaoPrazoMedioDashboardProps) => {
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -66,11 +66,11 @@ export const DinamicaCapitalCarousel = ({
 
   const fetchData = async () => {
     if (!accountPlanId) return;
+    if (!year) return;
     try {
       if (!accountPlanId) return;
-      if (!year) return;
-      const response = await getCapitalDynamics(accountPlanId, year);
-      setData(response.capitalDynamics?.months);
+      const response = await getGestaoPrazoMedio(year, accountPlanId);
+      setData(response);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
     } finally {
@@ -84,11 +84,11 @@ export const DinamicaCapitalCarousel = ({
 
   return (
     <Box>
-      <CapitalDynamicsCarousel
+      <GestaoPrazoMedioCarousel
         data={data}
-        currentIndex={currentIndex}
-        onNext={onNext}
         onPrev={onPrev}
+        onNext={onNext}
+        currentIndex={currentIndex}
         onChangeIndex={onChangeIndex}
       />
     </Box>
