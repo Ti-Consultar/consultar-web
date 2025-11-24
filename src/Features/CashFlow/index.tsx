@@ -8,7 +8,7 @@ import { MainContainer, Title } from "./styles";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
 import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { MainTemplate } from "../../components/AppLayout";
 import { getCashFlowVariation } from "../../services/apis/routes/cashFlow.service";
 import { CashFlowTable } from "./table";

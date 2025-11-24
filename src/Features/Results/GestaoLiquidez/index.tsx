@@ -27,7 +27,7 @@ import {
 import { useNavigate, useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import FleurietGestaoLiquidezChart from "../../../components/Charts/FleurietChart/FleurietGestaoLiquidezChart";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";

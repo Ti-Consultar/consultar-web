@@ -7,7 +7,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { getValueTreeBudget } from "../../../services/apis/routes/valueTree";
 import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";

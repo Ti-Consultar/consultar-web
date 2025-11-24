@@ -17,7 +17,7 @@ import { getBreadcrumb } from "../../services/apis/routes/breadcrumb.service";
 import { useMainContext } from "../../contexts/mainContext";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { useLoading } from "../../contexts/LoadingProvider";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import { GroupFormData } from "../../types/group";
 

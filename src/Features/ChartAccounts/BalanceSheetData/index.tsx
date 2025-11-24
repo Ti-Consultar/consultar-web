@@ -17,7 +17,7 @@ import {
   getBalanceteByCostCenter,
 } from "../../../services/apis/routes/balancete.service";
 import { BalanceSheetDetailsTable } from "./table";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export const BalanceSheetData = () => {
   const location = useLocation();

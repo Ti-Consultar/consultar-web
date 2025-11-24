@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Box, useMediaQuery } from "@mui/material";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "../styles";

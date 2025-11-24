@@ -5,7 +5,7 @@ import { Box } from "@mui/material";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getProfitability } from "../../../services/apis/routes/economicIndices.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 interface MarginsChartsProps {
   year: number | null;

@@ -10,7 +10,7 @@ import { useNavigate, useParams } from "react-router";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getBalancoContabil } from "../../../services/apis/routes/classification.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import BalancoContabilTable from "./table";
 import { BalancoResponse, Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";

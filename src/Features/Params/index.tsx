@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
 import { useParams } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import {
   getParams,
   saveParam,
