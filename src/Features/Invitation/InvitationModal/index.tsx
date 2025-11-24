@@ -17,7 +17,6 @@ import { useParams } from "react-router";
 import { invitations } from "../../../types/userInvitationPayload";
 import { inviteUser } from "../../../services/apis/routes/invitation.service";
 import { toast } from "sonner";
-import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { Protected } from "../../../components/Protection";
 import { usePermission } from "../../../contexts/PermissionsContext";
 
