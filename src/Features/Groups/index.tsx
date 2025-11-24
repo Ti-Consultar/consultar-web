@@ -11,7 +11,7 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { CompanyForm } from "../GroupForm";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import {
   deleteGroup,
   getAllGroups,

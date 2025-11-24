@@ -2,7 +2,7 @@ import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Box } from "@mui/material";
 import { LiquidityChart } from "../../../Features/Companies/Charts/VariaveisLiquidez";
 import { getLiquidityManagement } from "../../../services/apis/routes/gestaoLiquidez.service";

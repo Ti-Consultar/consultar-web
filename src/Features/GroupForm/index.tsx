@@ -16,7 +16,7 @@ import {
   getAddressByCep,
   getEmpresaByCnpj,
 } from "../../services/apis/routes/consults.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { GroupFormSteps } from "./StepContent";
 

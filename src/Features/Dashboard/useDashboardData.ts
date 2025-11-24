@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
 import {

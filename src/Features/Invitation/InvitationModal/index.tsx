@@ -16,7 +16,7 @@ import { Member } from "../../../types/member";
 import { useParams } from "react-router";
 import { invitations } from "../../../types/userInvitationPayload";
 import { inviteUser } from "../../../services/apis/routes/invitation.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { Protected } from "../../../components/Protection";
 import { usePermission } from "../../../contexts/PermissionsContext";
@@ -45,7 +45,6 @@ export const InvitationModal = ({
   companyId,
   subCompanyId,
 }: InvitationModalProps) => {
-
   const [emails, setEmails] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<number>(1);
 
@@ -86,7 +85,6 @@ export const InvitationModal = ({
 
         setMembers(membersRes?.data ?? []);
         setUserPolicies(policiesRes?.data ?? []);
-
       } catch (error) {
         toast.error("Erro ao carregar membros ou permissões.");
         console.error(error);
@@ -128,19 +126,12 @@ export const InvitationModal = ({
     };
 
     try {
-      await toast.promise(
-        inviteUser(payload),
-        {
-          pending: "Enviando convite...",
-          success: "Convite enviado",
-          error: "Erro ao enviar convite.",
-        },
-        {
-          position: "bottom-center",
-          hideProgressBar: true,
-          icon: () => <SendRoundedIcon fontSize="medium" />,
-        }
-      );
+      await toast.promise(inviteUser(payload), {
+        loading: "Enviando convite...",
+        success: "Convite enviado",
+        error: "Erro ao enviar convite.",
+        position: "bottom-center",
+      });
 
       setEmails([]);
       setSelectedRole(1);
@@ -177,7 +168,12 @@ export const InvitationModal = ({
       }}
     >
       <DialogTitle>
-        <Box display="flex" alignItems="center" justifyContent="space-between" gap={1}>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          gap={1}
+        >
           <Typography
             variant="h5"
             fontWeight={600}
@@ -198,21 +194,29 @@ export const InvitationModal = ({
         </Box>
 
         <Typography sx={{ color: "var(--neutral-500)" }}>
-          {["Admin", "Gestor", "Desenvolvedor", "Consultor"].includes(role ?? "")
+          {["Admin", "Gestor", "Desenvolvedor", "Consultor"].includes(
+            role ?? ""
+          )
             ? "Convide novos membros para participar da empresa"
             : "Veja quem está participando dessa empresa."}
         </Typography>
       </DialogTitle>
 
       <DialogContent>
-
         {/* ENTRADA DE EMAILS */}
-        <Protected allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}>
-          <Typography sx={{ color: "var(--neutral-500)" }}>Insira os emails</Typography>
+        <Protected
+          allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
+        >
+          <Typography sx={{ color: "var(--neutral-500)" }}>
+            Insira os emails
+          </Typography>
 
           <Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 2 }}>
             <Box sx={{ width: "80%" }}>
-              <MultiEmailEditableInput emails={emails} onEmailsChange={setEmails} />
+              <MultiEmailEditableInput
+                emails={emails}
+                onEmailsChange={setEmails}
+              />
             </Box>
 
             <Button

@@ -6,7 +6,7 @@ import { Title, MainContainer } from "./styles";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { getProfileInfo } from "../../services/apis/routes/profile.service";
 import { useAuth } from "../../utils/hooks/useAuth";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { ProfileInformation } from "../../types/profile";
 
 export const ProfileInfo = () => {

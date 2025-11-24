@@ -42,7 +42,7 @@ import {
   getSentNotifications,
   getUserInvitesNotifications,
 } from "../../../services/apis/routes/notifications.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { acceptOrDeclineInvite } from "../../../services/apis/routes/invitation.service";
 import { useRefresh } from "../../../contexts/refreshContext";

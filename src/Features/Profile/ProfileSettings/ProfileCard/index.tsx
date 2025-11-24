@@ -8,7 +8,7 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import { ProfileChanges } from "../../../../types/profile";
 import { useLoading } from "../../../../contexts/LoadingProvider";
 import { editUserInfo } from "../../../../services/apis/routes/profile.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 interface ProfileCardProps {
   name: string;

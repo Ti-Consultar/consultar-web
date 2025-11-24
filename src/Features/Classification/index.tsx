@@ -16,7 +16,7 @@ import {
   BondListWrapper,
   ClassificationType,
 } from "../../types/classification";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { ClassificationModal } from "./UseDefaultsModal";
 import { useParams } from "react-router";
 import { getAccountPlan } from "../../services/apis/routes/accountplan.service";

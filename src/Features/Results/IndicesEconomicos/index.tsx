@@ -7,7 +7,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
 import {

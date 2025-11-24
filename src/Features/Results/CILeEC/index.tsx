@@ -9,7 +9,7 @@ import { MainContainer, Title } from "./styles";
 import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { getCILeECWithBudget } from "../../../services/apis/routes/CILeEC.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { ExportButton } from "../../../components/Button/ExportButton";

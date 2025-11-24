@@ -14,7 +14,7 @@ import { useLoading } from "../../../contexts/LoadingProvider";
 import { BalanceSheetTable } from "./table";
 import { getBalanceteData } from "../../../services/apis/routes/balancete.service";
 import { BalanceteData } from "../../../types/balancete";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export const BalanceSheetDetailed = () => {
   const { balanceteId } = useParams();

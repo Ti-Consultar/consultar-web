@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Button, Snackbar, Alert } from "@mui/material";
 import PasswordInputWithValidation from "../../../../../components/Inputs/PasswordInput/PasswordInputWithValidation";
 import { redefinePassword } from "../../../../../services/apis/routes/auth.service";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export const ChangePassword = () => {
   const [newPassword, setNewPassword] = useState("");

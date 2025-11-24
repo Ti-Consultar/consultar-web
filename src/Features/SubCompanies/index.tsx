@@ -6,7 +6,7 @@ import { useAuth } from "../../utils/hooks/useAuth";
 import { InfoCard } from "../Companies/InfoCard";
 import { MainContainer } from "../Companies/styles";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { getBreadcrumb } from "../../services/apis/routes/breadcrumb.service";
 import { BreadcrumbItem } from "../../types/breadcrumb";
 import { useMainContext } from "../../contexts/mainContext";
