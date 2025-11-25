@@ -1,0 +1,57 @@
+// src/pages/NotFoundPage/index.tsx
+import { useNavigate } from "react-router-dom";
+import { Button, Typography, Box, Chip } from "@mui/material";
+import { styled } from "styled-components";
+import { MainTemplate } from "../../components/AppLayout";
+import NotFoundIcon from "../../assets/images/consultar-404.png";
+
+const Container = styled(Box)`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+  background-color: #fafafa;
+`;
+
+const Illustration = styled.img`
+  margin-bottom: 20px;
+
+  @media (min-width: 768px) {
+    width: 380px;
+  }
+`;
+
+export const NotFoundPage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <MainTemplate>
+      <Container>
+
+        <Illustration src={NotFoundIcon} alt="Página não encontrada" draggable={false}/>
+        <Chip label="404" color="error" variant="outlined"></Chip>
+
+        <Typography variant="h4" fontWeight={700} mb={1}>
+            Página não encontrada
+        </Typography>
+
+        <Typography variant="body1" color="text.secondary" mb={3}>
+          A rota que você tentou acessar não existe ou foi movida. Verifique o
+          caminho e tente novamente.
+        </Typography>
+
+        <Button
+          variant="contained"
+          size="large"
+          onClick={() => navigate(-1)}
+          sx={{ textTransform: "none", borderRadius: "8px" }}
+        >
+          Voltar
+        </Button>
+      </Container>
+    </MainTemplate>
+  );
+};

@@ -26,12 +26,14 @@ import { ProfileCustomizing } from "../../Features/Profile/ProfileCustomizing";
 import { UploadBalanceSheet } from "../../Features/Upload/UploadBalanceSheet";
 import { UploadBudgetSheet } from "../../Features/Upload/UploadBudgetSheet";
 import { UsersSettings } from "../../Features/Profile/UsersSettings";
+import { NotFoundPage } from "../../Features/NotFoundPage";
 
 export const AppRoutes = () => {
   return (
     <>
       <Routes>
         {/* <Route path="*" element={<Navigate to="/" />} /> */}
+        <Route path="*" element={<NotFoundPage />} />
         <Route path="/" element={<Home />} />
         <Route path="/perfil/informacoes" element={<ProfileInfo />} />
         <Route path="/perfil/seguranca" element={<ProfileSecurity />} />
