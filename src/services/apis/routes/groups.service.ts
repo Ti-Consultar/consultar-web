@@ -1,5 +1,5 @@
 import { GroupFormData } from "../../../types/group";
-import { axiosIntanceWithoutToken, axiosInstanceWithToken } from "../config";
+import { axiosInstanceWithoutToken, axiosInstanceWithToken } from "../config";
 
 const URL = import.meta.env.VITE_API_URL_MRP;
 
@@ -19,7 +19,7 @@ export const getAllGroups = async () => {
 
 export const getGroupsByUserId = async () => {
   try {
-    const response = await axiosIntanceWithoutToken.get(`${URL}/api/Group/all`);
+    const response = await axiosInstanceWithoutToken.get(`${URL}/api/Group/all`);
     return response.data;
   } catch (error) {
     throw error;

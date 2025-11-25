@@ -1,5 +1,5 @@
 import { UserRegisterData } from "../../../types/userRegisterPayload";
-import { axiosInstanceWithToken, axiosIntanceWithoutToken } from "../config";
+import { axiosInstanceWithToken, axiosInstanceWithoutToken } from "../config";
 import Cookies from "js-cookie";
 
 const BASE_URL = import.meta.env.VITE_API_URL_BASE;
@@ -62,7 +62,7 @@ export const registerFake = async (data: {
 export const setNewPassword = async (email: string) => {
   await delay(1000);
   try {
-    const response = await axiosIntanceWithoutToken.put(
+    const response = await axiosInstanceWithoutToken.put(
       `${BASE_URL}/User/redefine-password`,
       {
         email,
@@ -92,7 +92,7 @@ export const redefinePassword = async (password: string) => {
 
 export const getUserPolicies = async () => {
   try {
-    const response = await axiosIntanceWithoutToken.get(
+    const response = await axiosInstanceWithoutToken.get(
       `${MRP_URL}/api/Permission/permissions`
     );
     return response.data;
