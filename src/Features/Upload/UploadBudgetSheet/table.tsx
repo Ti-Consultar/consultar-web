@@ -13,12 +13,16 @@ import {
   Tooltip,
   useTheme,
   useMediaQuery,
+  Box,
 } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Balancetes } from "../../../types/balancete";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/pt-br";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { ModernTextField } from "../../../styles/DatePicker";
 dayjs.locale("pt-br");
 
 interface AccountingTableProps {
@@ -29,7 +33,7 @@ interface AccountingTableProps {
 
 type Order = "asc" | "desc";
 
-export const AccountingTable = ({
+export const BudgetUploadTable = ({
   data,
   onRowClick,
   onDelete,
@@ -42,6 +46,7 @@ export const AccountingTable = ({
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [filterYear, setFilterYear] = useState<Dayjs | null>(null);
 
   const monthMap: Record<string, string> = {
     January: "Janeiro",
@@ -76,44 +81,32 @@ export const AccountingTable = ({
     setPage(0);
   };
 
-  function getComparator<Key extends keyof any>(
-    order: Order,
-    orderBy: Key
-  ): (a: { [key in Key]: any }, b: { [key in Key]: any }) => number {
-    return order === "desc"
-      ? (a, b) =>
-          b[orderBy] < a[orderBy] ? -1 : b[orderBy] > a[orderBy] ? 1 : 0
-      : (a, b) =>
-          a[orderBy] < b[orderBy] ? -1 : a[orderBy] > b[orderBy] ? 1 : 0;
-  }
+  const filteredData = useMemo(() => {
+    if (!filterYear) return data?.balancetes ?? [];
 
-  function stableSort<T>(
-    array: (T | null | undefined)[] | undefined,
-    comparator: (a: T, b: T) => number
-  ): T[] {
-    if (!Array.isArray(array)) return [];
+    const year = filterYear.year();
+    return (data?.balancetes ?? []).filter((item) => item.dateYear === year);
+  }, [data, filterYear]);
 
-    const stabilized = array
-      .map((el, index) => [el, index] as const)
-      .sort((a, b) => {
-        const elA = a[0];
-        const elB = b[0];
+  const comparator = (a: any, b: any) => {
+    if (orderBy === "dateMonth") {
+      const dateA = a.dateYear * 100 + a.dateMonth;
+      const dateB = b.dateYear * 100 + b.dateMonth;
+      return order === "desc" ? dateB - dateA : dateA - dateB;
+    }
 
-        if (elA == null && elB == null) return a[1] - b[1];
-        if (elA == null) return 1;
-        if (elB == null) return -1;
+    // fallback para outros campos
+    const valA = a[orderBy];
+    const valB = b[orderBy];
 
-        const cmp = comparator(elA, elB);
-        return cmp !== 0 ? cmp : a[1] - b[1];
-      });
+    if (valA < valB) return order === "asc" ? -1 : 1;
+    if (valA > valB) return order === "asc" ? 1 : -1;
+    return 0;
+  };
 
-    return stabilized.map(([el]) => el as T);
-  }
+  
+  const sortedData = [...filteredData].sort(comparator);
 
-  const sortedData = stableSort(
-    data?.balancetes ?? [],
-    getComparator(order, orderBy)
-  );
   const paginatedData = sortedData.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
@@ -121,6 +114,34 @@ export const AccountingTable = ({
 
   return (
     <>
+      <Box
+        sx={{
+          display: "flex",
+          width: "100%",
+          mb: 2,
+          mr: 0,
+        }}
+      >
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            label="Filtrar por ano"
+            views={["year"]}
+            value={filterYear}
+            onChange={(v) => {
+              setFilterYear(v);
+              setPage(0);
+            }}
+            enableAccessibleFieldDOMStructure={false}
+            slots={{
+              textField: ModernTextField,
+            }}
+            slotProps={{
+              textField: { size: "medium" },
+            }}
+          />
+        </LocalizationProvider>
+      </Box>
+
       <TableContainer
         component={Paper}
         elevation={0}

@@ -6,7 +6,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { toast } from "sonner";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
@@ -28,36 +27,39 @@ import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigat
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { ModernTextField } from "../../../styles/DatePicker";
+import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
 export const IndicesEconomicos = () => {
-  const [tabValue, setTabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
-    dayjs().startOf("year")
-  );
   const { setLoading } = useLoading();
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
+  const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
+  const [tabValue, setTabValue] = useState<number>(1);
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
+    dayjs().startOf("year")
+  );
   const [months, setMonths] = useState<any[]>([]);
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
   const [metricTypes, setMetricTypes] =
     useState<Record<string, "number" | "percent">>();
-  const [entityName, setEntityName] = useState<string | null>(null);
-  const [exportOpen, setExportMenuOpen] = useState(false);
-  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
-  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
-  const [highlightRows, setHighlightRows] = useState<Record<string, boolean>>(
-    {}
-  );
-  useState<Record<string, "number" | "percent">>();
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
     null
   );
-  const navigate = useNavigate();
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
+  const [highlightRows, setHighlightRows] = useState<Record<string, boolean>>(
+    {}
+  );
+  const { accountPlanId, entityName } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
 
   useEffect(() => {
     const loadSetting = () => {
@@ -70,40 +72,6 @@ export const IndicesEconomicos = () => {
     window.addEventListener("storage", loadSetting);
     return () => window.removeEventListener("storage", loadSetting);
   }, []);
-
-  useEffect(() => {
-    if (!groupId) return;
-
-    const getAccountPlanId = async (
-      groupId: number,
-      companyId?: number,
-      subCompanyId?: number
-    ): Promise<void> => {
-      try {
-        setLoading(true, "Buscando...");
-        const response = await getAccountPlan(groupId, companyId, subCompanyId);
-
-        const data = response.data;
-
-        if (!Array.isArray(data) || data.length === 0) return;
-
-        const lastItem = data[data.length - 1];
-        setEntityName(lastItem.group?.name);
-        setAccountPlanId(lastItem.id);
-      } catch (error) {
-        console.error("Failed to fetch AccountPlanId", error);
-        toast.error("Erro ao buscar plano de contas");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getAccountPlanId(
-      Number(groupId),
-      companyid ? Number(companyid) : undefined,
-      subCompanyId ? Number(subCompanyId) : undefined
-    );
-  }, [groupId, companyid, subCompanyId, accountPlanId]);
 
   const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

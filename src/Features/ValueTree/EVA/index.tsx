@@ -6,13 +6,13 @@ import { useEffect, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
-import { toast } from "sonner";
 import { getValueTreeBudget } from "../../../services/apis/routes/valueTree";
 import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { toast } from "sonner";
 
 export const AgregadoMensal = () => {
   const [year, setYear] = useState<number>(dayjs().year());
@@ -29,36 +29,11 @@ export const AgregadoMensal = () => {
     null
   );
   const navigate = useNavigate();
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!groupId) return;
-
-    const getAccountPlanId = async (
-      groupId: number,
-      companyId?: number,
-      subCompanyId?: number
-    ) => {
-      try {
-        setLoading(true, "Buscando...");
-        const response = await getAccountPlan(groupId, companyId, subCompanyId);
-        const data = response.data;
-        if (!Array.isArray(data) || data.length === 0) return;
-        setAccountPlanId(data[data.length - 1].id);
-      } catch (error) {
-        console.error("Failed to fetch AccountPlanId", error);
-        toast.error("Erro ao buscar plano de contas");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getAccountPlanId(
-      Number(groupId),
-      companyid ? Number(companyid) : undefined,
-      subCompanyId ? Number(subCompanyId) : undefined
-    );
-  }, [groupId, companyid, subCompanyId]);
+  const { accountPlanId } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
 
   const fetchData = async (fetchYear?: number, fetchMonth?: number) => {
     setLoading(true);
@@ -83,6 +58,7 @@ export const AgregadoMensal = () => {
       }
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
+      toast.error("Erro ao buscar dados da Árvore de Valor.");
     } finally {
       setLoading(false);
     }

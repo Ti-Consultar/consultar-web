@@ -1,4 +1,3 @@
-/** --------------------------- IMPORTS --------------------------- */
 import { useState, useEffect, useMemo } from "react";
 import { Box, Tabs, Tab, Paper, Typography } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -25,7 +24,6 @@ import {
 } from "../../../services/apis/routes/gestaoLiquidez.service";
 
 import { useNavigate, useParams } from "react-router";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { toast } from "sonner";
 
@@ -45,11 +43,11 @@ import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigat
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { ModernTextField } from "../../../styles/DatePicker";
+import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
-/** --------------------------- CACHE --------------------------- */
+/* CACHE  */
 const apiCache = new Map();
 
-/** --------------------------- COMPONENT --------------------------- */
 export const GestaoLiquidez = () => {
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
@@ -63,7 +61,6 @@ export const GestaoLiquidez = () => {
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
 
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
     null
   );
@@ -71,7 +68,7 @@ export const GestaoLiquidez = () => {
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
   const [liquidityMonth, setLiquidityMonth] = useState<any>();
 
-  /** Dashboard data (gráficos) */
+  /** Dashboard data */
   const [liquidityVariables, setLiquidityVariables] = useState<any[]>([]);
   const [capitalDynamicsData, setCapitalDynamicsData] = useState<any[]>([]);
   const [grossCashFlowDashData, setGrossCashFlowDashData] = useState<any[]>([]);
@@ -91,6 +88,12 @@ export const GestaoLiquidez = () => {
     subCompanyId?: string;
   }>();
 
+  const { accountPlanId } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
+
   useEffect(() => {
     const loadSetting = () => {
       const saved = localStorage.getItem("showBudgetColumns");
@@ -100,59 +103,6 @@ export const GestaoLiquidez = () => {
     window.addEventListener("storage", loadSetting);
     return () => window.removeEventListener("storage", loadSetting);
   }, []);
-
-  useEffect(() => {
-    if (!groupId) return;
-
-    let cancelled = false;
-
-    const load = async () => {
-      setLoading(true, "Buscando...");
-
-      try {
-        const cacheKey = `dropdown-ap-${groupId}-${companyid}-${subCompanyId}`;
-
-        if (apiCache.has(cacheKey)) {
-          const cached = apiCache.get(cacheKey);
-          setAccountPlanId(cached.accountPlanId);
-          setDropdownData(cached.dropdown);
-          return;
-        }
-
-        const [apRes, dropdownRes] = await Promise.all([
-          getAccountPlan(
-            Number(groupId),
-            companyid ? Number(companyid) : undefined,
-            subCompanyId ? Number(subCompanyId) : undefined
-          ),
-          getDropdownNavigation(Number(groupId)),
-        ]);
-
-        if (cancelled) return;
-
-        const list = apRes.data;
-        const lastId = list?.[list.length - 1]?.id ?? null;
-
-        setAccountPlanId(lastId);
-        setDropdownData(dropdownRes);
-
-        apiCache.set(cacheKey, {
-          accountPlanId: lastId,
-          dropdown: dropdownRes,
-        });
-      } catch (err) {
-        console.error(err);
-        toast.error("Erro ao carregar informações da empresa");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [groupId, companyid, subCompanyId]);
 
   useEffect(() => {
     if (tabValue !== 1) return; // Apenas na aba 1
@@ -190,14 +140,14 @@ export const GestaoLiquidez = () => {
     setSelectedMonth(autoMonth);
   }, [months, tabValue, selectedYear]);
 
-  /** --------------------------- FetchData (tabelas + gráficos) --------------------------- */
+  /**  FetchData (tabelas + gráficos)  */
   const fetchData = async () => {
     if (!selectedYear || !accountPlanId) return;
 
     const year = Number(selectedYear.format("YYYY"));
     const cacheKey = `tab-${tabValue}-ap-${accountPlanId}-year-${year}`;
 
-    /** ------------------ RESTAURAR DO CACHE ------------------ */
+    /**  RESTAURAR DO CACHE  */
     if (apiCache.has(cacheKey)) {
       const cached = apiCache.get(cacheKey);
 
@@ -220,7 +170,7 @@ export const GestaoLiquidez = () => {
       return;
     }
 
-    /** ------------------ FETCH REAL ------------------ */
+    /**  FETCH REAL  */
     setLoading(true);
 
     try {
@@ -232,7 +182,7 @@ export const GestaoLiquidez = () => {
       let dashboard: any = null;
       let variation: any = null;
 
-      /** ------------------ SWITCH TABS ------------------ */
+      /**  SWITCH TABS  */
       switch (tabValue) {
         case 1: {
           [variation, dashboard] = await Promise.all([
@@ -481,7 +431,7 @@ export const GestaoLiquidez = () => {
     }
   };
 
-  /** --------------------------- Fleuriet --------------------------- */
+  /**  Fleuriet  */
   const fetchFeurietData = async () => {
     if (!accountPlanId || !selectedYear || !selectedMonth) return;
 
@@ -514,7 +464,7 @@ export const GestaoLiquidez = () => {
     }
   };
 
-  /** --------------------------- Effects --------------------------- */
+  /**  Effects  */
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
@@ -531,7 +481,7 @@ export const GestaoLiquidez = () => {
     }
   }, [selectedMonth, accountPlanId, selectedYear]);
 
-  /** --------------------------- TABS STYLE --------------------------- */
+  /**  TABS STYLE  */
   const tabStyle = {
     color: "var(--neutral-700)",
     fontWeight: "bold",
@@ -546,7 +496,7 @@ export const GestaoLiquidez = () => {
     return months.map((m) => m.dateMonth);
   }, [months, tabValue]);
 
-  /** --------------------------- RENDER CHARTS --------------------------- */
+  /**  RENDER CHARTS  */
   const renderChartByTab = () => {
     switch (tabValue) {
       case 1:
@@ -682,7 +632,7 @@ export const GestaoLiquidez = () => {
     }
   };
 
-  /** --------------------------- RENDER --------------------------- */
+  /**  RENDER  */
   return (
     <MainTemplate>
       <MainContainer isOpen={isOpen}>

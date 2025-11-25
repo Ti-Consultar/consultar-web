@@ -7,7 +7,6 @@ import dayjs, { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useNavigate, useParams } from "react-router";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getBalancoContabil } from "../../../services/apis/routes/classification.service";
 import { toast } from "sonner";
@@ -23,15 +22,15 @@ import { getDropdownNavigation } from "../../../services/apis/routes/companies.s
 import { CompanyResponse } from "../../../types/companyDropdown";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { ModernTextField } from "../../../styles/DatePicker";
+import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
 export const BalancoContabil = () => {
-  const [tabValue, setTabValue] = useState<number>(1); // 1 = Ativo, 2 = Passivo
+  const navigate = useNavigate();
+  const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
   );
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const { setLoading } = useLoading();
-  const [entityName, setEntityName] = useState<string | null>(null);
   const [balanceteData, setBalanceteData] = useState<Month[]>([]);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
@@ -43,46 +42,13 @@ export const BalancoContabil = () => {
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
     null
-  );
-  const navigate = useNavigate();
+  );const { accountPlanId, entityName } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
 
   useEffect(() => {
-    if (!groupId) return;
-
-    const getAccountPlanId = async (
-      groupId: number,
-      companyId?: number,
-      subCompanyId?: number
-    ): Promise<void> => {
-      try {
-        setLoading(true, "Buscando...");
-        const response = await getAccountPlan(groupId, companyId, subCompanyId);
-
-        const data = response.data;
-
-        if (!Array.isArray(data) || data.length === 0) return;
-
-        const lastItem = data[data.length - 1];
-        setAccountPlanId(lastItem.id);
-        setEntityName(lastItem.group?.name);
-      } catch (error) {
-        console.error("Failed to fetch AccountPlanId", error);
-        toast.error("Erro ao buscar plano de contas");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getAccountPlanId(
-      Number(groupId),
-      companyid ? Number(companyid) : undefined,
-      subCompanyId ? Number(subCompanyId) : undefined
-    );
-  }, [groupId, companyid, subCompanyId]);
-
-  useEffect(() => {
-    setAccountPlanId(null);
-    setEntityName(null);
     setBalanceteData([]);
   }, [groupId, companyid, subCompanyId]);
 

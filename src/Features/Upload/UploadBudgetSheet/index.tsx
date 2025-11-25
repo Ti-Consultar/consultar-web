@@ -14,10 +14,9 @@ import UploadIcon from "../../../assets/images/import-file.png";
 import { toast } from "sonner";
 import { BalanceSheetForm } from "./UploadForm";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { BalancetePayload } from "../../../types/balancetePayload";
 import { MainTemplate } from "../../../components/AppLayout";
-import { AccountingTable } from "./table";
+import { BudgetUploadTable } from "./table";
 import { Balancetes } from "../../../types/balancete";
 import {
   deleteBudget,
@@ -25,13 +24,14 @@ import {
   importBudgetSheet,
   submitBudget,
 } from "../../../services/apis/routes/budget.service";
+import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { AlertModal } from "../../../components/AlertModal";
 
 export const UploadBudgetSheet = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams();
   const { setLoading } = useLoading();
-  const [accountPlanId, setAccountPlanId] = useState<number>();
   const [balanceteList, setBalanceteList] = useState<Balancetes>({
     id: 0,
     balancetes: [],
@@ -41,26 +41,15 @@ export const UploadBudgetSheet = () => {
   const [balancete, setBalancete] = useState<number>();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  useEffect(() => {
-    const fetchAccountPlan = async () => {
-      setLoading(true, "Buscando plano de contas...");
-      try {
-        if (!groupId) return;
-        const response = await getAccountPlan(
-          +groupId,
-          companyid ? +companyid : undefined,
-          subCompanyId ? +subCompanyId : undefined
-        );
-        setAccountPlanId(response.data[0].id);
-      } catch {
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAccountPlan();
-  }, []);
+  const [openDialog, setOpenDialog] = useState(false);
+  const { accountPlanId } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
+  const [selectedBalanceteId, setSelectedBalanceteId] = useState<number | null>(
+    null
+  );
 
   const handleRowClick = (balanceteId: number) => {
     const basePath = location.pathname.replace(
@@ -125,46 +114,6 @@ export const UploadBudgetSheet = () => {
     setYear(year);
   };
 
-  useEffect(() => {
-    if (groupId) {
-      const getAccountPlanId = async (
-        groupId: number,
-        companyId?: number,
-        subCompanyId?: number
-      ): Promise<number | null> => {
-        try {
-          setLoading(true, "Buscando...");
-          const response = await getAccountPlan(
-            groupId,
-            companyId,
-            subCompanyId
-          );
-
-          const data = response.data;
-
-          if (!Array.isArray(data) || data.length === 0) return null;
-
-          const lastItem = data[data.length - 1];
-
-          setAccountPlanId(lastItem.id);
-          setLoading(false);
-
-          return null;
-        } catch (error) {
-          setLoading(false);
-          console.error("Failed to fetch AccountPlanId", error);
-          throw error;
-        }
-      };
-
-      getAccountPlanId(
-        +groupId,
-        companyid ? +companyid : undefined,
-        subCompanyId ? +subCompanyId : undefined
-      );
-    }
-  }, [groupId, companyid, subCompanyId]);
-
   useEffect(() => {}, [balancete]);
 
   const handleSubmitAndUpload = async (
@@ -224,6 +173,11 @@ export const UploadBudgetSheet = () => {
     }
   };
 
+  const handleOpenDeleteDialog = (id: number) => {
+    setSelectedBalanceteId(id);
+    setOpenDialog(true);
+  };
+
   return (
     <MainTemplate>
       <MainContainer>
@@ -259,12 +213,42 @@ export const UploadBudgetSheet = () => {
           </OptionsContainer>
         </HeaderContainer>
         <ListContainer>
-          <AccountingTable
+          <BudgetUploadTable
             data={balanceteList}
             onRowClick={handleRowClick}
-            onDelete={handleDeleteBalancete}
+             onDelete={handleOpenDeleteDialog}
           />
         </ListContainer>
+        <AlertModal
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          onConfirm={() => {
+            if (selectedBalanceteId) {
+              handleDeleteBalancete(selectedBalanceteId);
+            }
+            setOpenDialog(false);
+          }}
+          title="Excluir balancete"
+          confirmText="Sim, excluir"
+          cancelText="Cancelar"
+          message={
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "column",
+                width: "100%",
+                gap: "10px",
+              }}
+            >
+              <span style={{ textAlign: "center" }}>
+                Tem certeza que deseja excluir este balancete?
+              </span>
+            </div>
+          }
+          type="warning"
+        />
       </MainContainer>
     </MainTemplate>
   );

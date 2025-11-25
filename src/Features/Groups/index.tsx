@@ -96,6 +96,7 @@ export const Groups = () => {
         const dataDecoded: UserData = jwtDecode(token);
         setUserData(dataDecoded);
       } catch (error) {
+        toast.error("Sua sessão expirou. Faça login novamente.");
         navigate("/");
       }
     } else {
@@ -109,8 +110,8 @@ export const Groups = () => {
       const response = await getAllGroups();
       const data = response.data;
 
-      setGroupList(data); // fonte original
-      setFilteredGroupList(data); // lista inicial (sem filtro)
+      setGroupList(data);
+      setFilteredGroupList(data);
     } catch (error: unknown) {
       if (
         error instanceof Error &&
@@ -217,7 +218,7 @@ export const Groups = () => {
         error instanceof Error &&
         (error as { response?: { status?: number } }).response?.status === 401
       ) {
-        toast.error("Erro ao salvar os dados da empresa.");
+        toast.error("Sua sessão expirou. Faça login novamente.");
       }
     } finally {
       setLoading(false);

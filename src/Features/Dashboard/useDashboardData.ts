@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLoading } from "../../contexts/LoadingProvider";
-import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
 import {
   getDashboardData,
   getGestaoPrazoMedio,
@@ -12,6 +11,7 @@ import {
 } from "../../services/apis/routes/gestaoLiquidez.service";
 import { getProfitability } from "../../services/apis/routes/economicIndices.service";
 import { DashboardPanelData } from "../../types/dashboardPanel";
+import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
 
 interface useDashboardDataProps {
   groupId?: string;
@@ -27,7 +27,6 @@ export function useDashboardData({
   year,
 }: useDashboardDataProps) {
   const { setLoading } = useLoading();
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
 
   const [panel, setPanel] = useState<DashboardPanelData | null>(null);
   const [liquidity, setLiquidity] = useState<any[]>([]);
@@ -35,36 +34,15 @@ export function useDashboardData({
   const [dinamica, setDinamica] = useState<any[]>([]);
   const [margins, setMargins] = useState<any[]>([]);
   const [index, setIndex] = useState(0);
+  const { accountPlanId } = useAccountPlanId({
+    groupId,
+    companyId: companyId,
+    subCompanyId: subCompanyId,
+  });
 
   // === CARROSSEL ===
   const next = () => setIndex((i) => i + 1);
   const prev = () => setIndex((i) => i - 1);
-
-  // === PEGAR ACCOUNT PLAN ID ===
-  useEffect(() => {
-    if (!groupId) return;
-
-    async function fetchPlan() {
-      try {
-        setLoading(true);
-        const response = await getAccountPlan(
-          Number(groupId),
-          companyId ? Number(companyId) : undefined,
-          subCompanyId ? Number(subCompanyId) : undefined
-        );
-
-        const data = response.data;
-        if (Array.isArray(data) && data.length > 0)
-          setAccountPlanId(data[data.length - 1].id);
-      } catch (e) {
-        toast.error("Erro ao carregar Plano de Contas");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPlan();
-  }, [groupId, companyId, subCompanyId]);
 
   // === FETCH DAS MÉTRICAS ===
   useEffect(() => {

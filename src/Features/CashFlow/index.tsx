@@ -7,7 +7,6 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainContainer, Title } from "./styles";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
-import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
 import { toast } from "sonner";
 import { MainTemplate } from "../../components/AppLayout";
 import { getCashFlowVariation } from "../../services/apis/routes/cashFlow.service";
@@ -21,6 +20,7 @@ import { BudgetToggleButton } from "../../components/Button/TableOptions";
 import { getDropdownNavigation } from "../../services/apis/routes/companies.service";
 import { CompanyResponse } from "../../types/companyDropdown";
 import CompanyNavigationDropdown from "../../components/Inputs/CompanyNavigationDropdown";
+import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
 
 export const CashFlow = () => {
   const [tabValue] = useState<number>(1);
@@ -36,8 +36,6 @@ export const CashFlow = () => {
     companyid?: string;
     subCompanyId?: string;
   }>();
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
-  const [entityName, setEntityName] = useState<string | null>(null);
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
@@ -45,6 +43,11 @@ export const CashFlow = () => {
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
     null
   );
+  const { accountPlanId, entityName } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
 
   const metrics = [
     "lucroOperacionalLiquido",
@@ -113,34 +116,6 @@ export const CashFlow = () => {
     window.addEventListener("storage", loadSetting);
     return () => window.removeEventListener("storage", loadSetting);
   }, []);
-
-  useEffect(() => {
-    if (!groupId) return;
-
-    const getAccountPlanIdAsync = async () => {
-      try {
-        setLoading(true, "Buscando...");
-        const response = await getAccountPlan(
-          Number(groupId),
-          companyid ? Number(companyid) : undefined,
-          subCompanyId ? Number(subCompanyId) : undefined
-        );
-
-        const data = response.data;
-        if (!Array.isArray(data) || data.length === 0) return;
-
-        const lastItem = data[data.length - 1];
-        setAccountPlanId(lastItem.id);
-        setEntityName(lastItem.group?.name);
-      } catch (error) {
-        toast.error("Erro ao buscar plano de contas");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getAccountPlanIdAsync();
-  }, [groupId, companyid, subCompanyId]);
 
   const fetchData = async () => {
     if (!selectedYear) return;

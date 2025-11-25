@@ -5,6 +5,7 @@ import { useMainContext } from "../../contexts/mainContext";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 interface UserData {
   exp: number;
@@ -32,6 +33,7 @@ export const MrpHome = () => {
         const dataDecoded: UserData = jwtDecode(token);
         setUserData(dataDecoded);
       } catch (error) {
+        toast.error("Sua sessão expirou. Faça login novamente.");
         navigate("/");
       }
     } else {
