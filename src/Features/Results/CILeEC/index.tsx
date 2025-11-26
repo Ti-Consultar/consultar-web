@@ -151,7 +151,7 @@ export const CILeEC = () => {
   const fetchData = async () => {
     if (!selectedYear) return;
 
-    setLoading(true);
+    setLoading(true, "Buscando dados...");
     const year = Number(selectedYear.format("YYYY"));
 
     try {

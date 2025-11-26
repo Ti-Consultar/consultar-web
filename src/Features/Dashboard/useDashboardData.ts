@@ -49,7 +49,7 @@ export function useDashboardData({
     async function load() {
       if (!accountPlanId) return;
       try {
-        setLoading(true);
+        setLoading(true, "Carregando dados do dashboard...");
 
         const [panelResp, lp, prazo, din, marg] = await Promise.all([
           getDashboardData(year, accountPlanId),

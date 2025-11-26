@@ -57,7 +57,7 @@ export const GestaoLiquidez = () => {
   const [months, setMonths] = useState<any[]>([]);
 
   const [metricTypes, setMetricTypes] =
-    useState<Record<string, "number" | "percent" | "indicator">>();
+    useState<Record<string, "number" | "percent" | "indicator">>({});
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
 
@@ -105,7 +105,7 @@ export const GestaoLiquidez = () => {
   }, []);
 
   useEffect(() => {
-    if (tabValue !== 1) return; // Apenas na aba 1
+    if (tabValue !== 1) return;
     if (!months || months.length === 0) return;
 
     if (selectedMonth) return;
@@ -171,7 +171,7 @@ export const GestaoLiquidez = () => {
     }
 
     /**  FETCH REAL  */
-    setLoading(true);
+    setLoading(true, "Buscando dados...");
 
     try {
       let metrics: string[] = [];
@@ -454,15 +454,18 @@ export const GestaoLiquidez = () => {
     }
   };
 
-  const fetchDropdown = async () => {
-    try {
-      if (!groupId) return;
-      const response = await getDropdownNavigation(Number(groupId));
-      setDropdownData(response);
-    } catch {
-      console.error("Erro ao buscar dropdown");
-    }
-  };
+  useEffect(() => {
+    const fetchDropdown = async () => {
+      try {
+        if (!groupId) return;
+        const response = await getDropdownNavigation(Number(groupId));
+        setDropdownData(response);
+      } catch {
+        console.error("Erro ao buscar dropdown");
+      }
+    };
+    fetchDropdown();
+  }, [groupId]);
 
   /**  Effects  */
   useEffect(() => {
@@ -470,10 +473,6 @@ export const GestaoLiquidez = () => {
       fetchData();
     }
   }, [tabValue, selectedYear, accountPlanId]);
-
-  useEffect(() => {
-    fetchDropdown();
-  }, [groupId]);
 
   useEffect(() => {
     if (selectedMonth && accountPlanId && selectedYear) {

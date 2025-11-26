@@ -120,7 +120,7 @@ export const CashFlow = () => {
   const fetchData = async () => {
     if (!selectedYear) return;
 
-    setLoading(true);
+    setLoading(true, "Buscando fluxo de caixa...");
     const year = Number(selectedYear.format("YYYY"));
 
     try {

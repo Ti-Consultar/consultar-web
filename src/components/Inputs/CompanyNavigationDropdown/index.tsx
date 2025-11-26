@@ -87,7 +87,7 @@ const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
   return (
     <FormControl fullWidth size="small">
       <Select
-        value={selectedId ? `${selectedId}|dummy|dummy` : ""}
+        value={selectedId ? `${selectedId}` : ""}
         onChange={handleSelect}
         displayEmpty
         renderValue={() => (

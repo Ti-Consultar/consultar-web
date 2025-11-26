@@ -76,7 +76,7 @@ export function DashboardPage({year}: DashboardPageProps) {
       {/* MARGINS */}
       <MarginCarousel data={margins} />
 
-      <Subtitle>Gestão Prazo Médio</Subtitle>
+      <Subtitle>Dinâmica do Capital de Giro</Subtitle>
       <Box
         sx={{
           display: "flex",
