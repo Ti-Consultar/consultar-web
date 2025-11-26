@@ -12,7 +12,7 @@ interface DashboardPageProps {
   year: number;
 }
 
-export function DashboardPage({year}: DashboardPageProps) {
+export function DashboardPage({ year }: DashboardPageProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { groupId, companyId, subCompanyId } = useParams<{
@@ -39,9 +39,6 @@ export function DashboardPage({year}: DashboardPageProps) {
 
   return (
     <MainContainer>
-      {/* HEADER */}
-      
-
       <Subtitle>Índices Econômicos</Subtitle>
 
       {/* KPIS */}

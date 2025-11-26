@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 const accountPlanCache = new Map<string, { id: number; entityName: string }>();
 
@@ -14,6 +15,7 @@ interface Params {
 export function useAccountPlanId({ groupId, companyId, subCompanyId }: Params) {
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const [entityName, setEntityName] = useState<string>("");
+  const navigate = useNavigate();
   const { setLoading } = useLoading();
 
   const cacheKey = `g:${groupId || 0}-c:${companyId || 0}-s:${
@@ -40,6 +42,12 @@ export function useAccountPlanId({ groupId, companyId, subCompanyId }: Params) {
           subCompanyId ? +subCompanyId : undefined
         );
 
+        if (response.status === 401) {
+          toast.error("Sessão expirada. Faça login novamente.");
+          navigate("/");
+          return;
+        }
+
         const data = response.data;
 
         if (!Array.isArray(data) || data.length === 0) return;
@@ -54,7 +62,13 @@ export function useAccountPlanId({ groupId, companyId, subCompanyId }: Params) {
 
         setAccountPlanId(value.id);
         setEntityName(value.entityName);
-      } catch (error) {
+      } catch (error: any) {
+        if (error?.response?.status === 401) {
+          toast.error("Sessão expirada. Faça login novamente.");
+          navigate("/");
+          return;
+        }
+
         console.error("Erro ao buscar Plano de Contas:", error);
         toast.error("Erro ao buscar Plano de Contas.");
       } finally {

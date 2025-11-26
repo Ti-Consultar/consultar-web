@@ -18,10 +18,7 @@ const Container = styled(Box)`
 
 const Illustration = styled.img`
   margin-bottom: 20px;
-
-  @media (min-width: 768px) {
-    width: 380px;
-  }
+  width: 280px;
 `;
 
 export const NotFoundPage = () => {
@@ -30,12 +27,15 @@ export const NotFoundPage = () => {
   return (
     <MainTemplate>
       <Container>
-
-        <Illustration src={NotFoundIcon} alt="Página não encontrada" draggable={false}/>
-        <Chip label="404" color="error" variant="outlined"></Chip>
+        <Illustration
+          src={NotFoundIcon}
+          alt="Página não encontrada"
+          draggable={false}
+        />
+        <Chip label="404 NOT_FOUND" color="error" variant="outlined"></Chip>
 
         <Typography variant="h4" fontWeight={700} mb={1}>
-            Página não encontrada
+          Página não encontrada
         </Typography>
 
         <Typography variant="body1" color="text.secondary" mb={3}>
@@ -43,13 +43,15 @@ export const NotFoundPage = () => {
           caminho e tente novamente.
         </Typography>
 
+        <Typography variant="body2" color="text.secondary" mb={3}>
+          Se você acredita que isso é um erro, entre em contato com o suporte.
+        </Typography>
         <Button
           variant="contained"
-          size="large"
           onClick={() => navigate(-1)}
-          sx={{ textTransform: "none", borderRadius: "8px" }}
+          sx={{ textTransform: "none", borderRadius: "8px", backgroundColor: "var(--neutral-700)" }}
         >
-          Voltar
+          Voltar ao site
         </Button>
       </Container>
     </MainTemplate>
