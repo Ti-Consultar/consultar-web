@@ -20,12 +20,34 @@ axiosInstanceWithToken.interceptors.request.use(
 
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
+axiosInstanceWithToken.interceptors.response.use(
+  (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
       toast.error("Sua sessão expirou. Faça login novamente.");
 
       localStorage.removeItem("token");
       localStorage.removeItem("userData");
+
+      window.location.href = "/";
+    }
+    return Promise.reject(error);
+  }
+);
+
+axiosInstanceWithoutToken.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      toast.error("Sua sessão expirou. Faça login novamente.");
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("userData");
+
+      window.location.href = "/";
     }
     return Promise.reject(error);
   }
