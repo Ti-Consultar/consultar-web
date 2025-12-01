@@ -11,13 +11,12 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { CompanyForm } from "../GroupForm";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import {
   deleteGroup,
   getAllGroups,
   getDeletedGroups,
   getGroupById,
-  getGroupUsers,
   restoreGroups,
   saveGroup,
   updateGroup,
@@ -30,9 +29,7 @@ import ApartmentIcon from "@mui/icons-material/Apartment";
 import { AlertModal } from "../../components/AlertModal";
 import { useMainContext } from "../../contexts/mainContext";
 import { InvitationModal } from "../Invitation/InvitationModal";
-import { getUserPolicies } from "../../services/apis/routes/auth.service";
 import { useRefresh } from "../../contexts/refreshContext";
-import { Member } from "../../types/member";
 import { GroupsHeader } from "./Header";
 
 interface UserData {
@@ -65,11 +62,6 @@ interface GroupsResponse {
   businessEntity: businessEntity;
 }
 
-type RoleOption = {
-  id: number;
-  name: string;
-};
-
 export const Groups = () => {
   const userId = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -89,9 +81,7 @@ export const Groups = () => {
   const { setBreadcrumbs } = useMainContext();
   const [openInvitationModal, setOpenInvitationModal] = useState(false);
   const [groupToBeInvited, setGroupToBeInvited] = useState<number>(0);
-  const [userPolicies, setUserPolicies] = useState<RoleOption[]>([]);
   const [notificationsRefreshTimestamp] = useRefresh("companies");
-  const [members, setMembers] = useState<Member[]>([]);
   const [deletedGroups, setDeletedGroups] = useState<any[]>([]);
 
   useEffect(() => {
@@ -106,24 +96,12 @@ export const Groups = () => {
         const dataDecoded: UserData = jwtDecode(token);
         setUserData(dataDecoded);
       } catch (error) {
+        toast.error("Sua sessão expirou. Faça login novamente.");
         navigate("/");
       }
     } else {
       navigate("/");
     }
-  }, []);
-
-  useEffect(() => {
-    const fetchUserPolicies = async () => {
-      try {
-        const response = await getUserPolicies();
-        setUserPolicies(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar políticas:", error);
-      }
-    };
-
-    fetchUserPolicies();
   }, []);
 
   const fetchGroups = async () => {
@@ -132,8 +110,8 @@ export const Groups = () => {
       const response = await getAllGroups();
       const data = response.data;
 
-      setGroupList(data); // fonte original
-      setFilteredGroupList(data); // lista inicial (sem filtro)
+      setGroupList(data);
+      setFilteredGroupList(data);
     } catch (error: unknown) {
       if (
         error instanceof Error &&
@@ -240,7 +218,7 @@ export const Groups = () => {
         error instanceof Error &&
         (error as { response?: { status?: number } }).response?.status === 401
       ) {
-        toast.error("Erro ao salvar os dados da empresa.");
+        toast.error("Sua sessão expirou. Faça login novamente.");
       }
     } finally {
       setLoading(false);
@@ -285,16 +263,6 @@ export const Groups = () => {
     }
   };
 
-  const fetchCurrentUsers = async (id: number) => {
-    try {
-      if (!id) return;
-      const response = await getGroupUsers(id);
-      setMembers(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar empresas inativas", error);
-    }
-  };
-
   const handleConfirmDelete = async () => {
     if (selectedGroupId !== null && userId?.userId) {
       await handleDeleteGroup(selectedGroupId);
@@ -317,9 +285,7 @@ export const Groups = () => {
       <InvitationModal
         open={openInvitationModal}
         onClose={() => setOpenInvitationModal(false)}
-        userPolicies={userPolicies}
         groupToBeInvited={groupToBeInvited}
-        members={members}
       />
       <MainContainer>
         <GroupsHeader
@@ -388,7 +354,6 @@ export const Groups = () => {
                 setSelectedGroupId(group.id);
               }}
               onInvite={() => {
-                fetchCurrentUsers(group.id);
                 handleOpenInvitationModal(group.id);
               }}
             />

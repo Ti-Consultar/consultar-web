@@ -1,7 +1,8 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import { toast } from "sonner";
 
-const axiosIntanceWithoutToken = axios.create({
+const axiosInstanceWithoutToken = axios.create({
   baseURL: import.meta.env.VITE_API_URL_BASE,
 });
 
@@ -19,9 +20,37 @@ axiosInstanceWithToken.interceptors.request.use(
 
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
+axiosInstanceWithToken.interceptors.response.use(
+  (response) => response,
   (error) => {
+    if (error?.response?.status === 401) {
+      toast.error("Sua sessão expirou. Faça login novamente.");
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("userData");
+
+      window.location.href = "/";
+    }
     return Promise.reject(error);
   }
 );
 
-export { axiosIntanceWithoutToken, axiosInstanceWithToken };
+axiosInstanceWithoutToken.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      toast.error("Sua sessão expirou. Faça login novamente.");
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("userData");
+
+      window.location.href = "/";
+    }
+    return Promise.reject(error);
+  }
+);
+
+export { axiosInstanceWithoutToken, axiosInstanceWithToken };

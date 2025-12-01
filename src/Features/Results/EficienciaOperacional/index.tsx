@@ -6,10 +6,9 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { useParams } from "react-router";
-import { toast } from "react-toastify";
+import { useNavigate, useParams } from "react-router";
+import { toast } from "sonner";
 import { getOperationalEfficienyVariation } from "../../../services/apis/routes/operationalEfficiency.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { ExportDialog } from "../../../components/ExportModal";
@@ -18,26 +17,37 @@ import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 import { ResultsTableVariation } from "../resultsTableVariation";
+import { ModernTextField } from "../../../styles/DatePicker";
+import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
+import { CompanyResponse } from "../../../types/companyDropdown";
+import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
 // --- Main BalancoContabil Component (replicated structure) ---
 export const EficienciaOperacional = () => {
-  const [tabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs>(
-    dayjs().startOf("year")
-  );
-  const [data, setData] = useState<any[]>([]);
+  const navigate = useNavigate();
   const { setLoading } = useLoading();
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
-  const [exportOpen, setExportMenuOpen] = useState(false);
-  const [entityName, setEntityName] = useState<string | null>(null);
-  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
-
+  const [tabValue] = useState<number>(1);
+  const [selectedYear, setSelectedYear] = useState<Dayjs>(
+    dayjs().startOf("year")
+  );
+  const [data, setData] = useState<any[]>([]);
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
+  const [exportOpen, setExportMenuOpen] = useState(false);
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null
+  );
+  const { accountPlanId, entityName } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
 
   const metrics = [
     "receitasLiquidas",
@@ -130,50 +140,29 @@ export const EficienciaOperacional = () => {
     return () => window.removeEventListener("storage", loadSetting);
   }, []);
 
-  useEffect(() => {
-    if (!groupId || accountPlanId) return;
-
-    const getAccountPlanId = async (
-      groupId: number,
-      companyId?: number,
-      subCompanyId?: number
-    ): Promise<void> => {
-      try {
-        setLoading(true, "Buscando...");
-        const response = await getAccountPlan(groupId, companyId, subCompanyId);
-
-        const data = response.data;
-
-        if (!Array.isArray(data) || data.length === 0) return;
-
-        const lastItem = data[data.length - 1];
-        setAccountPlanId(lastItem.id);
-        setEntityName(lastItem.group?.name);
-      } catch (error) {
-        console.error("Failed to fetch AccountPlanId", error);
-        toast.error("Erro ao buscar plano de contas");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getAccountPlanId(
-      Number(groupId),
-      companyid ? Number(companyid) : undefined,
-      subCompanyId ? Number(subCompanyId) : undefined
-    );
-  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+  const fetchDropdown = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getDropdownNavigation(Number(groupId));
+      setDropdownData(response);
+    } catch {
+      console.error("Erro ao buscar dropdown");
+    }
+  };
 
   const fetchData = async () => {
     if (!selectedYear) return;
 
-    setLoading(true);
+    setLoading(true, "Buscando dados...");
     const year = Number(selectedYear.format("YYYY"));
 
     try {
       if (!accountPlanId) return;
 
-      const response = await getOperationalEfficienyVariation(accountPlanId, year);
+      const response = await getOperationalEfficienyVariation(
+        accountPlanId,
+        year
+      );
       setData(response?.months);
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
@@ -271,6 +260,7 @@ export const EficienciaOperacional = () => {
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
+      fetchDropdown();
     }
   }, [tabValue, selectedYear, accountPlanId]);
 
@@ -281,7 +271,28 @@ export const EficienciaOperacional = () => {
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box display="flex" justifyContent={"space-between"}>
             <Box display="flex" gap={2} alignItems="center" mb={2}>
-              <TableValueVisualization />
+              {dropdownData && (
+                <Box sx={{ width: "30%" }}>
+                  <CompanyNavigationDropdown
+                    data={dropdownData.data}
+                    selectedId={companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type }) => {
+                      if (type === "group")
+                        return navigate(
+                          `/grupos/${id}/resultados/eficiencia-operacional`
+                        );
+                      if (type === "filial")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${id}/resultados/eficiencia-operacional`
+                        );
+                      if (type === "sub")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/eficiencia-operacional`
+                        );
+                    }}
+                  />
+                </Box>
+              )}
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   views={["year"]}
@@ -292,13 +303,16 @@ export const EficienciaOperacional = () => {
                       setSelectedYear(newValue);
                     }
                   }}
+                  enableAccessibleFieldDOMStructure={false}
+                  slots={{
+                    textField: ModernTextField,
+                  }}
                   slotProps={{
-                    textField: {
-                      size: "small",
-                    },
+                    textField: { size: "medium" },
                   }}
                 />
               </LocalizationProvider>
+              <TableValueVisualization />
 
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>

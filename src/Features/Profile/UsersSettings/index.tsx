@@ -15,7 +15,7 @@ import {
 } from "../../../services/apis/routes/auth.service";
 import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
 import SearchIcon from "@mui/icons-material/Search";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { UserRow } from "./UserRow";
 import { UserSearchLoader } from "../../../components/UserSearchLoading";
 import InsertEmoticonOutlinedIcon from "@mui/icons-material/InsertEmoticonOutlined";

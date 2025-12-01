@@ -6,13 +6,10 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainContainer, Title } from "./styles";
 import { useLoading } from "../../contexts/LoadingProvider";
-import { useParams } from "react-router";
-import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
-import { toast } from "react-toastify";
+import { useNavigate, useParams } from "react-router";
+import { toast } from "sonner";
 import { MainTemplate } from "../../components/AppLayout";
-import {
-  getCashFlowVariation,
-} from "../../services/apis/routes/cashFlow.service";
+import { getCashFlowVariation } from "../../services/apis/routes/cashFlow.service";
 import { CashFlowTable } from "./table";
 import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
 import { ExportDialog } from "../../components/ExportModal";
@@ -20,6 +17,10 @@ import { useExportUtils } from "../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../utils/formatters/monthTranslator";
 import { ExportButton } from "../../components/Button/ExportButton";
 import { BudgetToggleButton } from "../../components/Button/TableOptions";
+import { getDropdownNavigation } from "../../services/apis/routes/companies.service";
+import { CompanyResponse } from "../../types/companyDropdown";
+import CompanyNavigationDropdown from "../../components/Inputs/CompanyNavigationDropdown";
+import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
 
 export const CashFlow = () => {
   const [tabValue] = useState<number>(1);
@@ -35,11 +36,18 @@ export const CashFlow = () => {
     companyid?: string;
     subCompanyId?: string;
   }>();
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
-  const [entityName, setEntityName] = useState<string | null>(null);
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
+  const navigate = useNavigate();
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null
+  );
+  const { accountPlanId, entityName } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
 
   const metrics = [
     "lucroOperacionalLiquido",
@@ -109,44 +117,10 @@ export const CashFlow = () => {
     return () => window.removeEventListener("storage", loadSetting);
   }, []);
 
-  useEffect(() => {
-    if (!groupId || accountPlanId) return;
-
-    const getAccountPlanId = async (
-      groupId: number,
-      companyId?: number,
-      subCompanyId?: number
-    ): Promise<void> => {
-      try {
-        setLoading(true, "Buscando...");
-        const response = await getAccountPlan(groupId, companyId, subCompanyId);
-
-        const data = response.data;
-
-        if (!Array.isArray(data) || data.length === 0) return;
-
-        const lastItem = data[data.length - 1];
-        setAccountPlanId(lastItem.id);
-        setEntityName(lastItem.group?.name);
-      } catch (error) {
-        console.error("Failed to fetch AccountPlanId", error);
-        toast.error("Erro ao buscar plano de contas");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getAccountPlanId(
-      Number(groupId),
-      companyid ? Number(companyid) : undefined,
-      subCompanyId ? Number(subCompanyId) : undefined
-    );
-  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
-
   const fetchData = async () => {
     if (!selectedYear) return;
 
-    setLoading(true);
+    setLoading(true, "Buscando fluxo de caixa...");
     const year = Number(selectedYear.format("YYYY"));
 
     try {
@@ -160,6 +134,16 @@ export const CashFlow = () => {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDropdown = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getDropdownNavigation(Number(groupId));
+      setDropdownData(response);
+    } catch {
+      console.error("Erro ao buscar dropdown");
     }
   };
 
@@ -188,6 +172,11 @@ export const CashFlow = () => {
 
     return { columns, rows };
   };
+
+  useEffect(() => {
+    if (!accountPlanId) return;
+    fetchDropdown();
+  }, [groupId, companyid, subCompanyId]);
 
   const handleExport = (format: string) => {
     if (!realizado.length) {
@@ -231,10 +220,12 @@ export const CashFlow = () => {
   };
 
   useEffect(() => {
-    if (accountPlanId) {
-      fetchData();
-    }
-  }, [tabValue, selectedYear, accountPlanId]);
+    if (accountPlanId) fetchDropdown();
+  }, [accountPlanId]);
+
+  useEffect(() => {
+    if (accountPlanId) fetchData();
+  }, [accountPlanId, selectedYear, tabValue]);
 
   return (
     <MainTemplate>
@@ -243,6 +234,26 @@ export const CashFlow = () => {
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box display="flex" justifyContent={"space-between"}>
             <Box display="flex" gap={2} alignItems="center" mb={2}>
+              {dropdownData && (
+                <Box sx={{ width: "30%" }}>
+                  <CompanyNavigationDropdown
+                    data={dropdownData.data}
+                    selectedId={companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type }) => {
+                      if (type === "group")
+                        return navigate(`/grupos/${id}/fluxo-caixa/`);
+                      if (type === "filial")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${id}/fluxo-caixa`
+                        );
+                      if (type === "sub")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/fluxo-caixa`
+                        );
+                    }}
+                  />
+                </Box>
+              )}
               <TableValueVisualization />
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker

@@ -17,7 +17,7 @@ import {
   getBalanceteByCostCenter,
 } from "../../../services/apis/routes/balancete.service";
 import { BalanceSheetDetailsTable } from "./table";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export const BalanceSheetData = () => {
   const location = useLocation();
@@ -54,19 +54,36 @@ export const BalanceSheetData = () => {
       setLoading(true, "Buscando dados do balancete...");
       try {
         if (!balanceteId) return;
+
         const response = await getBalancete(+balanceteId);
+
+        if (response?.status === 401) {
+          toast.error("Sua sessão expirou. Faça login novamente.");
+          navigate("/login");
+          return;
+        }
+
         if (response.success === false) {
           toast.error(
             `Erro ao buscar dados do balancete, entre em contato com o suporte.`
           );
           return;
         }
+
         const date = formatDate(
           response.data[0]?.dateMonth,
           response.data[0]?.dateYear
         );
+
         setDate(date);
-      } catch (error) {
+      } catch (error: any) {
+        // Caso o axios dispare erro com response
+        if (error?.response?.status === 401) {
+          toast.error("Sua sessão expirou. Faça login novamente.");
+          navigate("/login");
+          return;
+        }
+
         toast.error(
           `Erro ao buscar dados do balancete, entre em contato com o suporte. ${error}`
         );
@@ -110,11 +127,10 @@ export const BalanceSheetData = () => {
     navigate(`${basePath}/detalhado`);
   };
 
-    const handleClickBalanceSheet = () => {
+  const handleClickBalanceSheet = () => {
     const basePath = location.pathname;
     navigate(`${basePath}/balanco-contabil`);
   };
-
 
   return (
     <MainTemplate>

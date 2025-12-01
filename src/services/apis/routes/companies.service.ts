@@ -5,10 +5,7 @@ const URL = import.meta.env.VITE_API_URL_MRP;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)); //Somente para fins de mocking
 
-export const deleteCompany = async (
-  id: number,
-  groupId: number,
-) => {
+export const deleteCompany = async (id: number, groupId: number) => {
   try {
     const response = await axiosInstanceWithToken.patch(
       `${URL}/api/Company/${id}/group/${groupId}/delete`
@@ -80,10 +77,7 @@ export const updateCompany = async (data: GroupFormData, id: number) => {
   }
 };
 
-export const restoreCompanies = async (
-  groupId: number,
-  data: number[]
-) => {
+export const restoreCompanies = async (groupId: number, data: number[]) => {
   try {
     const response = await axiosInstanceWithToken.patch(
       `${URL}/api/Company/group/${groupId}/restore`,
@@ -95,13 +89,21 @@ export const restoreCompanies = async (
   }
 };
 
-export const getCompanyById = async (
-  id: number,
-  groupId: number
-) => {
+export const getCompanyById = async (id: number, groupId: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/Company/${id}/group/${groupId}`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getDropdownNavigation = async (groupId: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/group/${groupId}/filiais`
     );
     return response.data;
   } catch (error) {

@@ -90,13 +90,13 @@ export const CapitalDynamicsCarousel: React.FC<Props> = ({
       <ChartWrapper>
         <div
           style={{
-            width: "100%",
             height: isMobile ? 170 : 350,
             backgroundColor: "#fff",
             borderRadius: 12,
             padding: 10,
             boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
             paddingRight: "36px",
+            width: "100%"
           }}
         >
           <h3

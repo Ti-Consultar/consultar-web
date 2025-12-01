@@ -6,13 +6,10 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { getAccountPlan } from "../../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { useParams } from "react-router";
-import { toast } from "react-toastify";
-import {
-  getCILeECWithBudget,
-} from "../../../services/apis/routes/CILeEC.service";
+import { useNavigate, useParams } from "react-router";
+import { toast } from "sonner";
+import { getCILeECWithBudget } from "../../../services/apis/routes/CILeEC.service";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { ExportDialog } from "../../../components/ExportModal";
@@ -21,6 +18,11 @@ import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 import { ResultsTableVariation } from "../resultsTableVariation";
 import { normalizeCILECMonths } from "../../../utils/normalizeCILEECMonths";
+import { ModernTextField } from "../../../styles/DatePicker";
+import { CompanyResponse } from "../../../types/companyDropdown";
+import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
+import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
 export const CILeEC = () => {
   const [tabValue] = useState<number>(1);
@@ -34,11 +36,18 @@ export const CILeEC = () => {
     companyid?: string;
     subCompanyId?: string;
   }>();
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
-  const [entityName, setEntityName] = useState<string | null>(null);
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null
+  );
+  const { accountPlanId, entityName } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
+  const navigate = useNavigate();
 
   const metrics = [
     "disponibilidades",
@@ -86,14 +95,12 @@ export const CILeEC = () => {
     estoques: "receita",
     outrosAtivosOperacionais: "receita",
     fornecedores: "despesa",
-    obrigacoesTributariasTrabalhistas:
-      "despesa",
+    obrigacoesTributariasTrabalhistas: "despesa",
     outrosPassivosOperacionais: "despesa",
     ncg: "receita",
     realizavelLongoPrazo: "receita",
     exigivelALongoPrazoOperacional: "despesa",
-    ativosFixos:
-      "receita",
+    ativosFixos: "receita",
     capitalInvestidoLiquido: "receita",
     emprestimos: "despesa",
     posicaoFinanceiraCurtoPrazo: "receita",
@@ -141,44 +148,10 @@ export const CILeEC = () => {
     return () => window.removeEventListener("storage", loadSetting);
   }, []);
 
-  useEffect(() => {
-    if (!groupId || accountPlanId) return;
-
-    const getAccountPlanId = async (
-      groupId: number,
-      companyId?: number,
-      subCompanyId?: number
-    ): Promise<void> => {
-      try {
-        setLoading(true, "Buscando...");
-        const response = await getAccountPlan(groupId, companyId, subCompanyId);
-
-        const data = response.data;
-
-        if (!Array.isArray(data) || data.length === 0) return;
-
-        const lastItem = data[data.length - 1];
-        setAccountPlanId(lastItem.id);
-        setEntityName(lastItem.group?.name);
-      } catch (error) {
-        console.error("Failed to fetch AccountPlanId", error);
-        toast.error("Erro ao buscar plano de contas");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getAccountPlanId(
-      Number(groupId),
-      companyid ? Number(companyid) : undefined,
-      subCompanyId ? Number(subCompanyId) : undefined
-    );
-  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
-
   const fetchData = async () => {
     if (!selectedYear) return;
 
-    setLoading(true);
+    setLoading(true, "Buscando dados...");
     const year = Number(selectedYear.format("YYYY"));
 
     try {
@@ -189,6 +162,16 @@ export const CILeEC = () => {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDropdown = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getDropdownNavigation(Number(groupId));
+      setDropdownData(response);
+    } catch {
+      console.error("Erro ao buscar dropdown");
     }
   };
 
@@ -302,6 +285,7 @@ export const CILeEC = () => {
   useEffect(() => {
     if (accountPlanId) {
       fetchData();
+      fetchDropdown();
     }
   }, [tabValue, selectedYear, accountPlanId]);
 
@@ -312,7 +296,26 @@ export const CILeEC = () => {
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box display="flex" justifyContent={"space-between"}>
             <Box display="flex" gap={2} alignItems="center" mb={2}>
-              <TableValueVisualization />
+              {dropdownData && (
+                <Box sx={{ width: "30%" }}>
+                  <CompanyNavigationDropdown
+                    data={dropdownData.data}
+                    selectedId={companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type }) => {
+                      if (type === "group")
+                        return navigate(`/grupos/${id}/resultados/cil-ec`);
+                      if (type === "filial")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${id}/resultados/cil-ec`
+                        );
+                      if (type === "sub")
+                        return navigate(
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/cil-ec`
+                        );
+                    }}
+                  />
+                </Box>
+              )}
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   views={["year"]}
@@ -323,13 +326,16 @@ export const CILeEC = () => {
                       setSelectedYear(newValue);
                     }
                   }}
+                  enableAccessibleFieldDOMStructure={false}
+                  slots={{
+                    textField: ModernTextField,
+                  }}
                   slotProps={{
-                    textField: {
-                      size: "small",
-                    },
+                    textField: { size: "medium" },
                   }}
                 />
               </LocalizationProvider>
+              <TableValueVisualization />
 
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>

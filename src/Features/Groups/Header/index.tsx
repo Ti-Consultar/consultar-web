@@ -19,6 +19,7 @@ import {
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 interface GroupsHeaderProps {
   onSearchChange: (value: string) => void;
@@ -58,6 +59,7 @@ export const GroupsHeader = ({
         const dataDecoded: UserData = jwtDecode(token);
         setUserData(dataDecoded);
       } catch {
+        toast.error("Sua sessão expirou. Faça login novamente.");
         navigate("/");
       }
     } else {

@@ -4,8 +4,6 @@ import { ForgotPassword } from "../../Features/Authentication/forgot-password";
 import { PasswordSent } from "../../Features/Authentication/forgot-password/password-sent";
 import { Groups } from "../../Features/Groups";
 import { Companies } from "../../Features/Companies";
-import { Branches } from "../../Features/Companies/Branches";
-import { SubCompanies } from "../../Features/SubCompanies";
 import { ProfileInfo } from "../../Features/Profile";
 import { Authentication } from "../../Features/Authentication";
 import { ProfileSecurity } from "../../Features/Profile/ProfileSecurity";
@@ -28,12 +26,14 @@ import { ProfileCustomizing } from "../../Features/Profile/ProfileCustomizing";
 import { UploadBalanceSheet } from "../../Features/Upload/UploadBalanceSheet";
 import { UploadBudgetSheet } from "../../Features/Upload/UploadBudgetSheet";
 import { UsersSettings } from "../../Features/Profile/UsersSettings";
+import { NotFoundPage } from "../../Features/NotFoundPage";
 
 export const AppRoutes = () => {
   return (
     <>
       <Routes>
         {/* <Route path="*" element={<Navigate to="/" />} /> */}
+        <Route path="*" element={<NotFoundPage />} />
         <Route path="/" element={<Home />} />
         <Route path="/perfil/informacoes" element={<ProfileInfo />} />
         <Route path="/perfil/seguranca" element={<ProfileSecurity />} />
@@ -50,12 +50,12 @@ export const AppRoutes = () => {
         <Route path={`/grupos/:groupId/empresas`} element={<Companies />} />
         <Route
           path={`/grupos/:groupId/empresas/:companyId/filiais`}
-          element={<Branches />}
+          element={<Companies />}
         />
-        <Route
+        {/* <Route
           path={`/grupos/:groupId/empresas/:companyId/filiais/:subCompanyId`}
           element={<SubCompanies />}
-        />
+        /> */}
         {/* Upload Balancete */}
         {withScopes("arquivos/upload/balancete").map((path) => (
           <Route key={path} path={path} element={<UploadBalanceSheet />} />

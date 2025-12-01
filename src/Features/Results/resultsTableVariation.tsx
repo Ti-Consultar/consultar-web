@@ -61,7 +61,7 @@ const monthNameToPTBR: Record<string, string> = {
   OCTOBER: "Outubro",
   NOVEMBER: "Novembro",
   DECEMBER: "Dezembro",
-  ACUMULADO: "Acumulado",
+  ACUMULADO: "YTD",
 };
 
 export const ResultsTableVariation = ({
@@ -73,7 +73,6 @@ export const ResultsTableVariation = ({
   metricTypes = {},
   highlightRows = {},
   showBudgetColumns = false,
-  metricNature,
 }: ResultsTableProps) => {
   const [colWidth, setColWidth] = useState(220);
   const [dragging, setDragging] = useState(false);
@@ -119,7 +118,6 @@ export const ResultsTableVariation = ({
         translatedName: monthNameToPTBR[month.name] || month.name,
       }));
   }, [months, metricKeys, nestedMetrics]);
-
 
   const allNestedKeys = Object.values(nestedMetrics).flat();
 
@@ -202,31 +200,6 @@ export const ResultsTableVariation = ({
     },
   };
 
-  const getVariationIconAndColor = (
-    metric: string,
-    rawValue: number | undefined
-  ) => {
-    if (rawValue === undefined || rawValue === null || isNaN(rawValue)) {
-      return { icon: null, color: "inherit" };
-    }
-
-    const nature = metricNature?.[metric] ?? "receita";
-    const isPositive = rawValue > 0;
-
-    let color = "";
-    let icon = "";
-
-    if (nature === "receita") {
-      color = isPositive ? "green" : "red";
-      icon = isPositive ? "▲" : "▼";
-    } else {
-      color = isPositive ? "red" : "green";
-      icon = isPositive ? "▲" : "▼";
-    }
-
-    return { icon, color };
-  };
-
   const renderValueCells = (month: MonthData, metric: string) => {
     if (!showBudgetColumns) {
       const value = getMetricValue(month, metric, "realizado");
@@ -243,10 +216,7 @@ export const ResultsTableVariation = ({
 
     const real = getMetricValue(month, metric, "realizado");
     const orcado = getMetricValue(month, metric, "orcado");
-    const rawVar = month?.variacao?.[metric];
     const variacao = getMetricValue(month, metric, "variacao");
-
-    const { icon, color } = getVariationIconAndColor(metric, rawVar);
 
     return (
       <>
@@ -269,19 +239,11 @@ export const ResultsTableVariation = ({
           align="right"
           sx={{
             ...baseCellStyle,
-            color,
-            fontWeight: 600,
             minWidth: 110,
             whiteSpace: "nowrap",
           }}
         >
-          {variacao !== "-" ? (
-            <>
-              {variacao} <span style={{ fontSize: 12 }}>{icon}</span>
-            </>
-          ) : (
-            "-"
-          )}
+          {variacao}
         </TableCell>
       </>
     );
@@ -359,13 +321,31 @@ export const ResultsTableVariation = ({
               ></TableCell>
               {translatedMonths.map((month) => (
                 <React.Fragment key={`${month.name}-sub`}>
-                  <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: "bold",
+                      borderRight: "1px solid #e0e0e0",
+                      borderLeft: "1px solid #e0e0e0",
+                    }}
+                  >
                     Orçado
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: "bold",
+                      borderRight: "1px solid #e0e0e0",
+                    }}
+                  >
                     Realizado
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: "bold",
+                    }}
+                  >
                     Variação
                   </TableCell>
                 </React.Fragment>

@@ -72,8 +72,6 @@ export const CompanyTable = ({
   companyType = "Empresas",
   onUnlink,
   onRowClick,
-  userPolicies,
-  members = [],
   fetchCurrentUsers,
 }: CompanyTableProps) => {
   const {
@@ -458,10 +456,8 @@ export const CompanyTable = ({
         type="warning"
       />
       <InvitationModal
-        userPolicies={userPolicies}
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
-        members={members}
         companyId={selectedCompany?.companyId}
         subCompanyId={selectedCompany?.id}
       />

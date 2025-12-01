@@ -16,10 +16,9 @@ import {
   BondListWrapper,
   ClassificationType,
 } from "../../types/classification";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { ClassificationModal } from "./UseDefaultsModal";
 import { useParams } from "react-router";
-import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { AccountPlanTable } from "./Table";
 import { MonthYearPickerSearch } from "./MonthYearPickerSearch";
@@ -27,6 +26,7 @@ import {
   getBalanceteByDate,
   getBalanceteFiltered,
 } from "../../services/apis/routes/balancete.service";
+import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
 
 interface BondListItem {
   accountPlanClassificationId: number;
@@ -38,7 +38,6 @@ export const ClassificationPage = () => {
   const { setBreadcrumbs } = useMainContext();
   const [skeleton, setSkeleton] = useState(true);
   const [selectedTab, setSelectedTab] = useState(1);
-  const [accountPlanId, setAccountPlanId] = useState<number>();
   const [balanceteId, setBalanceteId] = useState<number>();
   const [classifications, setClassifications] = useState<ClassificationType[]>(
     []
@@ -57,6 +56,11 @@ export const ClassificationPage = () => {
     const saved = localStorage.getItem("classification-bondList");
     return saved ? JSON.parse(saved) : { bondList: [] };
   });
+  const { accountPlanId } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subcompanyid,
+  });
 
   const handleSelect = (ids: string[]) => {
     setSelectedKeys(ids);
@@ -74,37 +78,6 @@ export const ClassificationPage = () => {
     setAccountType(accountType);
     getBalanceteByAccountType(accountType);
   };
-
-  // Busca accountPlanId no mount e quando params mudam
-  useEffect(() => {
-    if (groupId) {
-      const getAccountPlanId = async (
-        groupId: number,
-        companyId?: number,
-        subCompanyId?: number
-      ): Promise<void> => {
-        try {
-          const response = await getAccountPlan(
-            groupId,
-            companyId,
-            subCompanyId
-          );
-          const data = response.data;
-          if (!Array.isArray(data) || data.length === 0) return;
-          setAccountPlanId(data[0]?.id);
-        } catch (error) {
-          console.error("Failed to fetch AccountPlanId", error);
-          throw error;
-        }
-      };
-
-      getAccountPlanId(
-        +groupId,
-        companyid ? +companyid : undefined,
-        subcompanyid ? +subcompanyid : undefined
-      );
-    }
-  }, [groupId, companyid, subcompanyid]);
 
   const loadExistingClassifications = async (accountPlanId: number) => {
     try {

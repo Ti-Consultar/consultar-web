@@ -14,10 +14,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { MainTemplate } from "../../components/AppLayout";
 import { Container, MainContainer, Title } from "./styles";
 import { useEffect, useState } from "react";
-import { getAccountPlan } from "../../services/apis/routes/accountplan.service";
 import { useParams } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import {
   getParams,
   saveParam,
@@ -25,6 +24,7 @@ import {
   deleteParam,
 } from "../../services/apis/routes/params.service";
 import { ModalFormParameter } from "./form";
+import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
 
 export interface Parameter {
   id: number;
@@ -45,42 +45,16 @@ export const Params = () => {
   const [editingParam, setEditingParam] = useState<Parameter | undefined>(
     undefined
   );
-  const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
-
-  useEffect(() => {
-    if (!groupId || accountPlanId) return;
-
-    const getAccountPlanId = async (
-      groupId: number,
-      companyId?: number,
-      subCompanyId?: number
-    ): Promise<void> => {
-      try {
-        setLoading(true, "Buscando plano de contas...");
-        const response = await getAccountPlan(groupId, companyId, subCompanyId);
-        const data = response.data;
-        if (!Array.isArray(data) || data.length === 0) return;
-        const lastItem = data[data.length - 1];
-        setAccountPlanId(lastItem.id);
-      } catch (error) {
-        console.error("Failed to fetch AccountPlanId", error);
-        toast.error("Erro ao buscar plano de contas");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getAccountPlanId(
-      Number(groupId),
-      companyid ? Number(companyid) : undefined,
-      subCompanyId ? Number(subCompanyId) : undefined
-    );
-  }, [groupId, companyid, subCompanyId, accountPlanId, setLoading]);
+  const { accountPlanId } = useAccountPlanId({
+    groupId,
+    companyId: companyid,
+    subCompanyId: subCompanyId,
+  });
 
   const fetchParameters = async () => {
     if (!accountPlanId) return;

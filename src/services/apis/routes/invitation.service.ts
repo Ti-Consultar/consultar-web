@@ -1,5 +1,5 @@
 import { invitations } from "../../../types/userInvitationPayload";
-import { axiosInstanceWithToken, axiosIntanceWithoutToken } from "../config";
+import { axiosInstanceWithToken, axiosInstanceWithoutToken } from "../config";
 
 const URL = import.meta.env.VITE_API_URL_MRP;
 
@@ -10,7 +10,7 @@ export const unlinkFromCompany = async (
   subCompanyId?: number
 ) => {
   try {
-    const response = await axiosIntanceWithoutToken.delete(
+    const response = await axiosInstanceWithoutToken.delete(
       `${URL}/api/Invitation/companyuser/${userId}/group/${groupId}`,
       {
         params: {
