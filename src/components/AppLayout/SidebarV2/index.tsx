@@ -27,6 +27,7 @@ import BalanceFile from "../../../assets/icons/sidebarv2/mrp-file.svg";
 import BalanceFileFilled from "../../../assets/icons/sidebarv2/mrp-file-filled.svg";
 
 import ClassificationIcon from "../../../assets/icons/sidebarv2/mrp-link.svg";
+import ClassificationIconFilled from "../../../assets/icons/sidebarv2/mrp-link-filled.svg";
 
 import FluxoIcon from "../../../assets/icons/sidebarv2/mrp-cashflow.svg";
 import FluxoIconFilled from "../../../assets/icons/sidebarv2/mrp-cashflow-filled.svg";
@@ -245,7 +246,7 @@ export const Sidebar = () => {
                 title: "Classificação",
                 icon: {
                   default: ClassificationIcon,
-                  filled: ClassificationIcon,
+                  filled: ClassificationIconFilled,
                 },
                 path: buildNestedUrl(params, "classificacao"),
               },
