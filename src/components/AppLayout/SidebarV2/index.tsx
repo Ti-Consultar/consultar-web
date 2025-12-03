@@ -9,45 +9,63 @@ import {
   Avatar,
   Menu,
   MenuItem,
+  Tooltip,
 } from "@mui/material";
-import {
-  ExpandLess,
-  ExpandMore,
-  CloudUploadOutlined,
-} from "@mui/icons-material";
+import { ExpandLess, ExpandMore } from "@mui/icons-material";
 
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState } from "react";
 
-import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
-import HomeIcon from "../../../assets/icons/sidebar/dashboard.svg";
-import DashboardIcon from "../../../assets/icons/duo-icons_dashboard.svg";
-import BalanceFile from "../../../assets/icons/sidebar/balanco-dre.svg";
-import SidebarOpen from "../../../assets/icons/sidebar/sidebar-open.svg";
+/* ÍCONES */
+import HomeIcon from "../../../assets/icons/sidebarv2/mrp-home.svg";
+import HomeIconFilled from "../../../assets/icons/sidebarv2/mrp-home-filled.svg";
+
+import DashboardIcon from "../../../assets/icons/sidebarv2/mrp-dashboard.svg";
+import DashboardIconFilled from "../../../assets/icons/sidebarv2/mrp-dashboard-filled.svg";
+
+import BalanceFile from "../../../assets/icons/sidebarv2/mrp-file.svg";
+import BalanceFileFilled from "../../../assets/icons/sidebarv2/mrp-file-filled.svg";
+
+import ClassificationIcon from "../../../assets/icons/sidebarv2/mrp-link.svg";
+
+import FluxoIcon from "../../../assets/icons/sidebarv2/mrp-cashflow.svg";
+import FluxoIconFilled from "../../../assets/icons/sidebarv2/mrp-cashflow-filled.svg";
+
+import ParamsIcon from "../../../assets/icons/sidebarv2/mrp-gear.svg";
+import ParamsIconFilled from "../../../assets/icons/sidebarv2/mrp-gear-filled.svg";
+
+import ValueTreeIcon from "../../../assets/icons/sidebarv2/mrp-flow.svg";
+import ValueTreeIconFilled from "../../../assets/icons/sidebarv2/mrp-flow-filled.svg";
+
+import UploadIcon from "../../../assets/icons/sidebarv2/mrp-file-upload.svg";
+import UploadIconFilled from "../../../assets/icons/sidebarv2/mrp-file-upload-filled.svg";
+
+import BarChartIcon from "../../../assets/icons/sidebarv2/mrp-chart-bar.svg";
+import BarChartIconFilled from "../../../assets/icons/sidebarv2/mrp-chart-bar-filled.svg";
+
 import SidebarClose from "../../../assets/icons/sidebar/sidebar-close.svg";
-import ClassificationIcon from "../../../assets/icons/sidebar/classification.svg";
-import FluxoIcon from "../../../assets/icons/sidebar/fluxo-caixa.svg";
-import ParamsIcon from "../../../assets/icons/sidebar/params.svg";
-import ValueTreeIcon from "../../../assets/icons/sidebar/value-tree.svg";
+import SidebarOpen from "../../../assets/icons/sidebar/sidebar-active.svg";
+import SidebarHover from "../../../assets/icons/sidebar/sidebar-closed.svg";
+
 import logoConsultar from "../../../../src/assets/icons/logo_horizontal 1.svg";
 
+/* Contexts */
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-
 import { Protected } from "../../Protection";
 import { NotificationDrawer } from "../../NoticationModal";
-
 import { Role } from "../../../contexts/PermissionsContext";
 import { useDrawer } from "../../../contexts/DrawerContext";
-
 import { getInitials } from "../../../utils/string/getInitials";
 import { buildNestedUrl } from "../../../utils/url/buildNestedUrl";
 import { useNotifications } from "../../../contexts/NotificationContext/NotificationContext";
 import { useAuth } from "../../../contexts/AuthContext/AuthContext";
 import { SectionTitle, SidebarContainer, StyledList } from "./styles";
 
-
+/* -------------------------------------------------------
+   TYPES
+------------------------------------------------------- */
 interface SidebarSubItem {
   title: string;
   path?: string | null;
@@ -56,7 +74,10 @@ interface SidebarSubItem {
 
 interface SidebarItem {
   title: string;
-  icon: ReactNode;
+  icon: {
+    default: string;
+    filled: string;
+  };
   path?: string | null;
   subItems?: SidebarSubItem[];
   allowedRoles?: Role[];
@@ -68,6 +89,9 @@ interface SidebarSection {
   allowedRoles?: Role[];
 }
 
+/* -------------------------------------------------------
+   COMPONENT
+------------------------------------------------------- */
 export const Sidebar = () => {
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
@@ -77,6 +101,8 @@ export const Sidebar = () => {
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
     {}
   );
+  const [hoverToggle, setHoverToggle] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -99,42 +125,47 @@ export const Sidebar = () => {
     menuType: "perfil" | null;
   }>({ anchorEl: null, menuType: null });
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
   const hasParams = !!params.groupId;
 
-  const toggleExpand = (title: string) => {
+  /* -------------------------------------------------------
+     HELPERS
+  ------------------------------------------------------- */
+  const isActive = (path?: string | null) =>
+    path ? location.pathname === path : false;
+
+  const isParentActive = (item: SidebarItem) =>
+    item.subItems?.some((s) => isActive(s.path)) ?? false;
+
+  const toggleExpand = (title: string) =>
     setExpandedItems((prev) => ({ ...prev, [title]: !prev[title] }));
-  };
 
-  const isActive = (path: string) => location.pathname === path;
-
-  // Carrega notificações quando Drawer abrir
   useEffect(() => {
     if (drawerOpen) loadNotifications();
-  }, [drawerOpen, loadNotifications]);
+  }, [drawerOpen]);
 
+  /* -------------------------------------------------------
+     SIDEBAR CONFIG
+  ------------------------------------------------------- */
   const sidebarSections: SidebarSection[] = [
     {
       title: "Menu",
       items: [
         {
           title: "Início",
-          icon: <img src={HomeIcon} alt="Home" width={22} height={22} />,
+          icon: { default: HomeIcon, filled: HomeIconFilled },
           path: "/grupos",
         },
+
         ...(hasParams
           ? [
               {
                 title: "Dashboard",
-                icon: (
-                  <img src={DashboardIcon} alt="Home" width={22} height={22} />
-                ),
+                icon: { default: DashboardIcon, filled: DashboardIconFilled },
                 path: buildNestedUrl(params, "empresas"),
               },
               {
                 title: "Uploads",
-                icon: <CloudUploadOutlined />,
+                icon: { default: UploadIcon, filled: UploadIconFilled },
                 subItems: [
                   {
                     title: "Balancetes",
@@ -149,7 +180,7 @@ export const Sidebar = () => {
               },
               {
                 title: "Demonstrações Financeiras",
-                icon: <img src={BalanceFile} width={22} height={22} />,
+                icon: { default: BalanceFile, filled: BalanceFileFilled },
                 subItems: [
                   {
                     title: "Balanço Contábil",
@@ -163,7 +194,7 @@ export const Sidebar = () => {
               },
               {
                 title: "Resultados",
-                icon: <PollOutlinedIcon />,
+                icon: { default: BarChartIcon, filled: BarChartIconFilled },
                 subItems: [
                   {
                     title: "Gestão de Liquidez",
@@ -191,12 +222,12 @@ export const Sidebar = () => {
               },
               {
                 title: "Fluxo de Caixa",
-                icon: <img src={FluxoIcon} width={22} height={22} />,
+                icon: { default: FluxoIcon, filled: FluxoIconFilled },
                 path: buildNestedUrl(params, "fluxo-caixa"),
               },
               {
                 title: "Árvore de Valor",
-                icon: <img src={ValueTreeIcon} width={22} height={22} />,
+                icon: { default: ValueTreeIcon, filled: ValueTreeIconFilled },
                 path: buildNestedUrl(params, "eva"),
               },
             ]
@@ -212,14 +243,15 @@ export const Sidebar = () => {
             items: [
               {
                 title: "Classificação",
-                icon: (
-                  <img src={ClassificationIcon} width={22} height={22} alt="" />
-                ),
+                icon: {
+                  default: ClassificationIcon,
+                  filled: ClassificationIcon,
+                },
                 path: buildNestedUrl(params, "classificacao"),
               },
               {
                 title: "Parametrização",
-                icon: <img src={ParamsIcon} width={22} height={22} alt="" />,
+                icon: { default: ParamsIcon, filled: ParamsIconFilled },
                 path: buildNestedUrl(params, "parametros"),
               },
             ],
@@ -228,17 +260,9 @@ export const Sidebar = () => {
       : []),
   ];
 
-  const handleSubItemClick = (subItemPath: string, parentTitle: string) => {
-    if (collapsed) {
-      setCollapsed(false);
-      setExpandedItems((prev) => ({
-        ...prev,
-        [parentTitle]: true,
-      }));
-    }
-    navigate(subItemPath);
-  };
-
+  /* -------------------------------------------------------
+     RENDER
+  ------------------------------------------------------- */
   return (
     <SidebarContainer collapsed={collapsed}>
       {/* HEADER */}
@@ -259,9 +283,26 @@ export const Sidebar = () => {
             setCollapsed(!collapsed);
             toggleDrawer();
           }}
+          onMouseEnter={() => setHoverToggle(true)}
+          onMouseLeave={() => setHoverToggle(false)}
           sx={{ width: 28, height: 28, mt: 1 }}
         >
-          <img src={!collapsed ? SidebarClose : SidebarOpen} />
+          <img
+            src={
+              collapsed
+                ? hoverToggle
+                  ? SidebarHover
+                  : SidebarOpen
+                : SidebarClose
+            }
+            style={{
+              width: "28px",
+              transition:
+                "opacity .2s ease, transform .25s cubic-bezier(.175,.885,.32,1.275)",
+              opacity: hoverToggle ? 0.9 : 1,
+              transform: hoverToggle ? "scale(1.08)" : "scale(1)",
+            }}
+          />
         </IconButton>
       </div>
 
@@ -273,95 +314,146 @@ export const Sidebar = () => {
 
             <StyledList dense>
               {section.items.map((item) => {
+                const activeSimple = isActive(item.path);
+                const activeParent = isParentActive(item);
+
+                const iconToShow = activeSimple
+                  ? item.icon.filled
+                  : item.icon.default;
+
+                const parentIcon = activeParent
+                  ? item.icon.filled
+                  : item.icon.default;
+
                 const ItemContent = (
                   <>
                     {/* Item simples */}
                     {!item.subItems && item.path && (
-                      <ListItemButton
-                        selected={isActive(item.path)}
-                        onClick={() => navigate(item.path!)}
-                        sx={{ paddingLeft: collapsed ? "30%" : 2 }}
+                      <Tooltip
+                        title={collapsed ? item.title : ""}
+                        placement="right"
                       >
-                        <ListItemIcon sx={{ minWidth: collapsed ? 0 : 40 }}>
-                          {item.icon}
-                        </ListItemIcon>
-
-                        {!collapsed && <ListItemText primary={item.title} />}
-                      </ListItemButton>
-                    )}
-
-                    {/* Item com subitens */}
-                    {item.subItems && (
-                      <div>
                         <ListItemButton
-                          onClick={() => {
-                            if (collapsed) {
-                              setCollapsed(false);
-                              setExpandedItems((prev) => ({
-                                ...prev,
-                                [item.title]: true,
-                              }));
-                            } else {
-                              toggleExpand(item.title);
-                            }
+                          selected={activeSimple}
+                          onClick={() => navigate(item.path!)}
+                          sx={{
+                            mx: collapsed ? 0.5 : 1,
+                            borderRadius: "8px",
+
+                            "&.Mui-selected": {
+                              backgroundColor: "#EEEEEE !important",
+                            },
+
+                            "&.Mui-selected:hover": {
+                              backgroundColor: "#e6e3e3ff !important",
+                            },
                           }}
-                          sx={{ paddingLeft: collapsed ? "30%" : 2 }}
                         >
                           <ListItemIcon sx={{ minWidth: collapsed ? 0 : 40 }}>
-                            {item.icon}
+                            <img
+                              src={iconToShow}
+                              width={20}
+                              height={20}
+                              alt=""
+                              style={{ transition: "0.2s" }}
+                            />
                           </ListItemIcon>
 
                           {!collapsed && <ListItemText primary={item.title} />}
-
-                          {!collapsed &&
-                            (expandedItems[item.title] ? (
-                              <ExpandLess />
-                            ) : (
-                              <ExpandMore />
-                            ))}
                         </ListItemButton>
-
-                        <Collapse
-                          in={!collapsed && !!expandedItems[item.title]}
-                          timeout="auto"
-                          unmountOnExit
-                        >
-                          <List disablePadding>
-                            {item.subItems.map((sub) => {
-                              const SubContent = (
-                                <ListItemButton
-                                  key={sub.title}
-                                  sx={{ pl: 4 }}
-                                  selected={!!sub.path && isActive(sub.path)}
-                                  onClick={() =>
-                                    sub.path &&
-                                    handleSubItemClick(sub.path, item.title)
-                                  }
-                                >
-                                  <ListItemText
-                                    primary={sub.title}
-                                    primaryTypographyProps={{
-                                      fontSize: "0.875rem",
-                                    }}
-                                  />
-                                </ListItemButton>
-                              );
-
-                              return sub.allowedRoles ? (
-                                <Protected
-                                  key={sub.title}
-                                  allowedRoles={sub.allowedRoles}
-                                >
-                                  {SubContent}
-                                </Protected>
-                              ) : (
-                                <div key={sub.title}>{SubContent}</div>
-                              );
-                            })}
-                          </List>
-                        </Collapse>
-                      </div>
+                      </Tooltip>
                     )}
+
+                    {/* Item com subitens */}
+                    {item.subItems &&
+                      (() => {
+                        const headerButton = (
+                          <ListItemButton
+                            onClick={() => {
+                              if (collapsed) {
+                                setCollapsed(false);
+                                setExpandedItems((prev) => ({
+                                  ...prev,
+                                  [item.title]: true,
+                                }));
+                              } else {
+                                toggleExpand(item.title);
+                              }
+                            }}
+                            sx={{
+                              mx: collapsed ? 0.5 : 1,
+                              borderRadius: "8px",
+                            }}
+                          >
+                            <ListItemIcon sx={{ minWidth: collapsed ? 0 : 40 }}>
+                              <img
+                                src={parentIcon}
+                                width={20}
+                                height={20}
+                                alt=""
+                                style={{ transition: "0.2s" }}
+                              />
+                            </ListItemIcon>
+
+                            {!collapsed && (
+                              <ListItemText primary={item.title} />
+                            )}
+
+                            {!collapsed &&
+                              (expandedItems[item.title] ? (
+                                <ExpandLess />
+                              ) : (
+                                <ExpandMore />
+                              ))}
+                          </ListItemButton>
+                        );
+
+                        return (
+                          <div>
+                            {collapsed ? (
+                              <Tooltip title={item.title} placement="right">
+                                <span>{headerButton}</span>
+                              </Tooltip>
+                            ) : (
+                              headerButton
+                            )}
+
+                            {/* SUBITEMS */}
+                            <Collapse
+                              in={!collapsed && !!expandedItems[item.title]}
+                              timeout="auto"
+                              unmountOnExit
+                            >
+                              <List disablePadding>
+                                {item.subItems.map((sub) => {
+                                  const subActive = isActive(sub.path);
+
+                                  return (
+                                    <ListItemButton
+                                      key={sub.title}
+                                      sx={{
+                                        pl: 4,
+                                        borderRadius: "8px",
+                                      }}
+                                      selected={subActive}
+                                      onClick={() =>
+                                        sub.path && navigate(sub.path)
+                                      }
+                                    >
+                                      <ListItemText
+                                        primary={sub.title}
+                                        primaryTypographyProps={{
+                                          fontSize: "0.875rem",
+                                        }}
+                                      />
+                                    </ListItemButton>
+                                  );
+                                })}
+                              </List>
+                            </Collapse>
+                          </div>
+                        );
+                      })()}
                   </>
                 );
 
