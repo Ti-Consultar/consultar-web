@@ -12,6 +12,8 @@ import { RefreshProvider } from "./contexts/refreshContext.tsx";
 import { PermissionProvider } from "./contexts/PermissionsContext/index.tsx";
 import { ValueDisplayProvider } from "./contexts/ValueDisplayContext/index.tsx";
 import { DrawerProvider } from "./contexts/DrawerContext/index.tsx";
+import { NotificationProvider } from "./contexts/NotificationContext/NotificationContext.tsx";
+import { AuthProvider } from "./contexts/AuthContext/AuthContext.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -23,13 +25,17 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <LoadingProvider>
             <ValueDisplayProvider>
               <RefreshProvider>
-                <CompanyProvider>
-                  <PermissionProvider>
-                    <AppProviders>
-                      <App />
-                    </AppProviders>
-                  </PermissionProvider>
-                </CompanyProvider>
+                <NotificationProvider>
+                  <CompanyProvider>
+                    <AuthProvider>
+                      <PermissionProvider>
+                        <AppProviders>
+                          <App />
+                        </AppProviders>
+                      </PermissionProvider>
+                    </AuthProvider>
+                  </CompanyProvider>
+                </NotificationProvider>
               </RefreshProvider>
             </ValueDisplayProvider>
           </LoadingProvider>
