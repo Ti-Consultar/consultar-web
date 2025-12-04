@@ -29,7 +29,7 @@ import { getDropdownNavigation } from "../../../services/apis/routes/companies.s
 import { ModernTextField } from "../../../styles/DatePicker";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
-export const IndicesEconomicos = () => {
+const IndicesEconomicos = () => {
   const { setLoading } = useLoading();
   const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams<{
@@ -465,3 +465,5 @@ export const IndicesEconomicos = () => {
     </MainTemplate>
   );
 };
+
+export default IndicesEconomicos;

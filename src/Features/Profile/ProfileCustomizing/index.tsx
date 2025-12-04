@@ -4,7 +4,7 @@ import { ProfileOptions } from "../ProfileOptions";
 import { MainTemplate } from "../../../components/AppLayout";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
 
-export const ProfileCustomizing = () => {
+const ProfileCustomizing = () => {
   return (
     <MainTemplate>
       <Title>Configurações do Perfil</Title>
@@ -31,3 +31,5 @@ export const ProfileCustomizing = () => {
     </MainTemplate>
   );
 };
+
+export default ProfileCustomizing;

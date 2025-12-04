@@ -48,7 +48,7 @@ import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 /* CACHE  */
 const apiCache = new Map();
 
-export const GestaoLiquidez = () => {
+const GestaoLiquidez = () => {
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
     dayjs().startOf("year")
@@ -56,8 +56,9 @@ export const GestaoLiquidez = () => {
 
   const [months, setMonths] = useState<any[]>([]);
 
-  const [metricTypes, setMetricTypes] =
-    useState<Record<string, "number" | "percent" | "indicator">>({});
+  const [metricTypes, setMetricTypes] = useState<
+    Record<string, "number" | "percent" | "indicator">
+  >({});
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
 
@@ -753,3 +754,5 @@ export const GestaoLiquidez = () => {
     </MainTemplate>
   );
 };
+
+export default GestaoLiquidez;

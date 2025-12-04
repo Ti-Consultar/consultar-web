@@ -25,7 +25,7 @@ import { getDropdownNavigation } from "../../../services/apis/routes/companies.s
 import { ModernTextField } from "../../../styles/DatePicker";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
-export const BalancoReclassificado = () => {
+const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
@@ -398,3 +398,5 @@ export const BalancoReclassificado = () => {
     </MainTemplate>
   );
 };
+
+export default BalancoReclassificado;

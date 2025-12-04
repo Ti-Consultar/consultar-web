@@ -24,7 +24,7 @@ import { getDropdownNavigation } from "../../../services/apis/routes/companies.s
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
-export const CILeEC = () => {
+const CILeEC = () => {
   const [tabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
@@ -366,3 +366,5 @@ export const CILeEC = () => {
     </MainTemplate>
   );
 };
+
+export default CILeEC;

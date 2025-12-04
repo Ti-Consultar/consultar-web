@@ -9,7 +9,7 @@ import { useAuth } from "../../utils/hooks/useAuth";
 import { toast } from "sonner";
 import { ProfileInformation } from "../../types/profile";
 
-export const ProfileInfo = () => {
+const ProfileInfo = () => {
   const { setBreadcrumbs } = useMainContext();
   const { setLoading } = useLoading();
   const userData = useAuth();
@@ -65,3 +65,5 @@ export const ProfileInfo = () => {
     </MainTemplate>
   );
 };
+
+export default ProfileInfo;

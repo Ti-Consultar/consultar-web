@@ -14,7 +14,7 @@ import { getDropdownNavigation } from "../../../services/apis/routes/companies.s
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 import { toast } from "sonner";
 
-export const AgregadoMensal = () => {
+const AgregadoMensal = () => {
   const [year, setYear] = useState<number>(dayjs().year());
   const [month, setMonth] = useState<number>(dayjs().month() + 1);
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
@@ -125,3 +125,5 @@ export const AgregadoMensal = () => {
     </MainTemplate>
   );
 };
+
+export default AgregadoMensal;

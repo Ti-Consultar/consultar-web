@@ -4,9 +4,11 @@ import {
   ClickableText,
   ContentContainer,
   Copyright,
+  CustomFormHelperText,
   Info,
   InputsContainer,
   LoginContainer,
+  LoginContent,
   LoginGrid,
   Logo,
   LogoWhite,
@@ -16,7 +18,6 @@ import {
 } from "./styles";
 import {
   FormControl,
-  FormHelperText,
   IconButton,
   InputAdornment,
   InputLabel,
@@ -34,7 +35,7 @@ import { TextCarousel } from "../../components/TextCarousel";
 import { PulseLoading } from "../../components/PulseLoading";
 import { usePermission } from "../../contexts/PermissionsContext";
 
-export const Authentication = () => {
+const Authentication = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -111,7 +112,7 @@ export const Authentication = () => {
             </Info>
           </ContentContainer>
           <LoginContainer>
-            <div
+            <LoginContent
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -145,9 +146,9 @@ export const Authentication = () => {
                       )}
                     />
                     {errors.email && (
-                      <FormHelperText sx={{ ml: 0 }}>
+                      <CustomFormHelperText>
                         {errors.email.message?.toString()}
-                      </FormHelperText>
+                      </CustomFormHelperText>
                     )}
                   </FormControl>
                   <FormControl variant="outlined" error={!!errors.password}>
@@ -186,14 +187,14 @@ export const Authentication = () => {
                     />
 
                     {errors.password && (
-                      <FormHelperText sx={{ ml: 0 }}>
+                      <CustomFormHelperText>
                         {errors.password.message}
-                      </FormHelperText>
+                      </CustomFormHelperText>
                     )}
                     {loginError && (
-                      <FormHelperText sx={{ ml: 0 }} error={true}>
+                      <CustomFormHelperText error={true}>
                         {loginError}
-                      </FormHelperText>
+                      </CustomFormHelperText>
                     )}
                   </FormControl>
 
@@ -215,7 +216,7 @@ export const Authentication = () => {
                   />
                 </ButtonSubmit>
               </form>
-            </div>
+            </LoginContent>
             <Copyright>
               Copyright © 2025 MRP Consultar. Todos os Direitos Reservados
             </Copyright>
@@ -225,3 +226,5 @@ export const Authentication = () => {
     </>
   );
 };
+
+export default Authentication;

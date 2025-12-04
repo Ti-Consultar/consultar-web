@@ -21,7 +21,7 @@ const Illustration = styled.img`
   width: 280px;
 `;
 
-export const NotFoundPage = () => {
+const NotFoundPage = () => {
   const navigate = useNavigate();
 
   return (
@@ -57,3 +57,5 @@ export const NotFoundPage = () => {
     </MainTemplate>
   );
 };
+
+export default NotFoundPage;

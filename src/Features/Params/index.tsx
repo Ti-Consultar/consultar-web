@@ -38,7 +38,7 @@ export interface ParameterApiResponse {
   success: boolean;
 }
 
-export const Params = () => {
+const Params = () => {
   const [data, setData] = useState<Parameter[]>([]);
   const { setLoading } = useLoading();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -232,3 +232,5 @@ export const Params = () => {
     </MainTemplate>
   );
 };
+
+export default Params;

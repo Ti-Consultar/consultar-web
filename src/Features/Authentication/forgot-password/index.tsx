@@ -29,7 +29,7 @@ import { TextCarousel } from "../../../components/TextCarousel";
 import LogoConsultarWhite from "../../../assets/icons/consultar-white.svg";
 import { ContentContainer } from "./styles";
 
-export const ForgotPassword = () => {
+const ForgotPassword = () => {
   const [newPasswordError, setNewPasswordError] = useState<string | null>(null);
 
   interface EmailFormInput {
@@ -151,3 +151,5 @@ export const ForgotPassword = () => {
     </>
   );
 };
+
+export default ForgotPassword;

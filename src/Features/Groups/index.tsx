@@ -62,7 +62,7 @@ interface GroupsResponse {
   businessEntity: businessEntity;
 }
 
-export const Groups = () => {
+const Groups = () => {
   const userId = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [groupList, setGroupList] = useState<any[]>([]);
@@ -382,3 +382,5 @@ export const Groups = () => {
     </MainTemplate>
   );
 };
+
+export default Groups;
