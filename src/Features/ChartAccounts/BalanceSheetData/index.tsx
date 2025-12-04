@@ -19,7 +19,7 @@ import {
 import { BalanceSheetDetailsTable } from "./table";
 import { toast } from "sonner";
 
-export const BalanceSheetData = () => {
+const BalanceSheetData = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { balanceteId } = useParams();
@@ -153,3 +153,5 @@ export const BalanceSheetData = () => {
     </MainTemplate>
   );
 };
+
+export default BalanceSheetData;

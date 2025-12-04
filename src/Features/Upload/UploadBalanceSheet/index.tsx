@@ -27,7 +27,7 @@ import { Balancetes } from "../../../types/balancete";
 import { AlertModal } from "../../../components/AlertModal";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
-export const UploadBalanceSheet = () => {
+const UploadBalanceSheet = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams();
@@ -249,3 +249,5 @@ export const UploadBalanceSheet = () => {
     </MainTemplate>
   );
 };
+
+export default UploadBalanceSheet;

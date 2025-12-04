@@ -16,7 +16,7 @@ import { getBalanceteData } from "../../../services/apis/routes/balancete.servic
 import { BalanceteData } from "../../../types/balancete";
 import { toast } from "sonner";
 
-export const BalanceSheetDetailed = () => {
+const BalanceSheetDetailed = () => {
   const { balanceteId } = useParams();
   const { setLoading } = useLoading();
   const [balanceteDataDetailed, setBalanceteDataDetailed] = useState<
@@ -85,3 +85,5 @@ export const BalanceSheetDetailed = () => {
     </MainTemplate>
   );
 };
+
+export default BalanceSheetDetailed;

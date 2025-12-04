@@ -23,8 +23,7 @@ import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
-// --- Main BalancoContabil Component (replicated structure) ---
-export const EficienciaOperacional = () => {
+const EficienciaOperacional = () => {
   const navigate = useNavigate();
   const { setLoading } = useLoading();
   const { groupId, companyid, subCompanyId } = useParams<{
@@ -342,3 +341,5 @@ export const EficienciaOperacional = () => {
     </MainTemplate>
   );
 };
+
+export default EficienciaOperacional;

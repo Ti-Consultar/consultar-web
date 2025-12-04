@@ -5,7 +5,7 @@ import { Container, SentImg } from "./styles";
 import { ButtonDefault } from "../../../../landingPage/components/ButtonDefault";
 import { useNavigate } from "react-router";
 
-export const PasswordSent = () => {
+const PasswordSent = () => {
     const navigate = useNavigate();
     return (
         <MainContainer>
@@ -25,3 +25,5 @@ export const PasswordSent = () => {
         </MainContainer>
     )
 }
+
+export default PasswordSent;

@@ -1,82 +1,144 @@
 import { Route, Routes } from "react-router-dom";
-import { Home } from "../../landingPage";
-import { ForgotPassword } from "../../Features/Authentication/forgot-password";
-import { PasswordSent } from "../../Features/Authentication/forgot-password/password-sent";
-import { Groups } from "../../Features/Groups";
-import { Companies } from "../../Features/Companies";
-import { ProfileInfo } from "../../Features/Profile";
-import { Authentication } from "../../Features/Authentication";
-import { ProfileSecurity } from "../../Features/Profile/ProfileSecurity";
-import { BalanceSheetData } from "../../Features/ChartAccounts/BalanceSheetData";
-import { BalanceSheetDetailed } from "../../Features/ChartAccounts/BalanceSheetDetailed";
-import { BalanceAssetsLiabilities } from "../../Features/ChartAccounts/BalanceAssetsLiabilities";
-import { ClassificationPage } from "../../Features/Classification";
-import { BalancoContabil } from "../../Features/BalanceSheet/BalanceSheet";
-import { BalancoReclassificado } from "../../Features/BalanceSheet/BalancoReclassificado";
+import { lazy, Suspense } from "react";
+
+/* Landing page e rotas simples */
+const Home = lazy(() => import("../../landingPage"));
+const ForgotPassword = lazy(
+  () => import("../../Features/Authentication/forgot-password")
+);
+const PasswordSent = lazy(
+  () => import("../../Features/Authentication/forgot-password/password-sent")
+);
+const Authentication = lazy(() => import("../../Features/Authentication"));
+
+/* Perfil */
+const ProfileInfo = lazy(() => import("../../Features/Profile"));
+const ProfileSecurity = lazy(
+  () => import("../../Features/Profile/ProfileSecurity")
+);
+const ProfileCustomizing = lazy(
+  () => import("../../Features/Profile/ProfileCustomizing")
+);
+const UsersSettings = lazy(
+  () => import("../../Features/Profile/UsersSettings")
+);
+
+/* Grupos / Empresas */
+const Groups = lazy(() => import("../../Features/Groups"));
+const Companies = lazy(() => import("../../Features/Companies"));
+
+/* Balancete, Contábil, DRE */
+const BalanceSheetData = lazy(
+  () => import("../../Features/ChartAccounts/BalanceSheetData")
+);
+const BalanceSheetDetailed = lazy(
+  () => import("../../Features/ChartAccounts/BalanceSheetDetailed")
+);
+const BalanceAssetsLiabilities = lazy(
+  () => import("../../Features/ChartAccounts/BalanceAssetsLiabilities")
+);
+
+const BalancoContabil = lazy(
+  () => import("../../Features/BalanceSheet/BalanceSheet")
+);
+const BalancoReclassificado = lazy(
+  () => import("../../Features/BalanceSheet/BalancoReclassificado")
+);
+
+/* Classificação */
+const ClassificationPage = lazy(() => import("../../Features/Classification"));
+
+/* Resultados */
+const GestaoLiquidez = lazy(
+  () => import("../../Features/Results/GestaoLiquidez")
+);
+const IndicesEconomicos = lazy(
+  () => import("../../Features/Results/IndicesEconomicos")
+);
+const CILeEC = lazy(() => import("../../Features/Results/CILeEC"));
+const EficienciaOperacional = lazy(
+  () => import("../../Features/Results/EficienciaOperacional")
+);
+
+/* Home interna */
+const MrpHome = lazy(() => import("../../Features/Home"));
+
+/* Parâmetros */
+const Params = lazy(() => import("../../Features/Params"));
+
+/* Fluxo de Caixa */
+const CashFlow = lazy(() => import("../../Features/CashFlow"));
+
+/* FEVA */
+const AgregadoMensal = lazy(() => import("../../Features/ValueTree/EVA"));
+
+/* Upload */
+const UploadBalanceSheet = lazy(
+  () => import("../../Features/Upload/UploadBalanceSheet")
+);
+const UploadBudgetSheet = lazy(
+  () => import("../../Features/Upload/UploadBudgetSheet")
+);
+
+/* Not Found */
+const NotFoundPage = lazy(() => import("../../Features/NotFoundPage"));
+
+/* Helper */
 import { withScopes } from "./helper";
-import { GestaoLiquidez } from "../../Features/Results/GestaoLiquidez";
-import { IndicesEconomicos } from "../../Features/Results/IndicesEconomicos";
-import { CILeEC } from "../../Features/Results/CILeEC";
-import { EficienciaOperacional } from "../../Features/Results/EficienciaOperacional";
-import { MrpHome } from "../../Features/Home";
-import { Params } from "../../Features/Params";
-import { CashFlow } from "../../Features/CashFlow";
-import { AgregadoMensal } from "../../Features/ValueTree/EVA";
-import { ProfileCustomizing } from "../../Features/Profile/ProfileCustomizing";
-import { UploadBalanceSheet } from "../../Features/Upload/UploadBalanceSheet";
-import { UploadBudgetSheet } from "../../Features/Upload/UploadBudgetSheet";
-import { UsersSettings } from "../../Features/Profile/UsersSettings";
-import { NotFoundPage } from "../../Features/NotFoundPage";
 
 export const AppRoutes = () => {
   return (
-    <>
+    <Suspense fallback={<div></div>}>
       <Routes>
-        {/* <Route path="*" element={<Navigate to="/" />} /> */}
         <Route path="*" element={<NotFoundPage />} />
         <Route path="/" element={<Home />} />
         <Route path="/perfil/informacoes" element={<ProfileInfo />} />
         <Route path="/perfil/seguranca" element={<ProfileSecurity />} />
         <Route path="/perfil/personalizacao" element={<ProfileCustomizing />} />
         <Route path="/users" element={<UsersSettings />} />
+
         <Route path="/login" element={<Authentication />} />
         <Route path="/recuperar-senha" element={<ForgotPassword />} />
         <Route
           path="/recuperar-senha/senha-enviada"
           element={<PasswordSent />}
         />
+
         <Route path="/dashboard" element={<MrpHome />} />
+
         <Route path="/grupos" element={<Groups />} />
-        <Route path={`/grupos/:groupId/empresas`} element={<Companies />} />
+        <Route path="/grupos/:groupId/empresas" element={<Companies />} />
         <Route
-          path={`/grupos/:groupId/empresas/:companyId/filiais`}
+          path="/grupos/:groupId/empresas/:companyId/filiais"
           element={<Companies />}
         />
-        {/* <Route
-          path={`/grupos/:groupId/empresas/:companyId/filiais/:subCompanyId`}
-          element={<SubCompanies />}
-        /> */}
+
         {/* Upload Balancete */}
         {withScopes("arquivos/upload/balancete").map((path) => (
           <Route key={path} path={path} element={<UploadBalanceSheet />} />
         ))}
+
         {/* Upload Orçamento */}
         {withScopes("arquivos/upload/orcamento").map((path) => (
           <Route key={path} path={path} element={<UploadBudgetSheet />} />
         ))}
-        {/* balancetes */}
+
+        {/* Balancetes */}
         {withScopes("balancetes").map((path) => (
           <Route key={path} path={path} element={<UploadBalanceSheet />} />
         ))}
-        {/* balancetes data */}
+
+        {/* Balancete Data */}
         {withScopes("balancetes/:balanceteId").map((path) => (
           <Route key={path} path={path} element={<BalanceSheetData />} />
         ))}
-        {/* balancetes detalhado */}
+
+        {/* Balancete Detalhado */}
         {withScopes("balancetes/:balanceteId/detalhado").map((path) => (
           <Route key={path} path={path} element={<BalanceSheetDetailed />} />
         ))}
-        {/* balanço contábil */}
+
+        {/* Balanço Contábil */}
         {withScopes("balancetes/:balanceteId/balanco-contabil").map((path) => (
           <Route
             key={path}
@@ -84,47 +146,57 @@ export const AppRoutes = () => {
             element={<BalanceAssetsLiabilities />}
           />
         ))}
-        {/* classificação */}
+
+        {/* Classificação */}
         {withScopes("classificacao").map((path) => (
           <Route key={path} path={path} element={<ClassificationPage />} />
         ))}
-        {/* balanço contábil geral */}
+
+        {/* Balanço Contábil Geral */}
         {withScopes("contabil").map((path) => (
           <Route key={path} path={path} element={<BalancoContabil />} />
         ))}
-        {/* demonstrações contábeis */}
+
+        {/* Demonstrações Contábeis */}
         {withScopes("demonstracoes-contabeis").map((path) => (
           <Route key={path} path={path} element={<BalancoReclassificado />} />
         ))}
-        {/* demonstrações contábeis */}
+
+        {/* Gestão da Liquidez */}
         {withScopes("resultados/gestao-liquidez").map((path) => (
           <Route key={path} path={path} element={<GestaoLiquidez />} />
         ))}
-        {/* Indíces econômicos */}
+
+        {/* Índices Econômicos */}
         {withScopes("resultados/indices-economicos").map((path) => (
           <Route key={path} path={path} element={<IndicesEconomicos />} />
         ))}
+
         {/* CIL e EC */}
         {withScopes("resultados/cil-ec").map((path) => (
           <Route key={path} path={path} element={<CILeEC />} />
         ))}
-        {/* Eficiencia Operacional */}
+
+        {/* Eficiência Operacional */}
         {withScopes("resultados/eficiencia-operacional").map((path) => (
           <Route key={path} path={path} element={<EficienciaOperacional />} />
         ))}
+
         {/* Parâmetros */}
         {withScopes("parametros").map((path) => (
           <Route key={path} path={path} element={<Params />} />
         ))}
+
         {/* Fluxo de Caixa */}
         {withScopes("fluxo-caixa").map((path) => (
           <Route key={path} path={path} element={<CashFlow />} />
-        ))}{" "}
+        ))}
+
         {/* FEVA */}
         {withScopes("eva").map((path) => (
           <Route key={path} path={path} element={<AgregadoMensal />} />
         ))}
       </Routes>
-    </>
+    </Suspense>
   );
 };
