@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { Box, Skeleton, Stack } from "@mui/material";
+import { lazy, Suspense, type PropsWithChildren, type ReactNode } from "react";
 
 /* Landing page e rotas simples */
 const Home = lazy(() => import("../../landingPage"));
@@ -86,117 +87,267 @@ const NotFoundPage = lazy(() => import("../../Features/NotFoundPage"));
 /* Helper */
 import { withScopes } from "./helper";
 
+const PageContainer = ({ children }: PropsWithChildren) => (
+  <Box padding={3} display="flex" flexDirection="column" gap={2}>
+    {children}
+  </Box>
+);
+
+const AuthSkeleton = () => (
+  <Box
+    minHeight="100vh"
+    display="flex"
+    alignItems="center"
+    justifyContent="center"
+    padding={3}
+  >
+    <Stack width="100%" maxWidth={420} spacing={2}>
+      <Skeleton variant="text" width="70%" height={36} />
+      <Skeleton variant="rectangular" height={48} />
+      <Skeleton variant="rectangular" height={48} />
+      <Skeleton variant="rectangular" height={42} />
+    </Stack>
+  </Box>
+);
+
+const LandingSkeleton = () => (
+  <PageContainer>
+    <Skeleton variant="text" width="30%" height={44} />
+    <Skeleton variant="text" width="55%" height={28} />
+    <Skeleton variant="rectangular" height={280} />
+  </PageContainer>
+);
+
+const ContentPageSkeleton = () => (
+  <PageContainer>
+    <Skeleton variant="text" width="35%" height={36} />
+    <Skeleton variant="rectangular" height={64} />
+    <Skeleton variant="rectangular" height={420} />
+  </PageContainer>
+);
+
+const DashboardSkeleton = () => (
+  <PageContainer>
+    <Skeleton variant="text" width="30%" height={36} />
+    <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+      <Skeleton
+        variant="rectangular"
+        height={160}
+        sx={{ width: { xs: "100%", md: "50%" } }}
+      />
+      <Skeleton
+        variant="rectangular"
+        height={160}
+        sx={{ width: { xs: "100%", md: "50%" } }}
+      />
+    </Stack>
+    <Skeleton variant="rectangular" height={320} />
+  </PageContainer>
+);
+
+const TablePageSkeleton = () => (
+  <PageContainer>
+    <Skeleton variant="text" width="30%" height={36} />
+    <Skeleton variant="rectangular" height={56} />
+    <Stack spacing={1.5}>
+      {Array.from({ length: 6 }).map((_, index) => (
+        <Skeleton key={index} variant="rectangular" height={56} />
+      ))}
+    </Stack>
+  </PageContainer>
+);
+
+const withFallback = (element: ReactNode, fallback: ReactNode) => (
+  <Suspense fallback={fallback}>{element}</Suspense>
+);
+
 export const AppRoutes = () => {
   return (
-    <Suspense fallback={<div></div>}>
-      <Routes>
-        <Route path="*" element={<NotFoundPage />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/perfil/informacoes" element={<ProfileInfo />} />
-        <Route path="/perfil/seguranca" element={<ProfileSecurity />} />
-        <Route path="/perfil/personalizacao" element={<ProfileCustomizing />} />
-        <Route path="/users" element={<UsersSettings />} />
+    <Routes>
+      <Route path="*" element={withFallback(<NotFoundPage />, <ContentPageSkeleton />)} />
+      <Route path="/" element={withFallback(<Home />, <LandingSkeleton />)} />
+      <Route
+        path="/perfil/informacoes"
+        element={withFallback(<ProfileInfo />, <ContentPageSkeleton />)}
+      />
+      <Route
+        path="/perfil/seguranca"
+        element={withFallback(<ProfileSecurity />, <ContentPageSkeleton />)}
+      />
+      <Route
+        path="/perfil/personalizacao"
+        element={withFallback(<ProfileCustomizing />, <ContentPageSkeleton />)}
+      />
+      <Route
+        path="/users"
+        element={withFallback(<UsersSettings />, <TablePageSkeleton />)}
+      />
 
-        <Route path="/login" element={<Authentication />} />
-        <Route path="/recuperar-senha" element={<ForgotPassword />} />
+      <Route path="/login" element={withFallback(<Authentication />, <AuthSkeleton />)} />
+      <Route
+        path="/recuperar-senha"
+        element={withFallback(<ForgotPassword />, <AuthSkeleton />)}
+      />
+      <Route
+        path="/recuperar-senha/senha-enviada"
+        element={withFallback(<PasswordSent />, <AuthSkeleton />)}
+      />
+
+      <Route path="/dashboard" element={withFallback(<MrpHome />, <DashboardSkeleton />)} />
+
+      <Route path="/grupos" element={withFallback(<Groups />, <TablePageSkeleton />)} />
+      <Route
+        path="/grupos/:groupId/empresas"
+        element={withFallback(<Companies />, <TablePageSkeleton />)}
+      />
+      <Route
+        path="/grupos/:groupId/empresas/:companyId/filiais"
+        element={withFallback(<Companies />, <TablePageSkeleton />)}
+      />
+
+      {/* Upload Balancete */}
+      {withScopes("arquivos/upload/balancete").map((path) => (
         <Route
-          path="/recuperar-senha/senha-enviada"
-          element={<PasswordSent />}
+          key={path}
+          path={path}
+          element={withFallback(<UploadBalanceSheet />, <TablePageSkeleton />)}
         />
+      ))}
 
-        <Route path="/dashboard" element={<MrpHome />} />
-
-        <Route path="/grupos" element={<Groups />} />
-        <Route path="/grupos/:groupId/empresas" element={<Companies />} />
+      {/* Upload Orçamento */}
+      {withScopes("arquivos/upload/orcamento").map((path) => (
         <Route
-          path="/grupos/:groupId/empresas/:companyId/filiais"
-          element={<Companies />}
+          key={path}
+          path={path}
+          element={withFallback(<UploadBudgetSheet />, <TablePageSkeleton />)}
         />
+      ))}
 
-        {/* Upload Balancete */}
-        {withScopes("arquivos/upload/balancete").map((path) => (
-          <Route key={path} path={path} element={<UploadBalanceSheet />} />
-        ))}
+      {/* Balancetes */}
+      {withScopes("balancetes").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<UploadBalanceSheet />, <TablePageSkeleton />)}
+        />
+      ))}
 
-        {/* Upload Orçamento */}
-        {withScopes("arquivos/upload/orcamento").map((path) => (
-          <Route key={path} path={path} element={<UploadBudgetSheet />} />
-        ))}
+      {/* Balancete Data */}
+      {withScopes("balancetes/:balanceteId").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<BalanceSheetData />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* Balancetes */}
-        {withScopes("balancetes").map((path) => (
-          <Route key={path} path={path} element={<UploadBalanceSheet />} />
-        ))}
+      {/* Balancete Detalhado */}
+      {withScopes("balancetes/:balanceteId/detalhado").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<BalanceSheetDetailed />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* Balancete Data */}
-        {withScopes("balancetes/:balanceteId").map((path) => (
-          <Route key={path} path={path} element={<BalanceSheetData />} />
-        ))}
+      {/* Balanço Contábil */}
+      {withScopes("balancetes/:balanceteId/balanco-contabil").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<BalanceAssetsLiabilities />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* Balancete Detalhado */}
-        {withScopes("balancetes/:balanceteId/detalhado").map((path) => (
-          <Route key={path} path={path} element={<BalanceSheetDetailed />} />
-        ))}
+      {/* Classificação */}
+      {withScopes("classificacao").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<ClassificationPage />, <TablePageSkeleton />)}
+        />
+      ))}
 
-        {/* Balanço Contábil */}
-        {withScopes("balancetes/:balanceteId/balanco-contabil").map((path) => (
-          <Route
-            key={path}
-            path={path}
-            element={<BalanceAssetsLiabilities />}
-          />
-        ))}
+      {/* Balanço Contábil Geral */}
+      {withScopes("contabil").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<BalancoContabil />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* Classificação */}
-        {withScopes("classificacao").map((path) => (
-          <Route key={path} path={path} element={<ClassificationPage />} />
-        ))}
+      {/* Demonstrações Contábeis */}
+      {withScopes("demonstracoes-contabeis").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<BalancoReclassificado />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* Balanço Contábil Geral */}
-        {withScopes("contabil").map((path) => (
-          <Route key={path} path={path} element={<BalancoContabil />} />
-        ))}
+      {/* Gestão da Liquidez */}
+      {withScopes("resultados/gestao-liquidez").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<GestaoLiquidez />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* Demonstrações Contábeis */}
-        {withScopes("demonstracoes-contabeis").map((path) => (
-          <Route key={path} path={path} element={<BalancoReclassificado />} />
-        ))}
+      {/* Índices Econômicos */}
+      {withScopes("resultados/indices-economicos").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<IndicesEconomicos />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* Gestão da Liquidez */}
-        {withScopes("resultados/gestao-liquidez").map((path) => (
-          <Route key={path} path={path} element={<GestaoLiquidez />} />
-        ))}
+      {/* CIL e EC */}
+      {withScopes("resultados/cil-ec").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<CILeEC />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* Índices Econômicos */}
-        {withScopes("resultados/indices-economicos").map((path) => (
-          <Route key={path} path={path} element={<IndicesEconomicos />} />
-        ))}
+      {/* Eficiência Operacional */}
+      {withScopes("resultados/eficiencia-operacional").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<EficienciaOperacional />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* CIL e EC */}
-        {withScopes("resultados/cil-ec").map((path) => (
-          <Route key={path} path={path} element={<CILeEC />} />
-        ))}
+      {/* Parâmetros */}
+      {withScopes("parametros").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<Params />, <ContentPageSkeleton />)}
+        />
+      ))}
 
-        {/* Eficiência Operacional */}
-        {withScopes("resultados/eficiencia-operacional").map((path) => (
-          <Route key={path} path={path} element={<EficienciaOperacional />} />
-        ))}
+      {/* Fluxo de Caixa */}
+      {withScopes("fluxo-caixa").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<CashFlow />, <DashboardSkeleton />)}
+        />
+      ))}
 
-        {/* Parâmetros */}
-        {withScopes("parametros").map((path) => (
-          <Route key={path} path={path} element={<Params />} />
-        ))}
-
-        {/* Fluxo de Caixa */}
-        {withScopes("fluxo-caixa").map((path) => (
-          <Route key={path} path={path} element={<CashFlow />} />
-        ))}
-
-        {/* FEVA */}
-        {withScopes("eva").map((path) => (
-          <Route key={path} path={path} element={<AgregadoMensal />} />
-        ))}
-      </Routes>
-    </Suspense>
+      {/* FEVA */}
+      {withScopes("eva").map((path) => (
+        <Route
+          key={path}
+          path={path}
+          element={withFallback(<AgregadoMensal />, <DashboardSkeleton />)}
+        />
+      ))}
+    </Routes>
   );
 };
