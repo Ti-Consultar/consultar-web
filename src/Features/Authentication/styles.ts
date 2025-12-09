@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import loginImage from "../../../src/assets/images/login-side.png";
+import { FormHelperText } from "@mui/material";
 
 export const LoginGrid = styled.div`
   display: grid;
@@ -45,6 +46,16 @@ export const ContentContainer = styled.div`
     @media (max-width: 720px) {
     display: none; // Oculta no mobile
   }
+`;
+
+export const LoginContent = styled.div`
+  display: flex,
+  flex-direction: column,
+  height: 100%,
+`;
+
+export const CustomFormHelperText = styled(FormHelperText)`
+  margin-left: 0 !important;
 `;
 
 export const Info = styled.div`

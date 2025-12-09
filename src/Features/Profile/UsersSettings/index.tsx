@@ -22,7 +22,7 @@ import InsertEmoticonOutlinedIcon from "@mui/icons-material/InsertEmoticonOutlin
 import { AlertModal } from "../../../components/AlertModal";
 import { FakeUserRegisterModal } from "../../../components/Modal/FakeUserRegisterModal";
 
-export const UsersSettings = () => {
+const UsersSettings = () => {
   const { setBreadcrumbs } = useMainContext();
   const { setLoading } = useLoading();
   const [open, setOpen] = useState(false);
@@ -325,3 +325,5 @@ export const UsersSettings = () => {
     </MainTemplate>
   );
 };
+
+export default UsersSettings;

@@ -22,7 +22,7 @@ import { CompanyResponse } from "../../types/companyDropdown";
 import CompanyNavigationDropdown from "../../components/Inputs/CompanyNavigationDropdown";
 import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
 
-export const CashFlow = () => {
+const CashFlow = () => {
   const [tabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs>(
     dayjs().startOf("year")
@@ -302,3 +302,5 @@ export const CashFlow = () => {
     </MainTemplate>
   );
 };
+
+export default CashFlow;

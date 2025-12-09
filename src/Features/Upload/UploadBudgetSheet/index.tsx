@@ -27,7 +27,7 @@ import {
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 import { AlertModal } from "../../../components/AlertModal";
 
-export const UploadBudgetSheet = () => {
+const UploadBudgetSheet = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams();
@@ -216,7 +216,7 @@ export const UploadBudgetSheet = () => {
           <BudgetUploadTable
             data={balanceteList}
             onRowClick={handleRowClick}
-             onDelete={handleOpenDeleteDialog}
+            onDelete={handleOpenDeleteDialog}
           />
         </ListContainer>
         <AlertModal
@@ -253,3 +253,5 @@ export const UploadBudgetSheet = () => {
     </MainTemplate>
   );
 };
+
+export default UploadBudgetSheet;

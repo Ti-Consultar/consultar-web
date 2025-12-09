@@ -35,7 +35,7 @@ import { CompanyMenu } from "../../components/Inputs/CompanyActionsDropdown";
 import { AlertModal } from "../../components/AlertModal";
 import { InvitationModal } from "../Invitation/InvitationModal";
 
-export const Companies = () => {
+const Companies = () => {
   const { groupId, companyId } = useParams<{
     groupId: string;
     companyId?: string;
@@ -428,3 +428,5 @@ export const Companies = () => {
     </MainTemplate>
   );
 };
+
+export default Companies;

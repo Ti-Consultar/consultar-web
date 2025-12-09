@@ -3,7 +3,7 @@ import { MainContainer } from "./components/AboutProduct/styles";
 import { HomeFooter } from "./components/HomeFooter";
 import { HomeHeader } from "./components/HomeHeader";
 
-export const Home = () => {
+const Home = () => {
     return (
         <MainContainer>
           <HomeHeader />
@@ -12,3 +12,5 @@ export const Home = () => {
         </MainContainer>
       );
 }
+
+export default Home;

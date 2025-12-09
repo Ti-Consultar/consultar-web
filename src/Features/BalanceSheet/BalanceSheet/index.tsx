@@ -24,7 +24,7 @@ import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigat
 import { ModernTextField } from "../../../styles/DatePicker";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 
-export const BalancoContabil = () => {
+const BalancoContabil = () => {
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<Dayjs>(
@@ -328,3 +328,5 @@ export const BalancoContabil = () => {
     </MainTemplate>
   );
 };
+
+export default BalancoContabil;

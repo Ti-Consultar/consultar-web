@@ -19,7 +19,7 @@ import { BalanceteData } from "../../../types/balancete";
 import { toast } from "sonner";
 import { TableTabs } from "./table";
 
-export const BalanceAssetsLiabilities = () => {
+const BalanceAssetsLiabilities = () => {
   const { balanceteId } = useParams();
   const { setLoading } = useLoading();
   const [balanceteDataDetailed, setBalanceteDataDetailed] = useState<
@@ -111,3 +111,5 @@ export const BalanceAssetsLiabilities = () => {
     </MainTemplate>
   );
 };
+
+export default BalanceAssetsLiabilities;

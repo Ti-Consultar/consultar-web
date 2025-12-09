@@ -16,7 +16,7 @@ interface UserData {
   userId: string;
 }
 
-export const MrpHome = () => {
+const MrpHome = () => {
   const { setBreadcrumbs } = useMainContext();
   const [userData, setUserData] = useState<UserData | null>(null);
   const navigate = useNavigate();
@@ -62,3 +62,5 @@ export const MrpHome = () => {
     </MainTemplate>
   );
 };
+
+export default MrpHome;

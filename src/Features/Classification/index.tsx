@@ -34,7 +34,7 @@ interface BondListItem {
   classificationName: string;
 }
 
-export const ClassificationPage = () => {
+const ClassificationPage = () => {
   const { setBreadcrumbs } = useMainContext();
   const [skeleton, setSkeleton] = useState(true);
   const [selectedTab, setSelectedTab] = useState(1);
@@ -386,3 +386,5 @@ export const ClassificationPage = () => {
     </MainTemplate>
   );
 };
+
+export default ClassificationPage;

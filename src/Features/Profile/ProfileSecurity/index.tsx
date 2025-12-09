@@ -5,7 +5,7 @@ import { MainContainer, Title } from "./styles";
 import { SecurityCard } from "./SecurityCard";
 
 
-export const ProfileSecurity = () => {
+const ProfileSecurity = () => {
   const { setBreadcrumbs } = useMainContext();
 
   useEffect(() => {
@@ -24,3 +24,5 @@ export const ProfileSecurity = () => {
     </MainTemplate>
   );
 };
+
+export default ProfileSecurity;
