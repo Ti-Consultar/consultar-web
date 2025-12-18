@@ -294,7 +294,7 @@ const UploadBalanceSheet = () => {
             data={balanceteList}
             onRowClick={handleRowClick}
             onDelete={handleOpenDeleteDialog}
-            hasBalanceSheets={balanceteList.balancetes.length > 0}
+            hasBalanceSheets={!!balanceteList?.balancetes?.length}
             onEditConfig={handleOpenEditMapping}
           />
         </ListContainer>
