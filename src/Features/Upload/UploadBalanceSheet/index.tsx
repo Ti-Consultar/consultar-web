@@ -6,7 +6,7 @@ import {
   Subtitle,
   Title,
 } from "./styles";
-import { Alert, Box, useMediaQuery, useTheme } from "@mui/material";
+import { Alert, Box, Button, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import UploadIcon from "../../../assets/images/import-file.png";
@@ -16,7 +16,10 @@ import { BalanceSheetForm } from "./UploadForm";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import {
   deleteBalancete,
+  editBalanceSheetColumns,
+  getBalanceSheetConfig,
   getBalancetes,
+  hasBalanceMapping,
   importAccounting,
   submitAccounting,
 } from "../../../services/apis/routes/balancete.service";
@@ -26,9 +29,11 @@ import { BalanceSheetUploadTable } from "./table";
 import { Balancetes } from "../../../types/balancete";
 import { AlertModal } from "../../../components/AlertModal";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { BalanceColumnMappingModal } from "../BalanceColumnMapping/BalanceColumnMappingModal";
 
 const UploadBalanceSheet = () => {
   const location = useLocation();
+  const basePath = location.pathname;
   const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams();
   const { setLoading } = useLoading();
@@ -41,6 +46,7 @@ const UploadBalanceSheet = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [openDialog, setOpenDialog] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedBalanceteId, setSelectedBalanceteId] = useState<number | null>(
     null
   );
@@ -49,6 +55,8 @@ const UploadBalanceSheet = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const [mappingFromApi, setMappingFromApi] = useState<any | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const handleRowClick = (balanceteId: number) => {
     const basePath = location.pathname.replace(
@@ -124,15 +132,33 @@ const UploadBalanceSheet = () => {
       return;
     }
 
-    const payload: BalancetePayload = {
-      accountPlansId: accountPlanId,
-      dateMonth: month,
-      dateYear: year,
-    };
-
-    setLoading(true, "Enviando dados e arquivo...");
+    setLoading(true, "Verificando configuração do balancete...");
 
     try {
+      const mappingResponse = await hasBalanceMapping(accountPlanId);
+
+      const hasMapping = mappingResponse?.data === true;
+
+      if (!hasMapping) {
+        navigate(`${basePath}/colunas`, {
+          state: {
+            file,
+            accountPlanId,
+            month,
+            year,
+          },
+        });
+        return;
+      }
+
+      const payload: BalancetePayload = {
+        accountPlansId: accountPlanId,
+        dateMonth: month,
+        dateYear: year,
+      };
+
+      setLoading(true, "Enviando dados e arquivo...");
+
       const response = await submitAccounting(payload);
 
       if (response?.success) {
@@ -162,7 +188,7 @@ const UploadBalanceSheet = () => {
     } catch (error) {
       console.error("Erro ao enviar balancete e arquivo:", error);
       toast.error(
-        "Erro ao enviar o balancete. Verifique os dados e tente novamente."
+        "Erro ao validar ou enviar o balancete. Verifique os dados e tente novamente."
       );
     } finally {
       setLoading(false);
@@ -172,6 +198,61 @@ const UploadBalanceSheet = () => {
   const handleOpenDeleteDialog = (id: number) => {
     setSelectedBalanceteId(id);
     setOpenDialog(true);
+  };
+
+  const handleOpenEditMapping = async () => {
+    if (!accountPlanId) return;
+
+    setLoading(true, "Buscando configuração do balancete...");
+
+    try {
+      const response = await getBalanceSheetConfig(accountPlanId);
+
+      if (response?.success === false) {
+        toast.error("Erro ao buscar configuração do balancete.");
+        return;
+      }
+
+      setMappingFromApi(response.data);
+      setOpenEditModal(true);
+    } catch (error) {
+      toast.error("Erro ao buscar configuração do balancete.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editMapping = async (payload: any) => {
+    if (!accountPlanId) return;
+
+    setSaving(true);
+    setLoading(true, "Salvando configuração do balancete...");
+
+    try {
+      const response = await editBalanceSheetColumns({
+        accountPlanId: accountPlanId,
+        startRow: payload.startRow,
+        costCenterCol: payload.costCenterCol,
+        nameCol: payload.nameCol,
+        initialValueCol: payload.initialValueCol,
+        debitCol: payload.debitCol,
+        creditCol: payload.creditCol,
+        finalValueCol: payload.finalValueCol,
+        createdAt: new Date().toISOString(),
+      });
+
+      if (response?.success) {
+        toast.success("Configuração do balancete atualizada com sucesso!");
+        setOpenEditModal(false);
+      } else {
+        toast.error("Erro ao atualizar configuração do balancete.");
+      }
+    } catch (error) {
+      toast.error("Erro ao atualizar configuração do balancete.");
+    } finally {
+      setSaving(false);
+      setLoading(false);
+    }
   };
 
   return (
@@ -213,6 +294,8 @@ const UploadBalanceSheet = () => {
             data={balanceteList}
             onRowClick={handleRowClick}
             onDelete={handleOpenDeleteDialog}
+            hasBalanceSheets={balanceteList.balancetes.length > 0}
+            onEditConfig={handleOpenEditMapping}
           />
         </ListContainer>
         <AlertModal
@@ -244,6 +327,14 @@ const UploadBalanceSheet = () => {
             </div>
           }
           type="warning"
+        />
+
+        <BalanceColumnMappingModal
+          open={openEditModal}
+          initialData={mappingFromApi}
+          loading={saving}
+          onClose={() => setOpenEditModal(false)}
+          onSubmit={editMapping}
         />
       </MainContainer>
     </MainTemplate>
