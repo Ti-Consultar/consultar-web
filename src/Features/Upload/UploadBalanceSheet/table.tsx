@@ -14,6 +14,7 @@ import {
   useTheme,
   useMediaQuery,
   Box,
+  Button,
 } from "@mui/material";
 import { useState, useMemo } from "react";
 import { Balancetes } from "../../../types/balancete";
@@ -31,6 +32,8 @@ interface AccountingTableProps {
   data: Balancetes;
   onRowClick?: (id: number) => void;
   onDelete?: (id: number) => void;
+  hasBalanceSheets?: boolean;
+  onEditConfig: () => void;
 }
 
 type Order = "asc" | "desc";
@@ -39,6 +42,8 @@ export const BalanceSheetUploadTable = ({
   data,
   onRowClick,
   onDelete,
+  onEditConfig,
+  hasBalanceSheets = false,
 }: AccountingTableProps) => {
   const [order, setOrder] = useState<Order>("desc");
   const [orderBy, setOrderBy] = useState<"dateMonth" | "status" | "dateYear">(
@@ -86,7 +91,6 @@ export const BalanceSheetUploadTable = ({
     setPage(0);
   };
 
-  /** 🔥 Comparator para ordenar por ano + mês quando ordenar por dateMonth */
   const comparator = (a: any, b: any) => {
     if (orderBy === "dateMonth") {
       const dateA = a.dateYear * 100 + a.dateMonth;
@@ -124,7 +128,8 @@ export const BalanceSheetUploadTable = ({
           display: "flex",
           width: "100%",
           mb: 2,
-          mr: 0
+          mr: 0,
+          gap: 2,
         }}
       >
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -145,6 +150,19 @@ export const BalanceSheetUploadTable = ({
             }}
           />
         </LocalizationProvider>
+        {hasBalanceSheets && (
+          <Button
+            color="info"
+            onClick={onEditConfig}
+            disableElevation
+            sx={{
+              textTransform: "none",
+            }}
+            variant="contained"
+          >
+            Gerenciar Colunas
+          </Button>
+        )}
       </Box>
 
       <TableContainer
@@ -207,55 +225,53 @@ export const BalanceSheetUploadTable = ({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map(
-                ({ id, dateMonth, dateYear, dateCreate }) => (
-                  <TableRow
-                    key={id}
-                    hover
-                    onClick={() => onRowClick?.(id)}
-                    sx={{ cursor: onRowClick ? "pointer" : "default" }}
+              paginatedData.map(({ id, dateMonth, dateYear, dateCreate }) => (
+                <TableRow
+                  key={id}
+                  hover
+                  onClick={() => onRowClick?.(id)}
+                  sx={{ cursor: onRowClick ? "pointer" : "default" }}
+                >
+                  <TableCell
+                    sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
                   >
-                    <TableCell
-                      sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
-                    >
-                      {formatDate(dateMonth, dateYear)}
-                    </TableCell>
+                    {formatDate(dateMonth, dateYear)}
+                  </TableCell>
 
-                    {!isMobile && (
-                      <TableCell>
-                        <Chip
-                          label={"enviado"}
-                          color="primary"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                    )}
-
-                    <TableCell
-                      sx={{
-                        fontWeight: 550,
-                        color: "var(--neutral-500)",
-                      }}
-                    >
-                      {dayjs(dateCreate).format("D [de] MMMM [de] YYYY")}
+                  {!isMobile && (
+                    <TableCell>
+                      <Chip
+                        label={"enviado"}
+                        color="primary"
+                        variant="outlined"
+                      />
                     </TableCell>
+                  )}
 
-                    <TableCell align="center">
-                      <Tooltip title="Excluir balancete">
-                        <IconButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete?.(id);
-                          }}
-                          color="error"
-                        >
-                          <DeleteOutlineRoundedIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                )
-              )
+                  <TableCell
+                    sx={{
+                      fontWeight: 550,
+                      color: "var(--neutral-500)",
+                    }}
+                  >
+                    {dayjs(dateCreate).format("D [de] MMMM [de] YYYY")}
+                  </TableCell>
+
+                  <TableCell align="center">
+                    <Tooltip title="Excluir balancete">
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete?.(id);
+                        }}
+                        color="error"
+                      >
+                        <DeleteOutlineRoundedIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>

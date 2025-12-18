@@ -9,8 +9,6 @@ export const MainContainer = styled.div<MainContainerProps>`
   flex-direction: column;
   margin: 1.5rem;
   transition: max-width 0.3s ease;
-  minWidth: 0ç
-  overflow-x: hiddenç
   @media (min-width: 768px) and (max-width: 1023px) {
     width: 85%;
   }

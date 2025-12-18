@@ -3,6 +3,17 @@ import { axiosInstanceWithToken } from "../config";
 
 const URL = import.meta.env.VITE_API_URL_MRP;
 
+type ImportAccountingWithMappingParams = {
+  balanceteId: number;
+  startRow: number;
+  costCenter: number;
+  name: number;
+  initialValue: number;
+  debit: number;
+  credit: number;
+  finalValue: number;
+};
+
 export const submitAccounting = async (data: BalancetePayload) => {
   try {
     const response = await axiosInstanceWithToken.post(
@@ -95,6 +106,59 @@ export const importAccounting = async (data: File, balanceteId: number) => {
   }
 };
 
+export const importAccountingWithMapping = async (
+  file: File,
+  params: ImportAccountingWithMappingParams
+) => {
+  const fileData = new FormData();
+  fileData.append("file", file);
+
+  try {
+    const response = await axiosInstanceWithToken.post(
+      `${URL}/api/Balancete/import/dinamic`,
+      fileData,
+      {
+        params: {
+          balanceteId: params.balanceteId,
+          StartRow: params.startRow,
+          CostCenter: params.costCenter,
+          Name: params.name,
+          InitialValue: params.initialValue,
+          Debit: params.debit,
+          Credit: params.credit,
+          FinalValue: params.finalValue,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const editBalanceSheetColumns = async (data: {
+  accountPlanId: number;
+  startRow: number;
+  costCenterCol: number;
+  nameCol: number;
+  initialValueCol: number;
+  debitCol: number;
+  creditCol: number;
+  finalValueCol: number;
+  createdAt?: string;
+}) => {
+  try {
+    const response = await axiosInstanceWithToken.put(
+      `${URL}api/Balancete/update-config/balancete`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getBalanceteFiltered = async (id: number, tipo: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
@@ -113,6 +177,28 @@ export const deleteBalancete = async (id: number) => {
   try {
     const response = await axiosInstanceWithToken.delete(
       `${URL}/api/Balancete/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const hasBalanceMapping = async (accountPlanId: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}api/Balancete/accountplan/${accountPlanId}/config/exists`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getBalanceSheetConfig = async (accountPlanId: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}api/Balancete/accountplan/${accountPlanId}/config/balancete`
     );
     return response.data;
   } catch (error) {
