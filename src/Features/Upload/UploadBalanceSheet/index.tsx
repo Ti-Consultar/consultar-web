@@ -6,7 +6,7 @@ import {
   Subtitle,
   Title,
 } from "./styles";
-import { Alert, Box, Button, useMediaQuery, useTheme } from "@mui/material";
+import { Alert, Box, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import UploadIcon from "../../../assets/images/import-file.png";
