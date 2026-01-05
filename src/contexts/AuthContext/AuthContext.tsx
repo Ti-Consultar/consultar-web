@@ -9,6 +9,7 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { setAuthTokenCookie } from "../../utils/authToken";
 
 interface DecodedToken {
   unique_name: string;
@@ -61,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Login: salva token e recalcula user
   const login = (token: string) => {
-    Cookies.set("token", token, { expires: 3 }); // 3 dias, ajuste se quiser
+    setAuthTokenCookie(token);
     loadUserFromToken();
     navigate("/grupos");
   };
