@@ -63,6 +63,8 @@ import { buildNestedUrl } from "../../../utils/url/buildNestedUrl";
 import { useNotifications } from "../../../contexts/NotificationContext/NotificationContext";
 import { useAuth } from "../../../contexts/AuthContext/AuthContext";
 import { SectionTitle, SidebarContainer, StyledList } from "./styles";
+import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie";
 
 /* -------------------------------------------------------
    TYPES
@@ -90,6 +92,22 @@ interface SidebarSection {
   allowedRoles?: Role[];
 }
 
+interface UserData {
+  company_id: number;
+  company_name: null;
+  company_uuid: null;
+  exp: number;
+  iat: number;
+  ip: string;
+  permissions: string[];
+  profile: string;
+  roles: any[];
+  sub_company_id: number;
+  sub_company_name: null;
+  sub_company_uuid: null;
+  unique_name: string;
+}
+
 /* -------------------------------------------------------
    COMPONENT
 ------------------------------------------------------- */
@@ -100,10 +118,11 @@ export const Sidebar = () => {
   });
 
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
-    {}
+    {},
   );
   const [hoverToggle, setHoverToggle] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [userData, setUserData] = useState<UserData | null | undefined>();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -143,6 +162,33 @@ export const Sidebar = () => {
   useEffect(() => {
     if (drawerOpen) loadNotifications();
   }, [drawerOpen]);
+
+  useEffect(() => {
+    const token = Cookies.get("token");
+
+    if (token) {
+      try {
+        const dataDecoded: UserData = jwtDecode(token);
+
+        const isExpired = dataDecoded.exp * 1000 < Date.now();
+
+        if (isExpired) {
+          console.warn("Token expirado");
+          Cookies.remove("token");
+          navigate("/login");
+        } else {
+          setUserData(dataDecoded);
+        }
+      } catch (error) {
+        console.error("Erro ao decodificar o token:", error);
+        Cookies.remove("token");
+        navigate("/login");
+      }
+    } else {
+      console.log("Token não encontrado");
+      navigate("/login");
+    }
+  }, []);
 
   /* -------------------------------------------------------
      SIDEBAR CONFIG
@@ -205,7 +251,7 @@ export const Sidebar = () => {
                     title: "Índices Econômicos",
                     path: buildNestedUrl(
                       params,
-                      "resultados/indices-economicos"
+                      "resultados/indices-economicos",
                     ),
                   },
                   {
@@ -216,7 +262,7 @@ export const Sidebar = () => {
                     title: "Eficiência Operacional",
                     path: buildNestedUrl(
                       params,
-                      "resultados/eficiencia-operacional"
+                      "resultados/eficiencia-operacional",
                     ),
                   },
                 ],
@@ -483,7 +529,7 @@ export const Sidebar = () => {
       <div style={{ marginTop: "auto", padding: collapsed ? 8 : 16 }}>
         <Divider sx={{ mb: 1 }} />
 
-        {user && (
+        {userData && (
           <ListItemButton
             onClick={(e) =>
               setMenuState({ anchorEl: e.currentTarget, menuType: "perfil" })
@@ -492,11 +538,11 @@ export const Sidebar = () => {
           >
             <ListItemIcon>
               <Avatar sx={{ width: 32, height: 32, fontSize: 14 }}>
-                {getInitials(user.unique_name)}
+                {getInitials(userData.unique_name)}
               </Avatar>
             </ListItemIcon>
 
-            {!collapsed && <ListItemText primary={user.unique_name} />}
+            {!collapsed && <ListItemText primary={userData.unique_name} />}
           </ListItemButton>
         )}
       </div>

@@ -31,6 +31,31 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<DecodedToken | null>(null);
   const navigate = useNavigate();
+  console.log(`AuthProvider render ${Math.random()}`);
+
+  const decodeAndSetUser = (token: string) => {
+    try {
+      const decoded: DecodedToken = jwtDecode(token);
+
+      if (decoded.exp * 1000 < Date.now()) {
+        Cookies.remove("token");
+        setUser(null);
+        return;
+      }
+
+      setUser(decoded);
+    } catch (err) {
+      console.error("Erro ao decodificar token", err);
+      Cookies.remove("token");
+      setUser(null);
+    }
+  };
+
+  const login = (token: string) => {
+    setAuthTokenCookie(token);
+    decodeAndSetUser(token);
+    navigate("/grupos");
+  };
 
   const logout = () => {
     Cookies.remove("token");
@@ -39,44 +64,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     toast.success("Sessão encerrada");
   };
 
-  const loadUserFromToken = () => {
-    const token = Cookies.get("token");
-    if (!token) return logout();
-
-    try {
-      const decoded: DecodedToken = jwtDecode(token);
-
-      // Token expirado
-      if (decoded.exp * 1000 < Date.now()) {
-        console.warn("Token expirado");
-        logout();
-        return;
-      }
-
-      setUser(decoded);
-    } catch (err) {
-      console.error("Erro ao decodificar o token:", err);
-      logout();
-    }
-  };
-
-  // Login: salva token e recalcula user
-  const login = (token: string) => {
-    setAuthTokenCookie(token);
-    loadUserFromToken();
-    navigate("/grupos");
-  };
-
-  // Carrega user ao iniciar a aplicação
+  // Boot da aplicação (uma única responsabilidade)
   useEffect(() => {
-    loadUserFromToken();
+    const token = Cookies.get("token");
+    if (token) decodeAndSetUser(token);
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        isAuthenticated: Boolean(user),
         login,
         logout,
       }}
