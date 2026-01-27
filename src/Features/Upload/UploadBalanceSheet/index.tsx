@@ -30,9 +30,6 @@ import { Balancetes } from "../../../types/balancete";
 import { AlertModal } from "../../../components/AlertModal";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 import { BalanceColumnMappingModal } from "../BalanceColumnMapping/BalanceColumnMappingModal";
-import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
-import { CompanyResponse } from "../../../types/companyDropdown";
-import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 
 const UploadBalanceSheet = () => {
   const location = useLocation();
@@ -60,9 +57,6 @@ const UploadBalanceSheet = () => {
   });
   const [mappingFromApi, setMappingFromApi] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
-  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null,
-  );
 
   const handleRowClick = (balanceteId: number) => {
     const basePath = location.pathname.replace(
@@ -70,16 +64,6 @@ const UploadBalanceSheet = () => {
       "",
     );
     navigate(`${basePath}/balancetes/${balanceteId}`);
-  };
-
-  const fetchDropdown = async () => {
-    try {
-      if (!groupId) return;
-      const response = await getDropdownNavigation(Number(groupId));
-      setDropdownData(response);
-    } catch {
-      console.error("Erro ao buscar dropdown");
-    }
   };
 
   const handleDeleteBalancete = async (id: number) => {
@@ -298,28 +282,6 @@ const UploadBalanceSheet = () => {
             <Subtitle>Preencha a data do balancete e suba o arquivo.</Subtitle>
           </Box>
           <OptionsContainer>
-            {dropdownData && (
-              <Box sx={{ width: "30%" }}>
-                <CompanyNavigationDropdown
-                  data={dropdownData.data}
-                  selectedId={companyid ? Number(companyid) : Number(groupId)}
-                  onChange={({ id, type }) => {
-                    if (type === "group")
-                      return navigate(
-                        `/grupos/${id}/arquivos/upload/balancete`,
-                      );
-                    if (type === "filial")
-                      return navigate(
-                        `/grupos/${groupId}/empresas/${id}/fluxo-caixa`,
-                      );
-                    if (type === "sub")
-                      return navigate(
-                        `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/fluxo-caixa`,
-                      );
-                  }}
-                />
-              </Box>
-            )}
             <BalanceSheetForm
               selectedMonth={month}
               selectedYear={year}
