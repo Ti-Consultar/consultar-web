@@ -20,7 +20,7 @@ import {
   getBalanceSheetConfig,
   getBalancetes,
   hasBalanceMapping,
-  importAccounting,
+  importAccountingWithMapping,
   submitAccounting,
 } from "../../../services/apis/routes/balancete.service";
 import { BalancetePayload } from "../../../types/balancetePayload";
@@ -30,6 +30,9 @@ import { Balancetes } from "../../../types/balancete";
 import { AlertModal } from "../../../components/AlertModal";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 import { BalanceColumnMappingModal } from "../BalanceColumnMapping/BalanceColumnMappingModal";
+import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import { CompanyResponse } from "../../../types/companyDropdown";
+import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 
 const UploadBalanceSheet = () => {
   const location = useLocation();
@@ -48,7 +51,7 @@ const UploadBalanceSheet = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedBalanceteId, setSelectedBalanceteId] = useState<number | null>(
-    null
+    null,
   );
   const { accountPlanId } = useAccountPlanId({
     groupId,
@@ -57,13 +60,26 @@ const UploadBalanceSheet = () => {
   });
   const [mappingFromApi, setMappingFromApi] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null,
+  );
 
   const handleRowClick = (balanceteId: number) => {
     const basePath = location.pathname.replace(
       /\/arquivos\/upload\/balancete$/,
-      ""
+      "",
     );
     navigate(`${basePath}/balancetes/${balanceteId}`);
+  };
+
+  const fetchDropdown = async () => {
+    try {
+      if (!groupId) return;
+      const response = await getDropdownNavigation(Number(groupId));
+      setDropdownData(response);
+    } catch {
+      console.error("Erro ao buscar dropdown");
+    }
   };
 
   const handleDeleteBalancete = async (id: number) => {
@@ -93,14 +109,14 @@ const UploadBalanceSheet = () => {
       const response = await getBalancetes(accountPlanId);
       if (response?.success === false) {
         toast.error(
-          `Erro ao buscar os balancetes, entre em contato com o suporte.`
+          `Erro ao buscar os balancetes, entre em contato com o suporte.`,
         );
         return;
       }
       setBalanceteList(response.data);
     } catch (error) {
       toast.error(
-        `Erro ao buscar os balancetes, entre em contato com o suporte.`
+        `Erro ao buscar os balancetes, entre em contato com o suporte.`,
       );
     } finally {
       setLoading(false);
@@ -122,7 +138,7 @@ const UploadBalanceSheet = () => {
   };
 
   const handleSubmitAndUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -164,14 +180,16 @@ const UploadBalanceSheet = () => {
       if (response?.success) {
         const newBalanceteId = response.data?.id;
 
-        const uploadResponse = await importAccounting(file, newBalanceteId);
+        const uploadResponse = await importAccountingWithMapping(file, {
+          balanceteId: newBalanceteId,
+        });
 
         if (uploadResponse?.success) {
           toast.success("Arquivo enviado com sucesso!");
           fetchBalancetes();
         } else {
           toast.error(
-            "Erro ao enviar o balancete. Verifique o arquivo e tente novamente."
+            "Erro ao enviar o balancete. Verifique o arquivo e tente novamente.",
           );
         }
       } else {
@@ -188,7 +206,7 @@ const UploadBalanceSheet = () => {
     } catch (error) {
       console.error("Erro ao enviar balancete e arquivo:", error);
       toast.error(
-        "Erro ao validar ou enviar o balancete. Verifique os dados e tente novamente."
+        "Erro ao validar ou enviar o balancete. Verifique os dados e tente novamente.",
       );
     } finally {
       setLoading(false);
@@ -280,6 +298,28 @@ const UploadBalanceSheet = () => {
             <Subtitle>Preencha a data do balancete e suba o arquivo.</Subtitle>
           </Box>
           <OptionsContainer>
+            {dropdownData && (
+              <Box sx={{ width: "30%" }}>
+                <CompanyNavigationDropdown
+                  data={dropdownData.data}
+                  selectedId={companyid ? Number(companyid) : Number(groupId)}
+                  onChange={({ id, type }) => {
+                    if (type === "group")
+                      return navigate(
+                        `/grupos/${id}/arquivos/upload/balancete`,
+                      );
+                    if (type === "filial")
+                      return navigate(
+                        `/grupos/${groupId}/empresas/${id}/fluxo-caixa`,
+                      );
+                    if (type === "sub")
+                      return navigate(
+                        `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/fluxo-caixa`,
+                      );
+                  }}
+                />
+              </Box>
+            )}
             <BalanceSheetForm
               selectedMonth={month}
               selectedYear={year}

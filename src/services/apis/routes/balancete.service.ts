@@ -5,13 +5,13 @@ const URL = import.meta.env.VITE_API_URL_MRP;
 
 type ImportAccountingWithMappingParams = {
   balanceteId: number;
-  startRow: number;
-  costCenter: number;
-  name: number;
-  initialValue: number;
-  debit: number;
-  credit: number;
-  finalValue: number;
+  startRow?: number;
+  costCenter?: number;
+  name?: number;
+  initialValue?: number;
+  debit?: number;
+  credit?: number;
+  finalValue?: number;
 };
 
 export const submitAccounting = async (data: BalancetePayload) => {
