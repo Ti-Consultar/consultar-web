@@ -129,7 +129,7 @@ export const Sidebar = () => {
   const params = useParams();
 
   const { toggleDrawer } = useDrawer();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   const {
     notifications,
