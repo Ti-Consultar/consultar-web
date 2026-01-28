@@ -32,7 +32,7 @@ export const BalanceSheetForm = ({
     null,
   );
   
-  const { groupId, companyid, subcompanyid } = useParams();
+  const { groupId, companyid } = useParams();
   const handleDateChange = (date: Dayjs | null) => {
     if (date) {
       onMonthChange(date.month() + 1);
