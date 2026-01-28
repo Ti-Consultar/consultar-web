@@ -31,7 +31,6 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<DecodedToken | null>(null);
   const navigate = useNavigate();
-  console.log(`AuthProvider render ${Math.random()}`);
 
   const decodeAndSetUser = (token: string) => {
     try {
