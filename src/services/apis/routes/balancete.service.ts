@@ -173,6 +173,20 @@ export const getBalanceteFiltered = async (id: number, tipo: number) => {
   }
 };
 
+export const getConsolidatedIncomeStatement = async (groupId: number, year: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/demonstracao-consolidado`,  
+      {
+        params: { groupId, year},
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const deleteBalancete = async (id: number) => {
   try {
     const response = await axiosInstanceWithToken.delete(

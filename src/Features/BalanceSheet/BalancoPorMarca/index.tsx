@@ -1,300 +1,84 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { MainTemplate } from "../../../components/AppLayout";
 import { Container, MainContainer, Title } from "./styles";
-import { Box, Tabs, Tab, Paper } from "@mui/material";
+import { Box, Paper } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { getBalancoReclassificadoVariation } from "../../../services/apis/routes/classification.service";
-import { toast } from "sonner";
-import { Month } from "../../../types/balanco";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
-import { ExportDialog } from "../../../components/ExportModal";
-import { useExportUtils } from "../../../utils/hooks/useExportUtils";
-import { monthTranslator } from "../../../utils/formatters/monthTranslator";
-import { ExportButton } from "../../../components/Button/ExportButton";
-import { BudgetToggleButton } from "../../../components/Button/TableOptions";
-import { metricNature } from "./metricNature";
 import { DreConsolidatedTable } from "./table";
-import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
-import { CompanyResponse } from "../../../types/companyDropdown";
-import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { ModernTextField } from "../../../styles/DatePicker";
-import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
-import { dreMockData } from "./mock";
 import { normalizeDreConsolidatedTable } from "./tableNormalizer";
+import { NormalizedDreTable } from "../../../types/balancoPorMarca";
+import { getConsolidatedIncomeStatement } from "../../../services/apis/routes/balancete.service";
 
 const BalancoPorMarca = () => {
-  const [tabValue, setTabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs>(
-    dayjs().startOf("year")
+  const [data, setData] = useState<NormalizedDreTable | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<Dayjs>(
+    dayjs().startOf("month"),
   );
-  const { setLoading } = useLoading();
-  const [realizadoMonths, setRealizadoMonths] = useState<Month[]>([]);
-  const [orcadoMonths, setOrcadoMonths] = useState<Month[]>([]);
-  const [variacaoMonths, setVariacaoMonths] = useState<Month[]>([]);
-  const [exportOpen, setExportMenuOpen] = useState(false);
-  const { groupId, companyid, subCompanyId } = useParams<{
+  const { groupId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
-  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
-  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
-  const navigate = useNavigate();
-  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null
+  const [selectedYear, setSelectedYear] = useState<Dayjs>(
+    dayjs().startOf("year"),
   );
-  const { accountPlanId, entityName } = useAccountPlanId({
-    groupId,
-    companyId: companyid,
-    subCompanyId: subCompanyId,
-  });
+  const { setLoading } = useLoading();
 
-  const highlightRows = useMemo(() => {
-    const ids: Record<number, boolean> = {};
-
-    const nomesParaDestacar = [
-      "Ativo Financeiro",
-      "Ativo Operacional",
-      "Ativo Não Circulante",
-      "Ativo Fixo",
-      "Passivo Financeiro",
-      "Passivo Operacional",
-      "Outros Ativos Operacionais Total",
-      "Passivo Não Circulante",
-      "Outros Passivos Operacionais Total",
-      "Patrimônio Liquido",
-      "Receita Operacional Bruta",
-      "(-) Deduções da Receita Bruta",
-      "(=) Receita Líquida de Vendas",
-      "Lucro Bruto",
-      "Margem Bruta %",
-      "Margem Contribuição",
-      "Margem Contribuição %",
-      "(-) Despesas Operacionais",
-      "Lucro Operacional",
-      "Margem Operacional %",
-      "Lucro Antes do Resultado Financeiro",
-      "Margem LAJIR %",
-      "Resultado do Exercício Antes do Imposto",
-      "Margem LAIR %",
-      "Lucro Líquido do Periodo",
-      "Margem Líquida %",
-      "EBITDA",
-      "Margem EBITDA %",
-      "NOPAT",
-      "Margem NOPAT %",
-    ];
-
-    realizadoMonths.forEach((month) => {
-      month.totalizer.forEach((tot) => {
-        if (nomesParaDestacar.includes(tot.name)) {
-          ids[tot.id] = true;
-        }
-      });
-    });
-
-    return ids;
-  }, [realizadoMonths]);
-
-  const fetchDropdown = async () => {
-    try {
-      if (!groupId) return;
-      const response = await getDropdownNavigation(Number(groupId));
-      setDropdownData(response);
-    } catch {
-      console.error("Erro ao buscar dropdown");
-    }
-  };
-
-  useEffect(() => {
-    const loadSetting = () => {
-      const savedSetting = localStorage.getItem("showBudgetColumns");
-      setShowBudgetColumns(savedSetting === "true");
-    };
-
-    loadSetting();
-
-    window.addEventListener("storage", loadSetting);
-    return () => window.removeEventListener("storage", loadSetting);
-  }, []);
-
-  const handleSearch = async (explicitTab?: number): Promise<void> => {
-    try {
-      setLoading(true, "Buscando Balanço Contábil");
-
-      if (!accountPlanId) {
-        toast.warning("Plano de contas não encontrado");
-        return;
-      }
-
-      const tab = explicitTab ?? tabValue;
-      const response = await getBalancoReclassificadoVariation(
-        accountPlanId,
-        selectedYear.year(),
-        tab
+  const filterMonthFromResponse = (response: any[], month: number) => {
+    return response.map((entity) => {
+      const monthData = entity.painel?.months?.find(
+        (m: any) => m.dateMonth === month,
       );
 
-      const data = response.data ?? {};
-      setRealizadoMonths(data.realizado?.months ?? []);
-      setOrcadoMonths(data.orcado?.months ?? []);
-      setVariacaoMonths(data.variacao?.months ?? []);
-    } catch (err) {
-      console.error(err);
-      toast.error("Ocorreu um erro ao tentar buscar os dados");
+      return {
+        ...entity,
+        painel: {
+          months: monthData ? [monthData] : [],
+        },
+      };
+    });
+  };
+
+  const fetchConsolidatedDre = async () => {
+    try {
+      setLoading(true, "Buscando DRE por marcas...");
+      if (!groupId || !selectedYear || !selectedMonth) return;
+
+      const response = await getConsolidatedIncomeStatement(
+        Number(groupId),
+        Number(selectedYear.format("YYYY")),
+      );
+
+      const monthNumber = selectedMonth.month() + 1;
+
+      const filteredByMonth = filterMonthFromResponse(response, monthNumber);
+
+      const normalized = normalizeDreConsolidatedTable(filteredByMonth);
+      setData(normalized);
+    } catch {
+      console.error("Erro ao buscar DRE consolidado");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChangeTab = (
-    _event: React.SyntheticEvent,
-    newValue: number
-  ): void => {
-    setTabValue(newValue);
-  };
-
-  const buildExportData = (months: Month[]) => {
-    if (!months.length) return { columns: [], rows: [] };
-
-    // Colunas: "Conta / Classificação" + cada mês
-    const columns = [
-      { label: "Conta / Classificação", accessor: (row: any) => row.name },
-      ...months.map((m) => ({
-        label: monthTranslator[m.name] ?? m.name,
-        accessor: (row: any) => row.values[m.id] ?? "-",
-      })),
-    ];
-    // Linhas
-    const rows: any[] = [];
-
-    const addRow = (name: string, values: Record<number, number | string>) => {
-      rows.push({ name, values });
-    };
-
-    // Itera os meses
-    months.forEach((month) => {
-      // Totalizadores do mês
-      month.totalizer?.forEach((tot) => {
-        // Linha do totalizador
-        let existing = rows.find((r) => r.name === tot.name);
-        if (!existing) {
-          addRow(tot.name, {});
-          existing = rows.find((r) => r.name === tot.name);
-        }
-        existing.values[month.id] = tot.totalValue;
-
-        // Classificações
-        tot.classifications?.forEach((cls) => {
-          let existingCls = rows.find((r) => r.name === `   ${cls.name}`);
-          if (!existingCls) {
-            addRow(`   ${cls.name}`, {});
-            existingCls = rows.find((r) => r.name === `   ${cls.name}`);
-          }
-          existingCls.values[month.id] = cls.value;
-        });
-      });
-
-      // Total geral do mês
-      if (month.monthPainelContabilTotalizer) {
-        let existingTotGeral = rows.find(
-          (r) => r.name === month.monthPainelContabilTotalizer.name
-        );
-        if (!existingTotGeral) {
-          addRow(month.monthPainelContabilTotalizer.name, {});
-          existingTotGeral = rows.find(
-            (r) => r.name === month.monthPainelContabilTotalizer.name
-          );
-        }
-        existingTotGeral.values[month.id] =
-          month.monthPainelContabilTotalizer.totalValue;
-      }
-    });
-
-    return { columns, rows };
-  };
-
-  const handleExport = (format: string) => {
-    if (!realizadoMonths.length) {
-      toast.warning("Nenhum dado para exportar");
-      return;
-    }
-
-    const { columns, rows } = buildExportData(realizadoMonths);
-
-    switch (format) {
-      case "PDF":
-        exportPDF(
-          rows,
-          columns,
-          `demonstracoes-${entityName}-${selectedYear.year()}`,
-          "landscape"
-        );
-        break;
-      case "CSV":
-        exportCSV(
-          rows,
-          columns,
-          `demonstracoes-${entityName}-${selectedYear.year()}`
-        );
-        break;
-      case "EXCEL":
-        exportExcel(
-          rows,
-          columns,
-          `demonstracoes-${entityName}-${selectedYear.year()}`
-        );
-        break;
-      case "PPT":
-        exportPPTX(
-          rows,
-          columns,
-          `demonstracoes-${entityName}-${selectedYear.year()}`
-        );
-        break;
-    }
-  };
-
   useEffect(() => {
-    if (!accountPlanId) return;
-    handleSearch(tabValue);
-    fetchDropdown();
-  }, [tabValue, selectedYear, accountPlanId, groupId, companyid, subCompanyId]);
-
-  const normalizedData = normalizeDreConsolidatedTable(dreMockData);
+    fetchConsolidatedDre();
+  }, [groupId, selectedYear, selectedMonth]);
 
   return (
     <MainTemplate>
       <MainContainer>
         <Title>Demonstrações Financeiras por Marca</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
-
           <Box display="flex" justifyContent={"space-between"}>
             <Box display="flex" gap={2} alignItems="center" mb={2}>
-              {dropdownData && (
-                <Box sx={{ width: "30%" }}>
-                  <CompanyNavigationDropdown
-                    data={dropdownData.data}
-                    selectedId={companyid ? Number(companyid) : Number(groupId)}
-                    onChange={({ id, type }) => {
-                      if (type === "group")
-                        return navigate(`/grupos/${id}/contabil`);
-                      if (type === "filial")
-                        return navigate(
-                          `/grupos/${groupId}/empresas/${id}/contabil`
-                        );
-                      if (type === "sub")
-                        return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/contabil`
-                        );
-                    }}
-                  />
-                </Box>
-              )}
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   views={["year"]}
@@ -313,29 +97,28 @@ const BalancoPorMarca = () => {
                     textField: { size: "medium" },
                   }}
                 />
+
+                <DatePicker
+                  views={["month"]}
+                  label="Mês"
+                  value={selectedMonth}
+                  onChange={(newValue: Dayjs | null) => {
+                    if (newValue) setSelectedMonth(newValue);
+                  }}
+                  enableAccessibleFieldDOMStructure={false}
+                  slots={{ textField: ModernTextField }}
+                  slotProps={{ textField: { size: "medium" } }}
+                />
               </LocalizationProvider>
               <TableValueVisualization />
-              <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
-            <div>
-              <BudgetToggleButton
-                showBudgetColumns={showBudgetColumns}
-                setShowBudgetColumns={setShowBudgetColumns}
-              />
-            </div>
           </Box>
 
           <Container>
-            <DreConsolidatedTable data={normalizedData} />
+            <DreConsolidatedTable data={data} />
           </Container>
         </Paper>
       </MainContainer>
-      <ExportDialog
-        open={exportOpen}
-        onClose={() => setExportMenuOpen(false)}
-        hasChart={false}
-        onExport={handleExport}
-      />
     </MainTemplate>
   );
 };
