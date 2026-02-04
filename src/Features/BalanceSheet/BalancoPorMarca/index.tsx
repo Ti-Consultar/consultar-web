@@ -15,19 +15,27 @@ import { normalizeDreConsolidatedTable } from "./tableNormalizer";
 import { NormalizedDreTable } from "../../../types/balancoPorMarca";
 import { getConsolidatedIncomeStatement } from "../../../services/apis/routes/balancete.service";
 
+import "dayjs/locale/pt-br";
+
+dayjs.locale("pt-br");
+
 const BalancoPorMarca = () => {
   const [data, setData] = useState<NormalizedDreTable | null>(null);
+
   const [selectedMonth, setSelectedMonth] = useState<Dayjs>(
     dayjs().startOf("month"),
   );
+
+  const [selectedYear, setSelectedYear] = useState<Dayjs>(
+    dayjs().startOf("year"),
+  );
+
   const { groupId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
-  const [selectedYear, setSelectedYear] = useState<Dayjs>(
-    dayjs().startOf("year"),
-  );
+
   const { setLoading } = useLoading();
 
   const filterMonthFromResponse = (response: any[], month: number) => {
@@ -48,6 +56,7 @@ const BalancoPorMarca = () => {
   const fetchConsolidatedDre = async () => {
     try {
       setLoading(true, "Buscando DRE por marcas...");
+
       if (!groupId || !selectedYear || !selectedMonth) return;
 
       const response = await getConsolidatedIncomeStatement(
@@ -61,8 +70,8 @@ const BalancoPorMarca = () => {
 
       const normalized = normalizeDreConsolidatedTable(filteredByMonth);
       setData(normalized);
-    } catch {
-      console.error("Erro ao buscar DRE consolidado");
+    } catch (error) {
+      console.error("Erro ao buscar DRE consolidado", error);
     } finally {
       setLoading(false);
     }
@@ -76,26 +85,24 @@ const BalancoPorMarca = () => {
     <MainTemplate>
       <MainContainer>
         <Title>Demonstrações Financeiras por Marca</Title>
+
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
-          <Box display="flex" justifyContent={"space-between"}>
+          <Box display="flex" justifyContent="space-between">
             <Box display="flex" gap={2} alignItems="center" mb={2}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="pt-br"
+              >
                 <DatePicker
                   views={["year"]}
                   label="Ano"
                   value={selectedYear}
                   onChange={(newValue: Dayjs | null) => {
-                    if (newValue) {
-                      setSelectedYear(newValue);
-                    }
+                    if (newValue) setSelectedYear(newValue);
                   }}
                   enableAccessibleFieldDOMStructure={false}
-                  slots={{
-                    textField: ModernTextField,
-                  }}
-                  slotProps={{
-                    textField: { size: "medium" },
-                  }}
+                  slots={{ textField: ModernTextField }}
+                  slotProps={{ textField: { size: "medium" } }}
                 />
 
                 <DatePicker
@@ -110,6 +117,7 @@ const BalancoPorMarca = () => {
                   slotProps={{ textField: { size: "medium" } }}
                 />
               </LocalizationProvider>
+
               <TableValueVisualization />
             </Box>
           </Box>
