@@ -237,6 +237,10 @@ export const Sidebar = () => {
                     title: "Demonstrações Contábeis",
                     path: buildNestedUrl(params, "demonstracoes-contabeis"),
                   },
+                  {
+                    title: "Demonstrações por Marca",
+                    path: buildNestedUrl(params, "demonstracoes-marcas"),
+                  },
                 ],
               },
               {

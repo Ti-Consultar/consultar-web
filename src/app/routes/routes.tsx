@@ -44,6 +44,9 @@ const BalancoContabil = lazy(
 const BalancoReclassificado = lazy(
   () => import("../../Features/BalanceSheet/BalancoReclassificado")
 );
+const BalancoPorMarca = lazy(
+  () => import("../../Features/BalanceSheet/BalancoPorMarca")
+);
 
 /* Classificação */
 const ClassificationPage = lazy(() => import("../../Features/Classification"));
@@ -169,6 +172,11 @@ export const AppRoutes = () => {
         {/* Demonstrações Contábeis */}
         {withScopes("demonstracoes-contabeis").map((path) => (
           <Route key={path} path={path} element={<BalancoReclassificado />} />
+        ))}
+
+        {/* Demonstrações por Marca */}
+        {withScopes("demonstracoes-marcas").map((path) => (
+          <Route key={path} path={path} element={<BalancoPorMarca />} />
         ))}
 
         {/* Gestão da Liquidez */}
