@@ -128,6 +128,12 @@ export const Sidebar = () => {
   const navigate = useNavigate();
   const params = useParams();
 
+  const { companyid } = params;
+
+  const hasCompanyContext = !!companyid;
+
+  console.log("hasCompanyContext", hasCompanyContext);
+
   const { toggleDrawer } = useDrawer();
   const { logout } = useAuth();
 
@@ -237,10 +243,14 @@ export const Sidebar = () => {
                     title: "Demonstrações Contábeis",
                     path: buildNestedUrl(params, "demonstracoes-contabeis"),
                   },
-                  {
-                    title: "Demonstrações por Marca",
-                    path: buildNestedUrl(params, "demonstracoes-marcas"),
-                  },
+                  ...(!hasCompanyContext
+                    ? [
+                        {
+                          title: "Demonstrações por Marca",
+                          path: buildNestedUrl(params, "demonstracoes-marcas"),
+                        },
+                      ]
+                    : []),
                 ],
               },
               {

@@ -333,14 +333,14 @@ const BalancoReclassificado = () => {
                     selectedId={companyid ? Number(companyid) : Number(groupId)}
                     onChange={({ id, type }) => {
                       if (type === "group")
-                        return navigate(`/grupos/${id}/contabil`);
+                        return navigate(`/grupos/${id}/demonstracoes-contabeis`);
                       if (type === "filial")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${id}/contabil`
+                          `/grupos/${groupId}/empresas/${id}/demonstracoes-contabeis`
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/contabil`
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/demonstracoes-contabeis`
                         );
                     }}
                   />
