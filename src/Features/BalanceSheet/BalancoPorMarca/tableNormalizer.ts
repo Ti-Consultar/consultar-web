@@ -16,15 +16,14 @@ export function normalizeDreConsolidatedTable(
   const getMonthTotalizers = (e: DreEntity): Totalizer[] =>
     e.painel.months[0]?.totalizer ?? [];
 
-  const groupEntity = entities.find((e) => e.nivel === "Grupo");
   const companyEntities = entities.filter((e) => e.nivel === "Empresa");
+  const groupEntity = entities.find((e) => e.nivel === "Grupo");
 
-  if (!companyEntities.length) {
+  const allEntities = [...companyEntities, ...(groupEntity ? [groupEntity] : [])];
+
+  if (!allEntities.length) {
     return { columns: [], rows: [] };
   }
-
-  // Empresa base para estruturar classifications
-  const baseCompanyEntity = companyEntities[0];
 
   // ---------- COLUNAS ----------
   const columns: DreColumn[] = [
@@ -42,19 +41,27 @@ export function normalizeDreConsolidatedTable(
     });
   }
 
-  // ---------- TOTALIZERS (base podem vir do grupo) ----------
-  const baseTotalizers = getMonthTotalizers(
-    groupEntity ?? baseCompanyEntity,
-  )
-    .slice()
-    .sort((a, b) => a.typeOrder - b.typeOrder);
+  // ---------- TOTALIZERS BASE (UNIÃO) ----------
+  const totalizerMap = new Map<number, Totalizer>();
+
+  for (const entity of allEntities) {
+    for (const t of getMonthTotalizers(entity)) {
+      if (!totalizerMap.has(t.typeOrder)) {
+        totalizerMap.set(t.typeOrder, t);
+      }
+    }
+  }
+
+  const baseTotalizers = Array.from(totalizerMap.values()).sort(
+    (a, b) => a.typeOrder - b.typeOrder,
+  );
 
   const rows: DreRow[] = [];
 
   for (const baseTot of baseTotalizers) {
     const isTotalizerPercentage = baseTot.name.trim().endsWith("%");
 
-    // ----- TOTALIZER -----
+    // ---------- TOTALIZER ----------
     const totalizerValues: Record<string, number | null> = {};
 
     for (const col of columns) {
@@ -63,16 +70,13 @@ export function normalizeDreConsolidatedTable(
           ? groupEntity
           : companyEntities.find((e) => String(e.companyId) === col.key);
 
-      if (!entity) {
-        totalizerValues[col.key] = null;
-        continue;
-      }
+      const tot = entity
+        ? getMonthTotalizers(entity).find(
+            (t) => t.typeOrder === baseTot.typeOrder,
+          )
+        : null;
 
-      const found = getMonthTotalizers(entity).find(
-        (t) => t.typeOrder === baseTot.typeOrder,
-      );
-
-      totalizerValues[col.key] = found?.totalValue ?? null;
+      totalizerValues[col.key] = tot?.totalValue ?? null;
     }
 
     rows.push({
@@ -83,21 +87,27 @@ export function normalizeDreConsolidatedTable(
       values: totalizerValues,
     });
 
-    // ---------- CLASSIFICATIONS (BASE SEMPRE DA EMPRESA) ----------
-    const baseCompanyTotalizer = getMonthTotalizers(
-      baseCompanyEntity,
-    ).find((t) => t.typeOrder === baseTot.typeOrder);
+    // ---------- CLASSIFICATIONS (UNIÃO POR NOME) ----------
+    const classificationMap = new Map<string, number>();
 
-    const baseClassifications =
-      baseCompanyTotalizer?.classifications
-        ?.slice()
-        .sort((a, b) => a.typeOrder - b.typeOrder) ?? [];
+    for (const entity of allEntities) {
+      const tot = getMonthTotalizers(entity).find(
+        (t) => t.typeOrder === baseTot.typeOrder,
+      );
+
+      for (const cls of tot?.classifications ?? []) {
+        if (!classificationMap.has(cls.name)) {
+          classificationMap.set(cls.name, cls.typeOrder);
+        }
+      }
+    }
+
+    const baseClassifications = Array.from(classificationMap.entries())
+      .map(([name, typeOrder]) => ({ name, typeOrder }))
+      .sort((a, b) => a.typeOrder - b.typeOrder);
 
     for (const baseCls of baseClassifications) {
-      const isClassificationPercentage = baseCls.name
-        .trim()
-        .endsWith("%");
-
+      const isClassificationPercentage = baseCls.name.trim().endsWith("%");
       const classValues: Record<string, number | null> = {};
 
       for (const col of columns) {
@@ -106,17 +116,14 @@ export function normalizeDreConsolidatedTable(
             ? groupEntity
             : companyEntities.find((e) => String(e.companyId) === col.key);
 
-        if (!entity) {
-          classValues[col.key] = null;
-          continue;
-        }
-
-        const tot = getMonthTotalizers(entity).find(
-          (t) => t.typeOrder === baseTot.typeOrder,
-        );
+        const tot = entity
+          ? getMonthTotalizers(entity).find(
+              (t) => t.typeOrder === baseTot.typeOrder,
+            )
+          : null;
 
         const cls = tot?.classifications?.find(
-          (c) => c.typeOrder === baseCls.typeOrder,
+          (c) => c.name === baseCls.name,
         );
 
         classValues[col.key] = cls?.value ?? null;

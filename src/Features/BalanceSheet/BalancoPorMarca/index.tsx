@@ -14,8 +14,10 @@ import { ModernTextField } from "../../../styles/DatePicker";
 import { normalizeDreConsolidatedTable } from "./tableNormalizer";
 import { NormalizedDreTable } from "../../../types/balancoPorMarca";
 import { getConsolidatedIncomeStatement } from "../../../services/apis/routes/balancete.service";
+import { exportDreToPdf } from "./exportDreToPdf";
 
 import "dayjs/locale/pt-br";
+import { ExportButton } from "../../../components/Button/ExportButton";
 
 dayjs.locale("pt-br");
 
@@ -30,16 +32,11 @@ const BalancoPorMarca = () => {
     dayjs().startOf("year"),
   );
 
-  const { groupId } = useParams<{
-    groupId: string;
-    companyid?: string;
-    subCompanyId?: string;
-  }>();
-
+  const { groupId } = useParams<{ groupId: string }>();
   const { setLoading } = useLoading();
 
-  const filterMonthFromResponse = (response: any[], month: number) => {
-    return response.map((entity) => {
+  const filterMonthFromResponse = (response: any[], month: number) =>
+    response.map((entity) => {
       const monthData = entity.painel?.months?.find(
         (m: any) => m.dateMonth === month,
       );
@@ -51,13 +48,12 @@ const BalancoPorMarca = () => {
         },
       };
     });
-  };
 
   const fetchConsolidatedDre = async () => {
     try {
-      setLoading(true, "Buscando DRE por marcas...");
+      if (!groupId) return;
 
-      if (!groupId || !selectedYear || !selectedMonth) return;
+      setLoading(true, "Buscando DRE por marcas...");
 
       const response = await getConsolidatedIncomeStatement(
         Number(groupId),
@@ -65,10 +61,9 @@ const BalancoPorMarca = () => {
       );
 
       const monthNumber = selectedMonth.month() + 1;
+      const filtered = filterMonthFromResponse(response, monthNumber);
+      const normalized = normalizeDreConsolidatedTable(filtered);
 
-      const filteredByMonth = filterMonthFromResponse(response, monthNumber);
-
-      const normalized = normalizeDreConsolidatedTable(filteredByMonth);
       setData(normalized);
     } catch (error) {
       console.error("Erro ao buscar DRE consolidado", error);
@@ -97,28 +92,35 @@ const BalancoPorMarca = () => {
                   views={["year"]}
                   label="Ano"
                   value={selectedYear}
-                  onChange={(newValue: Dayjs | null) => {
-                    if (newValue) setSelectedYear(newValue);
-                  }}
-                  enableAccessibleFieldDOMStructure={false}
+                  onChange={(v) => v && setSelectedYear(v)}
                   slots={{ textField: ModernTextField }}
-                  slotProps={{ textField: { size: "medium" } }}
+                  enableAccessibleFieldDOMStructure={false}
                 />
 
                 <DatePicker
                   views={["month"]}
                   label="Mês"
                   value={selectedMonth}
-                  onChange={(newValue: Dayjs | null) => {
-                    if (newValue) setSelectedMonth(newValue);
-                  }}
-                  enableAccessibleFieldDOMStructure={false}
+                  onChange={(v) => v && setSelectedMonth(v)}
                   slots={{ textField: ModernTextField }}
-                  slotProps={{ textField: { size: "medium" } }}
+                  enableAccessibleFieldDOMStructure={false}
                 />
               </LocalizationProvider>
 
               <TableValueVisualization />
+              <ExportButton
+                onClick={() => {
+                  if (!data) return;
+
+                  exportDreToPdf({
+                    title: "Demonstração do Resultado - Por Loja",
+                    year: Number(selectedYear.format("YYYY")),
+                    month: selectedMonth.format("MMMM"),
+                    columns: data.columns,
+                    rows: data.rows,
+                  });
+                }}
+              />
             </Box>
           </Box>
 
