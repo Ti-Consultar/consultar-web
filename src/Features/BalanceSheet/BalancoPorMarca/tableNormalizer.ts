@@ -13,12 +13,18 @@ export function normalizeDreConsolidatedTable(
     return { columns: [], rows: [] };
   }
 
-  // Assume um único mês selecionado (ex: janeiro)
   const getMonthTotalizers = (e: DreEntity): Totalizer[] =>
     e.painel.months[0]?.totalizer ?? [];
 
   const groupEntity = entities.find((e) => e.nivel === "Grupo");
   const companyEntities = entities.filter((e) => e.nivel === "Empresa");
+
+  if (!companyEntities.length) {
+    return { columns: [], rows: [] };
+  }
+
+  // Empresa base para estruturar classifications
+  const baseCompanyEntity = companyEntities[0];
 
   // ---------- COLUNAS ----------
   const columns: DreColumn[] = [
@@ -36,8 +42,10 @@ export function normalizeDreConsolidatedTable(
     });
   }
 
-  // ---------- BASE ESTRUTURAL ----------
-  const baseTotalizers = getMonthTotalizers(groupEntity ?? companyEntities[0])
+  // ---------- TOTALIZERS (base podem vir do grupo) ----------
+  const baseTotalizers = getMonthTotalizers(
+    groupEntity ?? baseCompanyEntity,
+  )
     .slice()
     .sort((a, b) => a.typeOrder - b.typeOrder);
 
@@ -55,7 +63,12 @@ export function normalizeDreConsolidatedTable(
           ? groupEntity
           : companyEntities.find((e) => String(e.companyId) === col.key);
 
-      const found = getMonthTotalizers(entity!).find(
+      if (!entity) {
+        totalizerValues[col.key] = null;
+        continue;
+      }
+
+      const found = getMonthTotalizers(entity).find(
         (t) => t.typeOrder === baseTot.typeOrder,
       );
 
@@ -70,14 +83,21 @@ export function normalizeDreConsolidatedTable(
       values: totalizerValues,
     });
 
-    // ----- CLASSIFICATIONS -----
+    // ---------- CLASSIFICATIONS (BASE SEMPRE DA EMPRESA) ----------
+    const baseCompanyTotalizer = getMonthTotalizers(
+      baseCompanyEntity,
+    ).find((t) => t.typeOrder === baseTot.typeOrder);
+
     const baseClassifications =
-      baseTot.classifications
+      baseCompanyTotalizer?.classifications
         ?.slice()
         .sort((a, b) => a.typeOrder - b.typeOrder) ?? [];
 
     for (const baseCls of baseClassifications) {
-      const isClassificationPercentage = baseCls.name.trim().endsWith("%");
+      const isClassificationPercentage = baseCls.name
+        .trim()
+        .endsWith("%");
+
       const classValues: Record<string, number | null> = {};
 
       for (const col of columns) {
@@ -86,7 +106,12 @@ export function normalizeDreConsolidatedTable(
             ? groupEntity
             : companyEntities.find((e) => String(e.companyId) === col.key);
 
-        const tot = getMonthTotalizers(entity!).find(
+        if (!entity) {
+          classValues[col.key] = null;
+          continue;
+        }
+
+        const tot = getMonthTotalizers(entity).find(
           (t) => t.typeOrder === baseTot.typeOrder,
         );
 
