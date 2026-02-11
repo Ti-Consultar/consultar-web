@@ -11,23 +11,21 @@ import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
-import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
-interface CompanyMenuProps {
+interface SubCompanyMenuProps {
   onAddCompany: () => void;
   onEditCompany: () => void;
   onInviteMembers: () => void;
   onDeactivateCompany: () => void;
-  createCompanyText?: string;
 }
 
-export function CompanyMenu({
+export function SubCompanyMenu({
   onAddCompany,
   onEditCompany,
   onInviteMembers,
   onDeactivateCompany,
-  createCompanyText
-}: CompanyMenuProps) {
+}: SubCompanyMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const open = Boolean(anchorEl);
@@ -81,7 +79,19 @@ export function CompanyMenu({
           <ListItemIcon>
             <AddOutlinedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary={createCompanyText || "Adicionar empresa"} />
+          <ListItemText primary="Adicionar empresa" />
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            onAddCompany();
+          }}
+        >
+          <ListItemIcon>
+            <AddOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Adicionar filial" />
         </MenuItem>
 
         <MenuItem

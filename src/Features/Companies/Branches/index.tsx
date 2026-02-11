@@ -35,7 +35,7 @@ import dayjs from "dayjs";
 import theme from "../../../styles/theme";
 import { CompanyMenu } from "../../../components/Inputs/CompanyActionsDropdown";
 
-export const Branches = () => {
+const Branches = () => {
   const navigate = useNavigate();
   const { setLoading } = useLoading();
   const { setBreadcrumbs } = useMainContext();
@@ -43,11 +43,12 @@ export const Branches = () => {
   const { groupId, companyId } = useParams<{
     groupId: string;
     companyId: string;
+    subCompanyId: string;
   }>();
 
   const [, setBranches] = useState<any[]>([]);
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null
+    null,
   );
 
   const [editingBranch, setEditingBranch] = useState<GroupFormData>();
@@ -248,3 +249,5 @@ export const Branches = () => {
     </MainTemplate>
   );
 };
+
+export default Branches;

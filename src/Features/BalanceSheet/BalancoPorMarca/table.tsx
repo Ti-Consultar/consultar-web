@@ -49,7 +49,7 @@ export const DreConsolidatedTable = ({ data }: Props) => {
   const isEmpty = !data || data.rows.length === 0;
 
   const groupBorderColor = theme.palette.primary.main;
-  const groupBg = theme.palette.primary.light + "22"; // azul claro suave
+  const groupBg = theme.palette.primary.light + "22";
 
   return (
     <TableContainer

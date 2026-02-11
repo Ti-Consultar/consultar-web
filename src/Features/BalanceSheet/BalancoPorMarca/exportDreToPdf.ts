@@ -26,17 +26,13 @@ export function exportDreToPdf({
 
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  /* ================= HEADER VISUAL ================= */
-
   // Faixa azul superior
-  doc.setFillColor(42, 69, 122); // #2A457A
+  doc.setFillColor(42, 69, 122); 
   doc.rect(0, 0, pageWidth, 30, "F");
 
   // Linha vermelha inferior
-  doc.setFillColor(148, 25, 29); // #94191D
+  doc.setFillColor(148, 25, 29);
   doc.rect(0, 30, pageWidth, 3, "F");
-
-  /* ================= CONTEÚDO HEADER ================= */
 
   // Título
   doc.setFont("helvetica", "bold");
@@ -56,8 +52,6 @@ export function exportDreToPdf({
   doc.text("Valores em milhar", pageWidth - 40, 55, {
     align: "right",
   });
-
-  /* ================= TABELA ================= */
 
   const head = [["Descrição", ...columns.map((c) => c.label)]];
 
@@ -134,7 +128,7 @@ export function exportDreToPdf({
 
   const pageHeight = doc.internal.pageSize.getHeight();
   const today = new Date();
-  const formattedDate = today.toLocaleDateString("pt-BR"); // formato DD/MM/AAAA
+  const formattedDate = today.toLocaleDateString("pt-BR");
 
   doc.setFontSize(8);
   doc.setTextColor(150);

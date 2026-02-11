@@ -8,7 +8,6 @@ import { CompanyForm } from "../GroupForm";
 import {
   deleteCompany,
   getCompanyById,
-  saveCompany,
   updateCompany,
 } from "../../services/apis/routes/companies.service";
 import { deleteGroup, getGroupById, updateGroup } from "../../services/apis/routes/groups.service";
@@ -34,6 +33,7 @@ import dayjs from "dayjs";
 import { CompanyMenu } from "../../components/Inputs/CompanyActionsDropdown";
 import { AlertModal } from "../../components/AlertModal";
 import { InvitationModal } from "../Invitation/InvitationModal";
+import { saveSubCompany } from "../../services/apis/routes/subcompanies.service";
 
 const Companies = () => {
   const { groupId, companyId } = useParams<{
@@ -114,6 +114,7 @@ const Companies = () => {
     const updatedData = {
       ...data,
       groupId: Number(groupId),
+      companyId: Number(companyId),
       userId: Number(userData?.userId),
     };
 
@@ -122,7 +123,7 @@ const Companies = () => {
 
       const response = editingCompany
         ? await updateCompany(updatedData, editingCompany.groupId!)
-        : await saveCompany(updatedData);
+        : await saveSubCompany(updatedData);
 
       if (!response.success) {
         toast.error("Erro ao salvar empresa");
@@ -367,6 +368,7 @@ const Companies = () => {
             onEditCompany={handleEditCompany}
             onInviteMembers={handleOpenInvitationModal}
             onDeactivateCompany={() => setOpenUnlinkDialog(true)}
+            createCompanyText={companyId ? "Adicionar filial" : "Adicionar empresa"}
           />
         </Box>
 

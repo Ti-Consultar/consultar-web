@@ -4,23 +4,23 @@ import { lazy, Suspense } from "react";
 /* Landing page e rotas simples */
 const Home = lazy(() => import("../../landingPage"));
 const ForgotPassword = lazy(
-  () => import("../../Features/Authentication/forgot-password")
+  () => import("../../Features/Authentication/forgot-password"),
 );
 const PasswordSent = lazy(
-  () => import("../../Features/Authentication/forgot-password/password-sent")
+  () => import("../../Features/Authentication/forgot-password/password-sent"),
 );
 const Authentication = lazy(() => import("../../Features/Authentication"));
 
 /* Perfil */
 const ProfileInfo = lazy(() => import("../../Features/Profile"));
 const ProfileSecurity = lazy(
-  () => import("../../Features/Profile/ProfileSecurity")
+  () => import("../../Features/Profile/ProfileSecurity"),
 );
 const ProfileCustomizing = lazy(
-  () => import("../../Features/Profile/ProfileCustomizing")
+  () => import("../../Features/Profile/ProfileCustomizing"),
 );
 const UsersSettings = lazy(
-  () => import("../../Features/Profile/UsersSettings")
+  () => import("../../Features/Profile/UsersSettings"),
 );
 
 /* Grupos / Empresas */
@@ -29,23 +29,23 @@ const Companies = lazy(() => import("../../Features/Companies"));
 
 /* Balancete, Contábil, DRE */
 const BalanceSheetData = lazy(
-  () => import("../../Features/ChartAccounts/BalanceSheetData")
+  () => import("../../Features/ChartAccounts/BalanceSheetData"),
 );
 const BalanceSheetDetailed = lazy(
-  () => import("../../Features/ChartAccounts/BalanceSheetDetailed")
+  () => import("../../Features/ChartAccounts/BalanceSheetDetailed"),
 );
 const BalanceAssetsLiabilities = lazy(
-  () => import("../../Features/ChartAccounts/BalanceAssetsLiabilities")
+  () => import("../../Features/ChartAccounts/BalanceAssetsLiabilities"),
 );
 
 const BalancoContabil = lazy(
-  () => import("../../Features/BalanceSheet/BalanceSheet")
+  () => import("../../Features/BalanceSheet/BalanceSheet"),
 );
 const BalancoReclassificado = lazy(
-  () => import("../../Features/BalanceSheet/BalancoReclassificado")
+  () => import("../../Features/BalanceSheet/BalancoReclassificado"),
 );
 const BalancoPorMarca = lazy(
-  () => import("../../Features/BalanceSheet/BalancoPorMarca")
+  () => import("../../Features/BalanceSheet/BalancoPorMarca"),
 );
 
 /* Classificação */
@@ -53,14 +53,14 @@ const ClassificationPage = lazy(() => import("../../Features/Classification"));
 
 /* Resultados */
 const GestaoLiquidez = lazy(
-  () => import("../../Features/Results/GestaoLiquidez")
+  () => import("../../Features/Results/GestaoLiquidez"),
 );
 const IndicesEconomicos = lazy(
-  () => import("../../Features/Results/IndicesEconomicos")
+  () => import("../../Features/Results/IndicesEconomicos"),
 );
 const CILeEC = lazy(() => import("../../Features/Results/CILeEC"));
 const EficienciaOperacional = lazy(
-  () => import("../../Features/Results/EficienciaOperacional")
+  () => import("../../Features/Results/EficienciaOperacional"),
 );
 
 /* Home interna */
@@ -77,22 +77,23 @@ const AgregadoMensal = lazy(() => import("../../Features/ValueTree/EVA"));
 
 /* Upload */
 const UploadBalanceSheet = lazy(
-  () => import("../../Features/Upload/UploadBalanceSheet")
+  () => import("../../Features/Upload/UploadBalanceSheet"),
 );
 const UploadBudgetSheet = lazy(
-  () => import("../../Features/Upload/UploadBudgetSheet")
+  () => import("../../Features/Upload/UploadBudgetSheet"),
 );
 
 const BalanceColumnMapping = lazy(
-  () => import("../../Features/Upload/BalanceColumnMapping")
+  () => import("../../Features/Upload/BalanceColumnMapping"),
 );
 
 /* Not Found */
 const NotFoundPage = lazy(() => import("../../Features/NotFoundPage"));
 
+const Branches = lazy(() => import("../../Features/Companies/Branches"));
+
 /* Helper */
 import { withScopes } from "./helper";
-
 export const AppRoutes = () => {
   return (
     <Suspense fallback={<div></div>}>
@@ -118,6 +119,10 @@ export const AppRoutes = () => {
         <Route
           path="/grupos/:groupId/empresas/:companyId/filiais"
           element={<Companies />}
+        />
+        <Route
+          path="/grupos/:groupId/empresas/:companyId/filiais/:subCompanyId"
+          element={<Branches />}
         />
 
         {/* Upload Balancete */}
