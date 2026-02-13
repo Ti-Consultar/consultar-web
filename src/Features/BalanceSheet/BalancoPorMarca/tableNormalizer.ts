@@ -41,7 +41,6 @@ export function normalizeDreConsolidatedTable(
     });
   }
 
-  // ---------- TOTALIZERS BASE (UNIÃO) ----------
   const totalizerMap = new Map<number, Totalizer>();
 
   for (const entity of allEntities) {
@@ -61,7 +60,6 @@ export function normalizeDreConsolidatedTable(
   for (const baseTot of baseTotalizers) {
     const isTotalizerPercentage = baseTot.name.trim().endsWith("%");
 
-    // ---------- TOTALIZER ----------
     const totalizerValues: Record<string, number | null> = {};
 
     for (const col of columns) {

@@ -57,9 +57,9 @@ export const StyledTableCell = styled(TableCell) <{
   isFocusedCell?: boolean;
 }>`
   background-color: ${({ isFocusedCell, isHovered, isSection }) => {
-    if (isFocusedCell) return "#d7d9eeff"; // célula em foco
-    if (isHovered) return "#eaeaeaff"; // hover X/Y
-    if (isSection) return "#f4f4f4"; // seção
+    if (isFocusedCell) return "#d7d9eeff";
+    if (isHovered) return "#eaeaeaff";
+    if (isSection) return "#f4f4f4";
     return "transparent";
   }};
   font-weight: ${({ isSection }) => (isSection ? "bold" : "normal")};
