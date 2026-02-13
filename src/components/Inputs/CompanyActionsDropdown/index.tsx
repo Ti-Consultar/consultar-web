@@ -19,6 +19,7 @@ interface CompanyMenuProps {
   onInviteMembers: () => void;
   onDeactivateCompany: () => void;
   createCompanyText?: string;
+  hideCompanyCreation?: boolean
 }
 
 export function CompanyMenu({
@@ -26,6 +27,7 @@ export function CompanyMenu({
   onEditCompany,
   onInviteMembers,
   onDeactivateCompany,
+  hideCompanyCreation,
   createCompanyText
 }: CompanyMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -72,18 +74,21 @@ export function CompanyMenu({
           },
         }}
       >
-        <MenuItem
-          onClick={() => {
-            handleClose();
-            onAddCompany();
-          }}
-        >
-          <ListItemIcon>
-            <AddOutlinedIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary={createCompanyText || "Adicionar empresa"} />
-        </MenuItem>
-
+        {
+          hideCompanyCreation ?? (
+            <MenuItem
+              onClick={() => {
+                handleClose();
+                onAddCompany();
+              }}
+            >
+              <ListItemIcon>
+                <AddOutlinedIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary={createCompanyText || "Adicionar empresa"} />
+            </MenuItem>
+          )
+        }
         <MenuItem
           onClick={() => {
             handleClose();

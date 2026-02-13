@@ -331,16 +331,16 @@ const Companies = () => {
               <CompanyNavigationDropdown
                 data={dropdownData.data}
                 selectedId={companyId ? Number(companyId) : Number(groupId)}
-                onChange={({ id, type }) => {
+                onChange={({ id, type, parentId }) => {
                   if (type === "group")
                     return navigate(`/grupos/${id}/empresas`);
+
                   if (type === "filial")
-                    return navigate(
-                      `/grupos/${groupId}/empresas/${id}/filiais`
-                    );
+                    return navigate(`/grupos/${groupId}/empresas/${id}/filiais`);
+
                   if (type === "sub")
                     return navigate(
-                      `/grupos/${groupId}/empresas/${companyId}/filiais/${id}`
+                      `/grupos/${groupId}/empresas/${parentId}/filiais/${id}`
                     );
                 }}
               />
@@ -406,15 +406,9 @@ const Companies = () => {
                 gap: "10px",
               }}
             >
-              {/* <span style={{ textAlign: "center", fontWeight: "bold" }}>
-                {dropdownData?.data?.name}
-              </span> */}
               <span style={{ textAlign: "center" }}>
                 Tem certeza que deseja inativar essa empresa?
               </span>
-              {/* <Alert color="warning" severity="warning">
-                Todas as lojas vinculadas a esta empresa também serão inativadas.
-              </Alert> */}
             </div>
           }
           type="warning"

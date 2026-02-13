@@ -227,6 +227,7 @@ const Branches = () => {
             onEditCompany={() => {}}
             onInviteMembers={() => console.log("Convidar membros")}
             onDeactivateCompany={() => console.log("Inativar")}
+            hideCompanyCreation
           />
         </Box>
 

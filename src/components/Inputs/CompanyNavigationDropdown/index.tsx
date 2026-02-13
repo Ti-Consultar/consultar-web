@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import {
   Button,
   Menu,
@@ -46,6 +46,7 @@ interface CompanyLevelSelectProps {
     id: number;
     accountPlanId: number;
     type: "group" | "filial" | "sub";
+    parentId?: number;
   }) => void;
 }
 
@@ -60,11 +61,10 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
   const [subAnchor, setSubAnchor] = useState<HTMLElement | null>(null);
 
   const [currentSubs, setCurrentSubs] = useState<SubCompany[]>([]);
+  const [activeFilialId, setActiveFilialId] = useState<number | null>(null);
 
-  // ====== PAGINAÇÃO ======
   const ITEMS_PER_PAGE = 5;
   const [page, setPage] = useState(0);
-  // =======================
 
   const open = Boolean(anchor);
 
@@ -82,13 +82,11 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
   }, [selectedId, data]);
 
   const filteredFiliais = useMemo(() => {
-    setPage(0); // reset ao buscar
     return data.filiais.filter((f) =>
-      f.name.toLowerCase().includes(search.toLowerCase()),
+      f.name.toLowerCase().includes(search.toLowerCase())
     );
   }, [data.filiais, search]);
 
-  // Paginação
   const totalPages = Math.ceil(filteredFiliais.length / ITEMS_PER_PAGE);
 
   const paginatedFiliais = useMemo(() => {
@@ -97,10 +95,13 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
   }, [filteredFiliais, page]);
 
   const selectSub = (sub: SubCompany) => {
+    if (!activeFilialId) return;
+
     onChange({
       id: sub.id,
       accountPlanId: sub.accountPlanId,
       type: "sub",
+      parentId: activeFilialId,
     });
 
     setSubAnchor(null);
@@ -144,7 +145,10 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
             placeholder="Buscar..."
             size="small"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(0);
+            }}
             fullWidth
           />
         </Box>
@@ -158,7 +162,6 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
               accountPlanId: data.accountPlanId,
               type: "group",
             });
-
             setAnchor(null);
           }}
         >
@@ -183,7 +186,7 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
                 p: 0,
               }}
             >
-              {/* CLIQUE NA FILIAL */}
+              {/* FILIAL */}
               <Box
                 onClick={(e) => {
                   e.stopPropagation();
@@ -212,9 +215,9 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
                 <Box
                   onMouseEnter={(e) => {
                     e.stopPropagation();
-
                     setSubAnchor(e.currentTarget as HTMLElement);
                     setCurrentSubs(f.subCompanies);
+                    setActiveFilialId(f.id);
                   }}
                   sx={{
                     px: 1.5,
@@ -224,15 +227,17 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
                     cursor: "pointer",
                   }}
                 >
-                  <Typography sx={{ fontSize: 12, opacity: 0.6 }}>▶</Typography>
+                  <Typography sx={{ fontSize: 12, opacity: 0.6 }}>
+                    ▶
+                  </Typography>
                 </Box>
               )}
             </MenuItem>
           );
         })}
 
-        {/* Footer */}
-        {totalPages > 0 && (
+        {/* FOOTER */}
+        {totalPages > 1 && (
           <Box
             sx={{
               display: "flex",
@@ -279,6 +284,15 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
         transformOrigin={{
           vertical: "top",
           horizontal: "left",
+        }}
+        PaperProps={{
+          sx: {
+            minWidth: 220,
+            borderRadius: "12px",
+            border: "1px solid #f1f1f1",
+            boxShadow: "0 4px 18px rgba(0,0,0,0.08)",
+            ml: 0.5,
+          },
         }}
       >
         {currentSubs.map((sub) => (
