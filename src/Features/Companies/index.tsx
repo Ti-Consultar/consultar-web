@@ -8,6 +8,7 @@ import { CompanyForm } from "../GroupForm";
 import {
   deleteCompany,
   getCompanyById,
+  saveCompany,
   updateCompany,
 } from "../../services/apis/routes/companies.service";
 import { deleteGroup, getGroupById, updateGroup } from "../../services/apis/routes/groups.service";
@@ -33,7 +34,7 @@ import dayjs from "dayjs";
 import { CompanyMenu } from "../../components/Inputs/CompanyActionsDropdown";
 import { AlertModal } from "../../components/AlertModal";
 import { InvitationModal } from "../Invitation/InvitationModal";
-import { saveSubCompany } from "../../services/apis/routes/subcompanies.service";
+import { saveSubCompany, updateSubCompany } from "../../services/apis/routes/subcompanies.service";
 
 const Companies = () => {
   const { groupId, companyId } = useParams<{
@@ -121,9 +122,19 @@ const Companies = () => {
     try {
       setLoading(true, "Salvando empresa...");
 
-      const response = editingCompany
-        ? await updateCompany(updatedData, editingCompany.groupId!)
-        : await saveSubCompany(updatedData);
+      let response;
+
+      if (companyId) {
+        // Fluxo de SubCompany
+        response = editingCompany
+          ? await updateSubCompany(updatedData, editingCompany.groupId!)
+          : await saveSubCompany(updatedData);
+      } else {
+        // Fluxo de Company normal
+        response = editingCompany
+          ? await updateCompany(updatedData, editingCompany.groupId!)
+          : await saveCompany(updatedData);
+      }
 
       if (!response.success) {
         toast.error("Erro ao salvar empresa");
@@ -135,7 +146,7 @@ const Companies = () => {
       setOpen(false);
       fetchData();
       fetchDropdown();
-    } catch {
+    } catch (error) {
       toast.error("Erro ao salvar os dados");
     } finally {
       setLoading(false);
@@ -368,7 +379,7 @@ const Companies = () => {
             onEditCompany={handleEditCompany}
             onInviteMembers={handleOpenInvitationModal}
             onDeactivateCompany={() => setOpenUnlinkDialog(true)}
-            createCompanyText={companyId ? "Adicionar filial" : "Adicionar empresa"}
+            createCompanyText={companyId ? "Adicionar Filial" : "Adicionar Empresa"}
           />
         </Box>
 
