@@ -40,7 +40,7 @@ const Branches = () => {
   const { setLoading } = useLoading();
   const { setBreadcrumbs } = useMainContext();
 
-  const { groupId, companyId } = useParams<{
+  const { groupId, companyId, subCompanyId } = useParams<{
     groupId: string;
     companyId: string;
     subCompanyId: string;
@@ -200,7 +200,7 @@ const Branches = () => {
             <Box sx={{ width: "20%", mb: 3 }}>
               <CompanyNavigationDropdown
                 data={dropdownData.data}
-                selectedId={Number(companyId)}
+                selectedId={Number(subCompanyId)}
                 onChange={handleNavigation}
               />
             </Box>
