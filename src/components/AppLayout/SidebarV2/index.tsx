@@ -132,8 +132,6 @@ export const Sidebar = () => {
 
   const hasCompanyContext = !!companyid;
 
-  console.log("hasCompanyContext", hasCompanyContext);
-
   const { toggleDrawer } = useDrawer();
   const { logout } = useAuth();
 

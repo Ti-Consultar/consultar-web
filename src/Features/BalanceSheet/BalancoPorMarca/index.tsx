@@ -32,7 +32,10 @@ const BalancoPorMarca = () => {
     dayjs().startOf("year"),
   );
 
-  const { groupId } = useParams<{ groupId: string }>();
+  const { groupId, companyid } = useParams<{
+    groupId: string;
+    companyid: string;
+  }>();
   const { setLoading } = useLoading();
 
   const filterMonthFromResponse = (response: any[], month: number) =>
@@ -74,12 +77,17 @@ const BalancoPorMarca = () => {
 
   useEffect(() => {
     fetchConsolidatedDre();
+    console.log(groupId, companyid);
   }, [groupId, selectedYear, selectedMonth]);
 
   return (
     <MainTemplate>
       <MainContainer>
-        <Title>Demonstrações Financeiras por Marca</Title>
+        <Title>
+          {companyid && groupId
+            ? `Demonstração do Resultado - Por Loja`
+            : "Demonstração do Resultado - Por Marca"}
+        </Title>
 
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box display="flex" justifyContent="space-between">

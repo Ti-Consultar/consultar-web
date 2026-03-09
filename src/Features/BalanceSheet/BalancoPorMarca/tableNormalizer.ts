@@ -25,9 +25,16 @@ export function normalizeDreConsolidatedTable(
     return { columns: [], rows: [] };
   }
 
+  // ---------- REMOVE DUPLICADAS POR companyId ----------
+  const uniqueCompanyEntities = Array.from(
+    new Map(
+      companyEntities.map((e) => [e.companyId, e])
+    ).values()
+  );
+
   // ---------- COLUNAS ----------
   const columns: DreColumn[] = [
-    ...companyEntities.map((e) => ({
+    ...uniqueCompanyEntities.map((e) => ({
       key: String(e.companyId),
       label: e.nome,
     })),
@@ -66,7 +73,7 @@ export function normalizeDreConsolidatedTable(
       const entity =
         col.key === "grupo"
           ? groupEntity
-          : companyEntities.find((e) => String(e.companyId) === col.key);
+          : uniqueCompanyEntities.find((e) => String(e.companyId) === col.key);
 
       const tot = entity
         ? getMonthTotalizers(entity).find(
@@ -112,7 +119,9 @@ export function normalizeDreConsolidatedTable(
         const entity =
           col.key === "grupo"
             ? groupEntity
-            : companyEntities.find((e) => String(e.companyId) === col.key);
+            : uniqueCompanyEntities.find(
+                (e) => String(e.companyId) === col.key,
+              );
 
         const tot = entity
           ? getMonthTotalizers(entity).find(

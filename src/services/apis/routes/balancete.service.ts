@@ -12,7 +12,7 @@ type ImportAccountingWithMappingParams = {
   debit?: number;
   credit?: number;
   finalValue?: number;
-};
+}; 
 
 export const submitAccounting = async (data: BalancetePayload) => {
   try {
@@ -69,7 +69,7 @@ export const getBalanceteData = async (balanceteId: number) => {
 export const getBalanceteByCostCenter = async (balanceteId: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}/api/Balancete/${balanceteId}/cost-center`
+      `${URL}/api/Balancete/${balanceteId}/cost-center/`
     );
     return response.data;
   } catch (error) {
@@ -179,6 +179,34 @@ export const getConsolidatedIncomeStatement = async (groupId: number, year: numb
       `${URL}/demonstracao-consolidado`,  
       {
         params: { groupId, year},
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getConsolidatedIncomeStatementBranch = async (companyid: number, year: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/demonstracao-consolidados/filiais`,  
+      {
+        params: { companyid, year},
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getConsolidatedIncomeStatementBranchByMonths = async (companyid: number, year: number, month: number) => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/demonstracao-consolidados/filiais`,  
+      {
+        params: { companyid, year, month},
       }
     );
     return response.data;
