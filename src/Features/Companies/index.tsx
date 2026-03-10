@@ -25,16 +25,14 @@ import CompanyNavigationDropdown from "../../components/Inputs/CompanyNavigation
 import { getDropdownNavigation } from "../../services/apis/routes/companies.service";
 import { CompanyResponse } from "../../types/companyDropdown";
 import { DashboardPage } from "../Dashboard";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { ModernTextField } from "../../styles/DatePicker";
 import DashboardIcon from "../../assets/icons/duo-icons_dashboard.svg";
 import theme from "../../styles/theme";
-import dayjs from "dayjs";
 import { CompanyMenu } from "../../components/Inputs/CompanyActionsDropdown";
 import { AlertModal } from "../../components/AlertModal";
 import { InvitationModal } from "../Invitation/InvitationModal";
 import { saveSubCompany, updateSubCompany } from "../../services/apis/routes/subcompanies.service";
+import YearPicker from "../../components/Inputs/YearPicker";
+import { useYear } from "../../contexts/YearContext";
 
 const Companies = () => {
   const { groupId, companyId } = useParams<{
@@ -55,7 +53,7 @@ const Companies = () => {
 
   const [editingCompany, setEditingCompany] = useState<GroupFormData>();
   const [open, setOpen] = useState(false);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const {year, setYear} = useYear();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [openUnlinkDialog, setOpenUnlinkDialog] = useState(false);
 
@@ -358,21 +356,10 @@ const Companies = () => {
             </Box>
           )}
 
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-              views={["year"]}
-              label="Ano"
-              value={dayjs().year(year)}
-              onChange={(v) => setYear(v?.year() ?? year)}
-              enableAccessibleFieldDOMStructure={false}
-              slots={{
-                textField: ModernTextField,
-              }}
-              slotProps={{
-                textField: { size: "medium" },
-              }}
-            />
-          </LocalizationProvider>
+          <YearPicker 
+            year={year}
+            onChange={(newYear) => setYear(newYear)}
+          />
 
           <CompanyMenu
             onAddCompany={() => setOpen(true)}

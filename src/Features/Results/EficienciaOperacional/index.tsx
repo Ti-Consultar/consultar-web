@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
 import { Box, Paper } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs, { Dayjs } from "dayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
 import { useLoading } from "../../../contexts/LoadingProvider";
@@ -17,11 +13,12 @@ import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 import { ResultsTableVariation } from "../resultsTableVariation";
-import { ModernTextField } from "../../../styles/DatePicker";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import YearPicker from "../../../components/Inputs/YearPicker";
+import { useYear } from "../../../contexts/YearContext";
 
 const EficienciaOperacional = () => {
   const navigate = useNavigate();
@@ -32,15 +29,13 @@ const EficienciaOperacional = () => {
     subCompanyId?: string;
   }>();
   const [tabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs>(
-    dayjs().startOf("year")
-  );
+  const { year, setYear } = useYear();
   const [data, setData] = useState<any[]>([]);
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null
+    null,
   );
   const { accountPlanId, entityName } = useAccountPlanId({
     groupId,
@@ -150,17 +145,16 @@ const EficienciaOperacional = () => {
   };
 
   const fetchData = async () => {
-    if (!selectedYear) return;
+    if (!year) return;
 
     setLoading(true, "Buscando dados...");
-    const year = Number(selectedYear.format("YYYY"));
 
     try {
       if (!accountPlanId) return;
 
       const response = await getOperationalEfficienyVariation(
         accountPlanId,
-        year
+        year,
       );
       setData(response?.months);
     } catch (error) {
@@ -228,29 +222,29 @@ const EficienciaOperacional = () => {
         exportPDF(
           rows,
           columns,
-          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`,
-          "landscape"
+          `Fluxo de Caixa - ${entityName} ${year}`,
+          "landscape",
         );
         break;
       case "CSV":
         exportCSV(
           rows,
           columns,
-          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+          `Fluxo de Caixa - ${entityName} ${year}`,
         );
         break;
       case "EXCEL":
         exportExcel(
           rows,
           columns,
-          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+          `Fluxo de Caixa - ${entityName} ${year}`,
         );
         break;
       case "PPT":
         exportPPTX(
           rows,
           columns,
-          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
+          `Fluxo de Caixa - ${entityName} ${year}`,
         );
         break;
     }
@@ -261,7 +255,7 @@ const EficienciaOperacional = () => {
       fetchData();
       fetchDropdown();
     }
-  }, [tabValue, selectedYear, accountPlanId]);
+  }, [tabValue, year, accountPlanId]);
 
   return (
     <MainTemplate>
@@ -278,39 +272,26 @@ const EficienciaOperacional = () => {
                     onChange={({ id, type }) => {
                       if (type === "group")
                         return navigate(
-                          `/grupos/${id}/resultados/eficiencia-operacional`
+                          `/grupos/${id}/resultados/eficiencia-operacional`,
                         );
                       if (type === "filial")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${id}/resultados/eficiencia-operacional`
+                          `/grupos/${groupId}/empresas/${id}/resultados/eficiencia-operacional`,
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/eficiencia-operacional`
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/eficiencia-operacional`,
                         );
                     }}
                   />
                 </Box>
               )}
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  views={["year"]}
-                  label="Ano"
-                  value={selectedYear}
-                  onChange={(newValue: Dayjs | null) => {
-                    if (newValue) {
-                      setSelectedYear(newValue);
-                    }
-                  }}
-                  enableAccessibleFieldDOMStructure={false}
-                  slots={{
-                    textField: ModernTextField,
-                  }}
-                  slotProps={{
-                    textField: { size: "medium" },
-                  }}
-                />
-              </LocalizationProvider>
+
+              <YearPicker
+                year={year}
+                onChange={(newYear) => setYear(newYear)}
+              />
+
               <TableValueVisualization />
 
               <ExportButton onClick={() => setExportMenuOpen(true)} />

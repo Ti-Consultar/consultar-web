@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
 import { Box, Paper } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs, { Dayjs } from "dayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainContainer, Title } from "./styles";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
@@ -21,12 +17,12 @@ import { getDropdownNavigation } from "../../services/apis/routes/companies.serv
 import { CompanyResponse } from "../../types/companyDropdown";
 import CompanyNavigationDropdown from "../../components/Inputs/CompanyNavigationDropdown";
 import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
+import { useYear } from "../../contexts/YearContext";
+import YearPicker from "../../components/Inputs/YearPicker";
 
 const CashFlow = () => {
   const [tabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs>(
-    dayjs().startOf("year")
-  );
+  const { year, setYear } = useYear();
   const [realizado, setRealizado] = useState<any[]>([]);
   const [orcado, setOrcado] = useState<any[]>([]);
   const [variacao, setVariacao] = useState<any[]>([]);
@@ -41,7 +37,7 @@ const CashFlow = () => {
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
   const navigate = useNavigate();
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null
+    null,
   );
   const { accountPlanId, entityName } = useAccountPlanId({
     groupId,
@@ -118,10 +114,9 @@ const CashFlow = () => {
   }, []);
 
   const fetchData = async () => {
-    if (!selectedYear) return;
+    if (!year) return;
 
     setLoading(true, "Buscando fluxo de caixa...");
-    const year = Number(selectedYear.format("YYYY"));
 
     try {
       if (!accountPlanId) return;
@@ -191,30 +186,18 @@ const CashFlow = () => {
         exportPDF(
           rows,
           columns,
-          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`,
-          "landscape"
+          `Fluxo de Caixa - ${entityName} ${year}`,
+          "landscape",
         );
         break;
       case "CSV":
-        exportCSV(
-          rows,
-          columns,
-          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
-        );
+        exportCSV(rows, columns, `Fluxo de Caixa - ${entityName} ${year}`);
         break;
       case "EXCEL":
-        exportExcel(
-          rows,
-          columns,
-          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
-        );
+        exportExcel(rows, columns, `Fluxo de Caixa - ${entityName} ${year}`);
         break;
       case "PPT":
-        exportPPTX(
-          rows,
-          columns,
-          `Fluxo de Caixa - ${entityName} ${selectedYear.year()}`
-        );
+        exportPPTX(rows, columns, `Fluxo de Caixa - ${entityName} ${year}`);
         break;
     }
   };
@@ -225,7 +208,7 @@ const CashFlow = () => {
 
   useEffect(() => {
     if (accountPlanId) fetchData();
-  }, [accountPlanId, selectedYear, tabValue]);
+  }, [accountPlanId, year, tabValue]);
 
   return (
     <MainTemplate>
@@ -244,34 +227,24 @@ const CashFlow = () => {
                         return navigate(`/grupos/${id}/fluxo-caixa/`);
                       if (type === "filial")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${id}/fluxo-caixa`
+                          `/grupos/${groupId}/empresas/${id}/fluxo-caixa`,
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/fluxo-caixa`
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/fluxo-caixa`,
                         );
                     }}
                   />
                 </Box>
               )}
+
+              <YearPicker
+                year={year}
+                onChange={(newYear) => setYear(newYear)}
+              />
+
               <TableValueVisualization />
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  views={["year"]}
-                  label="Ano"
-                  value={selectedYear}
-                  onChange={(newValue: Dayjs | null) => {
-                    if (newValue) {
-                      setSelectedYear(newValue);
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      size: "small",
-                    },
-                  }}
-                />
-              </LocalizationProvider>
+
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
             <div>

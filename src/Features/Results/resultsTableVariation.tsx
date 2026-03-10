@@ -79,13 +79,12 @@ export const ResultsTableVariation = ({
   const { valueMode } = useValueDisplay();
 
   const translatedMonths: MonthData[] = useMemo(() => {
-    // Conjunto de chaves que são MÉTRICAS válidas (ignora name/dateMonth)
+    // Conjunto de chaves que são MÉTRICAS válidas
     const metricUniverse = new Set<string>([
       ...metricKeys,
       ...Object.values(nestedMetrics).flat(),
     ]);
 
-    // Se quiser garantir que meta-campos nunca contem:
     const isMetricKey = (k: string) =>
       metricUniverse.has(k) && k !== "name" && k !== "dateMonth";
 
@@ -165,7 +164,7 @@ export const ResultsTableVariation = ({
   const getMetricValue = (
     month: MonthData,
     metric: string,
-    view: "realizado" | "orcado" | "variacao" = "realizado"
+    view: "realizado" | "orcado" | "variacao" = "realizado",
   ) => {
     const targetGroup = month[view];
     if (!targetGroup) return "-";
@@ -198,6 +197,20 @@ export const ResultsTableVariation = ({
     "&:hover": {
       backgroundColor: "#d6e9e0ff",
     },
+  };
+
+  const hasAnyMetricValue = (metric: string) => {
+    return translatedMonths.some((month) => {
+      const real = month.realizado?.[metric];
+      const budget = month.orcado?.[metric];
+      const variation = month.variacao?.[metric];
+
+      return (
+        (typeof real === "number" && real !== 0) ||
+        (typeof budget === "number" && budget !== 0) ||
+        (typeof variation === "number" && variation !== 0)
+      );
+    });
   };
 
   const renderValueCells = (month: MonthData, metric: string) => {
@@ -356,7 +369,10 @@ export const ResultsTableVariation = ({
 
         <TableBody>
           {nestedGroupOrder.map((groupKey) => {
-            const metrics = nestedMetrics[groupKey];
+            const metrics = nestedMetrics[groupKey].filter((metric) =>
+              hasAnyMetricValue(metric),
+            );
+            if (!metrics.length) return null;
             return (
               <React.Fragment key={groupKey}>
                 <TableRow>
@@ -429,7 +445,7 @@ export const ResultsTableVariation = ({
                       </TableCell>
 
                       {translatedMonths.map((month) =>
-                        renderValueCells(month, metric)
+                        renderValueCells(month, metric),
                       )}
                     </TableRow>
                   );
@@ -440,6 +456,7 @@ export const ResultsTableVariation = ({
 
           {metricKeys
             .filter((metric) => !allNestedKeys.includes(metric))
+            .filter((metric) => hasAnyMetricValue(metric))
             .map((metric) => {
               const isHighlighted = !!highlightRows[metric];
               return (
@@ -467,7 +484,7 @@ export const ResultsTableVariation = ({
                   </TableCell>
 
                   {translatedMonths.map((month) =>
-                    renderValueCells(month, metric)
+                    renderValueCells(month, metric),
                   )}
                 </TableRow>
               );

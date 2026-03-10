@@ -13,9 +13,10 @@ import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 import { toast } from "sonner";
+import { useYear } from "../../../contexts/YearContext";
 
 const AgregadoMensal = () => {
-  const [year, setYear] = useState<number>(dayjs().year());
+  const { year, setYear } = useYear();
   const [month, setMonth] = useState<number>(dayjs().month() + 1);
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [data, setData] = useState<any>(null);
@@ -26,7 +27,7 @@ const AgregadoMensal = () => {
     subCompanyId?: string;
   }>();
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null
+    null,
   );
   const navigate = useNavigate();
   const { accountPlanId } = useAccountPlanId({
@@ -49,9 +50,11 @@ const AgregadoMensal = () => {
       if (!selectedDate && response?.valueTreeYearMonth) {
         const { year: backendYear, month: backendMonth } =
           response.valueTreeYearMonth;
+
         const initialDate = dayjs()
           .year(backendYear)
           .month(backendMonth - 1);
+
         setSelectedDate(initialDate);
         setYear(backendYear);
         setMonth(backendMonth + 1);
@@ -76,8 +79,8 @@ const AgregadoMensal = () => {
 
   useEffect(() => {
     if (accountPlanId) {
-      fetchData(year, 0);
-      fetchDropdown()
+      fetchData(year, 1);
+      fetchDropdown();
     }
   }, [accountPlanId]);
 
@@ -97,7 +100,7 @@ const AgregadoMensal = () => {
                     return navigate(`/grupos/${groupId}/empresas/${id}/eva`);
                   if (type === "sub")
                     return navigate(
-                      `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/eva`
+                      `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/eva`,
                     );
                 }}
               />

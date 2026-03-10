@@ -75,7 +75,7 @@ export const BalancoReclassificadoTable = ({
   const canonicalName = (m: MonthRaw) => {
     if (m.name) return m.name;
     const byNum = Object.entries(MONTH_NUM_BY_NAME).find(
-      ([, num]) => num === m.dateMonth
+      ([, num]) => num === m.dateMonth,
     );
     return byNum?.[0] ?? "";
   };
@@ -145,7 +145,7 @@ export const BalancoReclassificadoTable = ({
           ...d,
           // deixa claro de qual classificação veio
           name: `${c.name} — ${d.name}`,
-        }))
+        })),
       ) ?? [];
 
     if (!items.length) return;
@@ -194,7 +194,7 @@ export const BalancoReclassificadoTable = ({
   const openDetails = (
     name: string,
     datas: any[] | undefined,
-    month: string
+    month: string,
   ) => {
     if (!datas?.length) return;
     setSelectedTitle(`${name} - ${tMonth(month)}`);
@@ -206,7 +206,7 @@ export const BalancoReclassificadoTable = ({
     value: number | undefined,
     name: string,
     real?: number | null,
-    budget?: number | null
+    budget?: number | null,
   ) => {
     // Se a tabela não estiver no modo DRE, não aplica setas nem cores
     if (nestedMode !== "DRE") {
@@ -250,13 +250,41 @@ export const BalancoReclassificadoTable = ({
     m: any,
     tot: number,
     cls: number,
-    type: "bud" | "real" | "var"
+    type: "bud" | "real" | "var",
   ) => {
     const list =
       type === "real" ? m.realRows : type === "bud" ? m.budgetRows : m.varRows;
     const row = list.find((x: any) => x.id === tot);
     const c = row?.classifications?.find((x: any) => x.id === cls);
     return c?.value;
+  };
+
+  const hasAnyTotalizerValue = (totId: number) => {
+    return mergedMonths.some((m) => {
+      const real = m.realRows.find((x) => x.id === totId)?.totalValue ?? 0;
+      const bud = m.budgetRows.find((x) => x.id === totId)?.totalValue ?? 0;
+      const vari = m.varRows.find((x) => x.id === totId)?.totalValue ?? 0;
+
+      return (
+        (real !== 0 && real !== null) ||
+        (bud !== 0 && bud !== null) ||
+        (vari !== 0 && vari !== null)
+      );
+    });
+  };
+
+  const hasAnyClassificationValue = (totId: number, clsId: number) => {
+    return mergedMonths.some((m) => {
+      const real = getClassValue(m, totId, clsId, "real") ?? 0;
+      const bud = getClassValue(m, totId, clsId, "bud") ?? 0;
+      const vari = getClassValue(m, totId, clsId, "var") ?? 0;
+
+      return (
+        (real !== 0 && real !== null) ||
+        (bud !== 0 && bud !== null) ||
+        (vari !== 0 && vari !== null)
+      );
+    });
   };
 
   return (
@@ -349,259 +377,128 @@ export const BalancoReclassificadoTable = ({
             </TableHead>
 
             <TableBody>
-              {allTotalizers.map((t) => {
-                const hl = !!highlightRows[t.id];
-                const rowBg = hl
-                  ? theme.palette.grey[300]
-                  : theme.palette.background.paper;
+              {allTotalizers
+                .filter((t) => hasAnyTotalizerValue(t.id))
+                .map((t) => {
+                  const hl = !!highlightRows[t.id];
+                  const rowBg = hl
+                    ? theme.palette.grey[300]
+                    : theme.palette.background.paper;
 
-                return (
-                  <React.Fragment key={t.id}>
-                    {/* Linha de totalizador */}
-                    <TableRow
-                      sx={{
-                        background: rowBg,
-                        borderBottom: `1px solid ${theme.palette.divider}`,
-                      }}
-                    >
-                      <TableCell
+                  return (
+                    <React.Fragment key={t.id}>
+                      {/* Linha de totalizador */}
+                      <TableRow
                         sx={{
-                          ...StickyCell,
-                          fontWeight: hl ? "bold" : 400,
-                          color: hl ? theme.palette.text.primary : "inherit",
                           background: rowBg,
-                          border: `1px solid ${theme.palette.divider}`,
-                          "&:hover": {
-                            backgroundColor: hl
-                              ? theme.palette.grey[400]
-                              : theme.palette.grey[200],
-                          },
+                          borderBottom: `1px solid ${theme.palette.divider}`,
                         }}
                       >
-                        <Tooltip title={t.name}>
-                          <span
-                            style={{
-                              display: "inline-block",
-                              maxWidth: 210,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {t.name}
-                          </span>
-                        </Tooltip>
-                      </TableCell>
-
-                      {mergedMonths.map((m) =>
-                        !showBudgetColumns ? (
-                          <TableCell
-                            key={`${m.id}-real-${t.id}`}
-                            align="right"
-                            sx={{
-                              ...(hasDatasFor(m, t.id) ? dataCellHover : {}),
-                              border: `1px solid ${theme.palette.divider}`,
-                              cursor: hasDatasFor(m, t.id)
-                                ? "pointer"
-                                : "default",
-                            }}
-                            onClick={() =>
-                              hasDatasFor(m, t.id) && openTotalsModal(t, m)
-                            }
-                          >
-                            {formatValue(
-                              m.realRows.find((x) => x.id === t.id)?.totalValue,
-                              t.name
-                            )}
-                          </TableCell>
-                        ) : (
-                          <React.Fragment key={m.id}>
-                            <TableCell
-                              align="right"
-                              sx={{
-                                ...dataCellHover,
-                                border: `1px solid ${theme.palette.divider}`,
+                        <TableCell
+                          sx={{
+                            ...StickyCell,
+                            fontWeight: hl ? "bold" : 400,
+                            color: hl ? theme.palette.text.primary : "inherit",
+                            background: rowBg,
+                            border: `1px solid ${theme.palette.divider}`,
+                            "&:hover": {
+                              backgroundColor: hl
+                                ? theme.palette.grey[400]
+                                : theme.palette.grey[200],
+                            },
+                          }}
+                        >
+                          <Tooltip title={t.name}>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                maxWidth: 210,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
                               }}
                             >
-                              {formatValue(
-                                m.budgetRows.find((x) => x.id === t.id)
-                                  ?.totalValue,
-                                t.name
-                              )}
-                            </TableCell>
+                              {t.name}
+                            </span>
+                          </Tooltip>
+                        </TableCell>
 
+                        {mergedMonths.map((m) =>
+                          !showBudgetColumns ? (
                             <TableCell
+                              key={`${m.id}-real-${t.id}`}
                               align="right"
                               sx={{
-                                ...dataCellHover,
+                                ...(hasDatasFor(m, t.id) ? dataCellHover : {}),
                                 border: `1px solid ${theme.palette.divider}`,
+                                cursor: hasDatasFor(m, t.id)
+                                  ? "pointer"
+                                  : "default",
                               }}
+                              onClick={() =>
+                                hasDatasFor(m, t.id) && openTotalsModal(t, m)
+                              }
                             >
                               {formatValue(
                                 m.realRows.find((x) => x.id === t.id)
                                   ?.totalValue,
-                                t.name
+                                t.name,
                               )}
                             </TableCell>
-
-                            <TableCell
-                              align="right"
-                              sx={{
-                                ...dataCellHover,
-                                border: `1px solid ${theme.palette.divider}`,
-                              }}
-                            >
-                              {(() => {
-                                const v = m.varRows.find(
-                                  (x) => x.id === t.id
-                                )?.totalValue;
-                                const real =
-                                  m.realRows.find((x) => x.id === t.id)
-                                    ?.totalValue ?? null;
-                                const budget =
+                          ) : (
+                            <React.Fragment key={m.id}>
+                              <TableCell
+                                align="right"
+                                sx={{
+                                  ...dataCellHover,
+                                  border: `1px solid ${theme.palette.divider}`,
+                                }}
+                              >
+                                {formatValue(
                                   m.budgetRows.find((x) => x.id === t.id)
-                                    ?.totalValue ?? null;
-                                const { arrow, color } = getVarVisual(
-                                  v,
+                                    ?.totalValue,
                                   t.name,
-                                  real,
-                                  budget
-                                );
-                                return (
-                                  <span
-                                    style={{
-                                      color,
-                                      display: "flex",
-                                      justifyContent: "flex-end",
-                                      gap: 4,
-                                    }}
-                                  >
-                                    {formatValue(v, t.name)}
-                                    {arrow}
-                                  </span>
-                                );
-                              })()}
-                            </TableCell>
-                          </React.Fragment>
-                        )
-                      )}
-                    </TableRow>
+                                )}
+                              </TableCell>
 
-                    {/* Classificações (DRE) */}
-                    {nestedMode === "DRE" &&
-                      (t.classifications ?? [])
-                        .filter((c) =>
-                          mergedMonths.some((m) =>
-                            getClassValue(m, t.id, c.id, "real")
-                          )
-                        )
-                        .map((c) => (
-                          <TableRow
-                            key={c.id}
-                            sx={{
-                              borderBottom: `1px solid ${theme.palette.divider}`,
-                            }}
-                          >
-                            <TableCell
-                              sx={{
-                                ...StickyCell,
-                                pl: 4,
-                                border: `1px solid ${theme.palette.divider}`,
-                              }}
-                            >
-                              <Tooltip title={c.name}>
-                                <span
-                                  style={{
-                                    display: "inline-block",
-                                    maxWidth: 210,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {c.name}
-                                </span>
-                              </Tooltip>
-                            </TableCell>
+                              <TableCell
+                                align="right"
+                                sx={{
+                                  ...dataCellHover,
+                                  border: `1px solid ${theme.palette.divider}`,
+                                }}
+                              >
+                                {formatValue(
+                                  m.realRows.find((x) => x.id === t.id)
+                                    ?.totalValue,
+                                  t.name,
+                                )}
+                              </TableCell>
 
-                            {mergedMonths.map((m) => {
-                              const realRow = m.realRows.find(
-                                (x) => x.id === t.id
-                              );
-                              const clsReal = realRow?.classifications?.find(
-                                (x) => x.id === c.id
-                              );
-                              const datas = clsReal?.datas;
-
-                              if (!showBudgetColumns) {
-                                const vReal = getClassValue(
-                                  m,
-                                  t.id,
-                                  c.id,
-                                  "real"
-                                );
-                                return (
-                                  <TableCell
-                                    key={m.id}
-                                    align="right"
-                                    sx={{
-                                      border: `1px solid ${theme.palette.divider}`,
-                                      ...(datas?.length ? dataCellHover : {}),
-                                    }}
-                                    onClick={() =>
-                                      datas?.length &&
-                                      openDetails(c.name, datas, m.name)
-                                    }
-                                  >
-                                    {formatValue(vReal, c.name)}
-                                  </TableCell>
-                                );
-                              }
-
-                              const vBud = getClassValue(m, t.id, c.id, "bud");
-                              const vReal = getClassValue(
-                                m,
-                                t.id,
-                                c.id,
-                                "real"
-                              );
-                              const vVar = getClassValue(m, t.id, c.id, "var");
-                              const { arrow, color } = getVarVisual(
-                                vVar,
-                                c.name,
-                                vReal,
-                                vBud
-                              );
-
-                              return (
-                                <React.Fragment key={m.id}>
-                                  <TableCell
-                                    align="right"
-                                    sx={{
-                                      border: `1px solid ${theme.palette.divider}`,
-                                    }}
-                                  >
-                                    {formatValue(vBud, c.name)}
-                                  </TableCell>
-                                  <TableCell
-                                    align="right"
-                                    sx={{
-                                      border: `1px solid ${theme.palette.divider}`,
-                                      ...(datas?.length ? dataCellHover : {}),
-                                    }}
-                                    onClick={() =>
-                                      datas?.length &&
-                                      openDetails(c.name, datas, m.name)
-                                    }
-                                  >
-                                    {formatValue(vReal, c.name)}
-                                  </TableCell>
-                                  <TableCell
-                                    align="right"
-                                    sx={{
-                                      border: `1px solid ${theme.palette.divider}`,
-                                    }}
-                                  >
+                              <TableCell
+                                align="right"
+                                sx={{
+                                  ...dataCellHover,
+                                  border: `1px solid ${theme.palette.divider}`,
+                                }}
+                              >
+                                {(() => {
+                                  const v = m.varRows.find(
+                                    (x) => x.id === t.id,
+                                  )?.totalValue;
+                                  const real =
+                                    m.realRows.find((x) => x.id === t.id)
+                                      ?.totalValue ?? null;
+                                  const budget =
+                                    m.budgetRows.find((x) => x.id === t.id)
+                                      ?.totalValue ?? null;
+                                  const { arrow, color } = getVarVisual(
+                                    v,
+                                    t.name,
+                                    real,
+                                    budget,
+                                  );
+                                  return (
                                     <span
                                       style={{
                                         color,
@@ -610,18 +507,158 @@ export const BalancoReclassificadoTable = ({
                                         gap: 4,
                                       }}
                                     >
-                                      {formatValue(vVar, c.name)}
+                                      {formatValue(v, t.name)}
                                       {arrow}
                                     </span>
-                                  </TableCell>
-                                </React.Fragment>
-                              );
-                            })}
-                          </TableRow>
-                        ))}
-                  </React.Fragment>
-                );
-              })}
+                                  );
+                                })()}
+                              </TableCell>
+                            </React.Fragment>
+                          ),
+                        )}
+                      </TableRow>
+
+                      {/* Classificações (DRE) */}
+                      {nestedMode === "DRE" &&
+                        (t.classifications ?? [])
+                          .filter((c) => hasAnyClassificationValue(t.id, c.id))
+                          .map((c) => (
+                            <TableRow
+                              key={c.id}
+                              sx={{
+                                borderBottom: `1px solid ${theme.palette.divider}`,
+                              }}
+                            >
+                              <TableCell
+                                sx={{
+                                  ...StickyCell,
+                                  pl: 4,
+                                  border: `1px solid ${theme.palette.divider}`,
+                                }}
+                              >
+                                <Tooltip title={c.name}>
+                                  <span
+                                    style={{
+                                      display: "inline-block",
+                                      maxWidth: 210,
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {c.name}
+                                  </span>
+                                </Tooltip>
+                              </TableCell>
+
+                              {mergedMonths.map((m) => {
+                                const realRow = m.realRows.find(
+                                  (x) => x.id === t.id,
+                                );
+                                const clsReal = realRow?.classifications?.find(
+                                  (x) => x.id === c.id,
+                                );
+                                const datas = clsReal?.datas;
+
+                                if (!showBudgetColumns) {
+                                  const vReal = getClassValue(
+                                    m,
+                                    t.id,
+                                    c.id,
+                                    "real",
+                                  );
+                                  return (
+                                    <TableCell
+                                      key={m.id}
+                                      align="right"
+                                      sx={{
+                                        border: `1px solid ${theme.palette.divider}`,
+                                        ...(datas?.length ? dataCellHover : {}),
+                                      }}
+                                      onClick={() =>
+                                        datas?.length &&
+                                        openDetails(c.name, datas, m.name)
+                                      }
+                                    >
+                                      {formatValue(vReal, c.name)}
+                                    </TableCell>
+                                  );
+                                }
+
+                                const vBud = getClassValue(
+                                  m,
+                                  t.id,
+                                  c.id,
+                                  "bud",
+                                );
+                                const vReal = getClassValue(
+                                  m,
+                                  t.id,
+                                  c.id,
+                                  "real",
+                                );
+                                const vVar = getClassValue(
+                                  m,
+                                  t.id,
+                                  c.id,
+                                  "var",
+                                );
+                                const { arrow, color } = getVarVisual(
+                                  vVar,
+                                  c.name,
+                                  vReal,
+                                  vBud,
+                                );
+
+                                return (
+                                  <React.Fragment key={m.id}>
+                                    <TableCell
+                                      align="right"
+                                      sx={{
+                                        border: `1px solid ${theme.palette.divider}`,
+                                      }}
+                                    >
+                                      {formatValue(vBud, c.name)}
+                                    </TableCell>
+                                    <TableCell
+                                      align="right"
+                                      sx={{
+                                        border: `1px solid ${theme.palette.divider}`,
+                                        ...(datas?.length ? dataCellHover : {}),
+                                      }}
+                                      onClick={() =>
+                                        datas?.length &&
+                                        openDetails(c.name, datas, m.name)
+                                      }
+                                    >
+                                      {formatValue(vReal, c.name)}
+                                    </TableCell>
+                                    <TableCell
+                                      align="right"
+                                      sx={{
+                                        border: `1px solid ${theme.palette.divider}`,
+                                      }}
+                                    >
+                                      <span
+                                        style={{
+                                          color,
+                                          display: "flex",
+                                          justifyContent: "flex-end",
+                                          gap: 4,
+                                        }}
+                                      >
+                                        {formatValue(vVar, c.name)}
+                                        {arrow}
+                                      </span>
+                                    </TableCell>
+                                  </React.Fragment>
+                                );
+                              })}
+                            </TableRow>
+                          ))}
+                    </React.Fragment>
+                  );
+                })}
             </TableBody>
 
             {mergedMonths[0]?.totalReal !== null && (
@@ -655,7 +692,7 @@ export const BalancoReclassificadoTable = ({
                           {(() => {
                             const { arrow, color } = getVarVisual(
                               m.totalVar ?? 0,
-                              "Total"
+                              "Total",
                             );
                             return (
                               <span
@@ -674,7 +711,7 @@ export const BalancoReclassificadoTable = ({
                           })()}
                         </TableCell>
                       </React.Fragment>
-                    )
+                    ),
                   )}
                 </TableRow>
               </TableBody>

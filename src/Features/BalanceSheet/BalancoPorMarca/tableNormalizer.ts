@@ -57,6 +57,9 @@ export function normalizeDreConsolidatedTable(
 
   const rows: DreRow[] = [];
 
+  const isRowEmpty = (values: Record<string, number | null>) =>
+    Object.values(values).every((v) => v === null || v === 0);
+
   for (const baseTot of baseTotalizers) {
     const isTotalizerPercentage = baseTot.name.trim().endsWith("%");
 
@@ -77,13 +80,15 @@ export function normalizeDreConsolidatedTable(
       totalizerValues[col.key] = tot?.totalValue ?? null;
     }
 
-    rows.push({
-      rowType: "TOTALIZER",
-      typeOrder: baseTot.typeOrder,
-      name: baseTot.name,
-      isPercentage: isTotalizerPercentage,
-      values: totalizerValues,
-    });
+    if (!isRowEmpty(totalizerValues)) {
+      rows.push({
+        rowType: "TOTALIZER",
+        typeOrder: baseTot.typeOrder,
+        name: baseTot.name,
+        isPercentage: isTotalizerPercentage,
+        values: totalizerValues,
+      });
+    }
 
     // ---------- CLASSIFICATIONS (UNIÃO POR NOME) ----------
     const classificationMap = new Map<string, number>();
@@ -127,14 +132,16 @@ export function normalizeDreConsolidatedTable(
         classValues[col.key] = cls?.value ?? null;
       }
 
-      rows.push({
-        rowType: "CLASSIFICATION",
-        parentTypeOrder: baseTot.typeOrder,
-        typeOrder: baseCls.typeOrder,
-        name: baseCls.name,
-        isPercentage: isClassificationPercentage,
-        values: classValues,
-      });
+      if (!isRowEmpty(classValues)) {
+        rows.push({
+          rowType: "CLASSIFICATION",
+          parentTypeOrder: baseTot.typeOrder,
+          typeOrder: baseCls.typeOrder,
+          name: baseCls.name,
+          isPercentage: isClassificationPercentage,
+          values: classValues,
+        });
+      }
     }
   }
 

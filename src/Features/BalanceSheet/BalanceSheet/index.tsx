@@ -2,10 +2,6 @@ import { useEffect, useState } from "react";
 import { MainTemplate } from "../../../components/AppLayout";
 import { Container, MainContainer, Title } from "./styles";
 import { Box, Tabs, Tab, Paper } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs, { Dayjs } from "dayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useNavigate, useParams } from "react-router";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { getBalancoContabil } from "../../../services/apis/routes/classification.service";
@@ -21,15 +17,14 @@ import { ExportButton } from "../../../components/Button/ExportButton";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { CompanyResponse } from "../../../types/companyDropdown";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
-import { ModernTextField } from "../../../styles/DatePicker";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import YearPicker from "../../../components/Inputs/YearPicker";
+import { useYear } from "../../../contexts/YearContext";
 
 const BalancoContabil = () => {
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs>(
-    dayjs().startOf("year")
-  );
+  const { year, setYear } = useYear();
   const { setLoading } = useLoading();
   const [balanceteData, setBalanceteData] = useState<Month[]>([]);
   const { groupId, companyid, subCompanyId } = useParams<{
@@ -41,8 +36,9 @@ const BalancoContabil = () => {
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null
-  );const { accountPlanId, entityName } = useAccountPlanId({
+    null,
+  );
+  const { accountPlanId, entityName } = useAccountPlanId({
     groupId,
     companyId: companyid,
     subCompanyId: subCompanyId,
@@ -62,15 +58,15 @@ const BalancoContabil = () => {
 
       const response: BalancoResponse = await getBalancoContabil(
         accountPlanId,
-        selectedYear.year(),
-        tab ?? tabValue
+        year,
+        tab ?? tabValue,
       );
 
       if (response.success && response.data?.months) {
         setBalanceteData(response.data.months);
       } else {
         toast.warning(
-          response.message || "Não encontramos um balanço para esta data."
+          response.message || "Não encontramos um balanço para esta data.",
         );
       }
     } catch (err) {
@@ -93,7 +89,7 @@ const BalancoContabil = () => {
 
   const handleChangeTab = (
     _event: React.SyntheticEvent,
-    newValue: number
+    newValue: number,
   ): void => {
     setTabValue(newValue);
     handleSearch(newValue);
@@ -150,12 +146,12 @@ const BalancoContabil = () => {
       // Total geral do mês
       if (month.monthPainelContabilTotalizer) {
         let existingTotGeral = rows.find(
-          (r) => r.name === month.monthPainelContabilTotalizer.name
+          (r) => r.name === month.monthPainelContabilTotalizer.name,
         );
         if (!existingTotGeral) {
           addRow(month.monthPainelContabilTotalizer.name, {});
           existingTotGeral = rows.find(
-            (r) => r.name === month.monthPainelContabilTotalizer.name
+            (r) => r.name === month.monthPainelContabilTotalizer.name,
           );
         }
         existingTotGeral.values[month.id] =
@@ -179,39 +175,39 @@ const BalancoContabil = () => {
         exportPDF(
           rows,
           columns,
-          `balanco-contabil-${entityName}-${selectedYear.year()}`,
-          "landscape"
+          `balanco-contabil-${entityName}-${year}`,
+          "landscape",
         );
         break;
       case "CSV":
         exportCSV(
           rows,
           columns,
-          `balanco-contabil-${entityName}-${selectedYear.year()}`
+          `balanco-contabil-${entityName}-${year}`,
         );
         break;
       case "EXCEL":
         exportExcel(
           rows,
           columns,
-          `balanco-contabil-${entityName}-${selectedYear.year()}`
+          `balanco-contabil-${entityName}-${year}`,
         );
         break;
       case "PPT":
         exportPPTX(
           rows,
           columns,
-          `balanco-contabil-${entityName}-${selectedYear.year()}`
+          `balanco-contabil-${entityName}-${year}`,
         );
         break;
     }
   };
 
   useEffect(() => {
-    if (selectedYear && accountPlanId) {
+    if (year && accountPlanId) {
       handleSearch();
     }
-  }, [selectedYear]);
+  }, [year]);
 
   return (
     <MainTemplate>
@@ -275,35 +271,22 @@ const BalancoContabil = () => {
                         return navigate(`/grupos/${id}/contabil`);
                       if (type === "filial")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${id}/contabil`
+                          `/grupos/${groupId}/empresas/${id}/contabil`,
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/contabil`
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/contabil`,
                         );
                     }}
                   />
                 </Box>
               )}
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  views={["year"]}
-                  label="Ano"
-                  value={selectedYear}
-                  onChange={(newValue: Dayjs | null) => {
-                    if (newValue) {
-                      setSelectedYear(newValue);
-                    }
-                  }}
-                  enableAccessibleFieldDOMStructure={false}
-                  slots={{
-                    textField: ModernTextField,
-                  }}
-                  slotProps={{
-                    textField: { size: "medium" },
-                  }}
-                />
-              </LocalizationProvider>
+
+              <YearPicker
+                year={year}
+                onChange={(year) => setYear((year))}
+              />
+
               <TableValueVisualization />
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>

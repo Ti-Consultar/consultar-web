@@ -89,7 +89,7 @@ const BalancoContabilTable = ({
   // Modal de detalhes
   const handleCellClick = (
     datas: FinancialData[] | undefined,
-    title: string
+    title: string,
   ) => {
     if (datas && datas.length > 0) {
       setSelectedData(datas);
@@ -151,6 +151,25 @@ const BalancoContabilTable = ({
     return isNegative ? `(${formatted})` : formatted;
   };
 
+  const hasAnyTotalizerValue = (totId: number) => {
+    return months.some((month) => {
+      const monthTotalizer = month.totalizer.find((t) => t.id === totId);
+      const v = monthTotalizer?.totalValue;
+      return v !== undefined && v !== null && v !== 0;
+    });
+  };
+
+  const hasAnyClassificationValue = (totId: number, clsId: number) => {
+    return months.some((month) => {
+      const monthTotalizer = month.totalizer.find((t) => t.id === totId);
+      const monthClassification = monthTotalizer?.classifications?.find(
+        (c) => c.id === clsId,
+      );
+      const v = monthClassification?.value;
+      return v !== undefined && v !== null && v !== 0;
+    });
+  };
+
   return (
     <>
       <TableContainer
@@ -210,156 +229,153 @@ const BalancoContabilTable = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {allTotalizers.map((totalizer: Totalizer) => {
-                const isHighlighted = !!highlightRows[totalizer.id];
-                const rowBg = isHighlighted
-                  ? theme.palette.action.hover
-                  : theme.palette.grey[100];
+              {allTotalizers
+                .filter((totalizer) => hasAnyTotalizerValue(totalizer.id))
+                .map((totalizer: Totalizer) => {
+                  const isHighlighted = !!highlightRows[totalizer.id];
+                  const rowBg = isHighlighted
+                    ? theme.palette.action.hover
+                    : theme.palette.grey[100];
 
-                return (
-                  <React.Fragment key={totalizer.id}>
-                    {/* Linha de Totalizador */}
-                    <TableRow
-                      sx={{
-                        backgroundColor: rowBg,
-                      }}
-                    >
-                      <TableCell
-                        component="th"
-                        scope="row"
+                  return (
+                    <React.Fragment key={totalizer.id}>
+                      {/* Linha de Totalizador */}
+                      <TableRow
                         sx={{
-                          ...stickyCellBase,
                           backgroundColor: rowBg,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          maxWidth: 220,
                         }}
                       >
-                        <Tooltip
-                          title={totalizer.name}
-                          arrow
-                          placement="top-start"
+                        <TableCell
+                          component="th"
+                          scope="row"
+                          sx={{
+                            ...stickyCellBase,
+                            backgroundColor: rowBg,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: 220,
+                          }}
                         >
-                          <Typography variant="body2" fontWeight="bold" noWrap>
-                            {totalizer.name}
-                          </Typography>
-                        </Tooltip>
-                      </TableCell>
-                      {months.map((month: Month) => {
-                        const monthTotalizer = month.totalizer.find(
-                          (t) => t.id === totalizer.id
-                        );
-                        return (
-                          <TableCell
-                            key={`${month.id}-${totalizer.id}`}
-                            align="right"
-                            sx={{
-                              backgroundColor: rowBg,
-                            }}
+                          <Tooltip
+                            title={totalizer.name}
+                            arrow
+                            placement="top-start"
                           >
-                            <Typography variant="body2" fontWeight="bold">
-                              {monthTotalizer?.totalValue !== undefined
-                                ? formatValue(
-                                    monthTotalizer.name,
-                                    monthTotalizer.totalValue
-                                  )
-                                : "-"}
-                            </Typography>
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-
-                    {/* Linhas de Classificação */}
-                    {totalizer.classifications
-                      ?.filter((classification) => {
-                        return months.some((month) => {
-                          const monthTotalizer = month.totalizer.find(
-                            (t) => t.id === totalizer.id
-                          );
-                          const monthClassification =
-                            monthTotalizer?.classifications?.find(
-                              (c) => c.id === classification.id
-                            );
-                          return (
-                            monthClassification?.datas &&
-                            monthClassification.datas.length > 0
-                          );
-                        });
-                      })
-                      .map((classification: Classification) => (
-                        <TableRow key={classification.id}>
-                          <TableCell
-                            component="th"
-                            scope="row"
-                            sx={{
-                              ...stickyCellBase,
-                              backgroundColor: theme.palette.background.paper,
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              maxWidth: 220,
-                            }}
-                          >
-                            <Tooltip
-                              title={classification.name}
-                              arrow
-                              placement="top-start"
+                            <Typography
+                              variant="body2"
+                              fontWeight="bold"
+                              noWrap
                             >
-                              <Typography variant="body2" noWrap>
-                                {classification.name}
+                              {totalizer.name}
+                            </Typography>
+                          </Tooltip>
+                        </TableCell>
+                        {months.map((month: Month) => {
+                          const monthTotalizer = month.totalizer.find(
+                            (t) => t.id === totalizer.id,
+                          );
+                          return (
+                            <TableCell
+                              key={`${month.id}-${totalizer.id}`}
+                              align="right"
+                              sx={{
+                                backgroundColor: rowBg,
+                              }}
+                            >
+                              <Typography variant="body2" fontWeight="bold">
+                                {monthTotalizer?.totalValue !== undefined
+                                  ? formatValue(
+                                      monthTotalizer.name,
+                                      monthTotalizer.totalValue,
+                                    )
+                                  : "-"}
                               </Typography>
-                            </Tooltip>
-                          </TableCell>
-                          {months.map((month: Month) => {
-                            const monthTotalizer = month.totalizer.find(
-                              (t) => t.id === totalizer.id
-                            );
-                            const monthClassification =
-                              monthTotalizer?.classifications?.find(
-                                (c) => c.id === classification.id
-                              );
-                            const hasData =
-                              !!monthClassification?.datas?.length;
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
 
-                            return (
-                              <TableCell
-                                key={`${month.id}-${classification.id}`}
-                                align="right"
-                                onClick={() =>
-                                  handleCellClick(
-                                    monthClassification?.datas,
-                                    `${classification.name} - ${monthTranslatorUtil(
-                                      month.name
-                                    )}`
-                                  )
-                                }
-                                sx={{
-                                  cursor: hasData ? "pointer" : "default",
-                                  "&:hover": {
-                                    backgroundColor: hasData
-                                      ? theme.palette.action.hover
-                                      : "inherit",
-                                  },
-                                }}
+                      {/* Linhas de Classificação */}
+                      {totalizer.classifications
+                        ?.filter((classification) =>
+                          hasAnyClassificationValue(
+                            totalizer.id,
+                            classification.id,
+                          ),
+                        )
+                        .map((classification: Classification) => (
+                          <TableRow key={classification.id}>
+                            <TableCell
+                              component="th"
+                              scope="row"
+                              sx={{
+                                ...stickyCellBase,
+                                backgroundColor: theme.palette.background.paper,
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                maxWidth: 220,
+                              }}
+                            >
+                              <Tooltip
+                                title={classification.name}
+                                arrow
+                                placement="top-start"
                               >
-                                <Typography variant="body2">
-                                  {monthClassification
-                                    ? formatValue(
-                                        classification.name,
-                                        monthClassification.value
-                                      )
-                                    : "-"}
+                                <Typography variant="body2" noWrap>
+                                  {classification.name}
                                 </Typography>
-                              </TableCell>
-                            );
-                          })}
-                        </TableRow>
-                      ))}
-                  </React.Fragment>
-                );
-              })}
+                              </Tooltip>
+                            </TableCell>
+                            {months.map((month: Month) => {
+                              const monthTotalizer = month.totalizer.find(
+                                (t) => t.id === totalizer.id,
+                              );
+                              const monthClassification =
+                                monthTotalizer?.classifications?.find(
+                                  (c) => c.id === classification.id,
+                                );
+                              const hasData =
+                                !!monthClassification?.datas?.length;
+
+                              return (
+                                <TableCell
+                                  key={`${month.id}-${classification.id}`}
+                                  align="right"
+                                  onClick={() =>
+                                    handleCellClick(
+                                      monthClassification?.datas,
+                                      `${classification.name} - ${monthTranslatorUtil(
+                                        month.name,
+                                      )}`,
+                                    )
+                                  }
+                                  sx={{
+                                    cursor: hasData ? "pointer" : "default",
+                                    "&:hover": {
+                                      backgroundColor: hasData
+                                        ? theme.palette.action.hover
+                                        : "inherit",
+                                    },
+                                  }}
+                                >
+                                  <Typography variant="body2">
+                                    {monthClassification
+                                      ? formatValue(
+                                          classification.name,
+                                          monthClassification.value,
+                                        )
+                                      : "-"}
+                                  </Typography>
+                                </TableCell>
+                              );
+                            })}
+                          </TableRow>
+                        ))}
+                    </React.Fragment>
+                  );
+                })}
 
               {/* Total do Painel Contábil */}
               {months[0]?.monthPainelContabilTotalizer && (
@@ -386,7 +402,7 @@ const BalancoContabilTable = ({
                         {month.monthPainelContabilTotalizer
                           ? formatValue(
                               "Totalizador",
-                              month.monthPainelContabilTotalizer.totalValue
+                              month.monthPainelContabilTotalizer.totalValue,
                             )
                           : "-"}
                       </Typography>
