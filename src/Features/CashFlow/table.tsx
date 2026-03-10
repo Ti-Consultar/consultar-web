@@ -63,7 +63,7 @@ export const CashFlowTable = ({
         ...month,
         translatedName: monthNameToPTBR[month.name] || month.name,
       })),
-    [realizadoMonths]
+    [realizadoMonths],
   );
 
   const formatValue = (label: string, value: number | undefined): string => {
@@ -90,7 +90,7 @@ export const CashFlowTable = ({
   const findMonth = (
     list: CashFlowMonth[],
     name: string,
-    dateMonth: number
+    dateMonth: number,
   ) => {
     // Tenta encontrar pelo nome
     let month = list.find((m) => m.name === name);
@@ -107,6 +107,28 @@ export const CashFlowTable = ({
     }
 
     return month;
+  };
+
+  const hasAnyMetricValue = (metric: string) => {
+    return translatedMonths.some((month) => {
+      const real = month[metric] as number | undefined;
+
+      const budgetMonth = findMonth(budgetMonths, month.name, month.dateMonth);
+      const variationMonth = findMonth(
+        variationMonths,
+        month.name,
+        month.dateMonth,
+      );
+
+      const budget = budgetMonth?.[metric] as number | undefined;
+      const variation = variationMonth?.[metric] as number | undefined;
+
+      return (
+        (real !== undefined && real !== null && real !== 0) ||
+        (budget !== undefined && budget !== null && budget !== 0) ||
+        (variation !== undefined && variation !== null && variation !== 0)
+      );
+    });
   };
 
   const renderValueCells = (month: CashFlowMonth, metric: string) => {
@@ -128,16 +150,16 @@ export const CashFlowTable = ({
     const variationMonth = findMonth(
       variationMonths,
       month.name,
-      month.dateMonth
+      month.dateMonth,
     );
 
     const budgetValue = formatValue(
       metric,
-      budgetMonth?.[metric] as number | undefined
+      budgetMonth?.[metric] as number | undefined,
     );
     const variationValue = formatValue(
       metric,
-      variationMonth?.[metric] as number | undefined
+      variationMonth?.[metric] as number | undefined,
     );
 
     return (
@@ -260,38 +282,40 @@ export const CashFlowTable = ({
         </TableHead>
 
         <TableBody>
-          {metricKeys.map((metric) => {
-            const highlighted = highlightedMetrics.includes(metric);
-            return (
-              <TableRow
-                key={metric}
-                sx={{
-                  backgroundColor: highlighted ? "#f0f0f0" : undefined,
-                }}
-              >
-                <TableCell
+          {metricKeys
+            .filter((metric) => hasAnyMetricValue(metric))
+            .map((metric) => {
+              const highlighted = highlightedMetrics.includes(metric);
+              return (
+                <TableRow
+                  key={metric}
                   sx={{
-                    position: "sticky",
-                    left: 0,
-                    backgroundColor: highlighted ? "#f0f0f0" : "#fff",
-                    fontWeight: highlighted ? "bold" : 500,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    borderRight: "1px solid #e0e0e0",
+                    backgroundColor: highlighted ? "#f0f0f0" : undefined,
                   }}
                 >
-                  <Tooltip title={metricLabels[metric] || metric}>
-                    <span>{metricLabels[metric] || metric}</span>
-                  </Tooltip>
-                </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      left: 0,
+                      backgroundColor: highlighted ? "#f0f0f0" : "#fff",
+                      fontWeight: highlighted ? "bold" : 500,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      borderRight: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Tooltip title={metricLabels[metric] || metric}>
+                      <span>{metricLabels[metric] || metric}</span>
+                    </Tooltip>
+                  </TableCell>
 
-                {translatedMonths.map((month) =>
-                  renderValueCells(month, metric)
-                )}
-              </TableRow>
-            );
-          })}
+                  {translatedMonths.map((month) =>
+                    renderValueCells(month, metric),
+                  )}
+                </TableRow>
+              );
+            })}
         </TableBody>
       </Table>
     </TableContainer>

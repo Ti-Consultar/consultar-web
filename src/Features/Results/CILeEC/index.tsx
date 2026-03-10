@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
 import { Box, Paper } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs, { Dayjs } from "dayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
 import { useLoading } from "../../../contexts/LoadingProvider";
@@ -18,17 +14,16 @@ import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 import { ResultsTableVariation } from "../resultsTableVariation";
 import { normalizeCILECMonths } from "../../../utils/normalizeCILEECMonths";
-import { ModernTextField } from "../../../styles/DatePicker";
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { useYear } from "../../../contexts/YearContext";
+import YearPicker from "../../../components/Inputs/YearPicker";
 
 const CILeEC = () => {
   const [tabValue] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<Dayjs>(
-    dayjs().startOf("year")
-  );
+  const { year, setYear } = useYear();
   const [data, setData] = useState<any[]>([]);
   const { setLoading } = useLoading();
   const { groupId, companyid, subCompanyId } = useParams<{
@@ -40,7 +35,7 @@ const CILeEC = () => {
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null
+    null,
   );
   const { accountPlanId, entityName } = useAccountPlanId({
     groupId,
@@ -149,10 +144,9 @@ const CILeEC = () => {
   }, []);
 
   const fetchData = async () => {
-    if (!selectedYear) return;
+    if (!year) return;
 
     setLoading(true, "Buscando dados...");
-    const year = Number(selectedYear.format("YYYY"));
 
     try {
       if (!accountPlanId) return;
@@ -223,7 +217,7 @@ const CILeEC = () => {
     rows.push({ name: metricLabels["estruturaDeCapital"], values: {} });
 
     const ecFields = Object.keys(months[0].estruturaDeCapital).filter(
-      (k) => k !== "name"
+      (k) => k !== "name",
     );
     ecFields.forEach((field) => {
       const row: any = {
@@ -254,30 +248,18 @@ const CILeEC = () => {
         exportPDF(
           rows,
           columns,
-          `cil-pfl - ${entityName} ${selectedYear.year()}`,
-          "landscape"
+          `cil-pfl - ${entityName} ${year}`,
+          "landscape",
         );
         break;
       case "CSV":
-        exportCSV(
-          rows,
-          columns,
-          `cil-pfl - ${entityName} ${selectedYear.year()}`
-        );
+        exportCSV(rows, columns, `cil-pfl - ${entityName} ${year}`);
         break;
       case "EXCEL":
-        exportExcel(
-          rows,
-          columns,
-          `cil-pfl - ${entityName} ${selectedYear.year()}`
-        );
+        exportExcel(rows, columns, `cil-pfl - ${entityName} ${year}`);
         break;
       case "PPT":
-        exportPPTX(
-          rows,
-          columns,
-          `cil-pfl - ${entityName} ${selectedYear.year()}`
-        );
+        exportPPTX(rows, columns, `cil-pfl - ${entityName} ${year}`);
         break;
     }
   };
@@ -287,7 +269,7 @@ const CILeEC = () => {
       fetchData();
       fetchDropdown();
     }
-  }, [tabValue, selectedYear, accountPlanId]);
+  }, [tabValue, year, accountPlanId]);
 
   return (
     <MainTemplate>
@@ -306,35 +288,22 @@ const CILeEC = () => {
                         return navigate(`/grupos/${id}/resultados/cil-ec`);
                       if (type === "filial")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${id}/resultados/cil-ec`
+                          `/grupos/${groupId}/empresas/${id}/resultados/cil-ec`,
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/cil-ec`
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/cil-ec`,
                         );
                     }}
                   />
                 </Box>
               )}
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  views={["year"]}
-                  label="Ano"
-                  value={selectedYear}
-                  onChange={(newValue: Dayjs | null) => {
-                    if (newValue) {
-                      setSelectedYear(newValue);
-                    }
-                  }}
-                  enableAccessibleFieldDOMStructure={false}
-                  slots={{
-                    textField: ModernTextField,
-                  }}
-                  slotProps={{
-                    textField: { size: "medium" },
-                  }}
-                />
-              </LocalizationProvider>
+
+              <YearPicker
+                year={year}
+                onChange={(newYear) => setYear(newYear)}
+              />
+
               <TableValueVisualization />
 
               <ExportButton onClick={() => setExportMenuOpen(true)} />

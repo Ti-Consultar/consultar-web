@@ -18,6 +18,8 @@ import { exportDreToPdf } from "./exportDreToPdf";
 
 import "dayjs/locale/pt-br";
 import { ExportButton } from "../../../components/Button/ExportButton";
+import { useYear } from "../../../contexts/YearContext";
+import YearPicker from "../../../components/Inputs/YearPicker";
 
 dayjs.locale("pt-br");
 
@@ -28,9 +30,7 @@ const BalancoPorMarca = () => {
     dayjs().startOf("month"),
   );
 
-  const [selectedYear, setSelectedYear] = useState<Dayjs>(
-    dayjs().startOf("year"),
-  );
+  const { year, setYear } = useYear();
 
   const { groupId } = useParams<{ groupId: string }>();
   const { setLoading } = useLoading();
@@ -57,7 +57,7 @@ const BalancoPorMarca = () => {
 
       const response = await getConsolidatedIncomeStatement(
         Number(groupId),
-        Number(selectedYear.format("YYYY")),
+        Number(year),
       );
 
       const monthNumber = selectedMonth.month() + 1;
@@ -74,7 +74,7 @@ const BalancoPorMarca = () => {
 
   useEffect(() => {
     fetchConsolidatedDre();
-  }, [groupId, selectedYear, selectedMonth]);
+  }, [groupId, year, selectedMonth]);
 
   return (
     <MainTemplate>
@@ -88,14 +88,7 @@ const BalancoPorMarca = () => {
                 dateAdapter={AdapterDayjs}
                 adapterLocale="pt-br"
               >
-                <DatePicker
-                  views={["year"]}
-                  label="Ano"
-                  value={selectedYear}
-                  onChange={(v) => v && setSelectedYear(v)}
-                  slots={{ textField: ModernTextField }}
-                  enableAccessibleFieldDOMStructure={false}
-                />
+                <YearPicker year={year} onChange={(year) => setYear(year)} />
 
                 <DatePicker
                   views={["month"]}
@@ -114,7 +107,7 @@ const BalancoPorMarca = () => {
 
                   exportDreToPdf({
                     title: "Demonstração do Resultado - Por Loja",
-                    year: Number(selectedYear.format("YYYY")),
+                    year: Number(year),
                     month: selectedMonth.format("MMMM"),
                     columns: data.columns,
                     rows: data.rows,

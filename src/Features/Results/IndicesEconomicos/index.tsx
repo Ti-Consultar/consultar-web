@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Box, Tabs, Tab, Paper } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs, { Dayjs } from "dayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
 import { toast } from "sonner";
@@ -26,8 +22,9 @@ import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
-import { ModernTextField } from "../../../styles/DatePicker";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import YearPicker from "../../../components/Inputs/YearPicker";
+import { useYear } from "../../../contexts/YearContext";
 
 const IndicesEconomicos = () => {
   const { setLoading } = useLoading();
@@ -40,20 +37,18 @@ const IndicesEconomicos = () => {
   const [tabValue, setTabValue] = useState<number>(1);
   const [exportOpen, setExportMenuOpen] = useState(false);
   const [showBudgetColumns, setShowBudgetColumns] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(
-    dayjs().startOf("year")
-  );
+  const { year, setYear } = useYear();
   const [months, setMonths] = useState<any[]>([]);
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
   const [metricTypes, setMetricTypes] =
     useState<Record<string, "number" | "percent">>();
   const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null
+    null,
   );
   const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const [highlightRows, setHighlightRows] = useState<Record<string, boolean>>(
-    {}
+    {},
   );
   const { accountPlanId, entityName } = useAccountPlanId({
     groupId,
@@ -78,10 +73,9 @@ const IndicesEconomicos = () => {
   };
 
   const fetchData = async () => {
-    if (!selectedYear) return;
+    if (!year) return;
 
     setLoading(true, "Buscando dados...");
-    const year = Number(selectedYear.format("YYYY"));
 
     try {
       if (!accountPlanId) return;
@@ -206,7 +200,7 @@ const IndicesEconomicos = () => {
     months: any[],
     metricKeys: string[],
     metricLabels: Record<string, string>,
-    metricTypes?: Record<string, "number" | "percent">
+    metricTypes?: Record<string, "number" | "percent">,
   ) => {
     if (!months.length || !metricKeys.length) return { columns: [], rows: [] };
 
@@ -259,12 +253,12 @@ const IndicesEconomicos = () => {
       months,
       metricKeys,
       metricLabels,
-      metricTypes
+      metricTypes,
     );
 
     const fileName = `indices-economicos - ${
       entityName ?? "empresa"
-    } ${selectedYear?.year()}`;
+    } ${year}`;
 
     switch (format) {
       case "PDF":
@@ -299,7 +293,7 @@ const IndicesEconomicos = () => {
       fetchData();
       fetchDropdown();
     }
-  }, [tabValue, selectedYear, accountPlanId]);
+  }, [tabValue, year, accountPlanId]);
 
   return (
     <MainTemplate>
@@ -401,39 +395,26 @@ const IndicesEconomicos = () => {
                     onChange={({ id, type }) => {
                       if (type === "group")
                         return navigate(
-                          `/grupos/${id}/resultados/indices-economicos`
+                          `/grupos/${id}/resultados/indices-economicos`,
                         );
                       if (type === "filial")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${id}/resultados/indices-economicos`
+                          `/grupos/${groupId}/empresas/${id}/resultados/indices-economicos`,
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/indices-economicos`
+                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/indices-economicos`,
                         );
                     }}
                   />
                 </Box>
               )}
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  views={["year"]}
-                  label="Ano"
-                  value={selectedYear}
-                  onChange={(newValue: Dayjs | null) => {
-                    if (newValue) {
-                      setSelectedYear(newValue);
-                    }
-                  }}
-                  enableAccessibleFieldDOMStructure={false}
-                  slots={{
-                    textField: ModernTextField,
-                  }}
-                  slotProps={{
-                    textField: { size: "medium" },
-                  }}
-                />
-              </LocalizationProvider>
+
+              <YearPicker
+                year={year}
+                onChange={(newYear) => setYear(newYear)}
+              />
+
               <TableValueVisualization />
 
               <ExportButton onClick={() => setExportMenuOpen(true)} />
