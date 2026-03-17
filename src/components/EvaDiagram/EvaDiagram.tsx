@@ -18,26 +18,29 @@ import {
 
 // ---------- Tipagem ----------
 type EvaData = {
-  realizado: {
-    economicView: Record<string, number | undefined>;
-    financialView: Record<string, number | undefined>;
-    indicators: Record<string, number | undefined>;
-  };
-  orcado: {
-    economicView: Record<string, number | undefined>;
-    financialView: Record<string, number | undefined>;
-    indicators: Record<string, number | undefined>;
-  };
+  realizado?: {
+    economicView?: Record<string, number | undefined | null>;
+    financialView?: Record<string, number | undefined | null>;
+    indicators?: Record<string, number | undefined | null>;
+  } | null;
+  orcado?: {
+    economicView?: Record<string, number | undefined | null>;
+    financialView?: Record<string, number | undefined | null>;
+    indicators?: Record<string, number | undefined | null>;
+  } | null;
 };
 
 // ---------- Utilitário ----------
-const formatValue = (value?: number, isPercentage = false) => {
-  if (value === undefined || value === 0) return "-";
+const formatValue = (value?: number | null, isPercentage = false) => {
+  if (value === undefined || value === null || value === 0) return "-";
+
   const abs = Math.abs(value);
+
   if (isPercentage) {
     const pct = `${abs.toFixed(2)}%`;
     return value < 0 ? `(${pct})` : pct;
   }
+
   const num = abs.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
   return value < 0 ? `(${num})` : num;
 };
@@ -90,7 +93,6 @@ const sections = [
       },
     ],
   },
-
   {
     id: "financial",
     title: "VISÃO FINANCEIRA",
@@ -126,7 +128,6 @@ const sections = [
       },
     ],
   },
-
   {
     id: "accumulated",
     title: "VISÃO ACUMULADA",
@@ -164,7 +165,7 @@ const sections = [
 ];
 
 // ---------- Componente ----------
-export default function EvaDiagram({ data }: { data: EvaData }) {
+export default function EvaDiagram({ data }: { data: EvaData | null | undefined }) {
   if (!data?.realizado || !data?.orcado) {
     return (
       <div
@@ -186,13 +187,14 @@ export default function EvaDiagram({ data }: { data: EvaData }) {
     );
   }
 
-  const { realizado, orcado } = data;
-  const realizadoEco = realizado.economicView;
-  const orcadoEco = orcado.economicView;
-  const realizadoFin = realizado.financialView;
-  const orcadoFin = orcado.financialView;
-  const realizadoInd = realizado.indicators;
-  const orcadoInd = orcado.indicators;
+  const realizadoEco = data.realizado?.economicView ?? {};
+  const orcadoEco = data.orcado?.economicView ?? {};
+
+  const realizadoFin = data.realizado?.financialView ?? {};
+  const orcadoFin = data.orcado?.financialView ?? {};
+
+  const realizadoInd = data.realizado?.indicators ?? {};
+  const orcadoInd = data.orcado?.indicators ?? {};
 
   const nodes: Node[] = useMemo(() => {
     const result: Node[] = [];
@@ -212,23 +214,24 @@ export default function EvaDiagram({ data }: { data: EvaData }) {
         : orcadoEco;
 
     sections.forEach((section) => {
-      const realView = getRealView(section.id);
-      const budgetView = getBudgetView(section.id);
+      const realView = getRealView(section.id) ?? {};
+      const budgetView = getBudgetView(section.id) ?? {};
 
       result.push({
         id: `${section.id}-title`,
         type: "titleNode",
         position: { x: -200, y: section.baseY + 40 + (section.offsetY ?? 0) },
-        data: { label: section.title },
+        data: { label: section.title ?? "" },
       });
 
-      section.groups.forEach((group, gIdx) => {
+      section.groups?.forEach((group, gIdx) => {
         const baseYGroup = section.baseY + (group.baseY ?? 0);
 
-        group.items.forEach((item: any, idx: number) => {
-          const label = item[0];
-          const key = item[1];
-          const x = group.baseX;
+        (group.items ?? []).forEach((item: any, idx: number) => {
+          const label = item?.[0] ?? "";
+          const key = item?.[1] ?? "";
+
+          const x = group.baseX ?? 0;
           const y = baseYGroup + idx * ROW_HEIGHT;
 
           const realValue = realView?.[key];
@@ -242,14 +245,12 @@ export default function EvaDiagram({ data }: { data: EvaData }) {
               data: { label },
             },
             {
-              // ⚠️ ORÇADO PRIMEIRO
               id: `${section.id}-${gIdx}-${idx}-budget`,
               type: "parallelogramBudget",
               position: { x: x + 280, y },
               data: { label: formatValue(budgetValue) },
             },
             {
-              // ⚠️ REALIZADO DEPOIS
               id: `${section.id}-${gIdx}-${idx}-real`,
               type: "parallelogram",
               position: { x: x + 440, y },
@@ -260,36 +261,34 @@ export default function EvaDiagram({ data }: { data: EvaData }) {
       });
     });
 
-    // Indicadores e EVA
     const addIndicator = (
       baseY: number,
       prefix: string,
       label: string,
-      key: keyof typeof realizadoInd,
+      key: string,
       isPct = true
     ) => {
       const x0 = 2100;
       const y = baseY;
+
       result.push(
         {
-          id: `${prefix}-${String(key)}-t`,
+          id: `${prefix}-${key}-t`,
           type: "parallelogramTitle",
           position: { x: x0, y },
-          data: { label },
+          data: { label: label ?? "" },
         },
         {
-          // ⚠️ Orçado primeiro
-          id: `${prefix}-${String(key)}-b`,
+          id: `${prefix}-${key}-b`,
           type: "parallelogramBudget",
           position: { x: x0 + 280, y },
-          data: { label: formatValue(orcadoInd[key], isPct) },
+          data: { label: formatValue(orcadoInd?.[key], isPct) },
         },
         {
-          // ⚠️ Realizado depois
-          id: `${prefix}-${String(key)}-r`,
+          id: `${prefix}-${key}-r`,
           type: "parallelogram",
           position: { x: x0 + 440, y },
-          data: { label: formatValue(realizadoInd[key], isPct) },
+          data: { label: formatValue(realizadoInd?.[key], isPct) },
         }
       );
     };
@@ -309,112 +308,18 @@ export default function EvaDiagram({ data }: { data: EvaData }) {
         id: "eva-budget",
         type: "parallelogramBudget",
         position: { x: 3030, y: 260 },
-        data: { label: formatValue(orcadoInd.eva) },
+        data: { label: formatValue(orcadoInd?.eva) },
       },
       {
         id: "eva-value",
         type: "parallelogram",
         position: { x: 3190, y: 260 },
-        data: { label: formatValue(realizadoInd.eva) },
-      }
-    );
-
-    addIndicator(500, "acc", "ROIC", "roicAcumulado");
-    addIndicator(560, "acc", "WACC", "waccAcumulado");
-    addIndicator(620, "acc", "SPREAD", "spreadAcumulado", true);
-
-    result.push(
-      {
-        id: "eva-acum-title",
-        type: "parallelogramTitle",
-        position: { x: 2750, y: 560 },
-        data: { label: "Árvore de Valor - EVA" },
-      },
-      {
-        id: "eva-acum-budget",
-        type: "parallelogramBudget",
-        position: { x: 3030, y: 560 },
-        data: { label: formatValue(orcadoInd.evA_Acumulado) },
-      },
-      {
-        id: "eva-acum-value",
-        type: "parallelogram",
-        position: { x: 3190, y: 560 },
-        data: { label: formatValue(realizadoInd.evA_Acumulado) },
-      }
-    );
-
-    // Linhas e divisões
-    result.push(
-      {
-        id: "division-top",
-        type: "divisionSign",
-        position: { x: 1980, y: 230 },
-        data: "",
-      },
-      {
-        id: "division-bottom",
-        type: "divisionSign",
-        position: { x: 1980, y: 540 },
-        data: "",
-      },
-      {
-        id: "line-v1",
-        type: "line",
-        position: { x: 1950, y: 100 },
-        data: { width: 4, height: 313 },
-      },
-      {
-        id: "line-h1",
-        type: "line",
-        position: { x: 1902, y: 100 },
-        data: { width: 50, height: 4 },
-      },
-      {
-        id: "line-h2",
-        type: "line",
-        position: { x: 1900, y: 410 },
-        data: { width: 53, height: 4 },
-      },
-      {
-        id: "line-v2",
-        type: "line",
-        position: { x: 1950, y: 300 },
-        data: { width: 4, height: 410 },
-      },
-      {
-        id: "line-h3",
-        type: "line",
-        position: { x: 1900, y: 707 },
-        data: { width: 53, height: 4 },
-      }
-    );
-
-    // Legenda (também invertida)
-    const legendY = -150;
-    result.push(
-      {
-        id: "legend-title",
-        type: "parallelogramTitle",
-        position: { x: 0, y: legendY },
-        data: { label: "Legenda" },
-      },
-      {
-        id: "legend-budget",
-        type: "parallelogramBudget",
-        position: { x: 290, y: legendY },
-        data: { label: "Orçado" },
-      },
-      {
-        id: "legend-real",
-        type: "parallelogram",
-        position: { x: 450, y: legendY },
-        data: { label: "Realizado" },
+        data: { label: formatValue(realizadoInd?.eva) },
       }
     );
 
     return result;
-  }, [realizado, orcado]);
+  }, [realizadoEco, realizadoFin, realizadoInd, orcadoEco, orcadoFin, orcadoInd]);
 
   return (
     <div style={{ width: "100%", height: 900 }}>
