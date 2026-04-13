@@ -43,7 +43,7 @@ const Params = () => {
   const { setLoading } = useLoading();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [editingParam, setEditingParam] = useState<Parameter | undefined>(
-    undefined
+    undefined,
   );
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
@@ -124,7 +124,7 @@ const Params = () => {
 
   const handleDelete = async (param: Parameter) => {
     const confirm = window.confirm(
-      `Tem certeza que deseja excluir o parâmetro "${param.name}"?`
+      `Tem certeza que deseja excluir o parâmetro "${param.name}"?`,
     );
     if (!confirm) return;
 
@@ -227,6 +227,13 @@ const Params = () => {
               </TableBody>
             </Table>
           </TableContainer>
+          <Button
+            variant="contained"
+            onClick={() => {}}
+            sx={{ mb: 2, mt: 4, maxWidth: 200, backgroundColor: "#696969ff" }}
+          >
+            Permissão de telas
+          </Button>
         </Container>
       </MainContainer>
     </MainTemplate>

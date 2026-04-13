@@ -3,6 +3,7 @@ import styled from "styled-components";
 
 export const MainContainer = styled.div`
   padding: 24px 50px;
+  background: var(--neutral-50);
 
   @media (max-width: 1195px) {
     padding: 24px;
@@ -15,6 +16,7 @@ export const EmptyStateContainer = styled.div`
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  text-align: center;
 
   @media (max-width: 1195px) {
     padding: 24px;
@@ -25,12 +27,14 @@ export const NoItems = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  background-color: #f5f5f5;
+
+  background-color: var(--neutral-100);
   border-radius: 50%;
   width: 64px;
   height: 64px;
-  margin-bottom: 2px;
+  margin-bottom: 8px;
+
+  color: var(--neutral-500);
 `;
 
 export const Title = styled.h1`
@@ -41,6 +45,7 @@ export const Title = styled.h1`
 
   span {
     font-weight: var(--fontWeightRegular);
+    color: var(--neutral-500);
   }
 
   @media (max-width: 1195px) {
@@ -48,60 +53,85 @@ export const Title = styled.h1`
   }
 `;
 
-export const ButtonTittle = styled.h1`
+export const ButtonTittle = styled.span`
   color: var(--neutral-white);
-  font-size: 18px;
+  font-size: 14px;
   font-weight: var(--fontWeightMedium);
 `;
 
-export const SubTitle = styled.h1`
+export const SubTitle = styled.span`
+  display: block;
   margin-bottom: 18px;
   color: var(--neutral-500);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: var(--fontWeightRegular);
 
-  span {
-    font-weight: var(--fontWeightRegular);
-  }
-
   @media (max-width: 1195px) {
-    font-size: 18px;
+    font-size: 14px;
   }
 `;
 
 export const HeaderListBoxContents = styled.div`
   display: grid;
   gap: 24px;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 export const BoxContent = styled.div`
-  align-items: center;
-  background-color: var(--neutral-white);
-  border-radius: 16px;
-  box-shadow: 0px 3px 6px 0px #0000001a;
-  color: var(--branding-default-blue);
-  cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 24px;
-  transition: filter 0.3s;
+  align-items: center;
+  gap: 12px;
+
+  padding: 20px;
+  border-radius: 16px;
+
+  background-color: var(--neutral-white);
+  color: var(--branding-default-blue);
+
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+
+  cursor: pointer;
+  transition: all 0.2s ease;
 
   &:hover {
-    filter: brightness(0.9);
+    transform: translateY(-2px);
+    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.08);
   }
 
   p {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: var(--fontWeightBold);
+    color: var(--neutral-800);
+  }
+
+  span {
+    font-size: 14px;
+    color: var(--neutral-500);
   }
 `;
 
-export const CardsContainer = styled(Grid2)({
+export const CardsContainer = styled(Grid2)(() => ({
   marginLeft: "50px",
+  marginRight: "50px",
 
   "@media (max-width: 1195px)": {
-    margin: "0 0.5rem 0 0.5rem",
+    margin: "0 8px",
   },
-});
+}));
+
+export const Greetings = styled.h1`
+  font-size: 20px;
+  font-weight: var(--fontWeightMedium);
+  color: var(--neutral-800);
+`;
+
+export const GreetingsSubTitle = styled.span`
+  font-size: 14px;
+  font-weight: var(--fontWeightRegular);
+  color: var(--neutral-500);
+`;
