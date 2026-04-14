@@ -4,6 +4,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import { FilterType, ViewMode } from "../../../types/groupViewTypes";
+import { Protected } from "../../../components/Protection";
 
 interface GroupsHeaderProps {
   total: number;
@@ -61,19 +62,23 @@ export const GroupsHeader = ({
             Todos
           </S.FilterButton>
 
-          <S.FilterButton
-            active={filter === "active"}
-            onClick={() => onFilterChange("active")}
+          <Protected
+            allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
           >
-            Ativos
-          </S.FilterButton>
+            <S.FilterButton
+              active={filter === "active"}
+              onClick={() => onFilterChange("active")}
+            >
+              Ativos
+            </S.FilterButton>
 
-          <S.FilterButton
-            active={filter === "inactive"}
-            onClick={() => onFilterChange("inactive")}
-          >
-            Inativos
-          </S.FilterButton>
+            <S.FilterButton
+              active={filter === "inactive"}
+              onClick={() => onFilterChange("inactive")}
+            >
+              Inativos
+            </S.FilterButton>
+          </Protected>
         </S.Filters>
       </S.Left>
 
@@ -96,8 +101,11 @@ export const GroupsHeader = ({
             <ViewListIcon fontSize="small" />
           </S.IconButton>
         </S.ViewSwitcher>
-
-        <S.AddButton onClick={onAddGroupClick}>+ Adicionar grupo</S.AddButton>
+        <Protected
+          allowedRoles={["Admin", "Desenvolvedor", "Consultor", "Gestor"]}
+        >
+          <S.AddButton onClick={onAddGroupClick}>+ Adicionar grupo</S.AddButton>
+        </Protected>
       </S.Right>
     </S.Container>
   );
