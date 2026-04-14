@@ -1,38 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MainTemplate } from "../../components/AppLayout";
 import {
   CardsContainer,
-  EmptyStateContainer,
   Greetings,
   GreetingsSubTitle,
   MainContainer,
-  NoItems,
 } from "./styles";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
-import { useLoading } from "../../contexts/LoadingProvider";
 import { CompanyForm } from "../GroupForm";
 import { toast } from "sonner";
-import {
-  deleteGroup,
-  getAllGroups,
-  getDeletedGroups,
-  getGroupById,
-  restoreGroups,
-  saveGroup,
-  updateGroup,
-} from "../../services/apis/routes/groups.service";
 import { GroupCard } from "../../components/Card";
-import { Alert, Box, Grid2, Typography } from "@mui/material";
-import { useAuth } from "../../utils/hooks/useAuth";
+import { Alert, Box, Grid2 } from "@mui/material";
 import { GroupFormData } from "../../types/group";
-import ApartmentIcon from "@mui/icons-material/Apartment";
 import { useMainContext } from "../../contexts/mainContext";
 import { useRefresh } from "../../contexts/refreshContext";
 import { GroupsHeader } from "./Header";
 import { GroupsKPI } from "./GroupsKPI";
 import { FilterType, ViewMode } from "../../types/groupViewTypes";
+import { AlertModal } from "../../components/AlertModal";
+import { InvitationModal } from "../Invitation/InvitationModal";
+
+import { useGroups } from "./hooks/useGroup";
+import { useGroupActions } from "./hooks/useGroupActions";
+
+import { combineGroups } from "./utils/group.mapper";
+import { filterGroups } from "./utils/group.filter";
 
 interface UserData {
   exp: number;
@@ -44,30 +38,42 @@ interface UserData {
 }
 
 const Groups = () => {
-  const userId = useAuth();
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const navigate = useNavigate();
+  const { setBreadcrumbs } = useMainContext();
+  const [notificationsRefreshTimestamp] = useRefresh("companies");
 
-  const [groupList, setGroupList] = useState<any[]>([]);
-  const [deletedGroups, setDeletedGroups] = useState<any[]>([]);
-  const [filteredGroupList, setFilteredGroupList] = useState<any[]>([]);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   const [filter, setFilter] = useState<FilterType>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [search, setSearch] = useState("");
 
   const [editingGroup, setEditingGroup] = useState<GroupFormData>();
-  const [, setError] = useState<string | null>(null);
-  const { setLoading } = useLoading();
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [, setErrors] = useState<{ [key: string]: boolean }>({});
   const [activeStep, setActiveStep] = useState(0);
-  const { setBreadcrumbs } = useMainContext();
+
   const [openInvitationModal, setOpenInvitationModal] = useState(false);
   const [groupToBeInvited, setGroupToBeInvited] = useState<number>(0);
-  const [notificationsRefreshTimestamp] = useRefresh("companies");
+
+  const { groupList, deletedGroups, refetch } = useGroups();
+
+  const {
+    handleSubmit,
+    handleEdit,
+    handleConfirmDelete,
+    handleOpenInvite,
+    handleReactivate
+  } = useGroupActions({
+    refetch,
+    setOpen,
+    setEditingGroup,
+    setOpenDialog,
+    setSelectedGroupId,
+    setOpenInvitationModal,
+    setGroupToBeInvited,
+  });
 
   useEffect(() => {
     setBreadcrumbs([{ name: "Grupos", link: "/grupos" }]);
@@ -89,91 +95,30 @@ const Groups = () => {
     }
   }, []);
 
-  const fetchGroups = async () => {
-    setLoading(true, "Carregando grupos empresariais...");
-    try {
-      const response = await getAllGroups();
-      setGroupList(response.data);
-    } catch {
-      toast.error("Erro ao buscar os grupos.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDeletedroups = async () => {
-    try {
-      const response = await getDeletedGroups();
-      const formatted = response.data.map((item: any) => ({
-        id: item.groupId,
-        nome: item.businessEntity.nomeFantasia || item.companyName,
-        cnpj: item.businessEntity.cnpj,
-      }));
-      setDeletedGroups(formatted);
-    } catch (error) {
-      console.error("Erro ao buscar grupos inativos", error);
-    }
-  };
-
   useEffect(() => {
     if (userData?.userId) {
-      fetchGroups();
+      refetch();
     }
-    fetchDeletedroups();
-    fetchGroups();
   }, [userData, notificationsRefreshTimestamp]);
 
-  // 🔥 LISTA UNIFICADA
-  const getCombinedGroups = () => {
-    const normalizedActive = groupList.map((item) => ({
-      ...item,
-      isDeleted: false,
-    }));
+  const combinedGroups = useMemo(
+    () => combineGroups(groupList, deletedGroups),
+    [groupList, deletedGroups]
+  );
 
-    const normalizedDeleted = deletedGroups.map((item) => ({
-      id: item.id,
-      groupName: item.nome,
-      businessEntity: {
-        nomeFantasia: item.nome,
-        razaoSocial: "",
-      },
-      isDeleted: true,
-    }));
+  const filteredGroupList = useMemo(
+    () =>
+      filterGroups({
+        groups: combinedGroups,
+        filter,
+        search,
+      }),
+    [combinedGroups, filter, search]
+  );
 
-    return [...normalizedActive, ...normalizedDeleted];
-  };
-
-  useEffect(() => {
-    let result = getCombinedGroups();
-
-    if (filter === "active") {
-      result = result.filter((g) => !g.isDeleted);
-    }
-
-    if (filter === "inactive") {
-      result = result.filter((g) => g.isDeleted);
-    }
-
-    if (search.trim()) {
-      result = result.filter((g) =>
-        (g.groupName || "").toLowerCase().includes(search.toLowerCase()),
-      );
-    }
-
-    setFilteredGroupList(result);
-  }, [groupList, deletedGroups, filter, search]);
-
-  const handleSearchChange = (query: string) => {
-    setSearch(query);
-  };
-
-  const handleFilterChange = (value: FilterType) => {
-    setFilter(value);
-  };
-
-  const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode);
-  };
+  const handleSearchChange = (query: string) => setSearch(query);
+  const handleFilterChange = (value: FilterType) => setFilter(value);
+  const handleViewModeChange = (mode: ViewMode) => setViewMode(mode);
 
   const handleCardClick = (groupId: number) => {
     navigate(`/grupos/${groupId}/empresas`);
@@ -188,30 +133,23 @@ const Groups = () => {
 
   const greeting = getGreeting();
 
-  const handleEdit = async (id: number) => {
-    try {
-      setOpen(true);
-      const data = await getGroupById(id);
-      setEditingGroup(data.data);
-    } catch (error) {
-      toast.error("Erro ao buscar grupo para edição.");
-    }
-  };
-
-  const handleOpenInvitationModal = (groupId: number) => {
-    setOpenInvitationModal(true);
-    setGroupToBeInvited(groupId);
-  };
-
   return (
     <MainTemplate>
+      <InvitationModal
+        open={openInvitationModal}
+        onClose={() => setOpenInvitationModal(false)}
+        groupToBeInvited={groupToBeInvited}
+      />
+
       <MainContainer>
         <Box gap={2} display="flex" flexDirection="column">
           <Box>
             <Greetings>
               {greeting}, {userData?.unique_name}
             </Greetings>
-            <GreetingsSubTitle>Gerencie suas empresas abaixo</GreetingsSubTitle>
+            <GreetingsSubTitle>
+              Gerencie suas empresas abaixo
+            </GreetingsSubTitle>
           </Box>
 
           <GroupsKPI
@@ -242,25 +180,72 @@ const Groups = () => {
                 group.businessEntity?.nomeFantasia || group.groupName
               }
               corporateName={group.businessEntity?.razaoSocial || ""}
+              isDeleted={group.isDeleted}
+
               onClick={() => handleCardClick(group.id)}
+
               onEdit={() => {
                 if (group.isDeleted) return;
                 handleEdit(group.id);
               }}
+
               onDelete={() => {
                 if (group.isDeleted) return;
-
                 setOpenDialog(true);
                 setSelectedGroupId(group.id);
               }}
+
               onInvite={() => {
                 if (group.isDeleted) return;
-                handleOpenInvitationModal(group.id);
+                handleOpenInvite(group.id);
+              }}
+
+              onReactivate={() => {
+                if (!group.isDeleted) return;
+                handleReactivate([group.id]);
               }}
             />
           </Grid2>
         ))}
       </CardsContainer>
+
+      <CompanyForm
+        onSubmit={(data) =>
+          handleSubmit(data, editingGroup)
+        }
+        externalActiveStep={activeStep}
+        isOpen={open}
+        onClose={() => {
+          setOpen(false);
+          setEditingGroup(undefined);
+          setActiveStep(0);
+        }}
+        defaultValues={editingGroup}
+        title="Adicionar Grupo Empresarial"
+      />
+
+      <AlertModal
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        onConfirm={() => handleConfirmDelete(selectedGroupId)}
+        title="Inativar Grupo"
+        message={
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              textAlign: "center",
+            }}
+          >
+            <span>Deseja inativar este grupo?</span>
+            <Alert color="warning" severity="info">
+              Esta ação também irá inativar todas as empresas atreladas a ela.
+            </Alert>
+          </div>
+        }
+        type="warning"
+      />
     </MainTemplate>
   );
 };

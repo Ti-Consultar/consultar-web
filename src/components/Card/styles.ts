@@ -4,6 +4,7 @@ import styled from "styled-components";
 export const StyledCard = styled(Card)(() => ({
   width: "100%",
   minWidth: 250,
+  minHeight: 160,
   padding: "20px",
   borderRadius: "12px",
   display: "flex",
