@@ -3,21 +3,27 @@ import styled from "styled-components";
 
 export const StyledCard = styled(Card)(() => ({
   width: "100%",
-  maxWidth: 320,
   minWidth: 250,
+  minHeight: 160,
   padding: "20px",
-  borderRadius: "10px",
+  borderRadius: "12px",
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
   cursor: "pointer",
   position: "relative",
+  border: "1px solid #EBEBEB",
+  transition: "all .2s ease",
+  boxShadow: "none",
+
   "&:hover": {
-    backgroundColor: "var(--neutral-150)",
-    transition: "transform 0.3s, box-shadow 0.3s ease-in-out",
-  },
-  "&:hover .card-actions": {
-    opacity: 1,
+    borderColor: "#1976d2",
+    boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
+
+    ".card-menu-button": {
+      opacity: 1,
+      transform: "translateY(0)",
+    },
   },
 }));
 
@@ -28,9 +34,12 @@ export const Header = styled(Box)({
 });
 
 export const StyledAvatar = styled(Avatar)(() => ({
-  backgroundColor: "#00000",
-  width: 48,
-  height: 48,
+  backgroundColor: "#E1F5EE",
+  borderRadius: "12px",
+  width: 40,
+  height: 40,
+  fontSize: "13px",
+  color: "#085041",
 }));
 
 export const CardActionsBox = styled(Box)(() => ({

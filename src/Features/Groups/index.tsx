@@ -1,36 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MainTemplate } from "../../components/AppLayout";
 import {
   CardsContainer,
-  EmptyStateContainer,
+  Greetings,
+  GreetingsSubTitle,
   MainContainer,
-  NoItems,
 } from "./styles";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
-import { useLoading } from "../../contexts/LoadingProvider";
 import { CompanyForm } from "../GroupForm";
 import { toast } from "sonner";
-import {
-  deleteGroup,
-  getAllGroups,
-  getDeletedGroups,
-  getGroupById,
-  restoreGroups,
-  saveGroup,
-  updateGroup,
-} from "../../services/apis/routes/groups.service";
 import { GroupCard } from "../../components/Card";
-import { Alert, Typography } from "@mui/material";
-import { useAuth } from "../../utils/hooks/useAuth";
+import { Alert, Box, Grid2 } from "@mui/material";
 import { GroupFormData } from "../../types/group";
-import ApartmentIcon from "@mui/icons-material/Apartment";
-import { AlertModal } from "../../components/AlertModal";
 import { useMainContext } from "../../contexts/mainContext";
-import { InvitationModal } from "../Invitation/InvitationModal";
 import { useRefresh } from "../../contexts/refreshContext";
 import { GroupsHeader } from "./Header";
+import { GroupsKPI } from "./GroupsKPI";
+import { FilterType, ViewMode } from "../../types/groupViewTypes";
+import { AlertModal } from "../../components/AlertModal";
+import { InvitationModal } from "../Invitation/InvitationModal";
+
+import { useGroups } from "./hooks/useGroup";
+import { useGroupActions } from "./hooks/useGroupActions";
+
+import { combineGroups } from "./utils/group.mapper";
+import { filterGroups } from "./utils/group.filter";
 
 interface UserData {
   exp: number;
@@ -41,48 +37,43 @@ interface UserData {
   userId: string;
 }
 
-interface businessEntity {
-  nomeFantasia: string;
-  razaoSocial: string;
-  cnpj: string;
-  logradouro: string;
-  numero: string;
-  bairro: string;
-  municipio: string;
-  uf: string;
-  cep: string;
-  telefone: string;
-  email: string;
-}
-
-interface GroupsResponse {
-  id: number;
-  userId: number;
-  groupName: string;
-  businessEntity: businessEntity;
-}
-
 const Groups = () => {
-  const userId = useAuth();
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [groupList, setGroupList] = useState<any[]>([]);
-  const [filteredGroupList, setFilteredGroupList] = useState<GroupsResponse[]>(
-    []
-  );
-  const [editingGroup, setEditingGroup] = useState<GroupFormData>();
-  const [, setError] = useState<string | null>(null);
-  const { setLoading } = useLoading();
-  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { setBreadcrumbs } = useMainContext();
+  const [notificationsRefreshTimestamp] = useRefresh("companies");
+
+  const [userData, setUserData] = useState<UserData | null>(null);
+
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [search, setSearch] = useState("");
+
+  const [editingGroup, setEditingGroup] = useState<GroupFormData>();
+  const [open, setOpen] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [, setErrors] = useState<{ [key: string]: boolean }>({});
   const [activeStep, setActiveStep] = useState(0);
-  const { setBreadcrumbs } = useMainContext();
+
   const [openInvitationModal, setOpenInvitationModal] = useState(false);
   const [groupToBeInvited, setGroupToBeInvited] = useState<number>(0);
-  const [notificationsRefreshTimestamp] = useRefresh("companies");
-  const [deletedGroups, setDeletedGroups] = useState<any[]>([]);
+
+  const { groupList, deletedGroups, refetch } = useGroups();
+
+  const {
+    handleSubmit,
+    handleEdit,
+    handleConfirmDelete,
+    handleOpenInvite,
+    handleReactivate
+  } = useGroupActions({
+    refetch,
+    setOpen,
+    setEditingGroup,
+    setOpenDialog,
+    setSelectedGroupId,
+    setOpenInvitationModal,
+    setGroupToBeInvited,
+  });
 
   useEffect(() => {
     setBreadcrumbs([{ name: "Grupos", link: "/grupos" }]);
@@ -95,7 +86,7 @@ const Groups = () => {
       try {
         const dataDecoded: UserData = jwtDecode(token);
         setUserData(dataDecoded);
-      } catch (error) {
+      } catch {
         toast.error("Sua sessão expirou. Faça login novamente.");
         navigate("/");
       }
@@ -104,181 +95,43 @@ const Groups = () => {
     }
   }, []);
 
-  const fetchGroups = async () => {
-    setLoading(true, "Carregando grupos empresariais...");
-    try {
-      const response = await getAllGroups();
-      const data = response.data;
-
-      setGroupList(data);
-      setFilteredGroupList(data);
-    } catch (error: unknown) {
-      if (
-        error instanceof Error &&
-        (error as { response?: { status?: number } }).response?.status === 401
-      ) {
-        setError(error.message);
-      } else {
-        toast.error("Erro ao buscar os grupos.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReactivate = async (selectedIds: number[]) => {
-    try {
-      setLoading(true, "Reativando empresas...");
-      await restoreGroups(selectedIds);
-      const updated = deletedGroups.filter((c) => !selectedIds.includes(c.id));
-      setDeletedGroups(updated);
-      toast.success("Empresas reativadas com sucesso!");
-      fetchDeletedroups();
-      fetchGroups();
-    } catch (error) {
-      toast.error("Erro ao reativar empresas");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDeletedroups = async () => {
-    try {
-      const response = await getDeletedGroups();
-      const formatted = response.data.map((item: any) => ({
-        id: item.groupId,
-        nome: item.businessEntity.nomeFantasia || item.companyName,
-        cnpj: item.businessEntity.cnpj,
-      }));
-      setDeletedGroups(formatted);
-    } catch (error) {
-      console.error("Erro ao buscar grupos inativos", error);
-    }
-  };
-
   useEffect(() => {
     if (userData?.userId) {
-      fetchGroups();
+      refetch();
     }
-    fetchDeletedroups();
-    fetchGroups();
   }, [userData, notificationsRefreshTimestamp]);
 
-  const onSubmit = async (data: GroupFormData) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValidEmail = emailRegex.test(data.businessEntity.email);
+  const combinedGroups = useMemo(
+    () => combineGroups(groupList, deletedGroups),
+    [groupList, deletedGroups]
+  );
 
-    if (!isValidEmail) {
-      setErrors((prev) => ({ ...prev, email: true }));
-      return;
-    }
+  const filteredGroupList = useMemo(
+    () =>
+      filterGroups({
+        groups: combinedGroups,
+        filter,
+        search,
+      }),
+    [combinedGroups, filter, search]
+  );
 
-    setLoading(
-      true,
-      editingGroup?.groupId ? "Atualizando grupo..." : "Salvando grupo..."
-    );
-
-    try {
-      const response = editingGroup?.groupId
-        ? await updateGroup(editingGroup.groupId, data)
-        : await saveGroup(data);
-
-      if (
-        response.success &&
-        typeof response.data === "string" &&
-        response.data.includes("Já existe um cadastro com este CNPJ")
-      ) {
-        setErrors((prev) => ({ ...prev, cnpj: true }));
-        toast.warning("Já existe um cadastro com este CNPJ.");
-        return;
-      }
-
-      if (!response.success) {
-        setError("Um erro ocorreu ao tentar salvar o Grupo");
-        return;
-      }
-
-      setError(null);
-      setActiveStep(0);
-      setOpen(false);
-      toast.dismiss();
-
-      setTimeout(() => {
-        const message = editingGroup?.groupId
-          ? "Grupo atualizado com sucesso!"
-          : "Grupo criado com sucesso!";
-
-        toast.success(message);
-      }, 500);
-
-      fetchGroups();
-      setEditingGroup(undefined);
-    } catch (error: unknown) {
-      if (
-        error instanceof Error &&
-        (error as { response?: { status?: number } }).response?.status === 401
-      ) {
-        toast.error("Sua sessão expirou. Faça login novamente.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearchChange = (query: string) => {
-    if (query.trim() === "") {
-      setFilteredGroupList(groupList);
-      return;
-    }
-
-    const filtered = groupList.filter((group) =>
-      group.name.toLowerCase().includes(query.toLowerCase())
-    );
-
-    setFilteredGroupList(filtered);
-  };
-
-  const handleDeleteGroup = async (id: number) => {
-    setLoading(true, "Deletando Grupo");
-    setError("");
-
-    try {
-      await deleteGroup(id);
-      toast.success("Grupo deletado com sucesso!");
-      fetchGroups();
-    } catch {
-      toast.error("Erro ao deletar grupo");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = async (id: number) => {
-    try {
-      setOpen(true);
-      const data = await getGroupById(id);
-      setEditingGroup(data.data);
-    } catch (error) {
-      toast.error("Erro ao buscar grupo para edição.");
-    }
-  };
-
-  const handleConfirmDelete = async () => {
-    if (selectedGroupId !== null && userId?.userId) {
-      await handleDeleteGroup(selectedGroupId);
-      setSelectedGroupId(null);
-    }
-    setOpenDialog(false);
-  };
+  const handleSearchChange = (query: string) => setSearch(query);
+  const handleFilterChange = (value: FilterType) => setFilter(value);
+  const handleViewModeChange = (mode: ViewMode) => setViewMode(mode);
 
   const handleCardClick = (groupId: number) => {
     navigate(`/grupos/${groupId}/empresas`);
   };
 
-  const handleOpenInvitationModal = (groupId: number) => {
-    setOpenInvitationModal(true);
-    setGroupToBeInvited(groupId);
-  };
+  function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Bom dia";
+    if (hour >= 12 && hour < 18) return "Boa tarde";
+    return "Boa noite";
+  }
+
+  const greeting = getGreeting();
 
   return (
     <MainTemplate>
@@ -287,98 +140,112 @@ const Groups = () => {
         onClose={() => setOpenInvitationModal(false)}
         groupToBeInvited={groupToBeInvited}
       />
+
       <MainContainer>
-        <GroupsHeader
-          onSearchChange={handleSearchChange}
-          onExportClick={() => {}}
-          onAddGroupClick={() => setOpen(true)}
-          viewMode={"grid"}
-          onChangeViewMode={() => {}}
-          deletedCompanies={deletedGroups}
-          onReactivate={handleReactivate}
-        />
-        <CompanyForm
-          onSubmit={onSubmit}
-          externalActiveStep={activeStep}
-          isOpen={open}
-          onClose={() => {
-            setOpen(false);
-            setEditingGroup(undefined);
-          }}
-          defaultValues={editingGroup}
-          title="Adicionar Grupo Empresarial"
-        />
-        <AlertModal
-          open={openDialog}
-          onClose={() => setOpenDialog(false)}
-          onConfirm={() => {
-            handleConfirmDelete();
-            setOpen(false);
-          }}
-          title="Inativar Grupo"
-          message={
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "column",
-                width: "100%",
-                gap: "10px",
-              }}
-            >
-              <span>Deseja inativar este grupo?</span>
-              <Alert color="warning" severity="info">
-                Esta ação também irá inativar todas as empresas atreladas a ela.
-              </Alert>
-            </div>
-          }
-          type="warning"
-        />
+        <Box gap={2} display="flex" flexDirection="column">
+          <Box>
+            <Greetings>
+              {greeting}, {userData?.unique_name}
+            </Greetings>
+            <GreetingsSubTitle>
+              Gerencie suas empresas abaixo
+            </GreetingsSubTitle>
+          </Box>
+
+          <GroupsKPI
+            total={groupList.length + deletedGroups.length}
+            active={groupList.length}
+            inactive={deletedGroups.length}
+          />
+
+          <GroupsHeader
+            onSearchChange={handleSearchChange}
+            onAddGroupClick={() => setOpen(true)}
+            viewMode={viewMode}
+            filter={filter}
+            onChangeViewMode={handleViewModeChange}
+            onFilterChange={handleFilterChange}
+            activeCount={groupList.length}
+            inactiveCount={deletedGroups.length}
+            total={groupList.length + deletedGroups.length}
+          />
+        </Box>
       </MainContainer>
-      {Array.isArray(filteredGroupList) && filteredGroupList.length > 0 ? (
-        <CardsContainer container spacing={2}>
-          {filteredGroupList?.map((group) => (
+
+      <CardsContainer container spacing={2}>
+        {filteredGroupList.map((group) => (
+          <Grid2 key={group.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <GroupCard
-              key={group.id}
               fantasyName={
                 group.businessEntity?.nomeFantasia || group.groupName
               }
-              corporateName={group.businessEntity.razaoSocial}
+              corporateName={group.businessEntity?.razaoSocial || ""}
+              isDeleted={group.isDeleted}
+
+              onClick={() => handleCardClick(group.id)}
+
               onEdit={() => {
+                if (group.isDeleted) return;
                 handleEdit(group.id);
               }}
-              onClick={() => handleCardClick(group.id)}
+
               onDelete={() => {
+                if (group.isDeleted) return;
                 setOpenDialog(true);
                 setSelectedGroupId(group.id);
               }}
+
               onInvite={() => {
-                handleOpenInvitationModal(group.id);
+                if (group.isDeleted) return;
+                handleOpenInvite(group.id);
+              }}
+
+              onReactivate={() => {
+                if (!group.isDeleted) return;
+                handleReactivate([group.id]);
               }}
             />
-          ))}
-        </CardsContainer>
-      ) : (
-        <>
-          <EmptyStateContainer>
-            <NoItems>
-              <ApartmentIcon color="action" fontSize="large"></ApartmentIcon>
-            </NoItems>
-            <Typography variant="h5" fontWeight="bold" textAlign={"center"}>
-              Nenhum grupo encontrado.
-            </Typography>
-            <Typography
-              variant="h6"
-              fontWeight="medium"
-              color="#888888"
-              textAlign={"center"}
-            >
-              Não encontramos nenhum grupo atrelado ao seu usuário.
-            </Typography>
-          </EmptyStateContainer>
-        </>
-      )}
+          </Grid2>
+        ))}
+      </CardsContainer>
+
+      <CompanyForm
+        onSubmit={(data) =>
+          handleSubmit(data, editingGroup)
+        }
+        externalActiveStep={activeStep}
+        isOpen={open}
+        onClose={() => {
+          setOpen(false);
+          setEditingGroup(undefined);
+          setActiveStep(0);
+        }}
+        defaultValues={editingGroup}
+        title="Adicionar Grupo Empresarial"
+      />
+
+      <AlertModal
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        onConfirm={() => handleConfirmDelete(selectedGroupId)}
+        title="Inativar Grupo"
+        message={
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              textAlign: "center",
+            }}
+          >
+            <span>Deseja inativar este grupo?</span>
+            <Alert color="warning" severity="info">
+              Esta ação também irá inativar todas as empresas atreladas a ela.
+            </Alert>
+          </div>
+        }
+        type="warning"
+      />
     </MainTemplate>
   );
 };

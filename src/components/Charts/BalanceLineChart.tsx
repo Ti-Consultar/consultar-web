@@ -199,9 +199,9 @@ export const BalanceLineChart = ({ data }: BalanceLineChartProps) => {
             .map((value) =>
               typeof value === "string" && value.includes(";")
                 ? `"${value}"`
-                : value
+                : value,
             )
-            .join(";")
+            .join(";"),
         )
         .join("\n");
 
@@ -346,7 +346,7 @@ export const BalanceLineChart = ({ data }: BalanceLineChartProps) => {
                 </ListItemIcon>
                 <ListItemText>PowerPoint</ListItemText>
               </MenuItem>
-               <MenuItem onClick={() => handleExport("excel")}>
+              <MenuItem onClick={() => handleExport("excel")}>
                 <ListItemIcon>
                   <img src={CSVExportIcon} style={{ width: "20px" }} />
                 </ListItemIcon>
