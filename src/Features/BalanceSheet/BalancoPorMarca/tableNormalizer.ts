@@ -19,7 +19,10 @@ export function normalizeDreConsolidatedTable(
   const companyEntities = entities.filter((e) => e.nivel === "Empresa");
   const groupEntity = entities.find((e) => e.nivel === "Grupo");
 
-  const allEntities = [...companyEntities, ...(groupEntity ? [groupEntity] : [])];
+  const allEntities = [
+    ...companyEntities,
+    ...(groupEntity ? [groupEntity] : []),
+  ];
 
   if (!allEntities.length) {
     return { columns: [], rows: [] };
@@ -30,6 +33,7 @@ export function normalizeDreConsolidatedTable(
     ...companyEntities.map((e) => ({
       key: String(e.companyId),
       label: e.nome,
+      isHighlighted: e.nome.includes("BSB"), // Métrica customizada feita apenas para FIAT - BSB
     })),
   ];
 
@@ -125,9 +129,7 @@ export function normalizeDreConsolidatedTable(
             )
           : null;
 
-        const cls = tot?.classifications?.find(
-          (c) => c.name === baseCls.name,
-        );
+        const cls = tot?.classifications?.find((c) => c.name === baseCls.name);
 
         classValues[col.key] = cls?.value ?? null;
       }

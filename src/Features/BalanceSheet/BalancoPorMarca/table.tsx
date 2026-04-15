@@ -8,7 +8,6 @@ import {
   Paper,
   Typography,
   Box,
-  useTheme,
 } from "@mui/material";
 import InboxIcon from "@mui/icons-material/Inbox";
 import { StickyCell, StickyHead, StickyHeadFirstCell } from "./styles";
@@ -20,8 +19,23 @@ interface Props {
 }
 
 export const DreConsolidatedTable = ({ data }: Props) => {
-  const theme = useTheme();
   const { valueMode } = useValueDisplay();
+
+  const colors = {
+    headerBg: "#E5E7EB",
+    rowBg: "#F9FAFB",
+    rowAltBg: "#F3F4F6",
+    totalBg: "#FFFFFF",
+
+    highlightBg: "#DBEAFE",
+    highlightHeaderBg: "#BFDBFE",
+
+    groupBg: "#CBD5E1",
+
+    textPrimary: "#111827",
+    border: "#E5E7EB",
+    hover: "#EDEDED",
+  };
 
   const formatValue = (
     v: number | null | undefined,
@@ -43,13 +57,15 @@ export const DreConsolidatedTable = ({ data }: Props) => {
     if (valueMode === "MILHARES") x /= 1_000_000;
 
     const txt = x.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
-    return v < 0 ? `(${txt})` : txt;
+
+    if (v < 0) {
+      return <span>({txt})</span>;
+    }
+
+    return txt;
   };
 
   const isEmpty = !data || data.rows.length === 0;
-
-  const groupBorderColor = theme.palette.primary.main;
-  const groupBg = theme.palette.primary.light + "22";
 
   return (
     <TableContainer
@@ -57,8 +73,9 @@ export const DreConsolidatedTable = ({ data }: Props) => {
       elevation={0}
       sx={{
         maxHeight: 650,
+        overflow: "auto",
         borderRadius: 3,
-        border: `1px solid ${theme.palette.divider}`,
+        border: `1px solid ${colors.border}`,
       }}
     >
       {isEmpty ? (
@@ -67,13 +84,22 @@ export const DreConsolidatedTable = ({ data }: Props) => {
           <Typography>Nada a exibir</Typography>
         </Box>
       ) : (
-        <Table size="small">
+        <Table size="small" sx={{ borderCollapse: "separate" }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={StickyHeadFirstCell}>Descrição</TableCell>
+              <TableCell
+                sx={{
+                  ...StickyHeadFirstCell,
+                  backgroundColor: colors.headerBg,
+                  borderRight: `1px solid ${colors.border}`,
+                }}
+              >
+                Descrição
+              </TableCell>
 
-              {data.columns.map((c, idx) => {
+              {data.columns.map((c) => {
                 const isGroup = c.isGroup;
+                const isBSB = c.label.includes("BSB");
 
                 return (
                   <TableCell
@@ -81,17 +107,13 @@ export const DreConsolidatedTable = ({ data }: Props) => {
                     align="right"
                     sx={{
                       ...StickyHead,
-                      fontWeight: isGroup ? 700 : 500,
-                      background: isGroup ? groupBg : undefined,
-                      borderRight: `1px solid ${theme.palette.divider}`,
-                      borderLeft: isGroup
-                        ? `2px solid ${groupBorderColor}`
-                        : idx === 0
-                        ? `1px solid ${theme.palette.divider}`
-                        : undefined,
-                      borderTop: isGroup
-                        ? `2px solid ${groupBorderColor}`
-                        : undefined,
+                      fontWeight: isGroup || isBSB ? 700 : 500,
+                      backgroundColor: isBSB
+                        ? colors.highlightHeaderBg
+                        : isGroup
+                          ? colors.groupBg
+                          : colors.headerBg,
+                      borderRight: `1px solid ${colors.border}`,
                     }}
                   >
                     {c.label}
@@ -105,21 +127,30 @@ export const DreConsolidatedTable = ({ data }: Props) => {
             {data.rows.map((r, idx) => {
               const isPercentageRow = r.name.includes("%");
 
+              const rowBg =
+                r.rowType === "TOTALIZER"
+                  ? colors.totalBg
+                  : idx % 2 === 0
+                    ? colors.rowBg
+                    : colors.rowAltBg;
+
               return (
                 <TableRow
                   key={`${r.rowType}-${idx}`}
                   sx={{
-                    background:
-                      r.rowType === "TOTALIZER"
-                        ? theme.palette.background.paper
-                        : theme.palette.grey[50],
+                    backgroundColor: rowBg,
+                    "&:hover td": {
+                      backgroundColor: colors.hover,
+                    },
                   }}
                 >
                   <TableCell
                     sx={{
                       ...StickyCell,
-                      fontWeight: r.rowType === "TOTALIZER" ? 600 : 400,
+                      backgroundColor: rowBg,
+                      fontWeight: r.rowType === "TOTALIZER" ? 700 : 400,
                       pl: r.rowType === "CLASSIFICATION" ? 4 : 2,
+                      borderRight: `1px solid ${colors.border}`,
                     }}
                   >
                     {r.name}
@@ -127,27 +158,25 @@ export const DreConsolidatedTable = ({ data }: Props) => {
 
                   {data.columns.map((c) => {
                     const isGroup = c.isGroup;
+                    const isBSB = c.label.includes("BSB");
 
                     return (
                       <TableCell
                         key={c.key}
                         align="right"
                         sx={{
-                          fontWeight:
-                            r.rowType === "TOTALIZER" && isGroup ? 700 : 400,
-                          background: isGroup ? groupBg : undefined,
-                          borderRight: isGroup
-                            ? `2px solid ${groupBorderColor}`
-                            : `1px solid ${theme.palette.divider}`,
-                          borderLeft: isGroup
-                            ? `2px solid ${groupBorderColor}`
-                            : undefined,
+                          fontWeight: r.rowType === "TOTALIZER" ? 700 : 400,
+
+                          backgroundColor: isBSB
+                            ? colors.highlightBg
+                            : isGroup
+                              ? colors.groupBg
+                              : rowBg,
+
+                          borderRight: `1px solid ${colors.border}`,
                         }}
                       >
-                        {formatValue(
-                          r.values[c.key],
-                          isPercentageRow,
-                        )}
+                        {formatValue(r.values[c.key], isPercentageRow)}
                       </TableCell>
                     );
                   })}
