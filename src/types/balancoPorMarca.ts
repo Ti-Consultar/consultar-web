@@ -28,6 +28,7 @@ export type DreColumn = {
   key: string;
   label: string;
   isGroup?: boolean;
+  isHighlighted?: boolean;
 };
 
 export type DreRow =
