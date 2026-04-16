@@ -27,6 +27,8 @@ import { useGroupActions } from "./hooks/useGroupActions";
 
 import { combineGroups } from "./utils/group.mapper";
 import { filterGroups } from "./utils/group.filter";
+import { GroupsTable } from "./GroupTable";
+import { GroupsEmptyState } from "./EmptyState";
 
 interface UserData {
   exp: number;
@@ -44,8 +46,15 @@ const Groups = () => {
 
   const [userData, setUserData] = useState<UserData | null>(null);
 
-  const [filter, setFilter] = useState<FilterType>("all");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [filter, setFilter] = useState<FilterType>(() => {
+    const saved = localStorage.getItem("groups:filterType");
+    return (saved as FilterType) || "active";
+  });
+
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem("groups:viewMode");
+    return (saved as ViewMode) || "grid";
+  });
   const [search, setSearch] = useState("");
 
   const [editingGroup, setEditingGroup] = useState<GroupFormData>();
@@ -64,7 +73,7 @@ const Groups = () => {
     handleEdit,
     handleConfirmDelete,
     handleOpenInvite,
-    handleReactivate
+    handleReactivate,
   } = useGroupActions({
     refetch,
     setOpen,
@@ -103,7 +112,7 @@ const Groups = () => {
 
   const combinedGroups = useMemo(
     () => combineGroups(groupList, deletedGroups),
-    [groupList, deletedGroups]
+    [groupList, deletedGroups],
   );
 
   const filteredGroupList = useMemo(
@@ -113,7 +122,7 @@ const Groups = () => {
         filter,
         search,
       }),
-    [combinedGroups, filter, search]
+    [combinedGroups, filter, search],
   );
 
   const handleSearchChange = (query: string) => setSearch(query);
@@ -133,6 +142,11 @@ const Groups = () => {
 
   const greeting = getGreeting();
 
+  useEffect(() => {
+    localStorage.setItem("groups:viewMode", viewMode);
+    localStorage.setItem("groups:filterType", filter);
+  }, [viewMode, filter]);
+
   return (
     <MainTemplate>
       <InvitationModal
@@ -147,9 +161,7 @@ const Groups = () => {
             <Greetings>
               {greeting}, {userData?.unique_name}
             </Greetings>
-            <GreetingsSubTitle>
-              Gerencie suas empresas abaixo
-            </GreetingsSubTitle>
+            <GreetingsSubTitle>Gerencie suas empresas abaixo</GreetingsSubTitle>
           </Box>
 
           <GroupsKPI
@@ -172,47 +184,58 @@ const Groups = () => {
         </Box>
       </MainContainer>
 
-      <CardsContainer container spacing={2}>
-        {filteredGroupList.map((group) => (
-          <Grid2 key={group.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-            <GroupCard
-              fantasyName={
-                group.businessEntity?.nomeFantasia || group.groupName
-              }
-              corporateName={group.businessEntity?.razaoSocial || ""}
-              isDeleted={group.isDeleted}
-
-              onClick={() => handleCardClick(group.id)}
-
-              onEdit={() => {
-                if (group.isDeleted) return;
-                handleEdit(group.id);
-              }}
-
-              onDelete={() => {
-                if (group.isDeleted) return;
-                setOpenDialog(true);
-                setSelectedGroupId(group.id);
-              }}
-
-              onInvite={() => {
-                if (group.isDeleted) return;
-                handleOpenInvite(group.id);
-              }}
-
-              onReactivate={() => {
-                if (!group.isDeleted) return;
-                handleReactivate([group.id]);
-              }}
-            />
-          </Grid2>
-        ))}
-      </CardsContainer>
+      {filteredGroupList.length === 0 ? (
+        <GroupsEmptyState filter={filter} search={search} />
+      ) : viewMode === "grid" ? (
+        <CardsContainer container spacing={2}>
+          {filteredGroupList.map((group) => (
+            <Grid2 key={group.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <GroupCard
+                fantasyName={
+                  group.businessEntity?.nomeFantasia || group.groupName
+                }
+                corporateName={group.businessEntity?.razaoSocial || ""}
+                isDeleted={group.isDeleted}
+                onClick={() => handleCardClick(group.id)}
+                onEdit={() => {
+                  if (group.isDeleted) return;
+                  handleEdit(group.id);
+                }}
+                onDelete={() => {
+                  if (group.isDeleted) return;
+                  setOpenDialog(true);
+                  setSelectedGroupId(group.id);
+                }}
+                onInvite={() => {
+                  if (group.isDeleted) return;
+                  handleOpenInvite(group.id);
+                }}
+                onReactivate={() => {
+                  if (!group.isDeleted) return;
+                  handleReactivate([group.id]);
+                }}
+              />
+            </Grid2>
+          ))}
+        </CardsContainer>
+      ) : (
+        <CardsContainer>
+          <GroupsTable
+            groups={filteredGroupList}
+            onClick={handleCardClick}
+            onEdit={handleEdit}
+            onDelete={(id) => {
+              setSelectedGroupId(id);
+              setOpenDialog(true);
+            }}
+            onInvite={handleOpenInvite}
+            onReactivate={(id) => handleReactivate([id])}
+          />
+        </CardsContainer>
+      )}
 
       <CompanyForm
-        onSubmit={(data) =>
-          handleSubmit(data, editingGroup)
-        }
+        onSubmit={(data) => handleSubmit(data, editingGroup)}
         externalActiveStep={activeStep}
         isOpen={open}
         onClose={() => {

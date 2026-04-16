@@ -132,7 +132,6 @@ export const Sidebar = () => {
 
   const hasCompanyContext = !!companyid;
 
-
   const { toggleDrawer } = useDrawer();
   const { logout } = useAuth();
 
@@ -565,6 +564,17 @@ export const Sidebar = () => {
         id="perfil-menu"
         anchorEl={menuState.anchorEl}
         open={menuState.menuType === "perfil"}
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 3,
+              minWidth: 150,
+              p: 1,
+              bgcolor: "background.paper",
+              boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+            },
+          },
+        }}
         onClose={() => setMenuState({ anchorEl: null, menuType: null })}
       >
         <MenuItem

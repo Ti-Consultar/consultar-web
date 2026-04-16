@@ -41,10 +41,6 @@ export const Title = styled.h2`
   margin-bottom: 1rem;
 `;
 
-// ============================
-// CELLS
-// ============================
-
 export const StickyTableCell = styled(TableCell)<{
   isHovered?: boolean;
   isSection?: boolean;
@@ -81,20 +77,12 @@ export const StyledTableCell = styled(TableCell)<{
   background-clip: padding-box;
 `;
 
-// ============================
-// HEADER
-// ============================
-
 export const StickyHeaderCell = styled(StickyTableCell)`
   top: 0;
   z-index: ${Z.headFirst};
   font-weight: bold;
   background-color: #d7d9eeff;
 `;
-
-// ============================
-// ROW
-// ============================
 
 export const HoverableTableRow = styled(TableRow)<{
   isSection?: boolean;
@@ -106,10 +94,6 @@ export const HoverableTableRow = styled(TableRow)<{
     background-color: ${theme.palette.action.hover};
   }
 `;
-
-// ============================
-// MUI SX HELPERS (usados no componente)
-// ============================
 
 export const StickyHead = {
   position: "sticky" as const,
