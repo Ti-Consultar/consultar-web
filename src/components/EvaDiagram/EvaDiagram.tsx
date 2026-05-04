@@ -165,7 +165,7 @@ const sections = [
 ];
 
 // ---------- Componente ----------
-export default function EvaDiagram({ data }: { data: EvaData | null | undefined }) {
+export default function EvaDiagram({ data, showBudget = true }: { data: EvaData | null | undefined, showBudget?: boolean }) {
   if (!data?.realizado || !data?.orcado) {
     return (
       <div
@@ -198,6 +198,7 @@ export default function EvaDiagram({ data }: { data: EvaData | null | undefined 
 
   const nodes: Node[] = useMemo(() => {
     const result: Node[] = [];
+    const shiftX = showBudget ? 0 : 160;
 
     const getRealView = (sectionId: string) =>
       sectionId === "economic"
@@ -231,32 +232,38 @@ export default function EvaDiagram({ data }: { data: EvaData | null | undefined 
           const label = item?.[0] ?? "";
           const key = item?.[1] ?? "";
 
-          const x = group.baseX ?? 0;
+          const x = (group.baseX ?? 0) - gIdx * shiftX;
           const y = baseYGroup + idx * ROW_HEIGHT;
 
           const realValue = realView?.[key];
           const budgetValue = budgetView?.[key];
 
-          result.push(
+          const nodesToAdd: Node[] = [
             {
               id: `${section.id}-${gIdx}-${idx}-title`,
               type: "parallelogramTitle",
               position: { x, y },
               data: { label },
-            },
-            {
+            }
+          ];
+
+          if (showBudget) {
+            nodesToAdd.push({
               id: `${section.id}-${gIdx}-${idx}-budget`,
               type: "parallelogramBudget",
               position: { x: x + 280, y },
               data: { label: formatValue(budgetValue) },
-            },
-            {
-              id: `${section.id}-${gIdx}-${idx}-real`,
-              type: "parallelogram",
-              position: { x: x + 440, y },
-              data: { label: formatValue(realValue) },
-            }
-          );
+            });
+          }
+
+          nodesToAdd.push({
+            id: `${section.id}-${gIdx}-${idx}-real`,
+            type: "parallelogram",
+            position: { x: showBudget ? x + 440 : x + 280, y },
+            data: { label: formatValue(realValue) },
+          });
+
+          result.push(...nodesToAdd);
         });
       });
     });
@@ -268,61 +275,83 @@ export default function EvaDiagram({ data }: { data: EvaData | null | undefined 
       key: string,
       isPct = true
     ) => {
-      const x0 = 2100;
+      const x0 = 2100 - 3 * shiftX;
       const y = baseY;
 
-      result.push(
+      const nodesToAdd: Node[] = [
         {
           id: `${prefix}-${key}-t`,
           type: "parallelogramTitle",
           position: { x: x0, y },
           data: { label: label ?? "" },
-        },
-        {
+        }
+      ];
+
+      if (showBudget) {
+        nodesToAdd.push({
           id: `${prefix}-${key}-b`,
           type: "parallelogramBudget",
           position: { x: x0 + 280, y },
           data: { label: formatValue(orcadoInd?.[key], isPct) },
-        },
-        {
-          id: `${prefix}-${key}-r`,
-          type: "parallelogram",
-          position: { x: x0 + 440, y },
-          data: { label: formatValue(realizadoInd?.[key], isPct) },
-        }
-      );
+        });
+      }
+
+      nodesToAdd.push({
+        id: `${prefix}-${key}-r`,
+        type: "parallelogram",
+        position: { x: showBudget ? x0 + 440 : x0 + 280, y },
+        data: { label: formatValue(realizadoInd?.[key], isPct) },
+      });
+
+      result.push(...nodesToAdd);
     };
 
     addIndicator(200, "eco", "ROIC", "roic");
     addIndicator(260, "eco", "WACC", "wacc");
     addIndicator(320, "eco", "SPREAD", "spread", true);
 
-    result.push(
+    const evaBaseX = 2750 - 4 * shiftX;
+
+    const evaNodes: Node[] = [
       {
         id: "eva-title",
         type: "parallelogramTitle",
-        position: { x: 2750, y: 260 },
+        position: { x: evaBaseX, y: 260 },
         data: { label: "Árvore de Valor - EVA" },
-      },
-      {
+      }
+    ];
+
+    if (showBudget) {
+      evaNodes.push({
         id: "eva-budget",
         type: "parallelogramBudget",
-        position: { x: 3030, y: 260 },
+        position: { x: evaBaseX + 280, y: 260 },
         data: { label: formatValue(orcadoInd?.eva) },
-      },
-      {
-        id: "eva-value",
-        type: "parallelogram",
-        position: { x: 3190, y: 260 },
-        data: { label: formatValue(realizadoInd?.eva) },
-      }
-    );
+      });
+    }
+
+    evaNodes.push({
+      id: "eva-value",
+      type: "parallelogram",
+      position: { x: showBudget ? evaBaseX + 440 : evaBaseX + 280, y: 260 },
+      data: { label: formatValue(realizadoInd?.eva) },
+    });
+
+    result.push(...evaNodes);
 
     return result;
-  }, [realizadoEco, realizadoFin, realizadoInd, orcadoEco, orcadoFin, orcadoInd]);
+  }, [
+    realizadoEco,
+    realizadoFin,
+    realizadoInd,
+    orcadoEco,
+    orcadoFin,
+    orcadoInd,
+    showBudget,
+  ]);
 
   return (
-    <div style={{ width: "100%", height: 900 }}>
+    <div style={{ width: "100%", height: 900, position: "relative" }}>
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
