@@ -7,6 +7,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
 import { getValueTreeBudget } from "../../../services/apis/routes/valueTree";
+import { BudgetToggleButton } from "../../../components/Button/TableOptions";
 import { MonthNavigator } from "../../../components/Inputs/MonthNavigator";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { CompanyResponse } from "../../../types/companyDropdown";
@@ -18,6 +19,9 @@ import { useYear } from "../../../contexts/YearContext";
 const AgregadoMensal = () => {
   const { year, setYear } = useYear();
   const [month, setMonth] = useState<number>(dayjs().month() + 1);
+  const [showBudgetColumns, setShowBudgetColumns] = useState<boolean>(
+    localStorage.getItem("showBudgetColumns") !== "false"
+  );
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [data, setData] = useState<any>(null);
   const { setLoading } = useLoading();
@@ -37,7 +41,7 @@ const AgregadoMensal = () => {
   });
 
   const fetchData = async (fetchYear?: number, fetchMonth?: number) => {
-    setLoading(true);
+    setLoading(true, "Buscando dados da Árvore de Valor...");
     try {
       if (!accountPlanId) return;
 
@@ -121,9 +125,16 @@ const AgregadoMensal = () => {
               }
             }}
           />
+
+          <Box ml="auto">
+            <BudgetToggleButton
+              showBudgetColumns={showBudgetColumns}
+              setShowBudgetColumns={setShowBudgetColumns}
+            />
+          </Box>
         </Box>
 
-        <Box mt={2}>{data && <EvaDiagram data={data} />}</Box>
+        <Box mt={2}>{data && <EvaDiagram data={data} showBudget={showBudgetColumns} />}</Box>
       </MainContainer>
     </MainTemplate>
   );
