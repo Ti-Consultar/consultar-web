@@ -14,6 +14,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Visibility, VisibilityOff, Refresh } from "@mui/icons-material";
+import { formatPhone } from "../../../utils/formatters/phoneMask";
 
 interface UserRegisterModalProps {
   open: boolean;
@@ -38,26 +39,35 @@ const permissions = [
   "Designer",
 ];
 
+const emptyForm = {
+  name: "",
+  contact: "",
+  role: "",
+  email: "",
+  password: "",
+};
+
 export const FakeUserRegisterModal: React.FC<UserRegisterModalProps> = ({
   open,
   onClose,
   onSubmit,
 }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    contact: "",
-    role: "", // <-- apenas 'role'
-    email: "",
-    password: "", // <-- campo visual; será mapeado para 'senha' no submit
-  });
-
+  const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const formatted = name === "contact" ? formatPhone(value) : value;
+    setFormData((prev) => ({ ...prev, [name]: formatted }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleClose = () => {
+    setFormData(emptyForm);
+    setErrors({});
+    setShowPassword(false);
+    onClose();
   };
 
   const handleGeneratePassword = () => {
@@ -70,7 +80,7 @@ export const FakeUserRegisterModal: React.FC<UserRegisterModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) newErrors.name = "Campo obrigatório";
-    if (!formData.role) newErrors.role = "Campo obrigatório"; // <-- role
+    if (!formData.role) newErrors.role = "Campo obrigatório";
     if (!formData.contact.trim()) newErrors.contact = "Campo obrigatório";
     if (!formData.email.trim()) newErrors.email = "Campo obrigatório";
     if (!formData.password.trim()) newErrors.password = "Campo obrigatório";
@@ -82,24 +92,23 @@ export const FakeUserRegisterModal: React.FC<UserRegisterModalProps> = ({
   const handleSubmitClick = () => {
     if (!validateFields()) return;
 
-    // Mapear para o shape da API:
     const payload = {
       name: formData.name.trim(),
       contact: formData.contact.trim(),
       role: formData.role,
       email: formData.email.trim(),
-      senha: formData.password, // <-- API espera 'senha'
-      __plainPassword: formData.password, // opcional para uso do frontend
+      senha: formData.password,
+      __plainPassword: formData.password,
     };
 
     onSubmit(payload);
-    onClose();
+    handleClose();
   };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       fullWidth
       maxWidth="sm"
       PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
@@ -124,12 +133,12 @@ export const FakeUserRegisterModal: React.FC<UserRegisterModalProps> = ({
           <TextField
             select
             label="Permissão"
-            name="role" // <-- corrigido
+            name="role"
             value={formData.role}
             onChange={handleChange}
             fullWidth
             required
-            error={!!errors.role} // <-- corrigido
+            error={!!errors.role}
             helperText={errors.role}
           >
             {permissions.map((p) => (
@@ -192,7 +201,7 @@ export const FakeUserRegisterModal: React.FC<UserRegisterModalProps> = ({
       </DialogContent>
 
       <DialogActions sx={{ p: 2, pt: 1.5 }}>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={handleClose}>Cancelar</Button> {/* 👈 */}
         <Button variant="contained" onClick={handleSubmitClick}>
           Salvar
         </Button>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import EditableField from "../../../../components/Inputs/EditableText";
 import { Container, Info, InfoContainer, ProfileCardContainer } from "./styles";
-import { Avatar, Box, Button } from "@mui/material";
+import { Avatar, Box, Button, ClickAwayListener } from "@mui/material";
 import DriveFileRenameOutlineOutlinedIcon from "@mui/icons-material/DriveFileRenameOutlineOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
@@ -9,6 +9,7 @@ import { ProfileChanges } from "../../../../types/profile";
 import { useLoading } from "../../../../contexts/LoadingProvider";
 import { editUserInfo } from "../../../../services/apis/routes/profile.service";
 import { toast } from "sonner";
+import { formatPhone } from "../../../../utils/formatters/phoneMask";
 
 interface ProfileCardProps {
   name: string;
@@ -17,6 +18,7 @@ interface ProfileCardProps {
   contact: string;
   onSave?: () => void;
   onEdit?: () => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const ProfileCard = ({
@@ -24,6 +26,7 @@ export const ProfileCard = ({
   role,
   email,
   contact,
+  onChange,
 }: ProfileCardProps) => {
   const { setLoading } = useLoading();
   const [editing, setEditing] = useState(false);
@@ -86,126 +89,134 @@ export const ProfileCard = ({
     setEditing(false);
   };
 
+  // 👇 função de reset reutilizada no cancelar e no click fora
+  const handleReset = () => {
+    setDraft({ name, email, contact });
+    setEditing(false);
+  };
+
   return (
-    <ProfileCardContainer>
-      <Container>
-        <Avatar
-          sx={{
-            alignItems: "center",
-            backgroundColor: "var(--neutral-800)",
-            borderRadius: "80px",
-            display: "flex",
-            height: "80px",
-            width: "80px",
-            marginRight: "16px",
-            justifyContent: "center",
-            "& p": {
-              fontSize: "32px",
-              color: "var(--neutral-white)",
-              fontWeight: "var(--fontWeightBold)",
-            },
-          }}
-        >
-          <p>{getInitials(name)}</p>
-        </Avatar>
-      </Container>
-      <InfoContainer>
-        <EditableField
-          value={draft.name}
-          style={{ fontSize: "20px" }}
-          isEditing={editing}
-          onChangeDraft={(val) => setDraft((prev) => ({ ...prev, name: val }))}
-          placeholder="Nome"
-          inputStyle={{
-            marginBottom: "10px",
-            padding: "0 10px",
-            maxWidth: "60%",
-          }}
-        />
-        <Info
-          style={{
-            fontWeight: "var(--fontWeightSemiBold)",
-            ...(role === "Desenvolvedor"
-              ? {
+    <ClickAwayListener onClickAway={() => { if (editing) handleReset(); }}>
+      <ProfileCardContainer>
+        <Container>
+          <Avatar
+            sx={{
+              alignItems: "center",
+              backgroundColor: "var(--neutral-800)",
+              borderRadius: "80px",
+              display: "flex",
+              height: "80px",
+              width: "80px",
+              marginRight: "16px",
+              justifyContent: "center",
+              "& p": {
+                fontSize: "32px",
+                color: "var(--neutral-white)",
+                fontWeight: "var(--fontWeightBold)",
+              },
+            }}
+          >
+            <p>{getInitials(name)}</p>
+          </Avatar>
+        </Container>
+        <InfoContainer>
+          <EditableField
+            value={draft.name}
+            style={{ fontSize: "20px" }}
+            isEditing={editing}
+            onChangeDraft={(val) => setDraft((prev) => ({ ...prev, name: val }))}
+            placeholder="Nome"
+            inputStyle={{
+              marginBottom: "10px",
+              padding: "0 10px",
+              maxWidth: "60%",
+            }}
+          />
+          <Info
+            style={{
+              fontWeight: "var(--fontWeightSemiBold)",
+              ...(role === "Desenvolvedor"
+                ? {
                   background:
                     "linear-gradient(90deg, #FFD700,rgb(191, 115, 0))",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }
-              : {}),
-          }}
-        >
-          {role}
-        </Info>
-        <EditableField
-          inputStyle={{
-            marginBottom: "10px",
-            padding: "0 10px",
-            maxWidth: "60%",
-          }}
-          value={draft.email}
-          isEditing={editing}
-          onChangeDraft={(val) => setDraft((prev) => ({ ...prev, email: val }))}
-          placeholder=""
-        />
-        <EditableField
-          inputStyle={{
-            marginBottom: "10px",
-            padding: "0 10px",
-            maxWidth: "60%",
-          }}
-          value={draft.contact}
-          isEditing={editing}
-          onChangeDraft={(val) =>
-            setDraft((prev) => ({ ...prev, contact: val }))
-          }
-          placeholder=""
-        />
-      </InfoContainer>
-      <Box>
-        {editing ? (
-          <div style={{ marginLeft: "1.5rem", display: "flex", gap: "1rem" }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => handleSubmit()}
-              endIcon={<CheckCircleOutlineOutlinedIcon />}
-              sx={{
-                textTransform: "none",
-                borderRadius: "10px",
-              }}
-            >
-              Salvar
-            </Button>
+                : {}),
+            }}
+          >
+            {role}
+          </Info>
+          <EditableField
+            inputStyle={{
+              marginBottom: "10px",
+              padding: "0 10px",
+              maxWidth: "60%",
+            }}
+            value={draft.email}
+            isEditing={editing}
+            onChangeDraft={(val) => setDraft((prev) => ({ ...prev, email: val }))}
+            placeholder=""
+          />
+          <EditableField
+            inputStyle={{
+              marginBottom: "10px",
+              padding: "0 10px",
+              maxWidth: "60%",
+            }}
+            value={draft.contact}
+            isEditing={editing}
+            onChangeDraft={(val) =>
+              setDraft((prev) => ({ ...prev, contact: formatPhone(val) }))
+            }
+            placeholder="(00) 00000-0000"
+          />
+        </InfoContainer>
+        <Box>
+          {editing ? (
+            <div style={{ marginLeft: "1.5rem", display: "flex", gap: "1rem" }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => handleSubmit()}
+                endIcon={<CheckCircleOutlineOutlinedIcon />}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: "10px",
+                }}
+              >
+                Salvar
+              </Button>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={handleReset} // 👈 reseta ao cancelar
+                endIcon={<CancelOutlinedIcon />}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: "10px",
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          ) : (
             <Button
               variant="outlined"
               color="inherit"
-              onClick={() => setEditing(false)}
-              endIcon={<CancelOutlinedIcon />}
+              onClick={() => setEditing(true)}
+              endIcon={<DriveFileRenameOutlineOutlinedIcon />}
+              fullWidth
               sx={{
                 textTransform: "none",
                 borderRadius: "10px",
               }}
             >
-              Cancelar
+              Editar
             </Button>
-          </div>
-        ) : (
-          <Button
-            variant="outlined"
-            color="inherit"
-            onClick={() => setEditing(true)}
-            endIcon={<DriveFileRenameOutlineOutlinedIcon />}
-            fullWidth
-            sx={{
-              textTransform: "none",
-              borderRadius: "10px",
-            }}
-          >
-            Editar
-          </Button>
-        )}
-      </Box>
-    </ProfileCardContainer>
+          )}
+        </Box>
+      </ProfileCardContainer>
+    </ClickAwayListener>
   );
 };

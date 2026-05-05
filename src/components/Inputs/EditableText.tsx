@@ -20,15 +20,9 @@ const EditableField = ({
   style,
   inputStyle
 }: EditableTableProps) => {
-  const [draft, setDraft] = useState(value);
-
-  useEffect(() => {
-    setDraft(value);
-  }, [value]);
 
   const handleChange = (e: any) => {
     const newValue = e.target.value;
-    setDraft(newValue);
     onChangeDraft(newValue);
   };
 
@@ -37,7 +31,7 @@ const EditableField = ({
       <Input
         disableUnderline
         type="text"
-        value={draft}
+        value={value}
         onChange={handleChange}
         placeholder={placeholder}
         autoFocus
