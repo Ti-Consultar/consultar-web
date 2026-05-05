@@ -20,9 +20,19 @@ export const filterGroups = ({
   }
 
   if (search.trim()) {
-    result = result.filter((g) =>
-      (g.groupName || "").toLowerCase().includes(search.toLowerCase())
-    );
+    const query = search.toLowerCase();
+
+    result = result.filter((g) => {
+      const groupName = (g.groupName || "").toLowerCase();
+      const fantasyName = (g.businessEntity?.nomeFantasia || "").toLowerCase();
+      const corporateName = (g.businessEntity?.razaoSocial || "").toLowerCase();
+
+      return (
+        groupName.includes(query) ||
+        fantasyName.includes(query) ||
+        corporateName.includes(query)
+      );
+    });
   }
 
   return result;
