@@ -13,6 +13,7 @@ import {
   Dialog as AlertDialog,
   DialogContentText,
 } from "@mui/material";
+import { formatPhone } from "../../../utils/formatters/phoneMask";
 
 interface UserRegisterModalProps {
   open: boolean;
@@ -51,8 +52,16 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" })); // limpa erro ao digitar
+    const formatted = name === "contact" ? formatPhone(value) : value;
+    setFormData((prev) => ({ ...prev, [name]: formatted }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  // 👇 limpa o form e fecha o modal
+  const handleClose = () => {
+    setFormData({ name: "", contact: "", role: "", email: "" });
+    setErrors({});
+    onClose();
   };
 
   const validateFields = () => {
@@ -76,6 +85,7 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
       const result = await onSubmit(formData);
       setCreatedUser(result);
       setAlertOpen(true);
+      handleClose(); // 👈 limpa o form após salvar com sucesso
     } catch (err) {
       console.error(err);
     } finally {
@@ -87,7 +97,7 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
     <>
       <Dialog
         open={open}
-        onClose={onClose}
+        onClose={handleClose} // 👈 ao clicar fora também limpa
         fullWidth
         maxWidth="sm"
         PaperProps={{
@@ -97,12 +107,7 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
           },
         }}
       >
-        <DialogTitle
-          sx={{
-            pb: 0,
-            fontWeight: 600,
-          }}
-        >
+        <DialogTitle sx={{ pb: 0, fontWeight: 600 }}>
           Cadastrar Novo Usuário
         </DialogTitle>
 
@@ -166,7 +171,7 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
         </DialogContent>
 
         <DialogActions sx={{ p: 2, pt: 1.5 }}>
-          <Button onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleClose}>Cancelar</Button> {/* 👈 */}
           <Button
             variant="contained"
             onClick={handleSubmit}
@@ -178,7 +183,6 @@ export const UserRegisterModal: React.FC<UserRegisterModalProps> = ({
         </DialogActions>
       </Dialog>
 
-      {/* Alerta com credenciais */}
       <AlertDialog
         open={alertOpen}
         onClose={() => setAlertOpen(false)}
