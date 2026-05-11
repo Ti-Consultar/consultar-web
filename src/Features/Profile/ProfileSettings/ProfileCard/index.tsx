@@ -26,7 +26,6 @@ export const ProfileCard = ({
   role,
   email,
   contact,
-  onChange,
 }: ProfileCardProps) => {
   const { setLoading } = useLoading();
   const [editing, setEditing] = useState(false);

@@ -1,5 +1,5 @@
 import { Input } from "@mui/material";
-import { useState, useEffect } from "react";
+import type { CSSProperties } from "react";
 
 interface EditableTableProps {
   value: string;
@@ -7,8 +7,8 @@ interface EditableTableProps {
   isEditing: boolean;
   placeholder: string;
   inputProps?: any;
-  style?: React.CSSProperties;
-  inputStyle?: React.CSSProperties;
+  style?: CSSProperties;
+  inputStyle?: CSSProperties;
 }
 
 const EditableField = ({
