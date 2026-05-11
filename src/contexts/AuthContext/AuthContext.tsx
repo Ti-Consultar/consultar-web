@@ -5,18 +5,21 @@ import {
   useState,
   ReactNode,
 } from "react";
-import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { setAuthTokenCookie } from "../../utils/authToken";
+import {
+  getAuthToken,
+  removeAuthToken,
+  setAuthTokenCookie,
+} from "../../utils/authToken";
 
 interface DecodedToken {
   unique_name: string;
   roles: string[];
   permissions: string[];
   exp: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface AuthContextValue {
@@ -37,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const decoded: DecodedToken = jwtDecode(token);
 
       if (decoded.exp * 1000 < Date.now()) {
-        Cookies.remove("token");
+        removeAuthToken();
         setUser(null);
         return;
       }
@@ -45,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(decoded);
     } catch (err) {
       console.error("Erro ao decodificar token", err);
-      Cookies.remove("token");
+      removeAuthToken();
       setUser(null);
     }
   };
@@ -57,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    Cookies.remove("token");
+    removeAuthToken();
     setUser(null);
     navigate("/login");
     toast.success("Sessão encerrada");
@@ -65,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Boot da aplicação (uma única responsabilidade)
   useEffect(() => {
-    const token = Cookies.get("token");
+    const token = getAuthToken();
     if (token) decodeAndSetUser(token);
   }, []);
 

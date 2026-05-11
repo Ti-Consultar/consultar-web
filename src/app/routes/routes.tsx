@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 
 /* Landing page e rotas simples */
@@ -95,11 +95,16 @@ const Branches = lazy(() => import("../../Features/Companies/Branches"));
 /* Helper */
 import { withScopes } from "./helper";
 export const AppRoutes = () => {
+  const isElectron = import.meta.env.VITE_ELECTRON === "true";
+
   return (
     <Suspense fallback={<div></div>}>
       <Routes>
         <Route path="*" element={<NotFoundPage />} />
-        <Route path="/" element={<Home />} />
+        <Route
+          path="/"
+          element={isElectron ? <Navigate to="/login" replace /> : <Home />}
+        />
         <Route path="/perfil/informacoes" element={<ProfileInfo />} />
         <Route path="/perfil/seguranca" element={<ProfileSecurity />} />
         <Route path="/perfil/personalizacao" element={<ProfileCustomizing />} />

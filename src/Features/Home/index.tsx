@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { MainTemplate } from "../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
 import { useMainContext } from "../../contexts/mainContext";
-import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import { getAuthToken } from "../../utils/authToken";
 
 interface UserData {
   exp: number;
@@ -26,13 +26,13 @@ const MrpHome = () => {
   }, []);
 
   useEffect(() => {
-    const token = Cookies.get("token");
+    const token = getAuthToken();
 
     if (token) {
       try {
         const dataDecoded: UserData = jwtDecode(token);
         setUserData(dataDecoded);
-      } catch (error) {
+      } catch {
         toast.error("Sua sessão expirou. Faça login novamente.");
         navigate("/");
       }
