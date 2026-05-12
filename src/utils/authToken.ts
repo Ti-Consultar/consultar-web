@@ -1,6 +1,11 @@
 import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 const AUTH_TOKEN_KEY = "token";
+
+interface DecodedToken {
+  exp?: number;
+}
 
 const canUseLocalStorage = () => typeof window !== "undefined";
 
@@ -24,6 +29,26 @@ export const getAuthToken = () => {
     Cookies.get(AUTH_TOKEN_KEY) ||
     (canUseLocalStorage() ? localStorage.getItem(AUTH_TOKEN_KEY) : null)
   );
+};
+
+export const hasValidAuthToken = () => {
+  const token = getAuthToken();
+
+  if (!token) {
+    return false;
+  }
+
+  try {
+    const decoded: DecodedToken = jwtDecode(token);
+
+    if (!decoded.exp) {
+      return true;
+    }
+
+    return decoded.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
 };
 
 export const removeAuthToken = () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ButtonSubmit,
   ClickableText,
@@ -34,6 +34,7 @@ import LogoConsultarWhite from "../../assets/icons/consultar-white.svg";
 import { TextCarousel } from "../../components/TextCarousel";
 import { PulseLoading } from "../../components/PulseLoading";
 import { usePermission } from "../../contexts/PermissionsContext";
+import { hasValidAuthToken } from "../../utils/authToken";
 
 const Authentication = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -47,6 +48,12 @@ const Authentication = () => {
 
   const navigate = useNavigate();
   const { reloadPermissions } = usePermission();
+
+  useEffect(() => {
+    if (hasValidAuthToken()) {
+      navigate("/grupos", { replace: true });
+    }
+  }, [navigate]);
 
   const {
     handleSubmit,

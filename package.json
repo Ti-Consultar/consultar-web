@@ -15,6 +15,8 @@
     "build:electron": "set \"VITE_ELECTRON=true\" && tsc -b && vite build",
     "desktop:build": "npm run build:electron && electron-builder",
     "desktop:win": "npm run build:electron && electron-builder --win",
+    "desktop:linux": "npm run build:electron && electron-builder --linux",
+    "desktop:mac": "npm run build:electron && electron-builder --mac",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -84,12 +86,31 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
+      "build/icons/**/*",
+      "build/icon.png",
       "package.json"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         "nsis"
       ]
+    },
+    "linux": {
+      "icon": "build/icons",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office"
+    },
+    "mac": {
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.business"
     }
   }
 }

@@ -615,7 +615,7 @@ export const Sidebar = () => {
             disabled={!desktopAppDownloadUrl}
           >
             <DownloadIcon fontSize="small" />
-            Download Desktop App
+            Baixar App
           </MenuItem>
         )}
 

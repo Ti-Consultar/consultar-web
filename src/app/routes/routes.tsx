@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { hasValidAuthToken } from "../../utils/authToken";
 
 /* Landing page e rotas simples */
 const Home = lazy(() => import("../../landingPage"));
@@ -94,6 +95,11 @@ const Branches = lazy(() => import("../../Features/Companies/Branches"));
 
 /* Helper */
 import { withScopes } from "./helper";
+
+const ElectronStartRoute = () => {
+  return <Navigate to={hasValidAuthToken() ? "/grupos" : "/login"} replace />;
+};
+
 export const AppRoutes = () => {
   const isElectron = import.meta.env.VITE_ELECTRON === "true";
 
@@ -103,7 +109,7 @@ export const AppRoutes = () => {
         <Route path="*" element={<NotFoundPage />} />
         <Route
           path="/"
-          element={isElectron ? <Navigate to="/login" replace /> : <Home />}
+          element={isElectron ? <ElectronStartRoute /> : <Home />}
         />
         <Route path="/perfil/informacoes" element={<ProfileInfo />} />
         <Route path="/perfil/seguranca" element={<ProfileSecurity />} />
