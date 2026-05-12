@@ -7,9 +7,11 @@ import {
   IconButton,
   Divider,
   Avatar,
+  Box,
   Menu,
   MenuItem,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 
@@ -65,7 +67,11 @@ import { useNotifications } from "../../../contexts/NotificationContext/Notifica
 import { useAuth } from "../../../contexts/AuthContext/AuthContext";
 import { SectionTitle, SidebarContainer, StyledList } from "./styles";
 import { jwtDecode } from "jwt-decode";
-import { getAuthToken, removeAuthToken } from "../../../utils/authToken";
+import {
+  getAuthToken,
+  getAuthUserEmail,
+  removeAuthToken,
+} from "../../../utils/authToken";
 
 /* -------------------------------------------------------
    TYPES
@@ -174,6 +180,8 @@ export const Sidebar = () => {
     window.open(desktopAppDownloadUrl, "_blank", "noopener,noreferrer");
     setMenuState({ anchorEl: null, menuType: null });
   };
+
+  const userEmail = getAuthUserEmail() ?? userData?.unique_name;
 
   useEffect(() => {
     if (drawerOpen) loadNotifications();
@@ -590,6 +598,44 @@ export const Sidebar = () => {
         onClose={() => setMenuState({ anchorEl: null, menuType: null })}
       >
         <MenuItem
+          disabled
+          sx={{
+            display: "flex",
+            gap: 1,
+            "&.Mui-disabled": { opacity: 1 },
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                fontSize: "0.75rem",
+                lineHeight: 1.3,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {userEmail}
+            </Typography>
+          </Box>
+        </MenuItem>
+
+        <Divider sx={{ my: 0.5 }} />
+
+        <MenuItem
+          sx={{ display: "flex", gap: 1 }}
+          onClick={() => {
+            navigate("/perfil/informacoes");
+            setMenuState({ anchorEl: null, menuType: null });
+          }}
+        >
+          <SettingsOutlinedIcon fontSize="small" />
+          Configurações
+        </MenuItem>
+
+        <MenuItem
           sx={{ display: "flex", gap: 1 }}
           onClick={() => {
             setDrawerOpen(true);
@@ -600,23 +646,21 @@ export const Sidebar = () => {
           Notificações
         </MenuItem>
 
-        <MenuItem
-          sx={{ display: "flex", gap: 1 }}
-          onClick={() => navigate("/perfil/informacoes")}
-        >
-          <SettingsOutlinedIcon fontSize="small" />
-          Configurações
-        </MenuItem>
+        <Divider sx={{ my: 0.5 }} />
 
         {shouldShowDesktopDownload && (
-          <MenuItem
-            sx={{ display: "flex", gap: 1 }}
-            onClick={handleDesktopAppDownload}
-            disabled={!desktopAppDownloadUrl}
-          >
-            <DownloadIcon fontSize="small" />
-            Baixar App
-          </MenuItem>
+          <>
+            <MenuItem
+              sx={{ display: "flex", gap: 1 }}
+              onClick={handleDesktopAppDownload}
+              disabled={!desktopAppDownloadUrl}
+            >
+              <DownloadIcon fontSize="small" />
+              Baixar App
+            </MenuItem>
+
+            <Divider sx={{ my: 0.5 }} />
+          </>
         )}
 
         <MenuItem sx={{ display: "flex", gap: 1 }} onClick={logout}>

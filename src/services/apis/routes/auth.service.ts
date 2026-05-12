@@ -1,6 +1,6 @@
 import { UserRegisterData } from "../../../types/userRegisterPayload";
 import { axiosInstanceWithToken, axiosInstanceWithoutToken } from "../config";
-import { setAuthTokenCookie } from "../../../utils/authToken";
+import { setAuthTokenCookie, setAuthUserEmail } from "../../../utils/authToken";
 
 const BASE_URL = import.meta.env.VITE_API_URL_BASE;
 const MRP_URL = import.meta.env.VITE_API_URL_MRP;
@@ -17,8 +17,17 @@ export const login = async (email: string, password: string) => {
 
     if (response.data.token) {
       const token = response.data.token;
+      const userEmail =
+        response.data.email ??
+        response.data.user?.email ??
+        response.data.userEmail ??
+        email;
 
       setAuthTokenCookie(token);
+
+      if (userEmail) {
+        setAuthUserEmail(userEmail);
+      }
     }
 
     return response.data;

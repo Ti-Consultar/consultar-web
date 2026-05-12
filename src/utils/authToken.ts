@@ -2,6 +2,7 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 
 const AUTH_TOKEN_KEY = "token";
+const AUTH_USER_EMAIL_KEY = "auth-user-email";
 
 interface DecodedToken {
   exp?: number;
@@ -22,6 +23,18 @@ export const setAuthTokenCookie = (token: string, days = 3) => {
     secure: isSecure,
     sameSite: "lax",
   });
+};
+
+export const setAuthUserEmail = (email: string) => {
+  if (canUseLocalStorage()) {
+    localStorage.setItem(AUTH_USER_EMAIL_KEY, email);
+  }
+};
+
+export const getAuthUserEmail = () => {
+  return canUseLocalStorage()
+    ? localStorage.getItem(AUTH_USER_EMAIL_KEY)
+    : null;
 };
 
 export const getAuthToken = () => {
@@ -56,5 +69,7 @@ export const removeAuthToken = () => {
 
   if (canUseLocalStorage()) {
     localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_USER_EMAIL_KEY);
+    localStorage.removeItem("userData");
   }
 };
