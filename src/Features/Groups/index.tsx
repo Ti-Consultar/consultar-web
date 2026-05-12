@@ -6,7 +6,6 @@ import {
   GreetingsSubTitle,
   MainContainer,
 } from "./styles";
-import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
 import { CompanyForm } from "../GroupForm";
@@ -29,6 +28,7 @@ import { combineGroups } from "./utils/group.mapper";
 import { filterGroups } from "./utils/group.filter";
 import { GroupsTable } from "./GroupTable";
 import { GroupsEmptyState } from "./EmptyState";
+import { getAuthToken } from "../../utils/authToken";
 
 interface UserData {
   exp: number;
@@ -89,7 +89,7 @@ const Groups = () => {
   }, []);
 
   useEffect(() => {
-    const token = Cookies.get("token");
+    const token = getAuthToken();
 
     if (token) {
       try {

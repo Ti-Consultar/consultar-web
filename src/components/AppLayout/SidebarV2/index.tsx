@@ -54,6 +54,7 @@ import logoConsultar from "../../../../src/assets/icons/logo_horizontal 1.svg";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import DownloadIcon from "@mui/icons-material/Download";
 import { Protected } from "../../Protection";
 import { NotificationDrawer } from "../../NoticationModal";
 import { Role } from "../../../contexts/PermissionsContext";
@@ -64,7 +65,7 @@ import { useNotifications } from "../../../contexts/NotificationContext/Notifica
 import { useAuth } from "../../../contexts/AuthContext/AuthContext";
 import { SectionTitle, SidebarContainer, StyledList } from "./styles";
 import { jwtDecode } from "jwt-decode";
-import Cookies from "js-cookie";
+import { getAuthToken, removeAuthToken } from "../../../utils/authToken";
 
 /* -------------------------------------------------------
    TYPES
@@ -101,7 +102,7 @@ interface UserData {
   ip: string;
   permissions: string[];
   profile: string;
-  roles: any[];
+  roles: unknown[];
   sub_company_id: number;
   sub_company_name: null;
   sub_company_uuid: null;
@@ -112,6 +113,10 @@ interface UserData {
    COMPONENT
 ------------------------------------------------------- */
 export const Sidebar = () => {
+  const isElectron = import.meta.env.VITE_ELECTRON === "true";
+  const desktopAppDownloadUrl = import.meta.env.VITE_DESKTOP_APP_DOWNLOAD_URL;
+  const shouldShowDesktopDownload = !isElectron;
+
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
     return saved ? JSON.parse(saved) : true;
@@ -163,12 +168,19 @@ export const Sidebar = () => {
   const toggleExpand = (title: string) =>
     setExpandedItems((prev) => ({ ...prev, [title]: !prev[title] }));
 
+  const handleDesktopAppDownload = () => {
+    if (!desktopAppDownloadUrl) return;
+
+    window.open(desktopAppDownloadUrl, "_blank", "noopener,noreferrer");
+    setMenuState({ anchorEl: null, menuType: null });
+  };
+
   useEffect(() => {
     if (drawerOpen) loadNotifications();
   }, [drawerOpen]);
 
   useEffect(() => {
-    const token = Cookies.get("token");
+    const token = getAuthToken();
 
     if (token) {
       try {
@@ -178,14 +190,14 @@ export const Sidebar = () => {
 
         if (isExpired) {
           console.warn("Token expirado");
-          Cookies.remove("token");
+          removeAuthToken();
           navigate("/login");
         } else {
           setUserData(dataDecoded);
         }
       } catch (error) {
         console.error("Erro ao decodificar o token:", error);
-        Cookies.remove("token");
+        removeAuthToken();
         navigate("/login");
       }
     } else {
@@ -595,6 +607,17 @@ export const Sidebar = () => {
           <SettingsOutlinedIcon fontSize="small" />
           Configurações
         </MenuItem>
+
+        {shouldShowDesktopDownload && (
+          <MenuItem
+            sx={{ display: "flex", gap: 1 }}
+            onClick={handleDesktopAppDownload}
+            disabled={!desktopAppDownloadUrl}
+          >
+            <DownloadIcon fontSize="small" />
+            Baixar App
+          </MenuItem>
+        )}
 
         <MenuItem sx={{ display: "flex", gap: 1 }} onClick={logout}>
           <LogoutOutlinedIcon fontSize="small" />

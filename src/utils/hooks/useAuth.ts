@@ -1,9 +1,9 @@
 // hooks/useAuth.ts
 import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { getAuthToken } from "../authToken";
 
 interface UserData {
   userId: string;
@@ -14,13 +14,13 @@ export function useAuth() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = Cookies.get("token");
+    const token = getAuthToken();
 
     if (token) {
       try {
         const decoded: UserData = jwtDecode(token);
         setUserData(decoded);
-      } catch (err) {
+      } catch {
         toast.error("Sua sessão expirou. Faça login novamente.");
         navigate("/");
       }

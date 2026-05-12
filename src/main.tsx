@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App.tsx";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 import { GlobalStyle } from "./styles/global.tsx";
 import { AppProviders } from "./contexts/AppProviders";
 import { CompanyProvider } from "./contexts/CompanyProvider/index.tsx";
@@ -16,13 +16,15 @@ import { NotificationProvider } from "./contexts/NotificationContext/Notificatio
 import { AuthProvider } from "./contexts/AuthContext/AuthContext.tsx";
 import { YearProvider } from "./contexts/YearContext/index.tsx";
 
+const Router = import.meta.env.VITE_ELECTRON === "true" ? HashRouter : BrowserRouter;
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <GlobalStyle />
       <DrawerProvider>
-        <BrowserRouter>
+        <Router>
           <LoadingProvider>
             <ValueDisplayProvider>
               <RefreshProvider>
@@ -42,7 +44,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               </RefreshProvider>
             </ValueDisplayProvider>
           </LoadingProvider>
-        </BrowserRouter>
+        </Router>
       </DrawerProvider>
     </ThemeProvider>
   </React.StrictMode>,

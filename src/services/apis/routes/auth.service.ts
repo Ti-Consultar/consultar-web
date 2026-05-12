@@ -10,7 +10,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const login = async (email: string, password: string) => {
   await delay(1000);
   try {
-    const response = await axiosInstanceWithToken.post(`${BASE_URL}/login`, {
+    const response = await axiosInstanceWithoutToken.post(`${BASE_URL}/login`, {
       email,
       password,
     });

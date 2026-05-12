@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
-import Cookies from "js-cookie";
+import { getAuthToken } from "../../utils/authToken";
 
 export type Role =
   | "Admin"
@@ -10,6 +10,10 @@ export type Role =
   | "Comercial"
   | "Desenvolvedor"
   | "Designer";
+
+interface DecodedPermissionsToken {
+  role?: string;
+}
 
 interface PermissionContextType {
   role: Role | null;
@@ -31,7 +35,7 @@ export const PermissionProvider = ({
   const [isLoading, setIsLoading] = useState(true);
 
   const loadPermissions = () => {
-    const token = Cookies.get("token");
+    const token = getAuthToken();
 
     if (!token) {
       setRole(null);
@@ -40,7 +44,7 @@ export const PermissionProvider = ({
     }
 
     try {
-      const decoded: any = jwtDecode(token);
+      const decoded: DecodedPermissionsToken = jwtDecode(token);
       const rawRole = decoded?.role?.trim();
 
       const validRoles: Role[] = [
@@ -53,8 +57,8 @@ export const PermissionProvider = ({
         "Designer",
       ];
 
-      if (validRoles.includes(rawRole)) {
-        setRole(rawRole);
+      if (rawRole && validRoles.includes(rawRole as Role)) {
+        setRole(rawRole as Role);
       } else {
         console.warn("Role inválida:", rawRole);
         setRole(null);

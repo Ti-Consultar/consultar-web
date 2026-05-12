@@ -1,4 +1,5 @@
 import { useMediaQuery } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { useMainContext } from "../../../contexts/mainContext";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import {
@@ -11,9 +12,18 @@ import {
 export const Header = () => {
   const { breadcrumbs } = useMainContext();
   const isMobile = useMediaQuery("(max-width:600px)");
+  const navigate = useNavigate();
 
   const flattenedBreadcrumbs = breadcrumbs.flat();
   const previous = flattenedBreadcrumbs.at(-2);
+
+  const handleBreadcrumbClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    link: string,
+  ) => {
+    event.preventDefault();
+    navigate(link);
+  };
 
   return (
     <MainContainer>
@@ -22,7 +32,13 @@ export const Header = () => {
           ? previous && (
               <BreadcrumbsItems breadcrumbActive>
                 <ArrowLeftIcon fontSize="medium" />
-                <BreadcrumbsItem href={previous.link} breadcrumbActive>
+                <BreadcrumbsItem
+                  href={previous.link}
+                  onClick={(event) =>
+                    handleBreadcrumbClick(event, previous.link)
+                  }
+                  breadcrumbActive
+                >
                   {previous.name}
                 </BreadcrumbsItem>
               </BreadcrumbsItems>
@@ -35,7 +51,12 @@ export const Header = () => {
                   breadcrumbActive={isLast}
                 >
                   {item.link && !isLast ? (
-                    <BreadcrumbsItem href={item.link}>
+                    <BreadcrumbsItem
+                      href={item.link}
+                      onClick={(event) =>
+                        handleBreadcrumbClick(event, item.link)
+                      }
+                    >
                       {item.name}
                     </BreadcrumbsItem>
                   ) : (

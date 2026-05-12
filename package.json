@@ -3,9 +3,20 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite --host --port 5173",
+    "dev:react": "vite --host --port 5173",
+    "electron:dev": "wait-on http://localhost:5173 && electron .",
+    "electron:prod": "npm run build:electron && set \"ELECTRON_LOAD_FILE=true\" && electron .",
+    "dev:desktop": "concurrently -k \"npm:dev:react\" \"npm:electron:dev\"",
     "build": "tsc -b && vite build",
+    "build:web": "tsc -b && vite build",
+    "build:electron": "set \"VITE_ELECTRON=true\" && tsc -b && vite build",
+    "desktop:build": "npm run build:electron && electron-builder",
+    "desktop:win": "npm run build:electron && electron-builder --win",
+    "desktop:linux": "npm run build:electron && electron-builder --linux",
+    "desktop:mac": "npm run build:electron && electron-builder --mac",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -51,6 +62,9 @@
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.2.1",
+    "electron": "^42.0.1",
+    "electron-builder": "^26.8.1",
     "eslint": "^9.23.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
@@ -58,6 +72,45 @@
     "globals": "^15.15.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.28.0",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "wait-on": "^9.0.10"
+  },
+  "build": {
+    "appId": "br.com.consultar.mrp",
+    "productName": "MRP Consultar",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "build/icons/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "icon": "build/icons",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office"
+    },
+    "mac": {
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.business"
+    }
   }
 }
