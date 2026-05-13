@@ -1,0 +1,50 @@
+name: Desktop Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-upload:
+    runs-on: windows-latest
+
+    env:
+      ELECTRON_UPDATE_URL: ${{ vars.ELECTRON_UPDATE_URL }}
+      AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate update URL
+        shell: pwsh
+        run: |
+          if (-not $env:ELECTRON_UPDATE_URL) {
+            throw "Configure a repository variable named ELECTRON_UPDATE_URL with the Azure Static Website desktop URL."
+          }
+
+      - name: Build Windows installer
+        run: npm run desktop:win
+
+      - name: Upload installer metadata
+        run: |
+          az storage blob upload-batch --source release --destination '$web' --destination-path desktop --pattern "latest.yml" --overwrite true --content-type "text/yaml"
+
+      - name: Upload installer executable
+        run: |
+          az storage blob upload-batch --source release --destination '$web' --destination-path desktop --pattern "*.exe" --overwrite true --content-type "application/vnd.microsoft.portable-executable"
+
+      - name: Upload differential update blockmap
+        run: |
+          az storage blob upload-batch --source release --destination '$web' --destination-path desktop --pattern "*.blockmap" --overwrite true --content-type "application/octet-stream"

@@ -3,6 +3,7 @@ import { AppRoutes } from "./routes/routes";
 import { usePermission } from "../contexts/PermissionsContext";
 import { Skeleton } from "@mui/material";
 import { Toaster } from "sonner";
+import AppUpdater from "../components/AppUpdater";
 
 function App() {
   const { isLoading } = usePermission();
@@ -14,6 +15,7 @@ function App() {
   return (
     <>
       <AppRoutes />
+      <AppUpdater />
       <Toaster closeButton position="top-right"/>
     </>
   );
