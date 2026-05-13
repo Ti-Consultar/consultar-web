@@ -44,7 +44,7 @@ interface CompanyTableProps {
   onReactivate: (selectedIds: number[]) => Promise<void>;
   onDelete: (company: Company) => void;
   fileName?: string;
-  companyType?: "Empresas" | "Filiais";
+  companyType?: "Empresas / Marcas" | "Unidades";
   deletedCompanies: InactiveCompany[];
   handleRowClick?: () => void;
   onUnlink: (company: any) => void;
@@ -69,7 +69,7 @@ export const CompanyTable = ({
   onDelete,
   onReactivate,
   deletedCompanies,
-  companyType = "Empresas",
+  companyType = "Empresas / Marcas",
   onUnlink,
   onRowClick,
   fetchCurrentUsers,
@@ -410,7 +410,7 @@ export const CompanyTable = ({
               {selectedCompany?.companyName}{" "}
             </span>
             <span style={{ textAlign: "center" }}>
-              Você também irá inativar todas as filiais dessa empresa.
+              Você também irá inativar todas as unidades dessa empresa / marca.
             </span>
             <Alert color="info" severity="info">
               Você pode reverter essa ação na aba de empresas inativas.

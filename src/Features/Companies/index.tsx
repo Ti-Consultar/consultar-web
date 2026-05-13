@@ -118,7 +118,7 @@ const Companies = () => {
     };
 
     try {
-      setLoading(true, "Salvando empresa...");
+      setLoading(true, companyId ? "Salvando unidade..." : "Salvando empresa / marca...");
 
       let response;
 
@@ -135,11 +135,11 @@ const Companies = () => {
       }
 
       if (!response.success) {
-        toast.error("Erro ao salvar empresa");
+        toast.error(companyId ? "Erro ao salvar unidade" : "Erro ao salvar empresa / marca");
         return;
       }
 
-      toast.success("Empresa salva com sucesso!");
+      toast.success(companyId ? "Unidade salva com sucesso!" : "Empresa / marca salva com sucesso!");
       setEditingCompany(undefined);
       setOpen(false);
       fetchData();
@@ -157,19 +157,19 @@ const Companies = () => {
 
     if (parsedCompanyId && parsedGroupId) {
       try {
-        setLoading(true, "Carregando empresa...");
+        setLoading(true, "Carregando empresa / marca...");
 
         const response = await getCompanyById(parsedCompanyId, parsedGroupId);
 
         if (!response.success) {
-          toast.error("Erro ao carregar empresa.");
+          toast.error("Erro ao carregar empresa / marca.");
           return;
         }
 
         setEditingCompany(response.data);
         setOpen(true);
       } catch (e) {
-        toast.error("Erro ao carregar empresa");
+        toast.error("Erro ao carregar empresa / marca");
       } finally {
         setLoading(false);
       }
@@ -211,7 +211,7 @@ const Companies = () => {
     try {
       setLoading(
         true,
-        parsedCompanyId ? "Atualizando empresa..." : "Atualizando grupo..."
+        parsedCompanyId ? "Atualizando empresa / marca..." : "Atualizando grupo..."
       );
 
       let response;
@@ -229,7 +229,7 @@ const Companies = () => {
         return;
       }
 
-      toast.success(parsedCompanyId ? "Empresa atualizada!" : "Grupo atualizado!");
+      toast.success(parsedCompanyId ? "Empresa / marca atualizada!" : "Grupo atualizado!");
 
       setEditingCompany(undefined);
       setOpen(false);
@@ -255,11 +255,11 @@ const Companies = () => {
         );
 
         if (!response.success) {
-          toast.error("Erro ao inativar empresa");
+          toast.error("Erro ao inativar empresa / marca");
           return;
         }
 
-        toast.success("Empresa inativada com sucesso!");
+        toast.success("Empresa / marca inativada com sucesso!");
         navigate(`/grupos/${groupId}/empresas`);
         fetchDropdown?.();
         fetchData?.();
@@ -366,7 +366,7 @@ const Companies = () => {
             onEditCompany={handleEditCompany}
             onInviteMembers={handleOpenInvitationModal}
             onDeactivateCompany={() => setOpenUnlinkDialog(true)}
-            createCompanyText={companyId ? "Adicionar Filial" : "Adicionar Empresa"}
+            createCompanyText={companyId ? "Adicionar Unidade" : "Adicionar Empresa / Marca"}
           />
         </Box>
 
@@ -378,7 +378,24 @@ const Companies = () => {
             setOpen(false);
             setEditingCompany(undefined);
           }}
-          title={editingCompany ? "Editar" : "Adicionar"}
+          title={
+            editingCompany
+              ? companyId
+                ? "Editar Empresa / Marca"
+                : "Editar Grupo Empresarial"
+              : companyId
+                ? "Adicionar Unidade"
+                : "Adicionar Empresa / Marca"
+          }
+          entityLabel={
+            editingCompany
+              ? companyId
+                ? "Empresa / Marca"
+                : "Grupo Empresarial"
+              : companyId
+                ? "Unidade"
+                : "Empresa / Marca"
+          }
           onSubmit={editingCompany ? onEdit : onSubmit}
           defaultValues={editingCompany}
         />
@@ -390,7 +407,7 @@ const Companies = () => {
             handleInactivate();
             setOpenUnlinkDialog(false);
           }}
-          title="Inativar empresa"
+          title="Inativar empresa / marca"
           confirmText="Sim, inativar"
           cancelText="Cancelar"
           message={
@@ -405,7 +422,7 @@ const Companies = () => {
               }}
             >
               <span style={{ textAlign: "center" }}>
-                Tem certeza que deseja inativar essa empresa?
+                Tem certeza que deseja inativar essa empresa / marca?
               </span>
             </div>
           }

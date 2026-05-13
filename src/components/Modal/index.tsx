@@ -9,19 +9,29 @@ interface ModalCustomProps {
   title?: string;
   children: React.ReactNode;
   width?: number | string;
+  height?: number | string;
+  padding?: number | string;
   hasSaveCancel?: boolean;
 }
 
-const style = (width: number | string = 400) => ({
+const style = (
+  width: number | string = 400,
+  height?: number | string,
+  padding: number | string = 4,
+) => ({
   position: "absolute" as const,
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
   width,
+  height,
+  maxWidth: "calc(100vw - 32px)",
+  maxHeight: "calc(100vh - 32px)",
   bgcolor: "background.paper",
   boxShadow: 24,
   borderRadius: 2,
-  p: 4,
+  p: padding,
+  overflow: "hidden",
 });
 
 export const ModalCustom = ({
@@ -30,12 +40,14 @@ export const ModalCustom = ({
   title,
   children,
   width = "auto",
+  height,
+  padding = 4,
   hasSaveCancel = true,
   onSubmit,
 }: ModalCustomProps) => {
   return (
     <Modal open={open} onClose={onClose} disableEnforceFocus disableAutoFocus>
-      <Box sx={style(width)}>
+      <Box sx={style(width, height, padding)}>
         <Box
           alignContent={"space-between"}
           justifyContent={"space-between"}

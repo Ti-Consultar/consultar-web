@@ -161,7 +161,7 @@ const Groups = () => {
             <Greetings>
               {greeting}, {userData?.unique_name}
             </Greetings>
-            <GreetingsSubTitle>Gerencie suas empresas abaixo</GreetingsSubTitle>
+            <GreetingsSubTitle>Gerencie seus grupos empresariais abaixo</GreetingsSubTitle>
           </Box>
 
           <GroupsKPI
@@ -244,7 +244,8 @@ const Groups = () => {
           setActiveStep(0);
         }}
         defaultValues={editingGroup}
-        title="Adicionar Grupo Empresarial"
+        title={editingGroup ? "Editar Grupo Empresarial" : "Adicionar Grupo Empresarial"}
+        entityLabel="Grupo Empresarial"
       />
 
       <AlertModal

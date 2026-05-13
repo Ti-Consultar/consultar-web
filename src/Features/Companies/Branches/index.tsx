@@ -70,7 +70,7 @@ const Branches = () => {
 
       setBranches(branchResponse.data ?? []);
     } catch (error) {
-      toast.error("Erro ao buscar filiais");
+      toast.error("Erro ao buscar unidades");
     } finally {
       setLoading(false);
     }
@@ -129,18 +129,18 @@ const Branches = () => {
       }
 
       if (!response.success) {
-        toast.error("Erro ao salvar filial");
+        toast.error("Erro ao salvar unidade");
         return;
       }
 
-      toast.success(editingBranchId ? "Filial atualizada!" : "Filial criada!");
+      toast.success(editingBranchId ? "Unidade atualizada!" : "Unidade criada!");
 
       setOpen(false);
       setEditingBranch(undefined);
       setEditingBranchId(null);
       fetchData();
     } catch {
-      toast.error("Erro ao salvar filial");
+      toast.error("Erro ao salvar unidade");
     } finally {
       setLoading(false);
     }
@@ -242,7 +242,8 @@ const Branches = () => {
             setEditingBranch(undefined);
             setEditingBranchId(null);
           }}
-          title="Adicionar Filial"
+          title="Adicionar Unidade"
+          entityLabel="Unidade"
           onSubmit={onSubmit}
           defaultValues={editingBranch}
         />

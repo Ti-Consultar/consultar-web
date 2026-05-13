@@ -6,6 +6,7 @@ interface GroupFormStepsProps {
   formData: GroupFormData;
   errors: { [key: string]: boolean };
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  entityLabel: string;
 }
 
 export const GroupFormSteps = ({
@@ -13,24 +14,62 @@ export const GroupFormSteps = ({
   formData,
   errors,
   handleChange,
+  entityLabel,
 }: GroupFormStepsProps) => {
   const b = formData.businessEntity;
+
+  const fieldSx = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: "10px",
+      backgroundColor: "#fff",
+      minHeight: 48,
+    },
+    "& .MuiInputLabel-root": {
+      fontSize: 14,
+    },
+    "& .MuiInputBase-input": {
+      fontSize: 14,
+      py: 1.35,
+    },
+  };
+
+  const sectionSx = {
+    display: "flex",
+    gap: 2.25,
+    flexDirection: "column",
+  };
+
+  const gridSx = {
+    display: "grid",
+    gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+    gap: 2,
+  };
 
   switch (activeStep) {
     case 0:
       return (
-        <Box sx={{ display: "flex", gap: 2, flexDirection: "column" }}>
-          <Typography sx={{ mt: 2, mb: 1 }}>Dados da Empresa</Typography>
-          <Box sx={{ display: "flex", gap: 2, flexDirection: "row" }}>
+        <Box sx={sectionSx}>
+          <Box>
+            <Typography sx={{ color: "#1f2937", fontSize: 18, fontWeight: 700 }}>
+              Dados cadastrais
+            </Typography>
+            <Typography sx={{ color: "#667085", fontSize: 13, mt: 0.5 }}>
+              Identificação fiscal e nome de exibição de {entityLabel}.
+            </Typography>
+          </Box>
+
+          <Box sx={gridSx}>
             <TextField
               fullWidth
               label="CNPJ"
               name="cnpj"
               value={b.cnpj}
               onChange={handleChange}
-              error={errors["cnpj"]}
-              helperText={errors["cnpj"] ? "Campo obrigatório" : ""}
+              error={errors.cnpj}
+              helperText={errors.cnpj ? "Campo obrigatório" : ""}
               disabled={!!formData.groupId}
+              size="small"
+              sx={fieldSx}
             />
             <TextField
               fullWidth
@@ -41,6 +80,8 @@ export const GroupFormSteps = ({
               error={errors.razaoSocial}
               helperText={errors.razaoSocial ? "Campo obrigatório" : ""}
               disabled
+              size="small"
+              sx={fieldSx}
             />
             <TextField
               fullWidth
@@ -50,6 +91,8 @@ export const GroupFormSteps = ({
               onChange={handleChange}
               error={errors.nomeFantasia}
               helperText={errors.nomeFantasia ? "Campo obrigatório" : ""}
+              size="small"
+              sx={fieldSx}
             />
           </Box>
         </Box>
@@ -57,9 +100,17 @@ export const GroupFormSteps = ({
 
     case 1:
       return (
-        <Box sx={{ display: "flex", gap: 2, flexDirection: "column" }}>
-          <Typography sx={{ mt: 2, mb: 1 }}>Endereço Comercial</Typography>
-          <Box sx={{ display: "flex", gap: 2, flexDirection: "row" }}>
+        <Box sx={sectionSx}>
+          <Box>
+            <Typography sx={{ color: "#1f2937", fontSize: 18, fontWeight: 700 }}>
+              Endereço comercial
+            </Typography>
+            <Typography sx={{ color: "#667085", fontSize: 13, mt: 0.5 }}>
+              Localização principal usada para cadastro.
+            </Typography>
+          </Box>
+
+          <Box sx={gridSx}>
             <TextField
               fullWidth
               label="CEP"
@@ -69,6 +120,8 @@ export const GroupFormSteps = ({
               error={errors.cep}
               helperText={errors.cep && "Campo obrigatório"}
               required
+              size="small"
+              sx={fieldSx}
             />
             <TextField
               fullWidth
@@ -79,6 +132,8 @@ export const GroupFormSteps = ({
               error={errors.logradouro}
               helperText={errors.logradouro && "Campo obrigatório"}
               required
+              size="small"
+              sx={fieldSx}
             />
             <TextField
               fullWidth
@@ -89,9 +144,9 @@ export const GroupFormSteps = ({
               error={errors.numero}
               helperText={errors.numero && "Campo obrigatório"}
               required
+              size="small"
+              sx={fieldSx}
             />
-          </Box>
-          <Box sx={{ display: "flex", gap: 2, flexDirection: "row" }}>
             <TextField
               fullWidth
               label="Bairro"
@@ -101,6 +156,8 @@ export const GroupFormSteps = ({
               error={errors.bairro}
               helperText={errors.bairro && "Campo obrigatório"}
               required
+              size="small"
+              sx={fieldSx}
             />
             <TextField
               fullWidth
@@ -111,6 +168,8 @@ export const GroupFormSteps = ({
               error={errors.municipio}
               helperText={errors.municipio && "Campo obrigatório"}
               required
+              size="small"
+              sx={fieldSx}
             />
             <TextField
               fullWidth
@@ -121,6 +180,8 @@ export const GroupFormSteps = ({
               error={errors.uf}
               helperText={errors.uf && "Campo obrigatório"}
               required
+              size="small"
+              sx={fieldSx}
             />
           </Box>
         </Box>
@@ -128,9 +189,17 @@ export const GroupFormSteps = ({
 
     case 2:
       return (
-        <Box sx={{ display: "flex", gap: 2, flexDirection: "column" }}>
-          <Typography sx={{ mt: 2, mb: 1 }}>Informações de Contato</Typography>
-          <Box sx={{ display: "flex", gap: 2, flexDirection: "row" }}>
+        <Box sx={sectionSx}>
+          <Box>
+            <Typography sx={{ color: "#1f2937", fontSize: 18, fontWeight: 700 }}>
+              Informações de contato
+            </Typography>
+            <Typography sx={{ color: "#667085", fontSize: 13, mt: 0.5 }}>
+              Canais usados para comunicação administrativa.
+            </Typography>
+          </Box>
+
+          <Box sx={gridSx}>
             <TextField
               fullWidth
               label="E-mail"
@@ -140,6 +209,8 @@ export const GroupFormSteps = ({
               error={errors.email}
               helperText={errors.email && "Campo obrigatório"}
               required
+              size="small"
+              sx={fieldSx}
             />
             <TextField
               fullWidth
@@ -150,6 +221,8 @@ export const GroupFormSteps = ({
               error={errors.telefone}
               helperText={errors.telefone && "Campo obrigatório"}
               required
+              size="small"
+              sx={fieldSx}
             />
           </Box>
         </Box>
