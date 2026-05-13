@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   getAuthToken,
+  setAuthUserEmail,
   removeAuthToken,
   setAuthTokenCookie,
 } from "../../utils/authToken";
@@ -25,7 +26,7 @@ interface DecodedToken {
 interface AuthContextValue {
   user: DecodedToken | null;
   isAuthenticated: boolean;
-  login: (token: string) => void;
+  login: (token: string, email?: string) => void;
   logout: () => void;
 }
 
@@ -53,8 +54,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const login = (token: string) => {
+  const login = (token: string, email?: string) => {
     setAuthTokenCookie(token);
+    if (email) setAuthUserEmail(email);
     decodeAndSetUser(token);
     navigate("/grupos");
   };

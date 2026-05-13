@@ -79,7 +79,7 @@ export function SubCompanyMenu({
           <ListItemIcon>
             <AddOutlinedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Adicionar empresa" />
+          <ListItemText primary="Adicionar Empresa / Marca" />
         </MenuItem>
 
         <MenuItem
@@ -91,7 +91,7 @@ export function SubCompanyMenu({
           <ListItemIcon>
             <AddOutlinedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Adicionar filial" />
+          <ListItemText primary="Adicionar Unidade" />
         </MenuItem>
 
         <MenuItem
@@ -103,7 +103,7 @@ export function SubCompanyMenu({
           <ListItemIcon>
             <EditRoundedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Editar empresa" />
+          <ListItemText primary="Editar Empresa / Marca" />
         </MenuItem>
 
         <MenuItem
@@ -133,7 +133,7 @@ export function SubCompanyMenu({
           <ListItemIcon>
             <ArchiveOutlinedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Inativar empresa" />
+          <ListItemText primary="Inativar Empresa / Marca" />
         </MenuItem>
       </Menu>
     </>

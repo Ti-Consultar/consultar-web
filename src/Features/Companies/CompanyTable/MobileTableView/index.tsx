@@ -126,7 +126,7 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
   return (
     <Box sx={{ gridArea: "content" }}>
       <TableToolbar
-        title="Empresas"
+        title="Empresas / Marcas"
         onAddClick={onAddClick}
         onExport={handleExport}
         searchValue={searchTerm}
@@ -245,7 +245,7 @@ export const MobileTableView: React.FC<MobileTableViewProps> = ({
                     {selectedCompany?.companyName}{" "}
                   </span>
                   <span style={{ textAlign: "center" }}>
-                    Você também irá inativar todas as filiais dessa empresa.
+                    Você também irá inativar todas as unidades dessa empresa / marca.
                   </span>
                   <Alert color="info" severity="info">
                     Você pode reverter essa ação na aba de empresas inativas.

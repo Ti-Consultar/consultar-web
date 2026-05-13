@@ -91,7 +91,7 @@ export const useGroupActions = ({
                 );
             }
 
-            toast.success("Empresas reativadas com sucesso!");
+            toast.success("Empresas / marcas reativadas com sucesso!");
 
             refetch();
         } catch {

@@ -39,7 +39,6 @@ axiosInstanceWithToken.interceptors.response.use(
       toast.error("Sua sessao expirou. Faca login novamente.");
 
       removeAuthToken();
-      localStorage.removeItem("userData");
 
       redirectToLogin();
     }

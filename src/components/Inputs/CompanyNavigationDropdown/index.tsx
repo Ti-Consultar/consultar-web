@@ -168,7 +168,7 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
           {data.name}
         </MenuItem>
 
-        <ListSubheader>Empresas</ListSubheader>
+        <ListSubheader>Empresas / Marcas</ListSubheader>
 
         {paginatedFiliais.map((f) => {
           const hasSubs = f.subCompanies?.length > 0;

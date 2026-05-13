@@ -1,7 +1,7 @@
 import {
   Box,
   Step,
-  StepLabel,
+  StepButton,
   Stepper,
   useMediaQuery,
   useTheme,
@@ -28,6 +28,7 @@ interface GroupFormProps {
   defaultValues?: GroupFormData;
   externalActiveStep?: number;
   title?: string;
+  entityLabel?: string;
 }
 
 export const CompanyForm = ({
@@ -36,7 +37,8 @@ export const CompanyForm = ({
   defaultValues,
   onSubmit,
   externalActiveStep,
-  title
+  title,
+  entityLabel = "Empresa / Marca",
 }: GroupFormProps) => {
   const userData = useAuth();
   const { setLoading } = useLoading();
@@ -79,33 +81,64 @@ export const CompanyForm = ({
     }
   }, [externalActiveStep]);
 
-  const handleNext = () => {
+  const validateStep = (step: number) => {
     const currentErrors: { [key: string]: boolean } = {};
     const b = formData.businessEntity;
 
-    if (activeStep === 0) {
+    if (step === 0) {
       if (!b.cnpj.trim()) currentErrors.cnpj = true;
       if (!b.razaoSocial.trim()) currentErrors.razaoSocial = true;
-    } else if (activeStep === 1) {
+    } else if (step === 1) {
       if (!b.cep.trim()) currentErrors.cep = true;
       if (!b.logradouro.trim()) currentErrors.logradouro = true;
       if (!b.numero.trim()) currentErrors.numero = true;
       if (!b.bairro.trim()) currentErrors.bairro = true;
       if (!b.municipio.trim()) currentErrors.municipio = true;
       if (!b.uf.trim()) currentErrors.uf = true;
-    } else if (activeStep === 2) {
+    } else if (step === 2) {
       if (!b.email.trim()) currentErrors.email = true;
       if (!b.telefone.trim()) currentErrors.telefone = true;
     }
 
-    setErrors({ ...currentErrors });
+    return currentErrors;
+  };
 
-    if (Object.keys(currentErrors).length > 0) return;
+  const validateUntilStep = (targetStep: number) => {
+    const currentErrors: { [key: string]: boolean } = {};
+
+    for (let step = 0; step <= targetStep; step += 1) {
+      Object.assign(currentErrors, validateStep(step));
+    }
+
+    setErrors(currentErrors);
+
+    for (let step = 0; step <= targetStep; step += 1) {
+      if (Object.keys(validateStep(step)).length > 0) {
+        setActiveStep(step);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validateUntilStep(activeStep)) return;
     setActiveStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
     setActiveStep((prev) => prev - 1);
+  };
+
+  const handleStepClick = (targetStep: number) => {
+    if (targetStep <= activeStep) {
+      setActiveStep(targetStep);
+      return;
+    }
+
+    if (!validateUntilStep(targetStep - 1)) return;
+    setActiveStep(targetStep);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,8 +170,10 @@ export const CompanyForm = ({
   // Para retornar os dados da empresa ao preencher o CNPJ
   useEffect(() => {
     const rawCnpj = formData.businessEntity.cnpj.replace(/\D/g, "");
+    const defaultCnpj = defaultValues?.businessEntity.cnpj?.replace(/\D/g, "");
 
     if (rawCnpj.length !== 14) return;
+    if (defaultCnpj && rawCnpj === defaultCnpj) return;
 
     const timeout = setTimeout(() => {
       setLoading(true, "Buscando dados da empresa");
@@ -175,7 +210,7 @@ export const CompanyForm = ({
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [formData.businessEntity.cnpj]);
+  }, [formData.businessEntity.cnpj, defaultValues]);
 
   // Para retornar os dados do endereço ao preencher o CEP
   useEffect(() => {
@@ -225,6 +260,7 @@ export const CompanyForm = ({
   // aplica ações após o envio do formulário;
   const handleSubmit = () => {
     if (!userData) return;
+    if (!validateUntilStep(steps.length - 1)) return;
 
     const {
       nomeFantasia,
@@ -242,12 +278,13 @@ export const CompanyForm = ({
 
     const cleanCNPJ = cnpj.replace(/\D/g, "");
     const cleanCEP = cep.replace(/\D/g, "");
+    const normalizedNomeFantasia = nomeFantasia.trim() || razaoSocial;
 
     const payload = {
-      name: nomeFantasia || razaoSocial,
+      name: normalizedNomeFantasia,
       userId: Number(userData.userId),
       businessEntity: {
-        nomeFantasia,
+        nomeFantasia: normalizedNomeFantasia,
         razaoSocial,
         cnpj: cleanCNPJ,
         logradouro,
@@ -291,33 +328,91 @@ export const CompanyForm = ({
       open={isOpen}
       onClose={handleCancel}
       title={title}
-      width={"80%"}
+      width={"min(1080px, calc(100vw - 48px))"}
+      height={"min(720px, calc(100vh - 48px))"}
+      padding={3}
       onSubmit={handleSubmit}
       hasSaveCancel={false}
     >
-      <Box sx={{ width: "100%", p: 2 }}>
-        <Stepper
-          activeStep={activeStep}
-          orientation={isMobile ? "vertical" : "horizontal"}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "260px minmax(0, 1fr)",
+          gap: 3,
+          height: "calc(100% - 56px)",
+          minHeight: 0,
+        }}
+      >
+        <Box
+          sx={{
+            borderRight: isMobile ? "none" : "1px solid #eef0f4",
+            borderBottom: isMobile ? "1px solid #eef0f4" : "none",
+            pr: isMobile ? 0 : 3,
+            pb: isMobile ? 2 : 0,
+          }}
         >
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+          <Stepper activeStep={activeStep} orientation="vertical" nonLinear>
+            {steps.map((label, index) => (
+              <Step key={label}>
+                <StepButton
+                  onClick={() => handleStepClick(index)}
+                  sx={{
+                    alignItems: "flex-start",
+                    py: 1,
+                    "& .MuiStepLabel-label": {
+                      color: "#667085",
+                      fontSize: 14,
+                      fontWeight: 600,
+                    },
+                    "& .Mui-active .MuiStepLabel-label": {
+                      color: "#3A5F9B",
+                      fontWeight: 700,
+                    },
+                    "& .MuiStepIcon-root": {
+                      color: "#d0d5dd",
+                    },
+                    "& .Mui-active .MuiStepIcon-root": {
+                      color: "#3A5F9B",
+                    },
+                    "& .Mui-completed .MuiStepIcon-root": {
+                      color: "#3A5F9B",
+                    },
+                  }}
+                >
+                  {label}
+                </StepButton>
+              </Step>
+            ))}
+          </Stepper>
+        </Box>
 
-        <Box sx={{ mt: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            overflow: "hidden",
+          }}
+        >
+        <Box sx={{ flex: 1, overflowY: "auto", pr: 1 }}>
           <GroupFormSteps
             activeStep={activeStep}
             formData={formData}
             errors={errors}
             handleChange={handleChange}
+            entityLabel={entityLabel}
           />
         </Box>
 
         <Box
-          sx={{ mt: 4, display: "flex", gap: 1, justifyContent: "flex-end" }}
+          sx={{
+            display: "flex",
+            gap: 1,
+            justifyContent: "flex-end",
+            pt: 3,
+            mt: 3,
+            borderTop: "1px solid #eef0f4",
+          }}
         >
           {activeStep > 0 && (
             <Button variant="secondary" onClick={handleBack} text="Voltar" />
@@ -328,9 +423,10 @@ export const CompanyForm = ({
               onClick={
                 activeStep === steps.length - 1 ? handleSubmit : handleNext
               }
-              text={activeStep === steps.length - 1 ? "Enviar" : "Próximo"}
+              text={activeStep === steps.length - 1 ? "Salvar" : "Próximo"}
             />
           ) : null}
+        </Box>
         </Box>
       </Box>
     </ModalCustom>

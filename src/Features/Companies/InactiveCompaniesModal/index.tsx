@@ -122,7 +122,7 @@ export const InactiveCompaniesModal: React.FC<InactiveCompaniesModalProps> = ({
           mb={2}
           sx={{ fontWeight: 600, color: "var(--neutral-500)" }}
         >
-          Empresas Inativadas
+          Empresas / Marcas Inativadas
         </Typography>
 
         <SearchInput

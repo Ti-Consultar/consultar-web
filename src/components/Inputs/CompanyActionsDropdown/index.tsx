@@ -85,7 +85,7 @@ export function CompanyMenu({
               <ListItemIcon>
                 <AddOutlinedIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary={createCompanyText || "Adicionar empresa"} />
+              <ListItemText primary={createCompanyText || "Adicionar Empresa / Marca"} />
             </MenuItem>
           )
         }
@@ -98,7 +98,7 @@ export function CompanyMenu({
           <ListItemIcon>
             <EditRoundedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Editar empresa" />
+          <ListItemText primary="Editar Empresa / Marca" />
         </MenuItem>
 
         <MenuItem
@@ -128,7 +128,7 @@ export function CompanyMenu({
           <ListItemIcon>
             <ArchiveOutlinedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Inativar empresa" />
+          <ListItemText primary="Inativar Empresa / Marca" />
         </MenuItem>
       </Menu>
     </>
