@@ -1,8 +1,12 @@
 import {
   Box,
+  Checkbox,
+  FormControl,
   IconButton,
+  InputLabel,
   MenuItem,
   Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -10,28 +14,22 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  Checkbox,
-  FormControl,
-  InputLabel,
-  Select,
   Tooltip,
   Typography,
 } from "@mui/material";
 import { useState } from "react";
 import CheckIcon from "@mui/icons-material/Check";
 import RemoveDoneOutlinedIcon from "@mui/icons-material/RemoveDoneOutlined";
+import { toast } from "sonner";
+import { ExportButton } from "../../../components/Button/ExportButton";
 import { SearchInput } from "../../../components/Inputs/SearchInput";
-import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
-import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 
 export interface AccountPlanRow {
   id: number;
   costCenter: string;
   name: string;
-  initialValue: number;
-  credit: number;
-  debit: number;
-  finalValue: number;
+  budgetedAmount: boolean;
 }
 
 interface BondListItem {
@@ -64,14 +62,7 @@ export const AccountPlanTable = ({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [search, setSearch] = useState("");
-
-  const { valueMode } = useValueDisplay();
-
-  const formatValue = (value: number) => {
-    if (valueMode === "MILHAR") return (value / 1000).toFixed(2);
-    if (valueMode === "MILHARES") return (value / 1000000).toFixed(2);
-    return value.toString();
-  };
+  const { exportExcel } = useExportUtils();
 
   const handleCheckboxToggle = (id: string) => {
     onSelect(
@@ -81,16 +72,55 @@ export const AccountPlanTable = ({
     );
   };
 
+  const getClassification = (costCenter: string) => {
+    for (const group of classificationBonds.bondList) {
+      if (
+        Array.isArray(group.costCenters) &&
+        group.costCenters.some((cc) => cc.costCenter === costCenter)
+      ) {
+        return {
+          id: group.accountPlanClassificationId,
+          name: group.classificationName,
+        };
+      }
+    }
+
+    return null;
+  };
+
   const filteredData =
     data?.filter((row) =>
       row.name.toLowerCase().includes(search.toLowerCase())
     ) || [];
 
+  const handleExportExcel = () => {
+    if (filteredData.length === 0) {
+      toast.warning("Nenhum dado para exportar.");
+      return;
+    }
+
+    const rows = filteredData.map((row) => ({
+      ...row,
+      classificationName: getClassification(row.costCenter)?.name || "",
+    }));
+
+    exportExcel(
+      rows,
+      [
+        { label: "Conta", accessor: (row) => row.costCenter },
+        { label: "Descrição", accessor: (row) => row.name },
+        {
+          label: "Classificação",
+          accessor: (row) => row.classificationName,
+        },
+      ],
+      "classificacao"
+    );
+  };
+
   return (
     <Paper elevation={0} sx={{ border: "1px solid #ddd" }}>
       <Box p={2} display="flex" gap={2} alignItems="center" flexWrap="wrap">
-        <TableValueVisualization />
-
         <FormControl
           size="small"
           sx={{
@@ -118,6 +148,9 @@ export const AccountPlanTable = ({
           placeholder="Pesquisar"
           onChange={setSearch}
         />
+        <Box sx={{ ml: "auto" }}>
+          <ExportButton onClick={handleExportExcel} />
+        </Box>
       </Box>
 
       <TableContainer>
@@ -146,26 +179,15 @@ export const AccountPlanTable = ({
               <TableCell onClick={() => onSort("name")} align="center">
                 Descrição
               </TableCell>
-              <TableCell onClick={() => onSort("initialValue")} align="center">
-                Inicial
-              </TableCell>
-              <TableCell onClick={() => onSort("credit")} align="center">
-                Crédito
-              </TableCell>
-              <TableCell onClick={() => onSort("debit")} align="center">
-                Débito
-              </TableCell>
-              <TableCell onClick={() => onSort("finalValue")} align="center">
-                Final
-              </TableCell>
+              <TableCell align="center">Classificação</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">
-                    Escolha uma data acima para trazer o balancete.
+                    Nenhum balancete encontrado.
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -174,35 +196,7 @@ export const AccountPlanTable = ({
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row) => {
                   const isSelected = selectedKeys.includes(row.costCenter);
-
-                  // Procura se o costCenter está classificado em algum grupo
-                  const classificationId = (() => {
-                    for (const group of classificationBonds.bondList) {
-                      if (
-                        Array.isArray(group.costCenters) &&
-                        group.costCenters.some(
-                          (cc) => cc.costCenter === row.costCenter
-                        )
-                      ) {
-                        return group.accountPlanClassificationId;
-                      }
-                    }
-                    return null;
-                  })();
-
-                  const classificationName = (() => {
-                    for (const group of classificationBonds.bondList) {
-                      if (
-                        Array.isArray(group.costCenters) &&
-                        group.costCenters.some(
-                          (cc) => cc.costCenter === row.costCenter
-                        )
-                      ) {
-                        return group.classificationName;
-                      }
-                    }
-                    return null;
-                  })();
+                  const classification = getClassification(row.costCenter);
 
                   return (
                     <TableRow
@@ -218,14 +212,12 @@ export const AccountPlanTable = ({
                         padding="checkbox"
                         sx={{ display: "flex", alignItems: "center" }}
                       >
-                        {classificationId !== null ? (
-                          <>
-                            <Tooltip
-                              title={`Classificado como ${classificationName}`}
-                            >
-                              <CheckIcon color="success" />
-                            </Tooltip>
-                          </>
+                        {classification !== null ? (
+                          <Tooltip
+                            title={`Classificado como ${classification.name}`}
+                          >
+                            <CheckIcon color="success" />
+                          </Tooltip>
                         ) : (
                           <Checkbox
                             sx={{ padding: "6px 16px" }}
@@ -241,7 +233,7 @@ export const AccountPlanTable = ({
                       <TableCell>{row.costCenter}</TableCell>
                       <TableCell
                         sx={{
-                          maxWidth: 200,
+                          maxWidth: 240,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -263,17 +255,35 @@ export const AccountPlanTable = ({
                           </Box>
                         </Tooltip>
                       </TableCell>
-                      <TableCell align="right">
-                        {formatValue(row.initialValue)}
-                      </TableCell>
-                      <TableCell align="right">
-                        {formatValue(row.credit)}
-                      </TableCell>
-                      <TableCell align="right">
-                        {formatValue(row.debit)}
-                      </TableCell>
-                      <TableCell align="right">
-                        {formatValue(row.finalValue)}
+                      <TableCell
+                        sx={{
+                          maxWidth: 220,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {classification ? (
+                          <Tooltip title={classification.name}>
+                            <Box
+                              component="span"
+                              sx={{
+                                display: "inline-block",
+                                maxWidth: "100%",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              {classification.name}
+                            </Box>
+                          </Tooltip>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            -
+                          </Typography>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

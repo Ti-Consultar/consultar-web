@@ -20,11 +20,10 @@ import { toast } from "sonner";
 import { ClassificationModal } from "./UseDefaultsModal";
 import { useParams } from "react-router";
 import { useLoading } from "../../contexts/LoadingProvider";
-import { AccountPlanTable } from "./Table";
-import { MonthYearPickerSearch } from "./MonthYearPickerSearch";
+import { AccountPlanRow, AccountPlanTable } from "./Table";
 import {
-  getBalanceteByDate,
   getBalanceteFiltered,
+  getFirstBalanceteByAccountPlan,
 } from "../../services/apis/routes/balancete.service";
 import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
 
@@ -45,9 +44,9 @@ const ClassificationPage = () => {
   const [selectedClassificationId, setSelectedClassificationId] =
     useState<number>();
   const [open, setOpen] = useState(false);
-  const [accountType, setAccountType] = useState<number>();
+  const [accountType, setAccountType] = useState(0);
   const { groupId, companyid, subcompanyid } = useParams();
-  const [balanceteData, setBalanceteData] = useState<any[]>([]);
+  const [balanceteData, setBalanceteData] = useState<AccountPlanRow[]>([]);
   const { setLoading } = useLoading();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [classificationBonds, setClassificationBonds] = useState<{
@@ -66,7 +65,6 @@ const ClassificationPage = () => {
     setSelectedKeys(ids);
   };
 
-  // Atualiza breadcrumb no mount
   useEffect(() => {
     setBreadcrumbs([
       { name: "Grupos", link: "/grupos" },
@@ -83,18 +81,21 @@ const ClassificationPage = () => {
     try {
       const response = await getClassifiedBonds(accountPlanId);
       if (response.success) {
-        if (response.data === "Não encontrado") {
+        if (
+          typeof response.data === "string" &&
+          ["Não encontrado", "Nao encontrado"].includes(response.data)
+        ) {
           return;
-        } else {
-          const newBondList = { bondList: response.data || [] };
-
-          setClassificationBonds(newBondList);
-
-          localStorage.setItem(
-            "classification-bondList",
-            JSON.stringify(newBondList)
-          );
         }
+
+        const newBondList = { bondList: response.data || [] };
+
+        setClassificationBonds(newBondList);
+
+        localStorage.setItem(
+          "classification-bondList",
+          JSON.stringify(newBondList)
+        );
       }
     } catch (error) {
       console.error("Erro ao buscar classificações existentes", error);
@@ -102,7 +103,6 @@ const ClassificationPage = () => {
     }
   };
 
-  // Valida modelo de classificação
   const loadClassificationsFlow = async () => {
     if (!accountPlanId) return;
 
@@ -132,6 +132,32 @@ const ClassificationPage = () => {
     loadClassificationsFlow();
   }, [accountPlanId, selectedTab]);
 
+  const loadFirstBalancete = async () => {
+    try {
+      if (!accountPlanId) return;
+
+      localStorage.removeItem("classification-bondList");
+      setSelectedKeys([]);
+      setLoading(true, "Buscando contas...");
+
+      const response = await getFirstBalanceteByAccountPlan(accountPlanId);
+      if (response.success === true) {
+        setBalanceteData(response.data?.dataDto || []);
+        setBalanceteId(response.data?.balancete?.id);
+
+        await loadExistingClassifications(accountPlanId);
+      }
+    } catch {
+      toast.error("Erro ao carregar as contas.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFirstBalancete();
+  }, [accountPlanId]);
+
   const updateBondList = (bondList: BondListItem[]) => {
     const newBondList = { bondList };
     setClassificationBonds(newBondList);
@@ -141,7 +167,6 @@ const ClassificationPage = () => {
     );
   };
 
-  // Atualiza bondList e salva localStorage no momento da seleção da classificação
   const handleClassificationChange = (classificationId: number) => {
     if (!classificationId) return;
     setSelectedKeys([]);
@@ -210,30 +235,6 @@ const ClassificationPage = () => {
     }
   };
 
-  const handleMonthYearSearch = async ({
-    month,
-    year,
-  }: {
-    month: number;
-    year: number;
-  }) => {
-    try {
-      if (!accountPlanId) return;
-
-      localStorage.removeItem("classification-bondList");
-      setSelectedKeys([]);
-      const response = await getBalanceteByDate(accountPlanId, year, month);
-      if (response.success === true) {
-        setBalanceteData(response.data?.dataDto);
-        setBalanceteId(response.data?.balancete?.id);
-
-        await loadExistingClassifications(accountPlanId);
-      }
-    } catch {
-      toast.error("Erro ao buscar balancete por data.");
-    }
-  };
-
   const handleSaveClassification = async () => {
     try {
       if (!accountPlanId) return;
@@ -277,14 +278,18 @@ const ClassificationPage = () => {
 
   const getBalanceteByAccountType = async (accountType: number) => {
     try {
+      if (!accountType) {
+        await loadFirstBalancete();
+        return;
+      }
+
       if (!balanceteId) return;
-      if (!accountType) return;
 
       setLoading(true, "Buscando balancete por tipo de conta...");
 
       const response = await getBalanceteFiltered(balanceteId, accountType);
       if (response.success === true) {
-        setBalanceteData(response?.data);
+        setBalanceteData(response?.data || []);
       } else {
         toast.error("Erro ao buscar balancete por tipo de conta.");
       }
@@ -317,29 +322,16 @@ const ClassificationPage = () => {
         </Box>
         <Box>
           <Grid2 container spacing={2}>
-            {/* Coluna esquerda: Filtros e Tabela */}
             <Grid2 size={{ xs: 12, md: 8 }}>
               <Card sx={{ p: 2 }}>
                 <Grid2 container spacing={2}>
-                  {/* Linha de filtros */}
-                  <Grid2 size={{ xs: 12, md: 6 }}>
-                    <MonthYearPickerSearch onSearch={handleMonthYearSearch} />
-                  </Grid2>
-                  <Grid2 size={{ xs: 12, md: 3 }}>
-                    {/* Select de resultados */}
-                  </Grid2>
-
-                  <Grid2 size={{ xs: 12, md: 2 }}>{/* Pesquisa */}</Grid2>
-
-                  <Grid2 size={{ xs: 12, md: 2 }}>{/* Botão de busca */}</Grid2>
-
                   <Grid2 size={{ xs: 12 }}>
                     <AccountPlanTable
                       data={balanceteData}
                       selectedKeys={selectedKeys}
                       onSelect={handleSelect}
                       onSort={() => {}}
-                      accountType={accountType ? accountType : 0}
+                      accountType={accountType}
                       onAccountTypeChange={handleAccountTypeChange}
                       classificationBonds={classificationBonds}
                       onRemoveClassified={handleRemoveClassified}
@@ -349,7 +341,6 @@ const ClassificationPage = () => {
               </Card>
             </Grid2>
 
-            {/* Coluna direita: Classificação */}
             <Grid2 size={{ xs: 12, md: 4 }}>
               <Card sx={{ p: 2 }}>
                 <Grid2 container spacing={2}>

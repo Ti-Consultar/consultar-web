@@ -41,3 +41,24 @@ export type BalanceteData = {
   finalValue: number;
   budgetedAmount: boolean;
 };
+
+export type ClassificationBalancete = {
+  id: number;
+  accountPlans: AccountPlan | null;
+  dateMonth: number;
+  dateYear: number;
+  status: number;
+  dateCreate: string;
+};
+
+export type ClassificationBalanceteData = {
+  id: number;
+  costCenter: string;
+  name: string;
+  budgetedAmount: boolean;
+};
+
+export type ClassificationBalanceteResponse = {
+  balancete: ClassificationBalancete;
+  dataDto: ClassificationBalanceteData[];
+};
