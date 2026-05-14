@@ -1,4 +1,5 @@
 import { BalancetePayload } from "../../../types/balancetePayload";
+import { ClassificationBalanceteResponse } from "../../../types/balancete";
 import { axiosInstanceWithToken } from "../config";
 
 const URL = import.meta.env.VITE_API_URL_MRP;
@@ -48,6 +49,19 @@ export const getBalanceteByDate = async (
       {
         params: { year, month },
       }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getFirstBalanceteByAccountPlan = async (
+  accountPlanId: number
+): Promise<{ success: boolean; data?: ClassificationBalanceteResponse }> => {
+  try {
+    const response = await axiosInstanceWithToken.get(
+      `${URL}/api/Balancete/accountplan/${accountPlanId}/date`
     );
     return response.data;
   } catch (error) {
