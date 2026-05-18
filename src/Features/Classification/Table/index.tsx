@@ -89,9 +89,13 @@ export const AccountPlanTable = ({
   };
 
   const filteredData =
-    data?.filter((row) =>
-      row.name.toLowerCase().includes(search.toLowerCase())
-    ) || [];
+    data?.filter((row) => {
+      const query = search.toLowerCase();
+      return (
+        row.name.toLowerCase().includes(query) ||
+        row.costCenter.toLowerCase().includes(query)
+      );
+    }) || [];
 
   const handleExportExcel = () => {
     if (filteredData.length === 0) {
