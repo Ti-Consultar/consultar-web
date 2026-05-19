@@ -265,8 +265,8 @@ const BalancoContabil = () => {
                 <Box sx={{ width: "30%" }}>
                   <CompanyNavigationDropdown
                     data={dropdownData.data}
-                    selectedId={companyid ? Number(companyid) : Number(groupId)}
-                    onChange={({ id, type }) => {
+                    selectedId={subCompanyId ? Number(subCompanyId) : companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type, parentId }) => {
                       if (type === "group")
                         return navigate(`/grupos/${id}/contabil`);
                       if (type === "filial")
@@ -275,7 +275,7 @@ const BalancoContabil = () => {
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/contabil`,
+                          `/grupos/${groupId}/empresas/${parentId ?? companyid}/filiais/${id}/contabil`,
                         );
                     }}
                   />

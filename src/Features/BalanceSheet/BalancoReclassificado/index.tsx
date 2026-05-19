@@ -325,8 +325,8 @@ const BalancoReclassificado = () => {
                 <Box sx={{ width: "30%" }}>
                   <CompanyNavigationDropdown
                     data={dropdownData.data}
-                    selectedId={companyid ? Number(companyid) : Number(groupId)}
-                    onChange={({ id, type }) => {
+                    selectedId={subCompanyId ? Number(subCompanyId) : companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type, parentId }) => {
                       if (type === "group")
                         return navigate(
                           `/grupos/${id}/demonstracoes-contabeis`,
@@ -337,7 +337,7 @@ const BalancoReclassificado = () => {
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/demonstracoes-contabeis`,
+                          `/grupos/${groupId}/empresas/${parentId ?? companyid}/filiais/${id}/demonstracoes-contabeis`,
                         );
                     }}
                   />

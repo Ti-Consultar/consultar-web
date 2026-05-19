@@ -97,14 +97,14 @@ const AgregadoMensal = () => {
             <Box sx={{ width: "18%" }}>
               <CompanyNavigationDropdown
                 data={dropdownData.data}
-                selectedId={companyid ? Number(companyid) : Number(groupId)}
-                onChange={({ id, type }) => {
+                selectedId={subCompanyId ? Number(subCompanyId) : companyid ? Number(companyid) : Number(groupId)}
+                onChange={({ id, type, parentId }) => {
                   if (type === "group") return navigate(`/grupos/${id}/eva`);
                   if (type === "filial")
                     return navigate(`/grupos/${groupId}/empresas/${id}/eva`);
                   if (type === "sub")
                     return navigate(
-                      `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/eva`,
+                      `/grupos/${groupId}/empresas/${parentId ?? companyid}/filiais/${id}/eva`,
                     );
                 }}
               />

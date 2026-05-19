@@ -53,6 +53,17 @@ interface CompanyLevelSelectProps {
   }) => void;
 }
 
+type CompanyListItem =
+  | {
+      type: "filial";
+      filial: Filial;
+    }
+  | {
+      type: "sub";
+      sub: SubCompany;
+      parent: Filial;
+    };
+
 export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
   data,
   selectedId,
@@ -84,19 +95,24 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
     return "Selecionar nível";
   }, [selectedId, data]);
 
-  const filteredFiliais = useMemo(() => {
-    if (!normalizedSearch) return data.filiais;
+  const companyItems = useMemo<CompanyListItem[]>(() => {
+    if (!normalizedSearch) {
+      return data.filiais.map((filial) => ({ type: "filial", filial }));
+    }
 
-    return data.filiais.filter((filial) => {
+    return data.filiais.flatMap((filial) => {
       const filialMatches = filial.name
         .toLowerCase()
         .includes(normalizedSearch);
 
-      const subMatches = filial.subCompanies?.some((sub) =>
-        sub.name.toLowerCase().includes(normalizedSearch),
-      );
+      const subMatches = filial.subCompanies
+        ?.filter((sub) => sub.name.toLowerCase().includes(normalizedSearch))
+        .map((sub) => ({ type: "sub" as const, sub, parent: filial }));
 
-      return filialMatches || subMatches;
+      return [
+        ...(filialMatches ? [{ type: "filial" as const, filial }] : []),
+        ...(subMatches ?? []),
+      ];
     });
   }, [data.filiais, normalizedSearch]);
 
@@ -110,7 +126,7 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
     );
   }, [activeFilial, normalizedSearch]);
 
-  const listToPaginate = view === "companies" ? filteredFiliais : filteredUnits;
+  const listToPaginate = view === "companies" ? companyItems : filteredUnits;
   const totalPages = Math.ceil(listToPaginate.length / ITEMS_PER_PAGE);
 
   const paginatedItems = useMemo(() => {
@@ -286,8 +302,40 @@ export const CompanyLevelSelect: React.FC<CompanyLevelSelectProps> = ({
 
             <ListSubheader>Empresas / Marcas</ListSubheader>
 
-            {paginatedItems.map((item) => {
-              const filial = item as Filial;
+            {(paginatedItems as CompanyListItem[]).map((item) => {
+              if (item.type === "sub") {
+                const { sub, parent } = item;
+                const isSelected = selectedId === sub.id;
+
+                return (
+                  <MenuItem
+                    key={`${parent.id}-${sub.id}`}
+                    selected={isSelected}
+                    onClick={() => {
+                      onChange({
+                        id: sub.id,
+                        accountPlanId: sub.accountPlanId,
+                        type: "sub",
+                        parentId: parent.id,
+                      });
+                      closeMenu();
+                    }}
+                    sx={{
+                      ...itemSx,
+                      ...(isSelected ? selectedSx : {}),
+                    }}
+                  >
+                    <Box>
+                      <Typography sx={{ fontSize: 14 }}>{sub.name}</Typography>
+                      <Typography sx={{ fontSize: 12, color: "#667085" }}>
+                        {parent.name}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                );
+              }
+
+              const filial = item.filial;
               const hasSubs = filial.subCompanies?.length > 0;
               const isSelected = selectedId === filial.id;
 

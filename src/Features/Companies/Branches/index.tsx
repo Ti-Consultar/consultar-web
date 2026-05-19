@@ -8,6 +8,7 @@ import { MainContainer, Title } from "../styles";
 
 import {
   getBranches,
+  getSubCompanyById,
   saveSubCompany,
   updateSubCompany,
 } from "../../../services/apis/routes/subcompanies.service";
@@ -27,13 +28,12 @@ import { GroupFormData } from "../../../types/group";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { DashboardPage } from "../../Dashboard";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { ModernTextField } from "../../../styles/DatePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import DashboardIcon from "../../../assets/icons/duo-icons_dashboard.svg";
-import dayjs from "dayjs";
 import theme from "../../../styles/theme";
 import { CompanyMenu } from "../../../components/Inputs/CompanyActionsDropdown";
+import { InvitationModal } from "../../Invitation/InvitationModal";
+import YearPicker from "../../../components/Inputs/YearPicker";
+import { useYear } from "../../../contexts/YearContext";
 
 const Branches = () => {
   const navigate = useNavigate();
@@ -54,7 +54,8 @@ const Branches = () => {
   const [editingBranch, setEditingBranch] = useState<GroupFormData>();
   const [open, setOpen] = useState(false);
   const [editingBranchId, setEditingBranchId] = useState<number | null>(null);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [openInvitationModal, setOpenInvitationModal] = useState(false);
+  const { year, setYear } = useYear();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // ============================
@@ -139,6 +140,7 @@ const Branches = () => {
       setEditingBranch(undefined);
       setEditingBranchId(null);
       fetchData();
+      fetchDropdown();
     } catch {
       toast.error("Erro ao salvar unidade");
     } finally {
@@ -149,7 +151,15 @@ const Branches = () => {
   // ============================
   // NAVIGATION HANDLER
   // ============================
-  const handleNavigation = ({ id, type }: { id: number; type: string }) => {
+  const handleNavigation = ({
+    id,
+    type,
+    parentId,
+  }: {
+    id: number;
+    type: string;
+    parentId?: number;
+  }) => {
     const group = Number(groupId);
 
     if (type === "group") {
@@ -161,7 +171,36 @@ const Branches = () => {
     }
 
     if (type === "sub") {
-      return navigate(`/grupos/${group}/empresas/${companyId}/filiais/${id}`);
+      return navigate(`/grupos/${group}/empresas/${parentId ?? companyId}/filiais/${id}`);
+    }
+  };
+
+  const handleEditBranch = async () => {
+    if (!companyId || !subCompanyId) {
+      toast.error("Unidade inválida para edição.");
+      return;
+    }
+
+    try {
+      setLoading(true, "Carregando unidade...");
+
+      const response = await getSubCompanyById(
+        Number(subCompanyId),
+        Number(companyId),
+      );
+
+      if (!response.success) {
+        toast.error("Erro ao carregar unidade.");
+        return;
+      }
+
+      setEditingBranch(response.data);
+      setEditingBranchId(Number(subCompanyId));
+      setOpen(true);
+    } catch {
+      toast.error("Erro ao carregar unidade.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -200,32 +239,24 @@ const Branches = () => {
             <Box sx={{ width: "20%", mb: 3 }}>
               <CompanyNavigationDropdown
                 data={dropdownData.data}
-                selectedId={Number(subCompanyId)}
+                selectedId={
+                  subCompanyId
+                    ? Number(subCompanyId)
+                    : companyId
+                      ? Number(companyId)
+                      : Number(groupId)
+                }
                 onChange={handleNavigation}
               />
             </Box>
           )}
 
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-              views={["year"]}
-              label="Ano"
-              value={dayjs().year(year)}
-              onChange={(v) => setYear(v?.year() ?? year)}
-              enableAccessibleFieldDOMStructure={false}
-              slots={{
-                textField: ModernTextField,
-              }}
-              slotProps={{
-                textField: { size: "medium" },
-              }}
-            />
-          </LocalizationProvider>
+          <YearPicker year={year} onChange={(newYear) => setYear(newYear)} />
 
           <CompanyMenu
             onAddCompany={() => setOpen(true)}
-            onEditCompany={() => {}}
-            onInviteMembers={() => console.log("Convidar membros")}
+            onEditCompany={handleEditBranch}
+            onInviteMembers={() => setOpenInvitationModal(true)}
             onDeactivateCompany={() => console.log("Inativar")}
             hideCompanyCreation
           />
@@ -242,10 +273,18 @@ const Branches = () => {
             setEditingBranch(undefined);
             setEditingBranchId(null);
           }}
-          title="Adicionar Unidade"
+          title={editingBranch ? "Editar Unidade" : "Adicionar Unidade"}
           entityLabel="Unidade"
           onSubmit={onSubmit}
           defaultValues={editingBranch}
+        />
+
+        <InvitationModal
+          open={openInvitationModal}
+          onClose={() => setOpenInvitationModal(false)}
+          groupToBeInvited={groupId ? Number(groupId) : undefined}
+          companyId={companyId ? Number(companyId) : undefined}
+          subCompanyId={subCompanyId ? Number(subCompanyId) : undefined}
         />
       </MainContainer>
     </MainTemplate>

@@ -282,8 +282,8 @@ const CILeEC = () => {
                 <Box sx={{ width: "30%" }}>
                   <CompanyNavigationDropdown
                     data={dropdownData.data}
-                    selectedId={companyid ? Number(companyid) : Number(groupId)}
-                    onChange={({ id, type }) => {
+                    selectedId={subCompanyId ? Number(subCompanyId) : companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type, parentId }) => {
                       if (type === "group")
                         return navigate(`/grupos/${id}/resultados/cil-ec`);
                       if (type === "filial")
@@ -292,7 +292,7 @@ const CILeEC = () => {
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/cil-ec`,
+                          `/grupos/${groupId}/empresas/${parentId ?? companyid}/filiais/${id}/resultados/cil-ec`,
                         );
                     }}
                   />

@@ -268,8 +268,8 @@ const EficienciaOperacional = () => {
                 <Box sx={{ width: "30%" }}>
                   <CompanyNavigationDropdown
                     data={dropdownData.data}
-                    selectedId={companyid ? Number(companyid) : Number(groupId)}
-                    onChange={({ id, type }) => {
+                    selectedId={subCompanyId ? Number(subCompanyId) : companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type, parentId }) => {
                       if (type === "group")
                         return navigate(
                           `/grupos/${id}/resultados/eficiencia-operacional`,
@@ -280,7 +280,7 @@ const EficienciaOperacional = () => {
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/eficiencia-operacional`,
+                          `/grupos/${groupId}/empresas/${parentId ?? companyid}/filiais/${id}/resultados/eficiencia-operacional`,
                         );
                     }}
                   />
