@@ -221,8 +221,8 @@ const CashFlow = () => {
                 <Box sx={{ width: "30%" }}>
                   <CompanyNavigationDropdown
                     data={dropdownData.data}
-                    selectedId={companyid ? Number(companyid) : Number(groupId)}
-                    onChange={({ id, type }) => {
+                    selectedId={subCompanyId ? Number(subCompanyId) : companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type, parentId }) => {
                       if (type === "group")
                         return navigate(`/grupos/${id}/fluxo-caixa/`);
                       if (type === "filial")
@@ -231,7 +231,7 @@ const CashFlow = () => {
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/fluxo-caixa`,
+                          `/grupos/${groupId}/empresas/${parentId ?? companyid}/filiais/${id}/fluxo-caixa`,
                         );
                     }}
                   />

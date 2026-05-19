@@ -391,8 +391,8 @@ const IndicesEconomicos = () => {
                 <Box sx={{ width: "30%" }}>
                   <CompanyNavigationDropdown
                     data={dropdownData.data}
-                    selectedId={companyid ? Number(companyid) : Number(groupId)}
-                    onChange={({ id, type }) => {
+                    selectedId={subCompanyId ? Number(subCompanyId) : companyid ? Number(companyid) : Number(groupId)}
+                    onChange={({ id, type, parentId }) => {
                       if (type === "group")
                         return navigate(
                           `/grupos/${id}/resultados/indices-economicos`,
@@ -403,7 +403,7 @@ const IndicesEconomicos = () => {
                         );
                       if (type === "sub")
                         return navigate(
-                          `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/resultados/indices-economicos`,
+                          `/grupos/${groupId}/empresas/${parentId ?? companyid}/filiais/${id}/resultados/indices-economicos`,
                         );
                     }}
                   />

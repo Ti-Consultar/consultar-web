@@ -45,7 +45,7 @@ const ClassificationPage = () => {
     useState<number>();
   const [open, setOpen] = useState(false);
   const [accountType, setAccountType] = useState(0);
-  const { groupId, companyid, subcompanyid } = useParams();
+  const { groupId, companyid, subCompanyId } = useParams();
   const [balanceteData, setBalanceteData] = useState<AccountPlanRow[]>([]);
   const { setLoading } = useLoading();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -58,7 +58,7 @@ const ClassificationPage = () => {
   const { accountPlanId } = useAccountPlanId({
     groupId,
     companyId: companyid,
-    subCompanyId: subcompanyid,
+    subCompanyId,
   });
 
   const handleSelect = (ids: string[]) => {

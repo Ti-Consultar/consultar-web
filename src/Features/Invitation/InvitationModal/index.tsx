@@ -23,6 +23,7 @@ import { usePermission } from "../../../contexts/PermissionsContext";
 import { getUserPolicies } from "../../../services/apis/routes/auth.service";
 import { getCompanyUsers } from "../../../services/apis/routes/companies.service";
 import { getGroupUsers } from "../../../services/apis/routes/groups.service";
+import { getSubCompanyUsers } from "../../../services/apis/routes/subcompanies.service";
 
 interface InvitationModalProps {
   open: boolean;
@@ -73,9 +74,21 @@ export const InvitationModal = ({
           return;
         }
 
-        const membersReq = companyId
-          ? getCompanyUsers(Number(companyId), parsedGroupId)
-          : getGroupUsers(parsedGroupId);
+        const parsedCompanyId =
+          companyId !== undefined && !isNaN(Number(companyId))
+            ? Number(companyId)
+            : undefined;
+        const parsedSubCompanyId =
+          subCompanyId !== undefined && !isNaN(Number(subCompanyId))
+            ? Number(subCompanyId)
+            : undefined;
+
+        const membersReq =
+          parsedCompanyId && parsedSubCompanyId
+            ? getSubCompanyUsers(parsedSubCompanyId, parsedGroupId, parsedCompanyId)
+            : parsedCompanyId
+              ? getCompanyUsers(parsedCompanyId, parsedGroupId)
+              : getGroupUsers(parsedGroupId);
 
         const [membersRes, policiesRes] = await Promise.all([
           membersReq,
@@ -93,7 +106,7 @@ export const InvitationModal = ({
     };
 
     loadData();
-  }, [open]);
+  }, [open, groupId, groupToBeInvited, companyId, subCompanyId]);
 
   const sendInvitation = async () => {
     const parsedGroupId =
@@ -111,8 +124,7 @@ export const InvitationModal = ({
       return;
     }
 
-    const adjustedSubCompanyId =
-      companyId === subCompanyId ? undefined : subCompanyId ?? 0;
+    const adjustedSubCompanyId = companyId && subCompanyId ? subCompanyId : undefined;
 
     const payload: invitations = {
       invitations: emails.map((email) => ({

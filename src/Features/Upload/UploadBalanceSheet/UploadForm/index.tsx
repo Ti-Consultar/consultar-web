@@ -32,7 +32,7 @@ export const BalanceSheetForm = ({
     null,
   );
   
-  const { groupId, companyid } = useParams();
+  const { groupId, companyid, subCompanyId } = useParams();
   const handleDateChange = (date: Dayjs | null) => {
     if (date) {
       onMonthChange(date.month() + 1);
@@ -67,8 +67,8 @@ export const BalanceSheetForm = ({
           <Box sx={{ width: "20%" }}>
             <CompanyNavigationDropdown
               data={dropdownData.data}
-              selectedId={companyid ? Number(companyid) : Number(groupId)}
-              onChange={({ id, type }) => {
+              selectedId={subCompanyId ? Number(subCompanyId) : companyid ? Number(companyid) : Number(groupId)}
+              onChange={({ id, type, parentId }) => {
                 if (type === "group")
                   return navigate(`/grupos/${id}/arquivos/upload/balancete`);
                 if (type === "filial")
@@ -77,7 +77,7 @@ export const BalanceSheetForm = ({
                   );
                 if (type === "sub")
                   return navigate(
-                    `/grupos/${groupId}/empresas/${companyid}/filiais/${id}/arquivos/upload/balancete`,
+                    `/grupos/${groupId}/empresas/${parentId ?? companyid}/filiais/${id}/arquivos/upload/balancete`,
                   );
               }}
             />

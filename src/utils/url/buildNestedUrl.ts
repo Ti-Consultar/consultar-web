@@ -25,11 +25,16 @@ export const buildNestedUrl = (
 
   if (!currentGroupId) return null;
 
-  // Dashboard -> sempre vai pro nível da empresa
+  // Dashboard -> preserva o nível atual
   if (finalPath === "empresas" || finalPath === "dashboard") {
+    if (currentCompanyId && currentSubCompanyId) {
+      return `/grupos/${currentGroupId}/empresas/${currentCompanyId}/filiais/${currentSubCompanyId}`;
+    }
+
     if (currentCompanyId) {
       return `/grupos/${currentGroupId}/empresas/${currentCompanyId}/filiais`;
     }
+
     return `/grupos/${currentGroupId}/empresas`;
   }
 
