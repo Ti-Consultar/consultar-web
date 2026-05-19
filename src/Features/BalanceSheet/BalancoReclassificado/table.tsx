@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -16,13 +16,25 @@ import {
   DialogActions,
   Button,
   Tooltip,
+  Menu,
+  MenuItem,
+  Checkbox,
+  ListItemText,
+  Divider,
+  IconButton,
 } from "@mui/material";
 import InboxIcon from "@mui/icons-material/Inbox";
+import CloseIcon from "@mui/icons-material/Close";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
 import { StickyCell, StickyHead, StickyHeadFirstCell } from "./styles";
 import { MergedMonth, MonthRaw } from "../../../types/BalancoReclassificado";
 import { Totalizer } from "../../../types/balanco";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
+
+const HIDDEN_MONTHS_STORAGE_KEY = "balancoReclassificadoTable.hiddenMonths";
 
 interface FinancialTableProps {
   realizado: { months: MonthRaw[] };
@@ -32,6 +44,7 @@ interface FinancialTableProps {
   highlightRows?: Record<number, boolean>;
   metricNature?: Record<string, "receita" | "despesa">;
   nestedMode?: "NONE" | "DRE";
+  isExpandedView?: boolean;
 }
 
 export const BalancoReclassificadoTable = ({
@@ -42,13 +55,19 @@ export const BalancoReclassificadoTable = ({
   highlightRows = {},
   metricNature,
   nestedMode = "NONE",
+  isExpandedView = false,
 }: FinancialTableProps) => {
   const theme = useTheme();
   const { valueMode } = useValueDisplay();
 
   const [openModal, setOpenModal] = useState(false);
+  const [openExpandedModal, setOpenExpandedModal] = useState(false);
   const [selectedTitle, setSelectedTitle] = useState("");
   const [selectedDetails, setSelectedDetails] = useState<any[]>([]);
+  const [hiddenMonthKeys, setHiddenMonthKeys] = useState<string[]>([]);
+  const [monthMenuAnchor, setMonthMenuAnchor] = useState<null | HTMLElement>(
+    null,
+  );
 
   const MONTH_NUM_BY_NAME: Record<string, number> = {
     January: 1,
@@ -129,6 +148,76 @@ export const BalancoReclassificadoTable = ({
     });
   }, [realizado, orcado, variacao]);
 
+  useEffect(() => {
+    const loadHiddenMonthKeys = () => {
+      try {
+        const raw = localStorage.getItem(HIDDEN_MONTHS_STORAGE_KEY);
+        if (!raw) {
+          setHiddenMonthKeys([]);
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setHiddenMonthKeys(parsed.filter((key) => typeof key === "string"));
+        }
+      } catch {
+        setHiddenMonthKeys([]);
+      }
+    };
+
+    loadHiddenMonthKeys();
+
+    window.addEventListener("storage", loadHiddenMonthKeys);
+    window.addEventListener(
+      "balanco-reclassificado-months-change",
+      loadHiddenMonthKeys,
+    );
+
+    return () => {
+      window.removeEventListener("storage", loadHiddenMonthKeys);
+      window.removeEventListener(
+        "balanco-reclassificado-months-change",
+        loadHiddenMonthKeys,
+      );
+    };
+  }, []);
+
+  const monthOptions = useMemo(
+    () =>
+      mergedMonths.map((m) => ({
+        key: String(m.dateMonth ?? m.id),
+        label: monthTranslator[m.name] ?? m.name,
+      })),
+    [mergedMonths],
+  );
+
+  const visibleMonths = useMemo(() => {
+    const hidden = new Set(hiddenMonthKeys);
+    return mergedMonths.filter(
+      (m) => !hidden.has(String(m.dateMonth ?? m.id)),
+    );
+  }, [hiddenMonthKeys, mergedMonths]);
+
+  const persistHiddenMonthKeys = (keys: string[]) => {
+    setHiddenMonthKeys(keys);
+    localStorage.setItem(HIDDEN_MONTHS_STORAGE_KEY, JSON.stringify(keys));
+    window.dispatchEvent(new Event("balanco-reclassificado-months-change"));
+  };
+
+  const toggleMonthVisibility = (monthKey: string) => {
+    const isHidden = hiddenMonthKeys.includes(monthKey);
+    const nextHidden = isHidden
+      ? hiddenMonthKeys.filter((key) => key !== monthKey)
+      : [...hiddenMonthKeys, monthKey];
+
+    persistHiddenMonthKeys(nextHidden);
+  };
+
+  const showAllMonths = () => persistHiddenMonthKeys([]);
+
+  const hideAllMonths = () =>
+    persistHiddenMonthKeys(monthOptions.map((month) => month.key));
+
   const hasDatasFor = (m: MergedMonth, totalizerId: number) => {
     const real = m.realRows.find((x) => x.id === totalizerId);
     return !!real?.classifications?.some((c) => (c.datas?.length ?? 0) > 0);
@@ -185,6 +274,10 @@ export const BalancoReclassificadoTable = ({
   };
 
   const tMonth = (name: string) => monthTranslator[name] ?? name;
+
+  const isYtdMonth = (m: MergedMonth) =>
+    m.dateMonth === 13 ||
+    ["YTD", "ACUMULADO"].includes((m.name ?? "").trim().toUpperCase());
 
   const dataCellHover = {
     cursor: "pointer",
@@ -287,13 +380,93 @@ export const BalancoReclassificadoTable = ({
     });
   };
 
+  const getHighlightCellSx = (hl: boolean) =>
+    hl
+      ? {
+          borderTop: `2px solid ${theme.palette.grey[500]}`,
+          borderBottom: `2px solid ${theme.palette.grey[500]}`,
+        }
+      : {};
+
   return (
     <>
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 1,
+          mb: 1.5,
+          flexWrap: "wrap",
+        }}
+      >
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<ViewColumnIcon />}
+          onClick={(event) => setMonthMenuAnchor(event.currentTarget)}
+          disabled={!monthOptions.length}
+          sx={{ textTransform: "none", borderRadius: 2 }}
+        >
+          Meses
+        </Button>
+
+        {!isExpandedView && (
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<OpenInFullIcon />}
+            onClick={() => setOpenExpandedModal(true)}
+            disabled={isEmpty}
+            sx={{ textTransform: "none", borderRadius: 2 }}
+          >
+            Expandir
+          </Button>
+        )}
+      </Box>
+
+      <Menu
+        anchorEl={monthMenuAnchor}
+        open={Boolean(monthMenuAnchor)}
+        onClose={() => setMonthMenuAnchor(null)}
+        PaperProps={{
+          sx: {
+            width: 260,
+            maxHeight: 420,
+            borderRadius: 2,
+          },
+        }}
+      >
+        <MenuItem onClick={showAllMonths} dense>
+          <RestartAltIcon fontSize="small" sx={{ mr: 1.5 }} />
+          <ListItemText primary="Mostrar todos os meses" />
+        </MenuItem>
+        <MenuItem onClick={hideAllMonths} dense disabled={!monthOptions.length}>
+          <ViewColumnIcon fontSize="small" sx={{ mr: 1.5 }} />
+          <ListItemText primary="Desmarcar todos" />
+        </MenuItem>
+        <Divider />
+        {monthOptions.map((month) => {
+          const checked = !hiddenMonthKeys.includes(month.key);
+          return (
+            <MenuItem
+              key={month.key}
+              onClick={() => toggleMonthVisibility(month.key)}
+              dense
+            >
+              <Checkbox checked={checked} size="small" />
+              <ListItemText primary={month.label} />
+            </MenuItem>
+          );
+        })}
+      </Menu>
+
       <TableContainer
         component={Paper}
         elevation={0}
         sx={{
-          maxHeight: 650,
+          maxHeight: isExpandedView ? "calc(100vh - 190px)" : 650,
           position: "relative",
           borderRadius: 3,
           overflow: "auto",
@@ -318,7 +491,7 @@ export const BalancoReclassificadoTable = ({
                 >
                   Descrição
                 </TableCell>
-                {mergedMonths.map((m) => (
+                {visibleMonths.map((m) => (
                   <TableCell
                     key={m.id}
                     align="center"
@@ -328,7 +501,13 @@ export const BalancoReclassificadoTable = ({
                       border: `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <b>{tMonth(m.name)}</b>
+                    {isYtdMonth(m) ? (
+                      <Tooltip title="Year to Date">
+                        <b>{tMonth(m.name)}</b>
+                      </Tooltip>
+                    ) : (
+                      <b>{tMonth(m.name)}</b>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
@@ -341,7 +520,7 @@ export const BalancoReclassificadoTable = ({
                       border: `1px solid ${theme.palette.divider}`,
                     }}
                   />
-                  {mergedMonths.map((m) => (
+                  {visibleMonths.map((m) => (
                     <React.Fragment key={m.id}>
                       <TableCell
                         align="right"
@@ -401,6 +580,7 @@ export const BalancoReclassificadoTable = ({
                             color: hl ? theme.palette.text.primary : "inherit",
                             background: rowBg,
                             border: `1px solid ${theme.palette.divider}`,
+                            ...getHighlightCellSx(hl),
                             "&:hover": {
                               backgroundColor: hl
                                 ? theme.palette.grey[400]
@@ -423,7 +603,7 @@ export const BalancoReclassificadoTable = ({
                           </Tooltip>
                         </TableCell>
 
-                        {mergedMonths.map((m) =>
+                        {visibleMonths.map((m) =>
                           !showBudgetColumns ? (
                             <TableCell
                               key={`${m.id}-real-${t.id}`}
@@ -431,6 +611,7 @@ export const BalancoReclassificadoTable = ({
                               sx={{
                                 ...(hasDatasFor(m, t.id) ? dataCellHover : {}),
                                 border: `1px solid ${theme.palette.divider}`,
+                                ...getHighlightCellSx(hl),
                                 cursor: hasDatasFor(m, t.id)
                                   ? "pointer"
                                   : "default",
@@ -452,6 +633,7 @@ export const BalancoReclassificadoTable = ({
                                 sx={{
                                   ...dataCellHover,
                                   border: `1px solid ${theme.palette.divider}`,
+                                  ...getHighlightCellSx(hl),
                                 }}
                               >
                                 {formatValue(
@@ -466,6 +648,7 @@ export const BalancoReclassificadoTable = ({
                                 sx={{
                                   ...dataCellHover,
                                   border: `1px solid ${theme.palette.divider}`,
+                                  ...getHighlightCellSx(hl),
                                 }}
                               >
                                 {formatValue(
@@ -480,6 +663,7 @@ export const BalancoReclassificadoTable = ({
                                 sx={{
                                   ...dataCellHover,
                                   border: `1px solid ${theme.palette.divider}`,
+                                  ...getHighlightCellSx(hl),
                                 }}
                               >
                                 {(() => {
@@ -551,7 +735,7 @@ export const BalancoReclassificadoTable = ({
                                 </Tooltip>
                               </TableCell>
 
-                              {mergedMonths.map((m) => {
+                              {visibleMonths.map((m) => {
                                 const realRow = m.realRows.find(
                                   (x) => x.id === t.id,
                                 );
@@ -661,7 +845,7 @@ export const BalancoReclassificadoTable = ({
                 })}
             </TableBody>
 
-            {mergedMonths[0]?.totalReal !== null && (
+            {visibleMonths[0]?.totalReal !== null && (
               <TableBody>
                 <TableRow sx={{ backgroundColor: theme.palette.grey[200] }}>
                   <TableCell
@@ -675,7 +859,7 @@ export const BalancoReclassificadoTable = ({
                       "Total"}
                   </TableCell>
 
-                  {mergedMonths.map((m) =>
+                  {visibleMonths.map((m) =>
                     !showBudgetColumns ? (
                       <TableCell key={m.id} align="right">
                         <b>{formatValue(m.totalReal, "Total")}</b>
@@ -719,6 +903,55 @@ export const BalancoReclassificadoTable = ({
           </Table>
         )}
       </TableContainer>
+
+      {!isExpandedView && (
+        <Dialog
+          open={openExpandedModal}
+          onClose={() => setOpenExpandedModal(false)}
+          fullWidth
+          maxWidth="xl"
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              width: "calc(100vw - 48px)",
+              height: "calc(100vh - 48px)",
+              maxWidth: "none",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontSize: "1.1rem",
+              fontWeight: 700,
+              pb: 1,
+            }}
+          >
+            Demonstrações Financeiras
+            <IconButton
+              aria-label="Fechar tabela expandida"
+              onClick={() => setOpenExpandedModal(false)}
+              size="small"
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ p: 2.5, pt: 1 }}>
+            <BalancoReclassificadoTable
+              realizado={realizado}
+              orcado={orcado}
+              variacao={variacao}
+              showBudgetColumns={showBudgetColumns}
+              highlightRows={highlightRows}
+              metricNature={metricNature}
+              nestedMode={nestedMode}
+              isExpandedView
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       <Dialog
         open={openModal}
