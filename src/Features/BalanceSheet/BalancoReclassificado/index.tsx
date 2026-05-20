@@ -81,6 +81,7 @@ const BalancoReclassificado = () => {
       "Margem EBITDA %",
       "NOPAT",
       "Margem NOPAT %",
+      "Outros Resultados"
     ];
 
     realizadoMonths.forEach((month) => {
