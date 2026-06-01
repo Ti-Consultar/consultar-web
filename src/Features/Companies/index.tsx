@@ -261,6 +261,20 @@ const Companies = () => {
 
         toast.success("Empresa / marca inativada com sucesso!");
         navigate(`/grupos/${groupId}/empresas`);
+
+        // Remover a empresa do dropdown localmente para forçar re-render
+        setDropdownData((prev) => {
+          try {
+            if (!prev) return prev;
+            const newFiliais = prev.data.filiais.filter(
+              (f: any) => f.id !== Number(companyId)
+            );
+            return { ...prev, data: { ...prev.data, filiais: newFiliais } };
+          } catch {
+            return prev;
+          }
+        });
+
         fetchDropdown?.();
         fetchData?.();
         return;
