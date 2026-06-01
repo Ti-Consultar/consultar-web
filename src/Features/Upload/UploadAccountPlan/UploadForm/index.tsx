@@ -40,7 +40,7 @@ export const AccountPlanUploadForm = ({
     <MainContainer>
       <FormContainer>
         {dropdownData && (
-          <Box sx={{ width: { xs: "100%", md: "50%" } }}>
+          <Box sx={{ width: { xs: "100%", md: "20%" } }}>
             <CompanyNavigationDropdown
               data={dropdownData.data}
               selectedId={

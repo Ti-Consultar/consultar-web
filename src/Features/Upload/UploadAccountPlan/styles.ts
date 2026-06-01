@@ -55,10 +55,6 @@ export const Subtitle = styled.span`
 `;
 
 export const OptionsContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
   gap: 0.5rem;
   width: 100%;
   margin-bottom: 1rem;
