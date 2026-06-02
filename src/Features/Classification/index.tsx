@@ -3,8 +3,27 @@ import { MainTemplate } from "../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
 import { useMainContext } from "../../contexts/mainContext";
 import { ClassificationPanel } from "./ClassificationOptions";
-import { Box, Button, Card, Grid2 } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid2,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import {
   getClassification,
   getClassifiedBonds,
@@ -47,6 +66,11 @@ const ClassificationPage = () => {
   const [accountType, setAccountType] = useState(0);
   const { groupId, companyid, subCompanyId } = useParams();
   const [balanceteData, setBalanceteData] = useState<AccountPlanRow[]>([]);
+  const [allBalanceteData, setAllBalanceteData] = useState<AccountPlanRow[]>(
+    []
+  );
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const { setLoading } = useLoading();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [classificationBonds, setClassificationBonds] = useState<{
@@ -64,6 +88,21 @@ const ClassificationPage = () => {
   const handleSelect = (ids: string[]) => {
     setSelectedKeys(ids);
   };
+
+  const classifiedRows = classificationBonds.bondList.flatMap((group) =>
+    group.costCenters.map((item) => {
+      const account = allBalanceteData.find(
+        (row) => row.costCenter === item.costCenter
+      );
+
+      return {
+        accountPlanClassificationId: group.accountPlanClassificationId,
+        classificationName: group.classificationName,
+        costCenter: item.costCenter,
+        name: account?.name || "Conta não encontrada na tabela",
+      };
+    })
+  );
 
   useEffect(() => {
     setBreadcrumbs([
@@ -142,7 +181,9 @@ const ClassificationPage = () => {
 
       const response = await getFirstBalanceteByAccountPlan(accountPlanId);
       if (response.success === true) {
-        setBalanceteData(response.data?.dataDto || []);
+        const accounts = response.data?.dataDto || [];
+        setBalanceteData(accounts);
+        setAllBalanceteData(accounts);
         setBalanceteId(response.data?.balancete?.id);
 
         await loadExistingClassifications(accountPlanId);
@@ -235,6 +276,15 @@ const ClassificationPage = () => {
     }
   };
 
+  const handleOpenSaveConfirmation = () => {
+    if (classifiedRows.length === 0) {
+      toast.warning("Nenhuma classificação para enviar.");
+      return;
+    }
+
+    setConfirmModalOpen(true);
+  };
+
   const handleSaveClassification = async () => {
     try {
       if (!accountPlanId) return;
@@ -246,14 +296,18 @@ const ClassificationPage = () => {
 
       const parsed: BondListWrapper = JSON.parse(saved);
 
-      if (!parsed.bondList || parsed.bondList.length === 0) {
+      const bondList = (parsed.bondList || []).filter(
+        (group) => group.costCenters.length > 0
+      );
+
+      if (bondList.length === 0) {
         toast.warning("Nenhuma classificação para enviar.");
         return;
       }
 
       setLoading(true, "Enviando classificação...");
 
-      const response = await sendClassification(parsed, accountPlanId);
+      const response = await sendClassification({ bondList }, accountPlanId);
 
       if (response.success === true) {
         toast.success("Classificação enviada com sucesso!");
@@ -264,6 +318,8 @@ const ClassificationPage = () => {
 
         handleRemoveClassified(allClassifiedCostCenters);
         setSelectedKeys([]);
+        setConfirmModalOpen(false);
+        setReviewModalOpen(false);
         loadExistingClassifications(accountPlanId);
       } else {
         toast.error("Erro ao classificar.");
@@ -303,12 +359,14 @@ const ClassificationPage = () => {
 
   const handleRemoveClassified = (costCentersToRemove: string[]) => {
     setClassificationBonds((prev) => {
-      const bondList = prev.bondList.map((group) => ({
-        ...group,
-        costCenters: group.costCenters.filter(
-          (cc) => !costCentersToRemove.includes(cc.costCenter)
-        ),
-      }));
+      const bondList = prev.bondList
+        .map((group) => ({
+          ...group,
+          costCenters: group.costCenters.filter(
+            (cc) => !costCentersToRemove.includes(cc.costCenter)
+          ),
+        }))
+        .filter((group) => group.costCenters.length > 0);
       updateBondList(bondList);
       return { bondList };
     });
@@ -347,7 +405,7 @@ const ClassificationPage = () => {
                   <Grid2 size={{ xs: 12 }}>
                     <Button
                       variant="contained"
-                      onClick={handleSaveClassification}
+                      onClick={handleOpenSaveConfirmation}
                       fullWidth
                       startIcon={<LinkOutlinedIcon />}
                     >
@@ -373,6 +431,120 @@ const ClassificationPage = () => {
           onClose={() => setOpen(false)}
           onConfirm={useDefaultClassification}
         />
+        <Dialog
+          open={confirmModalOpen}
+          onClose={() => setConfirmModalOpen(false)}
+          maxWidth="xs"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              p: 1,
+            },
+          }}
+        >
+          <DialogTitle>
+            <Box display="flex" alignItems="center" gap={1}>
+              <FactCheckOutlinedIcon color="primary" />
+              <Typography variant="h6">Confirmar classificação</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Typography color="text.secondary">
+              {classifiedRows.length} item(ns) serão enviados para
+              classificação.
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button color="inherit" onClick={() => setConfirmModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setConfirmModalOpen(false);
+                setReviewModalOpen(true);
+              }}
+            >
+              Revisar
+            </Button>
+            <Button variant="contained" onClick={handleSaveClassification}>
+              Confirmar
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+            },
+          }}
+        >
+          <DialogTitle>Revisar classificações</DialogTitle>
+          <DialogContent>
+            <TableContainer sx={{ maxHeight: 420 }}>
+              <Table size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Conta</TableCell>
+                    <TableCell>Descrição</TableCell>
+                    <TableCell>Classificação</TableCell>
+                    <TableCell align="right">Remover</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {classifiedRows.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                        <Typography color="text.secondary">
+                          Nenhuma classificação selecionada.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    classifiedRows.map((row) => (
+                      <TableRow
+                        key={`${row.accountPlanClassificationId}-${row.costCenter}`}
+                        hover
+                      >
+                        <TableCell>{row.costCenter}</TableCell>
+                        <TableCell>{row.name}</TableCell>
+                        <TableCell>{row.classificationName}</TableCell>
+                        <TableCell align="right">
+                          <IconButton
+                            color="error"
+                            size="small"
+                            onClick={() =>
+                              handleRemoveClassified([row.costCenter])
+                            }
+                          >
+                            <DeleteOutlineIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button color="inherit" onClick={() => setReviewModalOpen(false)}>
+              Voltar
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSaveClassification}
+              disabled={classifiedRows.length === 0}
+            >
+              Confirmar classificação
+            </Button>
+          </DialogActions>
+        </Dialog>
       </MainContainer>
     </MainTemplate>
   );

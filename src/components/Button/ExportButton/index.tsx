@@ -1,8 +1,9 @@
 import { Button } from "@mui/material";
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import type { MouseEventHandler } from "react";
 
 interface ExportButtonProps {
-  onClick: () => void;
+  onClick: MouseEventHandler<HTMLButtonElement>;
 }
 
 export const ExportButton = ({ onClick }: ExportButtonProps) => {
