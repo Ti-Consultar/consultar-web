@@ -246,8 +246,20 @@ export const Sidebar = () => {
                     title: "Orçamentos",
                     path: buildNestedUrl(params, "arquivos/upload/orcamento"),
                   },
+                  {
+                    title: "Plano de contas",
+                    path: buildNestedUrl(
+                      params,
+                      "arquivos/upload/plano-contas",
+                    ),
+                  },
                 ],
-                allowedRoles: ["Admin", "Desenvolvedor", "Gestor"] as Role[],
+                allowedRoles: [
+                  "Admin",
+                  "Consultor",
+                  "Desenvolvedor",
+                  "Gestor",
+                ] as Role[],
               },
               {
                 title: "Demonstrações Financeiras",
@@ -507,7 +519,7 @@ export const Sidebar = () => {
                                 {item.subItems.map((sub) => {
                                   const subActive = isActive(sub.path);
 
-                                  return (
+                                  const SubItemContent = (
                                     <ListItemButton
                                       key={sub.title}
                                       sx={{
@@ -526,6 +538,17 @@ export const Sidebar = () => {
                                         }}
                                       />
                                     </ListItemButton>
+                                  );
+
+                                  return sub.allowedRoles ? (
+                                    <Protected
+                                      key={sub.title}
+                                      allowedRoles={sub.allowedRoles}
+                                    >
+                                      {SubItemContent}
+                                    </Protected>
+                                  ) : (
+                                    SubItemContent
                                   );
                                 })}
                               </List>

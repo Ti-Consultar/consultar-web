@@ -83,6 +83,9 @@ const UploadBalanceSheet = lazy(
 const UploadBudgetSheet = lazy(
   () => import("../../Features/Upload/UploadBudgetSheet"),
 );
+const UploadAccountPlan = lazy(
+  () => import("../../Features/Upload/UploadAccountPlan"),
+);
 
 const BalanceColumnMapping = lazy(
   () => import("../../Features/Upload/BalanceColumnMapping"),
@@ -149,6 +152,11 @@ export const AppRoutes = () => {
         {/* Upload Orçamento */}
         {withScopes("arquivos/upload/orcamento").map((path) => (
           <Route key={path} path={path} element={<UploadBudgetSheet />} />
+        ))}
+
+        {/* Upload Plano de Contas */}
+        {withScopes("arquivos/upload/plano-contas").map((path) => (
+          <Route key={path} path={path} element={<UploadAccountPlan />} />
         ))}
 
         {/* Balancetes */}
