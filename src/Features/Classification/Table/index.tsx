@@ -4,6 +4,9 @@ import {
   FormControl,
   IconButton,
   InputLabel,
+  ListItemIcon,
+  ListItemText,
+  Menu,
   MenuItem,
   Paper,
   Select,
@@ -19,6 +22,8 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import CheckIcon from "@mui/icons-material/Check";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import RemoveDoneOutlinedIcon from "@mui/icons-material/RemoveDoneOutlined";
 import { toast } from "sonner";
 import { ExportButton } from "../../../components/Button/ExportButton";
@@ -62,7 +67,11 @@ export const AccountPlanTable = ({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [search, setSearch] = useState("");
+  const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
   const { exportExcel } = useExportUtils();
+  const isExportMenuOpen = Boolean(exportAnchorEl);
 
   const handleCheckboxToggle = (id: string) => {
     onSelect(
@@ -97,16 +106,42 @@ export const AccountPlanTable = ({
       );
     }) || [];
 
-  const handleExportExcel = () => {
+  const closeExportMenu = () => {
+    setExportAnchorEl(null);
+  };
+
+  const handleExportAccountPlan = () => {
     if (filteredData.length === 0) {
       toast.warning("Nenhum dado para exportar.");
+      closeExportMenu();
       return;
     }
 
-    const rows = filteredData.map((row) => ({
-      ...row,
-      classificationName: getClassification(row.costCenter)?.name || "",
-    }));
+    exportExcel(
+      filteredData,
+      [
+        { label: "Conta", accessor: (row) => row.costCenter },
+        { label: "Descrição", accessor: (row) => row.name },
+      ],
+      "plano-de-contas"
+    );
+
+    closeExportMenu();
+  };
+
+  const handleExportClassification = () => {
+    const rows = filteredData
+      .map((row) => ({
+        ...row,
+        classificationName: getClassification(row.costCenter)?.name || "",
+      }))
+      .filter((row) => row.classificationName);
+
+    if (rows.length === 0) {
+      toast.warning("Nenhuma classificação para exportar.");
+      closeExportMenu();
+      return;
+    }
 
     exportExcel(
       rows,
@@ -118,8 +153,10 @@ export const AccountPlanTable = ({
           accessor: (row) => row.classificationName,
         },
       ],
-      "classificacao"
+      "classificacao-atual"
     );
+
+    closeExportMenu();
   };
 
   return (
@@ -153,7 +190,35 @@ export const AccountPlanTable = ({
           onChange={setSearch}
         />
         <Box sx={{ ml: "auto" }}>
-          <ExportButton onClick={handleExportExcel} />
+          <ExportButton
+            onClick={(event) => setExportAnchorEl(event.currentTarget)}
+          />
+          <Menu
+            anchorEl={exportAnchorEl}
+            open={isExportMenuOpen}
+            onClose={closeExportMenu}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+          >
+            <MenuItem onClick={handleExportAccountPlan}>
+              <ListItemIcon>
+                <DescriptionOutlinedIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Plano de Contas"
+                secondary="Conta e descrição"
+              />
+            </MenuItem>
+            <MenuItem onClick={handleExportClassification}>
+              <ListItemIcon>
+                <FactCheckOutlinedIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Classificação atual"
+                secondary="Somente itens classificados"
+              />
+            </MenuItem>
+          </Menu>
         </Box>
       </Box>
 
