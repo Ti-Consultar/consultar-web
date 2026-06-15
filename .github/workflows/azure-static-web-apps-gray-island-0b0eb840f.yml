@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD
+name: Azure Static Web Apps Homologation
 
 on:
   push:
@@ -13,30 +13,48 @@ jobs:
   build_and_deploy_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
+    environment: homologation
+    name: Build and Deploy Homologation
+
+    env:
+      VITE_APP_ENV: homologation
+      VITE_API_URL_AUTH: ${{ vars.VITE_API_URL_AUTH }}
+      VITE_API_URL_MRP: ${{ vars.VITE_API_URL_MRP }}
+      VITE_API_URL_CONSULTS: ${{ vars.VITE_API_URL_CONSULTS }}
+      VITE_DESKTOP_APP_DOWNLOAD_URL: ${{ vars.VITE_DESKTOP_APP_DOWNLOAD_URL }}
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: false
+
+      - name: Debug environment variables
+        run: |
+          echo "VITE_APP_ENV=$VITE_APP_ENV"
+          echo "VITE_API_URL_AUTH=${VITE_API_URL_AUTH:+SET}"
+          echo "VITE_API_URL_MRP=${VITE_API_URL_MRP:+SET}"
+          echo "VITE_API_URL_CONSULTS=${VITE_API_URL_CONSULTS:+SET}"
+          echo "VITE_DESKTOP_APP_DOWNLOAD_URL=${VITE_DESKTOP_APP_DOWNLOAD_URL:+SET}"
+
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_GRAY_ISLAND_0B0EB840F }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
-          api_location: "" # Api source code path - optional
-          output_location: "dist" # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
+          app_location: "/"
+          api_location: ""
+          output_location: "dist"
+          app_build_command: "npm run build:homolog"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
-    name: Close Pull Request Job
+    environment: homologation
+    name: Close Homologation Pull Request
+
     steps:
       - name: Close Pull Request
         id: closepullrequest
