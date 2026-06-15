@@ -1,8 +1,9 @@
+import { env } from "../../../config/env";
 import axios from "axios";
 import { companyInfo } from "../../../types/cnpj";
 import { CEP } from "../../../types/cep";
 
-const URL = import.meta.env.VITE_API_URL_CONSULTS;
+const URL = env.api.consults;
 
 export const getEmpresaByCnpj = async (cnpj: string): Promise<companyInfo> => {
   try {

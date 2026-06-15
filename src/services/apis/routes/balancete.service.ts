@@ -1,8 +1,9 @@
+import { env } from "../../../config/env";
 import { BalancetePayload } from "../../../types/balancetePayload";
 import { ClassificationBalanceteResponse } from "../../../types/balancete";
 import { axiosInstanceWithToken } from "../config";
 
-const URL = import.meta.env.VITE_API_URL_MRP;
+const URL = env.api.mrp;
 
 type ImportAccountingWithMappingParams = {
   balanceteId: number;

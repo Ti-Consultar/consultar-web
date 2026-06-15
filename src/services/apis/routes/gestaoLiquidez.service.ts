@@ -1,5 +1,6 @@
+import { env } from "../../../config/env";
 import { axiosInstanceWithToken } from "../config";
-const URL = import.meta.env.VITE_API_URL_MRP;
+const URL = env.api.mrp;
 
 export const getLiquidityManagement = async (
   accountPlanId: number,

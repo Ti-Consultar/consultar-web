@@ -15,8 +15,9 @@ import { DrawerProvider } from "./contexts/DrawerContext/index.tsx";
 import { NotificationProvider } from "./contexts/NotificationContext/NotificationContext.tsx";
 import { AuthProvider } from "./contexts/AuthContext/AuthContext.tsx";
 import { YearProvider } from "./contexts/YearContext/index.tsx";
+import { env } from "./config/env.ts";
 
-const Router = import.meta.env.VITE_ELECTRON === "true" ? HashRouter : BrowserRouter;
+const Router = env.isElectron ? HashRouter : BrowserRouter;
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

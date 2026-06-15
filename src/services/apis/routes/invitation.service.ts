@@ -1,7 +1,8 @@
+import { env } from "../../../config/env";
 import { invitations } from "../../../types/userInvitationPayload";
 import { axiosInstanceWithToken, axiosInstanceWithoutToken } from "../config";
 
-const URL = import.meta.env.VITE_API_URL_MRP;
+const URL = env.api.mrp;
 
 export const unlinkFromCompany = async (
   userId: number,

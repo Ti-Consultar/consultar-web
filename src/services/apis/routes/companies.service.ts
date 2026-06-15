@@ -1,7 +1,8 @@
+import { env } from "../../../config/env";
 import { GroupFormData } from "../../../types/group";
 import { axiosInstanceWithToken } from "../config";
 
-const URL = import.meta.env.VITE_API_URL_MRP;
+const URL = env.api.mrp;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)); //Somente para fins de mocking
 

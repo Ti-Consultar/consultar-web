@@ -1,7 +1,8 @@
+import { env } from "../../../config/env";
 import { ProfileChanges } from "../../../types/profile";
 import { axiosInstanceWithToken } from "../config";
 
-const BASE_URL = import.meta.env.VITE_API_URL_BASE;
+const BASE_URL = env.api.auth;
 
 // Profile info
 

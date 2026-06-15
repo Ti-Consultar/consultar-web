@@ -65,6 +65,7 @@ import { getInitials } from "../../../utils/string/getInitials";
 import { buildNestedUrl } from "../../../utils/url/buildNestedUrl";
 import { useNotifications } from "../../../contexts/NotificationContext/NotificationContext";
 import { useAuth } from "../../../contexts/AuthContext/AuthContext";
+import { env } from "../../../config/env";
 import { SectionTitle, SidebarContainer, StyledList } from "./styles";
 import { jwtDecode } from "jwt-decode";
 import {
@@ -119,8 +120,8 @@ interface UserData {
    COMPONENT
 ------------------------------------------------------- */
 export const Sidebar = () => {
-  const isElectron = import.meta.env.VITE_ELECTRON === "true";
-  const desktopAppDownloadUrl = import.meta.env.VITE_DESKTOP_APP_DOWNLOAD_URL;
+  const isElectron = env.isElectron;
+  const desktopAppDownloadUrl = env.desktopAppDownloadUrl;
   const shouldShowDesktopDownload = !isElectron;
 
   const [collapsed, setCollapsed] = useState<boolean>(() => {
