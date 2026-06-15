@@ -122,6 +122,10 @@ export const AccountPlanTable = ({
       [
         { label: "Conta", accessor: (row) => row.costCenter },
         { label: "Descrição", accessor: (row) => row.name },
+        {
+          label: "Classificação",
+          accessor: (row) => getClassification(row.costCenter)?.name || "",
+        },
       ],
       "plano-de-contas"
     );
@@ -206,7 +210,7 @@ export const AccountPlanTable = ({
               </ListItemIcon>
               <ListItemText
                 primary="Plano de Contas"
-                secondary="Conta e descrição"
+                secondary="Conta, descrição e classificação"
               />
             </MenuItem>
             <MenuItem onClick={handleExportClassification}>
