@@ -10,7 +10,7 @@ import { ModalCustom } from "../../components/Modal";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { useEffect, useState } from "react";
 import { Button } from "../../components/Button";
-import { formatCEP, formatCNPJ, formatTelefone } from "../../utils/formatters";
+import { formatCEP, formatCNPJ, formatPhone } from "../../utils/formatters";
 import { GroupFormData } from "../../types/group";
 import {
   getAddressByCep,
@@ -147,7 +147,7 @@ export const CompanyForm = ({
 
     if (name === "cnpj") newValue = formatCNPJ(value);
     if (name === "cep") newValue = formatCEP(value);
-    if (name === "telefone") newValue = formatTelefone(value);
+    if (name === "telefone") newValue = formatPhone(value);
 
     if (formData.businessEntity.hasOwnProperty(name)) {
       setFormData((prev) => ({

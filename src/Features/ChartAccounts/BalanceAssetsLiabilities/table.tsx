@@ -13,9 +13,13 @@ import {
   Button,
   useTheme,
   useMediaQuery,
+  Collapse,
+  IconButton,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import ExcelExportIcon from "../../../assets/icons/csv_export.svg";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 
 // Novo tipo dos dados
 type FinancialRow = {
@@ -88,6 +92,31 @@ export const TableTabs = ({ ativos, passivos }: TableTabsProps) => {
       currency: "BRL",
     });
   };
+
+  const groupByMainCostCenter = (data: FinancialRow[]) => {
+    const groups: Record<string, FinancialRow[]> = {};
+
+    data.forEach((item) => {
+      const groupKey = item.costCenter.split(".")[0];
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(item);
+    });
+
+    return groups;
+  };
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  const toggleGroup = (groupKey: string) => {
+    setOpenGroups((prev) => ({
+      ...prev,
+      [groupKey]: !prev[groupKey],
+    }));
+  };
+
+  const groupedData = groupByMainCostCenter(currentData);
 
   return (
     <Box sx={{ width: "100%", p: 1 }}>
@@ -166,6 +195,7 @@ export const TableTabs = ({ ativos, passivos }: TableTabsProps) => {
           <Table size="small" sx={{ minWidth: 650 }}>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#F4F4F4" }}>
+                <TableCell sx={{ fontWeight: 600 }} />
                 <TableCell sx={{ fontWeight: 600 }}>{tabLabel}</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Conta</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Valor Inicial</TableCell>
@@ -176,19 +206,65 @@ export const TableTabs = ({ ativos, passivos }: TableTabsProps) => {
             </TableHead>
             <TableBody>
               {currentData.length > 0 ? (
-                currentData.map((row) => (
-                  <TableRow key={row.id} hover sx={{ borderBottom: "none" }}>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.costCenter}</TableCell>
-                    <TableCell>{formatCurrency(row.initialValue)}</TableCell>
-                    <TableCell>{formatCurrency(row.credit)}</TableCell>
-                    <TableCell>{formatCurrency(row.debit)}</TableCell>
-                    <TableCell>{formatCurrency(row.finalValue)}</TableCell>
-                  </TableRow>
-                ))
+                Object.entries(groupedData).map(([groupKey, items]) => {
+                  const main = items.find((item) => item.costCenter === groupKey);
+                  const children = items.filter((item) => item.costCenter !== groupKey);
+                  const isExpanded = openGroups[groupKey];
+
+                  return (
+                    <Fragment key={groupKey}>
+                      <TableRow hover sx={{ backgroundColor: "#F9FAFB" }}>
+                        <TableCell>
+                          {children.length > 0 ? (
+                            <IconButton
+                              size="small"
+                              onClick={() => toggleGroup(groupKey)}
+                            >
+                              {isExpanded ? <RemoveIcon /> : <AddIcon />}
+                            </IconButton>
+                          ) : null}
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>
+                          {main?.name ?? items[0].name}
+                        </TableCell>
+                        <TableCell>{main?.costCenter ?? items[0].costCenter}</TableCell>
+                        <TableCell>{formatCurrency(main?.initialValue ?? items[0].initialValue)}</TableCell>
+                        <TableCell>{formatCurrency(main?.credit ?? items[0].credit)}</TableCell>
+                        <TableCell>{formatCurrency(main?.debit ?? items[0].debit)}</TableCell>
+                        <TableCell>{formatCurrency(main?.finalValue ?? items[0].finalValue)}</TableCell>
+                      </TableRow>
+
+                      {children.length > 0 && (
+                        <TableRow>
+                          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+                            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                              <Table size="small">
+                                <TableBody>
+                                  {children.map((row) => (
+                                    <TableRow key={row.id} hover>
+                                      <TableCell />
+                                      <TableCell sx={{ paddingLeft: 4, fontWeight: 600 }}>
+                                        {row.name}
+                                      </TableCell>
+                                      <TableCell>{row.costCenter}</TableCell>
+                                      <TableCell>{formatCurrency(row.initialValue)}</TableCell>
+                                      <TableCell>{formatCurrency(row.credit)}</TableCell>
+                                      <TableCell>{formatCurrency(row.debit)}</TableCell>
+                                      <TableCell>{formatCurrency(row.finalValue)}</TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </Collapse>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  );
+                })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6}>
+                  <TableCell colSpan={7}>
                     <Typography align="center" py={2} color="text.secondary">
                       Nenhum dado disponível.
                     </Typography>
