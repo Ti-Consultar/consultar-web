@@ -17,10 +17,13 @@ import { getDropdownNavigation } from "../../services/apis/routes/companies.serv
 import { CompanyResponse } from "../../types/companyDropdown";
 import CompanyNavigationDropdown from "../../components/Inputs/CompanyNavigationDropdown";
 import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 import { useYear } from "../../contexts/YearContext";
 import YearPicker from "../../components/Inputs/YearPicker";
 
 const CashFlow = () => {
+  useBreadcrumb("cash-flow");
+
   const [tabValue] = useState<number>(1);
   const { year, setYear } = useYear();
   const [realizado, setRealizado] = useState<any[]>([]);

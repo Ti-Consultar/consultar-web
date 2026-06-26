@@ -29,7 +29,7 @@ import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { useNavigate } from "react-router";
 import { login } from "../../services/apis/routes/auth.service";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import LogoConsultarHorizontal from "../../assets/images/logo-consultar-horizontal.svg";
+import LogoConsultarHorizontal from "../../assets/images/logo-mrp.svg";
 import LogoConsultarWhite from "../../assets/icons/consultar-white.svg";
 import { TextCarousel } from "../../components/TextCarousel";
 import { PulseLoading } from "../../components/PulseLoading";
@@ -69,7 +69,7 @@ const Authentication = () => {
   }
 
   const handleMouseDownPassword = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     event.preventDefault();
   };
@@ -127,9 +127,9 @@ const Authentication = () => {
               }}
             >
               <Logo src={LogoConsultarHorizontal} alt="Logo Consultar" />
-              <Title>Log In</Title>
               <form onSubmit={handleSubmit(onSubmit)}>
                 <InputsContainer>
+                  <Title>Log In</Title>
                   <FormControl variant="outlined" error={!!errors.email}>
                     <InputLabel htmlFor="component-outlined">Email</InputLabel>
                     <Controller
@@ -213,19 +213,19 @@ const Authentication = () => {
                   >
                     Esqueci minha senha
                   </ClickableText>
+                  <ButtonSubmit>
+                    <ButtonDefault
+                      backgroundColor="branding-default-blue"
+                      color="neutral-50"
+                      icon={<ExitToAppIcon fontSize="small" />}
+                      text="Entrar"
+                    />
+                  </ButtonSubmit>
                 </InputsContainer>
-                <ButtonSubmit>
-                  <ButtonDefault
-                    backgroundColor="branding-default-blue"
-                    color="neutral-50"
-                    icon={<ExitToAppIcon fontSize="small" />}
-                    text="Login"
-                  />
-                </ButtonSubmit>
               </form>
             </LoginContent>
             <Copyright>
-              Copyright © 2025 MRP Consultar. Todos os Direitos Reservados
+              Copyright © 2026 MRP Consultar. Todos os Direitos Reservados
             </Copyright>
           </LoginContainer>
         </LoginGrid>

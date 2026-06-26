@@ -3,8 +3,11 @@ import { MainContainer, SectionTitle, Title } from "./styles";
 import { ProfileOptions } from "../ProfileOptions";
 import { MainTemplate } from "../../../components/AppLayout";
 import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 
 const ProfileCustomizing = () => {
+  useBreadcrumb("profile-customizing");
+
   return (
     <MainTemplate>
       <Title>Configurações do Perfil</Title>

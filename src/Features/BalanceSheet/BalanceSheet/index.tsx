@@ -18,10 +18,13 @@ import { getDropdownNavigation } from "../../../services/apis/routes/companies.s
 import { CompanyResponse } from "../../../types/companyDropdown";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import YearPicker from "../../../components/Inputs/YearPicker";
 import { useYear } from "../../../contexts/YearContext";
 
 const BalancoContabil = () => {
+  useBreadcrumb("accounting-balance");
+
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState<number>(1);
   const { year, setYear } = useYear();

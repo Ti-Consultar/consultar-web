@@ -20,9 +20,7 @@ import {
 import { CompanyForm } from "../../GroupForm";
 
 import { useLoading } from "../../../contexts/LoadingProvider";
-import { useMainContext } from "../../../contexts/mainContext";
 
-import { getBreadcrumb } from "../../../services/apis/routes/breadcrumb.service";
 import { GroupFormData } from "../../../types/group";
 
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
@@ -34,11 +32,12 @@ import { CompanyMenu } from "../../../components/Inputs/CompanyActionsDropdown";
 import { InvitationModal } from "../../Invitation/InvitationModal";
 import YearPicker from "../../../components/Inputs/YearPicker";
 import { useYear } from "../../../contexts/YearContext";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 
 const Branches = () => {
   const navigate = useNavigate();
   const { setLoading } = useLoading();
-  const { setBreadcrumbs } = useMainContext();
+  useBreadcrumb("dashboard");
 
   const { groupId, companyId, subCompanyId } = useParams<{
     groupId: string;
@@ -86,28 +85,6 @@ const Branches = () => {
       console.error("Erro ao carregar dropdown");
     }
   };
-
-  useEffect(() => {
-    const load = async () => {
-      if (!companyId) return;
-
-      const items = await getBreadcrumb({
-        id: Number(companyId),
-        type: "company",
-      });
-
-      const modifiedItems = items.map((item: any) => {
-        if (item.type === "group") {
-          return { ...item, link: `/grupos/${groupId}/empresas/` };
-        }
-        return item;
-      });
-
-      setBreadcrumbs([{ name: "Grupos", link: "/grupos" }, ...modifiedItems]);
-    };
-
-    load();
-  }, [companyId]);
 
   // ============================
   // ON SUBMIT (FORM)

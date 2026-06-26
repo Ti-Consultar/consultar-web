@@ -29,10 +29,16 @@ import { BalanceSheetUploadTable } from "./table";
 import { Balancetes } from "../../../types/balancete";
 import { AlertModal } from "../../../components/AlertModal";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import { BalanceColumnMappingModal } from "../BalanceColumnMapping/BalanceColumnMappingModal";
 
 const UploadBalanceSheet = () => {
   const location = useLocation();
+  useBreadcrumb(
+    location.pathname.includes("/balancetes")
+      ? "balance-sheets"
+      : "upload-balance-sheet"
+  );
   const basePath = location.pathname;
   const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams();

@@ -10,7 +10,7 @@ export const Button = styled.button<ButtonStyledProps>`
   display: flex;
   background-color: ${({ backgroundColor }) => `var(--${backgroundColor})`};
   border: none;
-  border-radius: 100px;
+  border-radius: 14px;
   color: ${({ color }) => `var(--${color})`};
   font-size: 16px;
   gap: 8px;

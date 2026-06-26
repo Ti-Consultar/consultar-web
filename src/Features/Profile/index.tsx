@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { MainTemplate } from "../../components/AppLayout";
-import { useMainContext } from "../../contexts/mainContext";
 import { ProfileSettings } from "./ProfileSettings";
 import { Title, MainContainer } from "./styles";
 import { useLoading } from "../../contexts/LoadingProvider";
@@ -8,22 +7,16 @@ import { getProfileInfo } from "../../services/apis/routes/profile.service";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { toast } from "sonner";
 import { ProfileInformation } from "../../types/profile";
+import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 
 const ProfileInfo = () => {
-  const { setBreadcrumbs } = useMainContext();
+  useBreadcrumb("profile-info");
   const { setLoading } = useLoading();
   const userData = useAuth();
 
   const [profileInfo, setProfileInfo] = useState<ProfileInformation | null>(
     null
   );
-
-  useEffect(() => {
-    setBreadcrumbs([
-      { name: "Início", link: "/grupos" },
-      { name: "Perfil", link: "/perfil" },
-    ]);
-  }, []);
 
   useEffect(() => {
     const fetchProfileInfo = async () => {
