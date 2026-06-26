@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { MainTemplate } from "../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { useMainContext } from "../../contexts/mainContext";
 import { ClassificationPanel } from "./ClassificationOptions";
 import {
   Box,
@@ -45,6 +44,7 @@ import {
   getFirstBalanceteByAccountPlan,
 } from "../../services/apis/routes/balancete.service";
 import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 
 interface BondListItem {
   accountPlanClassificationId: number;
@@ -53,7 +53,7 @@ interface BondListItem {
 }
 
 const ClassificationPage = () => {
-  const { setBreadcrumbs } = useMainContext();
+  useBreadcrumb("classification");
   const [skeleton, setSkeleton] = useState(true);
   const [selectedTab, setSelectedTab] = useState(1);
   const [balanceteId, setBalanceteId] = useState<number>();
@@ -103,13 +103,6 @@ const ClassificationPage = () => {
       };
     })
   );
-
-  useEffect(() => {
-    setBreadcrumbs([
-      { name: "Grupos", link: "/grupos" },
-      { name: "Classificação", link: "" },
-    ]);
-  }, []);
 
   const handleAccountTypeChange = (accountType: number) => {
     setAccountType(accountType);

@@ -40,6 +40,7 @@ import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigat
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import YearPicker from "../../../components/Inputs/YearPicker";
 import { useYear } from "../../../contexts/YearContext";
 
@@ -47,6 +48,8 @@ import { useYear } from "../../../contexts/YearContext";
 const apiCache = new Map();
 
 const GestaoLiquidez = () => {
+  useBreadcrumb("liquidity-management");
+
   const [tabValue, setTabValue] = useState<number>(1);
   const { year, setYear } = useYear();
 

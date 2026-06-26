@@ -23,10 +23,13 @@ import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigat
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import YearPicker from "../../../components/Inputs/YearPicker";
 import { useYear } from "../../../contexts/YearContext";
 
 const IndicesEconomicos = () => {
+  useBreadcrumb("economic-indices");
+
   const { setLoading } = useLoading();
   const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams<{

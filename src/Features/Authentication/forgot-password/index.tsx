@@ -14,6 +14,7 @@ import {
 } from "../styles";
 import LogoConsultarHorizontal from "../../../assets/images/logo-consultar-horizontal.svg";
 import {
+  Box,
   FormControl,
   FormHelperText,
   InputLabel,
@@ -67,7 +68,7 @@ const ForgotPassword = () => {
         (error as { response?: { status?: number } }).response?.status === 401
       ) {
         setNewPasswordError(
-          "Erro ao buscar o e-mail, verifique se o e-mail foi escrito corretamente."
+          "Erro ao buscar o e-mail, verifique se o e-mail foi escrito corretamente.",
         );
       } else {
         setNewPasswordError("Ocorreu um erro, tente novamente mais tarde.");
@@ -96,10 +97,15 @@ const ForgotPassword = () => {
           </ContentContainer>
           <LoginContainer>
             <Logo src={LogoConsultarHorizontal} alt="Logo Consultar" />
-            <Title>Digite seu e-mail</Title>
-            <SubTitle>Esse é o e-mail que você usa para fazer login.</SubTitle>
+
             <form onSubmit={handleSubmit(onSubmit)}>
               <InputsContainer>
+                <Box>
+                  <Title>Digite seu e-mail</Title>
+                  <SubTitle>
+                    Esse é o e-mail que você usa para fazer login.
+                  </SubTitle>
+                </Box>
                 <FormControl variant="outlined">
                   <InputLabel htmlFor="component-outlined">Email</InputLabel>
                   <Controller
@@ -133,14 +139,15 @@ const ForgotPassword = () => {
                     </FormHelperText>
                   )}
                 </FormControl>
+                <ButtonSubmit>
+                  <ButtonDefault
+                    backgroundColor="branding-default-blue"
+                    color="neutral-50"
+                    text="Próximo"
+                  />
+                </ButtonSubmit>
               </InputsContainer>
-              <ButtonSubmit>
-                <ButtonDefault
-                  backgroundColor="branding-default-blue"
-                  color="neutral-50"
-                  text="Próximo"
-                />
-              </ButtonSubmit>
+
               <InfoText>
                 Em caso de dúvidas, entre em contato com o suporte.
               </InfoText>

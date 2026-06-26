@@ -76,7 +76,7 @@ export const ClickableText = styled.p`
 
 export const Logo = styled.img`
   margin: 0 auto 32px;
-  width: 181px;
+  width: 230px;
 `;
 
 export const Title = styled.h2`
@@ -152,6 +152,7 @@ export const InputsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  padding: 0px 40px
 `;
 
 export const ButtonSubmit = styled.div`

@@ -2,6 +2,8 @@ import { useMediaQuery } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useMainContext } from "../../../contexts/mainContext";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import {
   BreadcrumbsContainer,
   BreadcrumbsItem,
@@ -16,6 +18,7 @@ export const Header = () => {
 
   const flattenedBreadcrumbs = breadcrumbs.flat();
   const previous = flattenedBreadcrumbs.at(-2);
+  const mobilePrevious = previous?.link ? previous : undefined;
 
   const handleBreadcrumbClick = (
     event: React.MouseEvent<HTMLAnchorElement>,
@@ -25,26 +28,42 @@ export const Header = () => {
     navigate(link);
   };
 
+  const renderBreadcrumbContent = (
+    item: (typeof flattenedBreadcrumbs)[number],
+    index: number,
+  ) => {
+    const isFirst = index === 0;
+
+    if (isFirst && item.name === "Grupos") {
+      return <HomeRoundedIcon sx={{mb: -0.5}} />;
+    }
+
+    return item.name;
+  };
+
   return (
     <MainContainer>
       <BreadcrumbsContainer>
         {isMobile
-          ? previous && (
+          ? mobilePrevious && (
               <BreadcrumbsItems breadcrumbActive>
                 <ArrowLeftIcon fontSize="medium" />
                 <BreadcrumbsItem
-                  href={previous.link}
+                  href={mobilePrevious.link}
                   onClick={(event) =>
-                    handleBreadcrumbClick(event, previous.link)
+                    handleBreadcrumbClick(event, mobilePrevious.link)
                   }
                   breadcrumbActive
                 >
-                  {previous.name}
+                  {mobilePrevious.name}
                 </BreadcrumbsItem>
               </BreadcrumbsItems>
             )
           : flattenedBreadcrumbs.map((item, index) => {
               const isLast = index === flattenedBreadcrumbs.length - 1;
+              const isFirst = index === 0;
+              const isHomeBreadcrumb = isFirst && item.name === "Grupos";
+
               return (
                 <BreadcrumbsItems
                   key={item.id || item.name}
@@ -56,13 +75,20 @@ export const Header = () => {
                       onClick={(event) =>
                         handleBreadcrumbClick(event, item.link)
                       }
+                      aria-label={isHomeBreadcrumb ? "Grupos" : undefined}
                     >
-                      {item.name}
+                      {renderBreadcrumbContent(item, index)}
                     </BreadcrumbsItem>
                   ) : (
-                    item.name
+                    renderBreadcrumbContent(item, index)
                   )}
-                  {!isLast && <div style={{ marginLeft: "0.5rem" }}>/</div>}
+
+                  {!isLast && (
+                    <ArrowForwardIosIcon
+                      fontSize="small"
+                      style={{ marginLeft: "0.5rem" }}
+                    />
+                  )}
                 </BreadcrumbsItems>
               );
             })}

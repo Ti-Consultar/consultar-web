@@ -25,9 +25,12 @@ import {
   submitBudget,
 } from "../../../services/apis/routes/budget.service";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import { AlertModal } from "../../../components/AlertModal";
 
 const UploadBudgetSheet = () => {
+  useBreadcrumb("upload-budget-sheet");
+
   const location = useLocation();
   const navigate = useNavigate();
   const { groupId, companyid, subCompanyId } = useParams();

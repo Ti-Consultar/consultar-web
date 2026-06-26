@@ -20,10 +20,13 @@ import "dayjs/locale/pt-br";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { useYear } from "../../../contexts/YearContext";
 import YearPicker from "../../../components/Inputs/YearPicker";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 
 dayjs.locale("pt-br");
 
 const BalancoPorMarca = () => {
+  useBreadcrumb("brand-statements");
+
   const [data, setData] = useState<NormalizedDreTable | null>(null);
 
   const [selectedMonth, setSelectedMonth] = useState<Dayjs>(

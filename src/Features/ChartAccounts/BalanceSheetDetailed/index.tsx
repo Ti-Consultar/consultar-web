@@ -15,8 +15,11 @@ import { BalanceSheetTable } from "./table";
 import { getBalanceteData } from "../../../services/apis/routes/balancete.service";
 import { BalanceteData } from "../../../types/balancete";
 import { toast } from "sonner";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 
 const BalanceSheetDetailed = () => {
+  useBreadcrumb("balance-sheet-detailed");
+
   const { balanceteId } = useParams();
   const { setLoading } = useLoading();
   const [balanceteDataDetailed, setBalanceteDataDetailed] = useState<

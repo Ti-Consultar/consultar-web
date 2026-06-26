@@ -18,8 +18,11 @@ import {
 } from "../../../services/apis/routes/balancete.service";
 import { BalanceSheetDetailsTable } from "./table";
 import { toast } from "sonner";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 
 const BalanceSheetData = () => {
+  useBreadcrumb("balance-sheet-data");
+
   const location = useLocation();
   const navigate = useNavigate();
   const { balanceteId } = useParams();

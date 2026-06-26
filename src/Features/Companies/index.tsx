@@ -12,9 +12,7 @@ import {
   updateCompany,
 } from "../../services/apis/routes/companies.service";
 import { deleteGroup, getGroupById, updateGroup } from "../../services/apis/routes/groups.service";
-import { getBreadcrumb } from "../../services/apis/routes/breadcrumb.service";
 
-import { useMainContext } from "../../contexts/mainContext";
 import { useAuth } from "../../utils/hooks/useAuth";
 import { useLoading } from "../../contexts/LoadingProvider";
 import { toast } from "sonner";
@@ -33,6 +31,7 @@ import { InvitationModal } from "../Invitation/InvitationModal";
 import { saveSubCompany, updateSubCompany } from "../../services/apis/routes/subcompanies.service";
 import YearPicker from "../../components/Inputs/YearPicker";
 import { useYear } from "../../contexts/YearContext";
+import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 
 const Companies = () => {
   const { groupId, companyId } = useParams<{
@@ -42,7 +41,7 @@ const Companies = () => {
 
   const userData = useAuth();
   const { setLoading } = useLoading();
-  const { setBreadcrumbs } = useMainContext();
+  useBreadcrumb("dashboard");
 
   const [, setGroupData] = useState<any>(null);
   const navigate = useNavigate();
@@ -85,22 +84,6 @@ const Companies = () => {
       console.error("Erro ao buscar dropdown");
     }
   };
-
-  // breadcrumb
-  useEffect(() => {
-    const load = async () => {
-      if (!groupId) return;
-
-      const items = await getBreadcrumb({
-        id: Number(groupId),
-        type: "group",
-      });
-
-      setBreadcrumbs([{ name: "Grupos", link: "/grupos" }, ...items]);
-    };
-
-    load();
-  }, [groupId]);
 
   useEffect(() => {
     if (groupId) {

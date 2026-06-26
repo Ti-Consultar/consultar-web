@@ -21,10 +21,13 @@ import {
 } from "../../../services/apis/routes/balancete.service";
 import { useLoading } from "../../../contexts/LoadingProvider";
 import { toast } from "sonner";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 
 const PREVIEW_ROWS_LIMIT = 150;
 
 const BalanceColumnMapping = () => {
+  useBreadcrumb("balance-column-mapping");
+
   const location = useLocation();
   const navigate = useNavigate();
   const { setLoading } = useLoading();

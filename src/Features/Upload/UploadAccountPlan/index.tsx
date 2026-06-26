@@ -10,6 +10,7 @@ import {
   importAccountPlanAccounts,
 } from "../../../services/apis/routes/accountplan.service";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import { buildNestedUrl } from "../../../utils/url/buildNestedUrl";
 import { AccountPlanUploadForm } from "./UploadForm";
 import {
@@ -28,6 +29,8 @@ import {
 } from "./styles";
 
 const UploadAccountPlan = () => {
+  useBreadcrumb("upload-account-plan");
+
   const { groupId, companyid, subCompanyId } = useParams();
   const navigate = useNavigate();
   const { setLoading } = useLoading();
