@@ -1,7 +1,8 @@
+import { env } from "../../../config/env";
 import { Breadcrumb } from "../../../types/breadcrumb";
 import { axiosInstanceWithoutToken } from "../config";
 
-const URL = import.meta.env.VITE_API_URL_MRP;
+const URL = env.api.mrp;
 
 export const getBreadcrumb = async ({ id, type }: Breadcrumb) => {
   try {

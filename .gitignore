@@ -13,6 +13,11 @@ dist-ssr
 *.local
 release/*
 
+# Environment files with real values must stay out of source control.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { env } from "../../config/env";
 import { hasValidAuthToken } from "../../utils/authToken";
 
 /* Landing page e rotas simples */
@@ -104,7 +105,7 @@ const ElectronStartRoute = () => {
 };
 
 export const AppRoutes = () => {
-  const isElectron = import.meta.env.VITE_ELECTRON === "true";
+  const isElectron = env.isElectron;
 
   return (
     <Suspense fallback={<div></div>}>

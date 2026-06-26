@@ -1,9 +1,10 @@
+import { env } from "../../../config/env";
 import { UserRegisterData } from "../../../types/userRegisterPayload";
 import { axiosInstanceWithToken, axiosInstanceWithoutToken } from "../config";
 import { setAuthTokenCookie, setAuthUserEmail } from "../../../utils/authToken";
 
-const BASE_URL = import.meta.env.VITE_API_URL_BASE;
-const MRP_URL = import.meta.env.VITE_API_URL_MRP;
+const BASE_URL = env.api.auth;
+const MRP_URL = env.api.mrp;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

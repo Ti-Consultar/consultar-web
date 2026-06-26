@@ -1,0 +1,66 @@
+name: Azure Static Web Apps Homologation
+
+on:
+  push:
+    branches:
+      - homolog
+      - develop
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - homolog
+      - develop
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    environment: homologation
+    name: Build and Deploy Homologation
+
+    env:
+      VITE_APP_ENV: homologation
+      VITE_API_URL_AUTH: ${{ vars.VITE_API_URL_AUTH }}
+      VITE_API_URL_MRP: ${{ vars.VITE_API_URL_MRP }}
+      VITE_API_URL_CONSULTS: ${{ vars.VITE_API_URL_CONSULTS }}
+      VITE_DESKTOP_APP_DOWNLOAD_URL: ${{ vars.VITE_DESKTOP_APP_DOWNLOAD_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: false
+
+      - name: Debug environment variables
+        run: |
+          echo "VITE_APP_ENV=$VITE_APP_ENV"
+          echo "VITE_API_URL_AUTH=${VITE_API_URL_AUTH:+SET}"
+          echo "VITE_API_URL_MRP=${VITE_API_URL_MRP:+SET}"
+          echo "VITE_API_URL_CONSULTS=${VITE_API_URL_CONSULTS:+SET}"
+          echo "VITE_DESKTOP_APP_DOWNLOAD_URL=${VITE_DESKTOP_APP_DOWNLOAD_URL:+SET}"
+
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_HOMOLOGATION }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "/"
+          api_location: ""
+          output_location: "dist"
+          app_build_command: "npm run build:homolog"
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    environment: homologation
+    name: Close Homologation Pull Request
+
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_HOMOLOGATION }}
+          action: "close"

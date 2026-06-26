@@ -2,6 +2,15 @@ name: Desktop Release
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Ambiente do build desktop"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - homologation
+          - production
   push:
     tags:
       - "v*"
@@ -9,10 +18,17 @@ on:
 jobs:
   build-and-upload:
     runs-on: windows-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'production' }}
 
     env:
+      BUILD_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'production' }}
       ELECTRON_UPDATE_URL: ${{ vars.ELECTRON_UPDATE_URL }}
       AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+      VITE_APP_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'production' }}
+      VITE_API_URL_AUTH: ${{ vars.VITE_API_URL_AUTH }}
+      VITE_API_URL_MRP: ${{ vars.VITE_API_URL_MRP }}
+      VITE_API_URL_CONSULTS: ${{ vars.VITE_API_URL_CONSULTS }}
+      VITE_DESKTOP_APP_DOWNLOAD_URL: ${{ vars.VITE_DESKTOP_APP_DOWNLOAD_URL }}
 
     steps:
       - name: Checkout
@@ -35,16 +51,22 @@ jobs:
           }
 
       - name: Build Windows installer
-        run: npm run desktop:win
+        shell: pwsh
+        run: |
+          if ($env:BUILD_ENV -eq "homologation") {
+            npm run desktop:win:homolog
+          } else {
+            npm run desktop:win:prod
+          }
 
       - name: Upload installer metadata
         run: |
-          az storage blob upload-batch --source release --destination '$web' --destination-path desktop --pattern "latest.yml" --overwrite true --content-type "text/yaml"
+          az storage blob upload-batch --source "release/$env:BUILD_ENV" --destination '$web' --destination-path "desktop/$env:BUILD_ENV" --pattern "latest.yml" --overwrite true --content-type "text/yaml"
 
       - name: Upload installer executable
         run: |
-          az storage blob upload-batch --source release --destination '$web' --destination-path desktop --pattern "*.exe" --overwrite true --content-type "application/vnd.microsoft.portable-executable"
+          az storage blob upload-batch --source "release/$env:BUILD_ENV" --destination '$web' --destination-path "desktop/$env:BUILD_ENV" --pattern "*.exe" --overwrite true --content-type "application/vnd.microsoft.portable-executable"
 
       - name: Upload differential update blockmap
         run: |
-          az storage blob upload-batch --source release --destination '$web' --destination-path desktop --pattern "*.blockmap" --overwrite true --content-type "application/octet-stream"
+          az storage blob upload-batch --source "release/$env:BUILD_ENV" --destination '$web' --destination-path "desktop/$env:BUILD_ENV" --pattern "*.blockmap" --overwrite true --content-type "application/octet-stream"

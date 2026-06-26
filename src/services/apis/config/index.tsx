@@ -1,17 +1,18 @@
 import axios from "axios";
 import { toast } from "sonner";
+import { env } from "../../../config/env";
 import { getAuthToken, removeAuthToken } from "../../../utils/authToken";
 
 const axiosInstanceWithoutToken = axios.create({
-  baseURL: import.meta.env.VITE_API_URL_BASE,
+  baseURL: env.api.auth,
 });
 
 const axiosInstanceWithToken = axios.create({
-  baseURL: import.meta.env.VITE_API_URL_BASE,
+  baseURL: env.api.auth,
 });
 
 const redirectToLogin = () => {
-  if (import.meta.env.VITE_ELECTRON === "true") {
+  if (env.isElectron) {
     window.location.hash = "/login";
     return;
   }
