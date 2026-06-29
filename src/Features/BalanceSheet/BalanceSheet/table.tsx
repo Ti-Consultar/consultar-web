@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Table,
   TableBody,
   TableCell,
@@ -14,9 +17,14 @@ import {
   IconButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import ArchiveRoundedIcon from "@mui/icons-material/ArchiveRounded";
+import CloseIcon from "@mui/icons-material/Close";
 import RemoveIcon from "@mui/icons-material/Remove";
-import InboxIcon from "@mui/icons-material/Inbox";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
+import {
+  MonthTableControls,
+  useMonthVisibility,
+} from "../../../components/TableControls/MonthTableControls";
 import { monthTranslatorUtil } from "../../../utils/formatters/monthTranslator";
 import {
   getDataValueByNameForMonth as getDataValueByNameForMonthHelper,
@@ -66,18 +74,46 @@ interface FinancialTableProps {
   months: Month[];
   highlightRows?: Record<number, boolean>;
   metricType?: Record<string, "PERCENT" | "VALUE">;
+  isExpandedView?: boolean;
 }
+
+const HIDDEN_MONTHS_STORAGE_KEY = "balancoContabilTable.hiddenMonths";
 
 const BalancoContabilTable = ({
   months,
   highlightRows = {},
   metricType = {},
+  isExpandedView = false,
 }: FinancialTableProps) => {
   const theme = useTheme();
+  const [openExpandedModal, setOpenExpandedModal] = useState(false);
   const [expandedClassifications, setExpandedClassifications] = useState<
     Set<number>
   >(new Set());
   const { valueMode } = useValueDisplay();
+
+  const monthOptions = useMemo(
+    () =>
+      months.map((month) => ({
+        key: String(month.dateMonth ?? month.id),
+        label: monthTranslatorUtil(month.name),
+      })),
+    [months],
+  );
+
+  const {
+    hiddenMonthKeys,
+    showAllMonths,
+    hideAllMonths,
+    toggleMonthVisibility,
+  } = useMonthVisibility(HIDDEN_MONTHS_STORAGE_KEY, monthOptions);
+
+  const visibleMonths = useMemo(() => {
+    const hidden = new Set(hiddenMonthKeys);
+    return months.filter(
+      (month) => !hidden.has(String(month.dateMonth ?? month.id)),
+    );
+  }, [hiddenMonthKeys, months]);
 
   // Cria lista única de totalizadores
   const allTotalizers: Totalizer[] = [];
@@ -92,6 +128,7 @@ const BalancoContabilTable = ({
   allTotalizers.sort((a, b) => a.typeOrder - b.typeOrder);
 
   const isEmpty = !months.length || !allTotalizers.length;
+  const showEmptyState = isEmpty || visibleMonths.length === 0;
 
   const toggleClassification = (classificationId: number) => {
     setExpandedClassifications((prev) => {
@@ -195,32 +232,46 @@ const BalancoContabilTable = ({
     );
 
   return (
-    <TableContainer
-      component={Paper}
-      sx={{
-        width: "100%",
-        maxHeight: 600,
-        overflowX: "auto",
-        overflowY: "auto",
-      }}
-    >
-      {isEmpty ? (
+    <>
+      <MonthTableControls
+        monthOptions={monthOptions}
+        hiddenMonthKeys={hiddenMonthKeys}
+        onShowAllMonths={showAllMonths}
+        onHideAllMonths={hideAllMonths}
+        onToggleMonth={toggleMonthVisibility}
+        onExpand={() => setOpenExpandedModal(true)}
+        expandDisabled={isEmpty}
+        hideExpand={isExpandedView}
+      />
+
+      <TableContainer
+        component={Paper}
+        sx={{
+          width: "100%",
+          maxHeight: isExpandedView ? "calc(100vh - 190px)" : 600,
+          overflowX: "auto",
+          overflowY: "auto",
+        }}
+      >
+      {showEmptyState ? (
         <Box
           display="flex"
           flexDirection="column"
           justifyContent="center"
           alignItems="center"
-          height={200}
+          minHeight={360}
           color={theme.palette.text.secondary}
           px={2}
           textAlign="center"
         >
-          <InboxIcon sx={{ fontSize: 48, color: theme.palette.text.disabled }} />
-          <Typography variant="subtitle1" fontWeight="medium">
-            Nada a exibir ainda
+          <ArchiveRoundedIcon
+            sx={{ fontSize: 56, color: theme.palette.text.disabled, mb: 1.5 }}
+          />
+          <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+            Ainda não há nada para exibir
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Selecione uma data válida para acessar os dados
+            À medida que os cadastros forem realizados, as informações serão exibidas aqui.
           </Typography>
         </Box>
       ) : (
@@ -234,7 +285,7 @@ const BalancoContabilTable = ({
               <TableCell
                 sx={{ ...stickyHeaderFirstCellStyle, minWidth: 250 }}
               />
-              {months.map((month: Month) => (
+              {visibleMonths.map((month: Month) => (
                 <TableCell
                   key={month.id}
                   align="right"
@@ -282,7 +333,7 @@ const BalancoContabilTable = ({
                           </Typography>
                         </Tooltip>
                       </TableCell>
-                      {months.map((month: Month) => {
+                      {visibleMonths.map((month: Month) => {
                         const monthTotalizer = month.totalizer.find(
                           (t) => t.id === totalizer.id,
                         );
@@ -392,7 +443,7 @@ const BalancoContabilTable = ({
                                   </Tooltip>
                                 </Box>
                               </TableCell>
-                              {months.map((month: Month) => {
+                              {visibleMonths.map((month: Month) => {
                                 const monthTotalizer = month.totalizer.find(
                                   (t) => t.id === totalizer.id,
                                 );
@@ -463,7 +514,7 @@ const BalancoContabilTable = ({
                                       </Typography>
                                     </Tooltip>
                                   </TableCell>
-                                  {months.map((month: Month) => {
+                                  {visibleMonths.map((month: Month) => {
                                     const value = getDataValueByNameForMonth(
                                       month,
                                       totalizer.id,
@@ -514,7 +565,7 @@ const BalancoContabilTable = ({
                     {months[0].monthPainelContabilTotalizer.name}
                   </Typography>
                 </TableCell>
-                {months.map((month: Month) => (
+                {visibleMonths.map((month: Month) => (
                   <TableCell key={`total-${month.id}`} align="right">
                     <Typography variant="subtitle2" fontWeight="bold">
                       {month.monthPainelContabilTotalizer
@@ -531,7 +582,53 @@ const BalancoContabilTable = ({
           </TableBody>
         </Table>
       )}
-    </TableContainer>
+      </TableContainer>
+
+      {!isExpandedView && (
+        <Dialog
+          open={openExpandedModal}
+          onClose={() => setOpenExpandedModal(false)}
+          fullWidth
+          maxWidth="xl"
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              width: "calc(100vw - 48px)",
+              height: "calc(100vh - 48px)",
+              maxWidth: "none",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontSize: "1.1rem",
+              fontWeight: 700,
+              pb: 1,
+            }}
+          >
+            Balanço Contábil
+            <IconButton
+              aria-label="Fechar tabela expandida"
+              onClick={() => setOpenExpandedModal(false)}
+              size="small"
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ p: 2.5, pt: 1 }}>
+            <BalancoContabilTable
+              months={months}
+              highlightRows={highlightRows}
+              metricType={metricType}
+              isExpandedView
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 };
 

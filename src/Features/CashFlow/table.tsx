@@ -1,4 +1,8 @@
 import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -8,8 +12,14 @@ import {
   Tooltip,
   Paper,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import React, { useMemo, useState } from "react";
 import { useValueDisplay } from "../../contexts/ValueDisplayContext";
+import {
+  MonthTableControls,
+  TableEmptyState,
+  useMonthVisibility,
+} from "../../components/TableControls/MonthTableControls";
 
 interface CashFlowMonth {
   name: string;
@@ -26,6 +36,7 @@ interface CashFlowTableProps {
   highlightedMetrics?: string[];
   showBudgetColumns?: boolean;
   metricNature?: Record<string, "receita" | "despesa">;
+  isExpandedView?: boolean;
 }
 
 const monthNameToPTBR: Record<string, string> = {
@@ -52,9 +63,11 @@ export const CashFlowTable = ({
   metricLabels,
   highlightedMetrics = [],
   showBudgetColumns = false,
+  isExpandedView = false,
 }: CashFlowTableProps) => {
   const [colWidth, setColWidth] = useState(220);
   const [dragging, setDragging] = useState(false);
+  const [openExpandedModal, setOpenExpandedModal] = useState(false);
   const { valueMode } = useValueDisplay();
 
   const translatedMonths: CashFlowMonth[] = useMemo(
@@ -65,6 +78,29 @@ export const CashFlowTable = ({
       })),
     [realizadoMonths],
   );
+
+  const monthOptions = useMemo(
+    () =>
+      translatedMonths.map((month) => ({
+        key: String(month.dateMonth ?? month.name),
+        label: String(month.translatedName ?? month.name),
+      })),
+    [translatedMonths],
+  );
+
+  const {
+    hiddenMonthKeys,
+    showAllMonths,
+    hideAllMonths,
+    toggleMonthVisibility,
+  } = useMonthVisibility("cashFlowTable.hiddenMonths", monthOptions);
+
+  const visibleMonths = useMemo(() => {
+    const hidden = new Set(hiddenMonthKeys);
+    return translatedMonths.filter(
+      (month) => !hidden.has(String(month.dateMonth ?? month.name)),
+    );
+  }, [hiddenMonthKeys, translatedMonths]);
 
   const formatValue = (label: string, value: number | undefined): string => {
     if (value === undefined || value === null) return "-";
@@ -197,17 +233,38 @@ export const CashFlowTable = ({
     };
   }, [dragging]);
 
+  const showEmptyState =
+    translatedMonths.length === 0 ||
+    visibleMonths.length === 0 ||
+    !metricKeys.some((metric) => hasAnyMetricValue(metric));
+
   return (
-    <TableContainer
-      component={Paper}
-      elevation={0}
-      sx={{
-        width: "100%",
-        border: "1px solid #e0e0e0",
-        borderRadius: 3,
-        overflow: "auto",
-      }}
-    >
+    <>
+      <MonthTableControls
+        monthOptions={monthOptions}
+        hiddenMonthKeys={hiddenMonthKeys}
+        onShowAllMonths={showAllMonths}
+        onHideAllMonths={hideAllMonths}
+        onToggleMonth={toggleMonthVisibility}
+        onExpand={() => setOpenExpandedModal(true)}
+        expandDisabled={!translatedMonths.length}
+        hideExpand={isExpandedView}
+      />
+
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          width: "100%",
+          maxHeight: isExpandedView ? "calc(100vh - 190px)" : 650,
+          border: "1px solid #e0e0e0",
+          borderRadius: 3,
+          overflow: "auto",
+        }}
+      >
+      {showEmptyState ? (
+        <TableEmptyState />
+      ) : (
       <Table size="small">
         <TableHead>
           <TableRow>
@@ -232,7 +289,7 @@ export const CashFlowTable = ({
               </div>
             </TableCell>
 
-            {translatedMonths.map((m) => (
+            {visibleMonths.map((m) => (
               <TableCell
                 key={m.name}
                 align="center"
@@ -258,7 +315,7 @@ export const CashFlowTable = ({
                   borderLeft: "1px solid #e0e0e0",
                 }}
               />
-              {translatedMonths.map((m) => (
+              {visibleMonths.map((m) => (
                 <React.Fragment key={m.name}>
                   <TableCell align="right" sx={{ fontWeight: "bold" }}>
                     Orçado
@@ -310,7 +367,7 @@ export const CashFlowTable = ({
                     </Tooltip>
                   </TableCell>
 
-                  {translatedMonths.map((month) =>
+                  {visibleMonths.map((month) =>
                     renderValueCells(month, metric),
                   )}
                 </TableRow>
@@ -318,6 +375,57 @@ export const CashFlowTable = ({
             })}
         </TableBody>
       </Table>
-    </TableContainer>
+      )}
+      </TableContainer>
+
+      {!isExpandedView && (
+        <Dialog
+          open={openExpandedModal}
+          onClose={() => setOpenExpandedModal(false)}
+          fullWidth
+          maxWidth="xl"
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              width: "calc(100vw - 48px)",
+              height: "calc(100vh - 48px)",
+              maxWidth: "none",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontSize: "1.1rem",
+              fontWeight: 700,
+              pb: 1,
+            }}
+          >
+            Fluxo de Caixa
+            <IconButton
+              aria-label="Fechar tabela expandida"
+              onClick={() => setOpenExpandedModal(false)}
+              size="small"
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ p: 2.5, pt: 1 }}>
+            <CashFlowTable
+              realizadoMonths={realizadoMonths}
+              budgetMonths={budgetMonths}
+              variationMonths={variationMonths}
+              metricKeys={metricKeys}
+              metricLabels={metricLabels}
+              highlightedMetrics={highlightedMetrics}
+              showBudgetColumns={showBudgetColumns}
+              isExpandedView
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 };
