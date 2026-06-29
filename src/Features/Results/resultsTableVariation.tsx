@@ -1,4 +1,8 @@
 import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -8,8 +12,14 @@ import {
   Tooltip,
   Paper,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import React, { useMemo, useState, useEffect } from "react";
 import { useValueDisplay } from "../../contexts/ValueDisplayContext";
+import {
+  MonthTableControls,
+  TableEmptyState,
+  useMonthVisibility,
+} from "../../components/TableControls/MonthTableControls";
 
 interface MonthView {
   [key: string]: number;
@@ -34,6 +44,7 @@ interface ResultsTableProps {
   highlightRows?: Record<string, boolean>;
   showBudgetColumns?: boolean;
   metricNature?: Record<string, "receita" | "despesa">;
+  isExpandedView?: boolean;
 }
 
 const monthNameToPTBR: Record<string, string> = {
@@ -73,9 +84,11 @@ export const ResultsTableVariation = ({
   metricTypes = {},
   highlightRows = {},
   showBudgetColumns = false,
+  isExpandedView = false,
 }: ResultsTableProps) => {
   const [colWidth, setColWidth] = useState(220);
   const [dragging, setDragging] = useState(false);
+  const [openExpandedModal, setOpenExpandedModal] = useState(false);
   const { valueMode } = useValueDisplay();
 
   const translatedMonths: MonthData[] = useMemo(() => {
@@ -117,6 +130,34 @@ export const ResultsTableVariation = ({
         translatedName: monthNameToPTBR[month.name] || month.name,
       }));
   }, [months, metricKeys, nestedMetrics]);
+
+  const monthOptions = useMemo(
+    () =>
+      translatedMonths.map((month) => ({
+        key: String(month.dateMonth ?? month.name),
+        label: month.translatedName ?? month.name,
+      })),
+    [translatedMonths],
+  );
+
+  const hiddenMonthsStorageKey = useMemo(
+    () => `resultsTableVariation.hiddenMonths.${metricKeys.join("-")}`,
+    [metricKeys],
+  );
+
+  const {
+    hiddenMonthKeys,
+    showAllMonths,
+    hideAllMonths,
+    toggleMonthVisibility,
+  } = useMonthVisibility(hiddenMonthsStorageKey, monthOptions);
+
+  const visibleMonths = useMemo(() => {
+    const hidden = new Set(hiddenMonthKeys);
+    return translatedMonths.filter(
+      (month) => !hidden.has(String(month.dateMonth ?? month.name)),
+    );
+  }, [hiddenMonthKeys, translatedMonths]);
 
   const allNestedKeys = Object.values(nestedMetrics).flat();
 
@@ -262,17 +303,44 @@ export const ResultsTableVariation = ({
     );
   };
 
+  const hasVisibleRows =
+    nestedGroupOrder.some((groupKey) =>
+      nestedMetrics[groupKey].some((metric) => hasAnyMetricValue(metric)),
+    ) ||
+    metricKeys
+      .filter((metric) => !allNestedKeys.includes(metric))
+      .some((metric) => hasAnyMetricValue(metric));
+
+  const showEmptyState =
+    translatedMonths.length === 0 || visibleMonths.length === 0 || !hasVisibleRows;
+
   return (
-    <TableContainer
-      component={Paper}
-      elevation={0}
-      sx={{
-        width: "100%",
-        border: "1px solid #e0e0e0",
-        borderRadius: 3,
-        overflow: "auto",
-      }}
-    >
+    <>
+      <MonthTableControls
+        monthOptions={monthOptions}
+        hiddenMonthKeys={hiddenMonthKeys}
+        onShowAllMonths={showAllMonths}
+        onHideAllMonths={hideAllMonths}
+        onToggleMonth={toggleMonthVisibility}
+        onExpand={() => setOpenExpandedModal(true)}
+        expandDisabled={!translatedMonths.length}
+        hideExpand={isExpandedView}
+      />
+
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          width: "100%",
+          maxHeight: isExpandedView ? "calc(100vh - 190px)" : 650,
+          border: "1px solid #e0e0e0",
+          borderRadius: 3,
+          overflow: "auto",
+        }}
+      >
+      {showEmptyState ? (
+        <TableEmptyState />
+      ) : (
       <Table size="small" sx={{ width: "100%" }}>
         <TableHead>
           <TableRow>
@@ -305,7 +373,7 @@ export const ResultsTableVariation = ({
               </div>
             </TableCell>
 
-            {translatedMonths.map((month) => (
+            {visibleMonths.map((month) => (
               <TableCell
                 key={month.name}
                 align="center"
@@ -332,7 +400,7 @@ export const ResultsTableVariation = ({
                   zIndex: 1,
                 }}
               ></TableCell>
-              {translatedMonths.map((month) => (
+              {visibleMonths.map((month) => (
                 <React.Fragment key={`${month.name}-sub`}>
                   <TableCell
                     align="right"
@@ -408,7 +476,7 @@ export const ResultsTableVariation = ({
                   </TableCell>
                   <TableCell
                     colSpan={
-                      translatedMonths.length * (showBudgetColumns ? 3 : 1)
+                      visibleMonths.length * (showBudgetColumns ? 3 : 1) || 1
                     }
                     sx={{
                       backgroundColor: "#fafafa",
@@ -444,7 +512,7 @@ export const ResultsTableVariation = ({
                         </Tooltip>
                       </TableCell>
 
-                      {translatedMonths.map((month) =>
+                      {visibleMonths.map((month) =>
                         renderValueCells(month, metric),
                       )}
                     </TableRow>
@@ -483,7 +551,7 @@ export const ResultsTableVariation = ({
                     </Tooltip>
                   </TableCell>
 
-                  {translatedMonths.map((month) =>
+                  {visibleMonths.map((month) =>
                     renderValueCells(month, metric),
                   )}
                 </TableRow>
@@ -491,6 +559,58 @@ export const ResultsTableVariation = ({
             })}
         </TableBody>
       </Table>
-    </TableContainer>
+      )}
+      </TableContainer>
+
+      {!isExpandedView && (
+        <Dialog
+          open={openExpandedModal}
+          onClose={() => setOpenExpandedModal(false)}
+          fullWidth
+          maxWidth="xl"
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              width: "calc(100vw - 48px)",
+              height: "calc(100vh - 48px)",
+              maxWidth: "none",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontSize: "1.1rem",
+              fontWeight: 700,
+              pb: 1,
+            }}
+          >
+            Resultados
+            <IconButton
+              aria-label="Fechar tabela expandida"
+              onClick={() => setOpenExpandedModal(false)}
+              size="small"
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ p: 2.5, pt: 1 }}>
+            <ResultsTableVariation
+              months={months}
+              metricKeys={metricKeys}
+              metricLabels={metricLabels}
+              nestedMetrics={nestedMetrics}
+              enableValueMode={enableValueMode}
+              metricTypes={metricTypes}
+              highlightRows={highlightRows}
+              showBudgetColumns={showBudgetColumns}
+              isExpandedView
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 };

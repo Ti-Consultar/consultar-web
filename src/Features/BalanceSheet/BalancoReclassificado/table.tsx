@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -16,23 +16,26 @@ import {
   DialogActions,
   Button,
   Tooltip,
-  Menu,
-  MenuItem,
-  Checkbox,
-  ListItemText,
-  Divider,
   IconButton,
 } from "@mui/material";
-import InboxIcon from "@mui/icons-material/Inbox";
 import CloseIcon from "@mui/icons-material/Close";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import ViewColumnIcon from "@mui/icons-material/ViewColumn";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
+import {
+  MonthTableControls,
+  TableEmptyState,
+  useMonthVisibility,
+} from "../../../components/TableControls/MonthTableControls";
 import { StickyCell, StickyHead, StickyHeadFirstCell } from "./styles";
 import { MergedMonth, MonthRaw } from "../../../types/BalancoReclassificado";
 import { Totalizer } from "../../../types/balanco";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
+import {
+  getDataValueByNameForMonth as getDataValueByNameForMonthHelper,
+  getUniqueDataNames as getUniqueDataNamesHelper,
+  hasAnyDatas as hasAnyDatasHelper,
+} from "../accordionHelpers";
 
 const HIDDEN_MONTHS_STORAGE_KEY = "balancoReclassificadoTable.hiddenMonths";
 
@@ -64,10 +67,9 @@ export const BalancoReclassificadoTable = ({
   const [openExpandedModal, setOpenExpandedModal] = useState(false);
   const [selectedTitle, setSelectedTitle] = useState("");
   const [selectedDetails, setSelectedDetails] = useState<any[]>([]);
-  const [hiddenMonthKeys, setHiddenMonthKeys] = useState<string[]>([]);
-  const [monthMenuAnchor, setMonthMenuAnchor] = useState<null | HTMLElement>(
-    null,
-  );
+  const [expandedClassifications, setExpandedClassifications] = useState<
+    Set<number>
+  >(new Set());
 
   const MONTH_NUM_BY_NAME: Record<string, number> = {
     January: 1,
@@ -148,40 +150,6 @@ export const BalancoReclassificadoTable = ({
     });
   }, [realizado, orcado, variacao]);
 
-  useEffect(() => {
-    const loadHiddenMonthKeys = () => {
-      try {
-        const raw = localStorage.getItem(HIDDEN_MONTHS_STORAGE_KEY);
-        if (!raw) {
-          setHiddenMonthKeys([]);
-          return;
-        }
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          setHiddenMonthKeys(parsed.filter((key) => typeof key === "string"));
-        }
-      } catch {
-        setHiddenMonthKeys([]);
-      }
-    };
-
-    loadHiddenMonthKeys();
-
-    window.addEventListener("storage", loadHiddenMonthKeys);
-    window.addEventListener(
-      "balanco-reclassificado-months-change",
-      loadHiddenMonthKeys,
-    );
-
-    return () => {
-      window.removeEventListener("storage", loadHiddenMonthKeys);
-      window.removeEventListener(
-        "balanco-reclassificado-months-change",
-        loadHiddenMonthKeys,
-      );
-    };
-  }, []);
-
   const monthOptions = useMemo(
     () =>
       mergedMonths.map((m) => ({
@@ -191,32 +159,19 @@ export const BalancoReclassificadoTable = ({
     [mergedMonths],
   );
 
+  const {
+    hiddenMonthKeys,
+    showAllMonths,
+    hideAllMonths,
+    toggleMonthVisibility,
+  } = useMonthVisibility(HIDDEN_MONTHS_STORAGE_KEY, monthOptions);
+
   const visibleMonths = useMemo(() => {
     const hidden = new Set(hiddenMonthKeys);
     return mergedMonths.filter(
       (m) => !hidden.has(String(m.dateMonth ?? m.id)),
     );
   }, [hiddenMonthKeys, mergedMonths]);
-
-  const persistHiddenMonthKeys = (keys: string[]) => {
-    setHiddenMonthKeys(keys);
-    localStorage.setItem(HIDDEN_MONTHS_STORAGE_KEY, JSON.stringify(keys));
-    window.dispatchEvent(new Event("balanco-reclassificado-months-change"));
-  };
-
-  const toggleMonthVisibility = (monthKey: string) => {
-    const isHidden = hiddenMonthKeys.includes(monthKey);
-    const nextHidden = isHidden
-      ? hiddenMonthKeys.filter((key) => key !== monthKey)
-      : [...hiddenMonthKeys, monthKey];
-
-    persistHiddenMonthKeys(nextHidden);
-  };
-
-  const showAllMonths = () => persistHiddenMonthKeys([]);
-
-  const hideAllMonths = () =>
-    persistHiddenMonthKeys(monthOptions.map((month) => month.key));
 
   const hasDatasFor = (m: MergedMonth, totalizerId: number) => {
     const real = m.realRows.find((x) => x.id === totalizerId);
@@ -255,6 +210,7 @@ export const BalancoReclassificadoTable = ({
   }, [mergedMonths]);
 
   const isEmpty = mergedMonths.length === 0 || allTotalizers.length === 0;
+  const showEmptyState = isEmpty || visibleMonths.length === 0;
 
   const isPercentageRow = (name: string) => name.trim().endsWith("%");
 
@@ -282,17 +238,6 @@ export const BalancoReclassificadoTable = ({
   const dataCellHover = {
     cursor: "pointer",
     "&:hover": { backgroundColor: theme.palette.grey[200] },
-  };
-
-  const openDetails = (
-    name: string,
-    datas: any[] | undefined,
-    month: string,
-  ) => {
-    if (!datas?.length) return;
-    setSelectedTitle(`${name} - ${tMonth(month)}`);
-    setSelectedDetails(datas);
-    setOpenModal(true);
   };
 
   const getVarVisual = (
@@ -380,6 +325,41 @@ export const BalancoReclassificadoTable = ({
     });
   };
 
+  const toggleClassification = (classificationId: number) => {
+    setExpandedClassifications((prev) => {
+      const next = new Set(prev);
+      if (next.has(classificationId)) {
+        next.delete(classificationId);
+      } else {
+        next.add(classificationId);
+      }
+      return next;
+    });
+  };
+
+  const hasAnyDatas = (totId: number, clsId: number) =>
+    hasAnyDatasHelper(mergedMonths, totId, clsId, (m) => m.realRows);
+
+  const getUniqueDataNames = (
+    totId: number,
+    clsId: number,
+  ): Array<{ name: string; costCenter?: string }> =>
+    getUniqueDataNamesHelper(mergedMonths, totId, clsId, (m) => m.realRows);
+
+  const getDataValueByNameForMonth = (
+    month: MergedMonth,
+    totId: number,
+    clsId: number,
+    dataName: string,
+  ): number | undefined =>
+    getDataValueByNameForMonthHelper(
+      month,
+      totId,
+      clsId,
+      dataName,
+      (m) => m.realRows,
+    );
+
   const getHighlightCellSx = (hl: boolean) =>
     hl
       ? {
@@ -390,77 +370,16 @@ export const BalancoReclassificadoTable = ({
 
   return (
     <>
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 1,
-          mb: 1.5,
-          flexWrap: "wrap",
-        }}
-      >
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<ViewColumnIcon />}
-          onClick={(event) => setMonthMenuAnchor(event.currentTarget)}
-          disabled={!monthOptions.length}
-          sx={{ textTransform: "none", borderRadius: 2 }}
-        >
-          Meses
-        </Button>
-
-        {!isExpandedView && (
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<OpenInFullIcon />}
-            onClick={() => setOpenExpandedModal(true)}
-            disabled={isEmpty}
-            sx={{ textTransform: "none", borderRadius: 2 }}
-          >
-            Expandir
-          </Button>
-        )}
-      </Box>
-
-      <Menu
-        anchorEl={monthMenuAnchor}
-        open={Boolean(monthMenuAnchor)}
-        onClose={() => setMonthMenuAnchor(null)}
-        PaperProps={{
-          sx: {
-            width: 260,
-            maxHeight: 420,
-            borderRadius: 2,
-          },
-        }}
-      >
-        <MenuItem onClick={showAllMonths} dense>
-          <RestartAltIcon fontSize="small" sx={{ mr: 1.5 }} />
-          <ListItemText primary="Mostrar todos os meses" />
-        </MenuItem>
-        <MenuItem onClick={hideAllMonths} dense disabled={!monthOptions.length}>
-          <ViewColumnIcon fontSize="small" sx={{ mr: 1.5 }} />
-          <ListItemText primary="Desmarcar todos" />
-        </MenuItem>
-        <Divider />
-        {monthOptions.map((month) => {
-          const checked = !hiddenMonthKeys.includes(month.key);
-          return (
-            <MenuItem
-              key={month.key}
-              onClick={() => toggleMonthVisibility(month.key)}
-              dense
-            >
-              <Checkbox checked={checked} size="small" />
-              <ListItemText primary={month.label} />
-            </MenuItem>
-          );
-        })}
-      </Menu>
+      <MonthTableControls
+        monthOptions={monthOptions}
+        hiddenMonthKeys={hiddenMonthKeys}
+        onShowAllMonths={showAllMonths}
+        onHideAllMonths={hideAllMonths}
+        onToggleMonth={toggleMonthVisibility}
+        onExpand={() => setOpenExpandedModal(true)}
+        expandDisabled={isEmpty}
+        hideExpand={isExpandedView}
+      />
 
       <TableContainer
         component={Paper}
@@ -472,13 +391,8 @@ export const BalancoReclassificadoTable = ({
           overflow: "auto",
         }}
       >
-        {isEmpty ? (
-          <Box textAlign="center" p={4}>
-            <InboxIcon
-              sx={{ fontSize: 48, color: theme.palette.text.disabled }}
-            />
-            <Typography>Nada a exibir</Typography>
-          </Box>
+        {showEmptyState ? (
+          <TableEmptyState />
         ) : (
           <Table size="small" sx={{ borderCollapse: "collapse" }}>
             <TableHead>
@@ -702,144 +616,231 @@ export const BalancoReclassificadoTable = ({
                         )}
                       </TableRow>
 
-                      {/* Classificações (DRE) */}
-                      {nestedMode === "DRE" &&
-                        (t.classifications ?? [])
-                          .filter((c) => hasAnyClassificationValue(t.id, c.id))
-                          .map((c) => (
-                            <TableRow
-                              key={c.id}
-                              sx={{
-                                borderBottom: `1px solid ${theme.palette.divider}`,
-                              }}
-                            >
-                              <TableCell
-                                sx={{
-                                  ...StickyCell,
-                                  pl: 4,
-                                  border: `1px solid ${theme.palette.divider}`,
-                                }}
-                              >
-                                <Tooltip title={c.name}>
-                                  <span
-                                    style={{
-                                      display: "inline-block",
-                                      maxWidth: 210,
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      whiteSpace: "nowrap",
+                      {/* Classificações */}
+                      {(t.classifications ?? [])
+                        .filter((c) => hasAnyClassificationValue(t.id, c.id))
+                        .map((c) => {
+                            const isExpanded = expandedClassifications.has(c.id);
+                            const canExpand = hasAnyDatas(t.id, c.id);
+                            const uniqueDataNames = isExpanded
+                              ? getUniqueDataNames(t.id, c.id)
+                              : [];
+
+                            return (
+                              <React.Fragment key={c.id}>
+                                <TableRow
+                                  sx={{
+                                    borderBottom: `1px solid ${theme.palette.divider}`,
+                                  }}
+                                >
+                                  <TableCell
+                                    sx={{
+                                      ...StickyCell,
+                                      pl: 4,
+                                      border: `1px solid ${theme.palette.divider}`,
                                     }}
                                   >
-                                    {c.name}
-                                  </span>
-                                </Tooltip>
-                              </TableCell>
-
-                              {visibleMonths.map((m) => {
-                                const realRow = m.realRows.find(
-                                  (x) => x.id === t.id,
-                                );
-                                const clsReal = realRow?.classifications?.find(
-                                  (x) => x.id === c.id,
-                                );
-                                const datas = clsReal?.datas;
-
-                                if (!showBudgetColumns) {
-                                  const vReal = getClassValue(
-                                    m,
-                                    t.id,
-                                    c.id,
-                                    "real",
-                                  );
-                                  return (
-                                    <TableCell
-                                      key={m.id}
-                                      align="right"
-                                      sx={{
-                                        border: `1px solid ${theme.palette.divider}`,
-                                        ...(datas?.length ? dataCellHover : {}),
-                                      }}
-                                      onClick={() =>
-                                        datas?.length &&
-                                        openDetails(c.name, datas, m.name)
-                                      }
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={0.5}
+                                      sx={{ minWidth: 0 }}
                                     >
-                                      {formatValue(vReal, c.name)}
-                                    </TableCell>
-                                  );
-                                }
+                                      {canExpand ? (
+                                        <IconButton
+                                          size="small"
+                                          onClick={() =>
+                                            toggleClassification(c.id)
+                                          }
+                                          sx={{
+                                            flexShrink: 0,
+                                            width: 20,
+                                            height: 20,
+                                            border: `1px solid ${theme.palette.divider}`,
+                                            borderRadius: "4px",
+                                            p: 0,
+                                            color: theme.palette.text.secondary,
+                                            "&:hover": {
+                                              backgroundColor:
+                                                theme.palette.action.hover,
+                                            },
+                                          }}
+                                        >
+                                          {isExpanded ? (
+                                            <RemoveIcon sx={{ fontSize: 14 }} />
+                                          ) : (
+                                            <AddIcon sx={{ fontSize: 14 }} />
+                                          )}
+                                        </IconButton>
+                                      ) : (
+                                        <Box sx={{ width: 20, flexShrink: 0 }} />
+                                      )}
+                                      <Tooltip title={c.name}>
+                                        <span
+                                          style={{
+                                            display: "inline-block",
+                                            maxWidth: 210,
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          {c.name}
+                                        </span>
+                                      </Tooltip>
+                                    </Box>
+                                  </TableCell>
 
-                                const vBud = getClassValue(
-                                  m,
-                                  t.id,
-                                  c.id,
-                                  "bud",
-                                );
-                                const vReal = getClassValue(
-                                  m,
-                                  t.id,
-                                  c.id,
-                                  "real",
-                                );
-                                const vVar = getClassValue(
-                                  m,
-                                  t.id,
-                                  c.id,
-                                  "var",
-                                );
-                                const { arrow, color } = getVarVisual(
-                                  vVar,
-                                  c.name,
-                                  vReal,
-                                  vBud,
-                                );
+                                  {visibleMonths.map((m) => {
+                                    const vBud = getClassValue(
+                                      m,
+                                      t.id,
+                                      c.id,
+                                      "bud",
+                                    );
+                                    const vReal = getClassValue(
+                                      m,
+                                      t.id,
+                                      c.id,
+                                      "real",
+                                    );
+                                    const vVar = getClassValue(
+                                      m,
+                                      t.id,
+                                      c.id,
+                                      "var",
+                                    );
+                                    const { arrow, color } = getVarVisual(
+                                      vVar,
+                                      c.name,
+                                      vReal,
+                                      vBud,
+                                    );
 
-                                return (
-                                  <React.Fragment key={m.id}>
-                                    <TableCell
-                                      align="right"
-                                      sx={{
-                                        border: `1px solid ${theme.palette.divider}`,
-                                      }}
-                                    >
-                                      {formatValue(vBud, c.name)}
-                                    </TableCell>
-                                    <TableCell
-                                      align="right"
-                                      sx={{
-                                        border: `1px solid ${theme.palette.divider}`,
-                                        ...(datas?.length ? dataCellHover : {}),
-                                      }}
-                                      onClick={() =>
-                                        datas?.length &&
-                                        openDetails(c.name, datas, m.name)
-                                      }
-                                    >
-                                      {formatValue(vReal, c.name)}
-                                    </TableCell>
-                                    <TableCell
-                                      align="right"
-                                      sx={{
-                                        border: `1px solid ${theme.palette.divider}`,
-                                      }}
-                                    >
-                                      <span
-                                        style={{
-                                          color,
-                                          display: "flex",
-                                          justifyContent: "flex-end",
-                                          gap: 4,
+                                    return !showBudgetColumns ? (
+                                      <TableCell
+                                        key={m.id}
+                                        align="right"
+                                        sx={{
+                                          border: `1px solid ${theme.palette.divider}`,
                                         }}
                                       >
-                                        {formatValue(vVar, c.name)}
-                                        {arrow}
-                                      </span>
-                                    </TableCell>
-                                  </React.Fragment>
-                                );
-                              })}
-                            </TableRow>
-                          ))}
+                                        {formatValue(vReal, c.name)}
+                                      </TableCell>
+                                    ) : (
+                                      <React.Fragment key={m.id}>
+                                        <TableCell
+                                          align="right"
+                                          sx={{
+                                            border: `1px solid ${theme.palette.divider}`,
+                                          }}
+                                        >
+                                          {formatValue(vBud, c.name)}
+                                        </TableCell>
+                                        <TableCell
+                                          align="right"
+                                          sx={{
+                                            border: `1px solid ${theme.palette.divider}`,
+                                          }}
+                                        >
+                                          {formatValue(vReal, c.name)}
+                                        </TableCell>
+                                        <TableCell
+                                          align="right"
+                                          sx={{
+                                            border: `1px solid ${theme.palette.divider}`,
+                                          }}
+                                        >
+                                          <span
+                                            style={{
+                                              color,
+                                              display: "flex",
+                                              justifyContent: "flex-end",
+                                              gap: 4,
+                                            }}
+                                          >
+                                            {formatValue(vVar, c.name)}
+                                            {arrow}
+                                          </span>
+                                        </TableCell>
+                                      </React.Fragment>
+                                    );
+                                  })}
+                                </TableRow>
+
+                                {isExpanded &&
+                                  uniqueDataNames.map(({ name, costCenter }) => (
+                                    <TableRow
+                                      key={`data-${c.id}-${name}`}
+                                      sx={{
+                                        backgroundColor:
+                                          theme.palette.action.selected,
+                                      }}
+                                    >
+                                      <TableCell
+                                        component="th"
+                                        scope="row"
+                                        sx={{
+                                          ...StickyCell,
+                                          backgroundColor:
+                                            theme.palette.action.selected,
+                                          whiteSpace: "nowrap",
+                                          overflow: "hidden",
+                                          textOverflow: "ellipsis",
+                                          maxWidth: 220,
+                                          pl: 5,
+                                          border: `1px solid ${theme.palette.divider}`,
+                                        }}
+                                      >
+                                        <Tooltip
+                                          title={costCenter ? name : null}
+                                          arrow
+                                          placement="top-start"
+                                        >
+                                          <Typography
+                                            variant="body2"
+                                            noWrap
+                                            sx={{
+                                              color: theme.palette.text.secondary,
+                                              fontSize: "0.75rem",
+                                            }}
+                                          >
+                                            {name}
+                                          </Typography>
+                                        </Tooltip>
+                                      </TableCell>
+                                      {visibleMonths.map((m) => (
+                                        <TableCell
+                                          key={`data-${m.id}-${c.id}-${name}`}
+                                          align="right"
+                                          sx={{
+                                            border: `1px solid ${theme.palette.divider}`,
+                                          }}
+                                        >
+                                          <Typography
+                                            variant="body2"
+                                            sx={{
+                                              color: theme.palette.text.secondary,
+                                              fontSize: "0.75rem",
+                                            }}
+                                          >
+                                            {formatValue(
+                                              getDataValueByNameForMonth(
+                                                m,
+                                                t.id,
+                                                c.id,
+                                                name,
+                                              ),
+                                              name,
+                                            )}
+                                          </Typography>
+                                        </TableCell>
+                                      ))}
+                                    </TableRow>
+                                  ))}
+                              </React.Fragment>
+                            );
+                          })}
                     </React.Fragment>
                   );
                 })}
