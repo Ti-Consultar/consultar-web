@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { MainTemplate } from "../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
-import { useMainContext } from "../../contexts/mainContext";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { getAuthToken } from "../../utils/authToken";
+import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 
 interface UserData {
   exp: number;
@@ -17,13 +17,9 @@ interface UserData {
 }
 
 const MrpHome = () => {
-  const { setBreadcrumbs } = useMainContext();
+  useBreadcrumb("home");
   const [userData, setUserData] = useState<UserData | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setBreadcrumbs([{ name: "Inicio", link: "/dashboard" }]);
-  }, []);
 
   useEffect(() => {
     const token = getAuthToken();

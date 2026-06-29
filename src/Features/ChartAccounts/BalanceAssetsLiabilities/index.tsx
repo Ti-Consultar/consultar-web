@@ -18,8 +18,11 @@ import {
 import { BalanceteData } from "../../../types/balancete";
 import { toast } from "sonner";
 import { TableTabs } from "./table";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 
 const BalanceAssetsLiabilities = () => {
+  useBreadcrumb("balance-assets-liabilities");
+
   const { balanceteId } = useParams();
   const { setLoading } = useLoading();
   const [balanceteDataDetailed, setBalanceteDataDetailed] = useState<

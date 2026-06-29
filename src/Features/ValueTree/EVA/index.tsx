@@ -13,10 +13,13 @@ import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigat
 import { CompanyResponse } from "../../../types/companyDropdown";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import { toast } from "sonner";
 import { useYear } from "../../../contexts/YearContext";
 
 const AgregadoMensal = () => {
+  useBreadcrumb("eva");
+
   const { year, setYear } = useYear();
   const [month, setMonth] = useState<number>(dayjs().month() + 1);
   const [showBudgetColumns, setShowBudgetColumns] = useState<boolean>(

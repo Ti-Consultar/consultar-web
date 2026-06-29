@@ -25,6 +25,7 @@ import {
 } from "../../services/apis/routes/params.service";
 import { ModalFormParameter } from "./form";
 import { useAccountPlanId } from "../../utils/hooks/useAccountPlanId";
+import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 
 export interface Parameter {
   id: number;
@@ -39,6 +40,8 @@ export interface ParameterApiResponse {
 }
 
 const Params = () => {
+  useBreadcrumb("parameters");
+
   const [data, setData] = useState<Parameter[]>([]);
   const { setLoading } = useLoading();
   const [modalOpen, setModalOpen] = useState<boolean>(false);

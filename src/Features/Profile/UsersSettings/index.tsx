@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useMainContext } from "../../../contexts/mainContext";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, SectionContainer, SectionTitle, Title } from "./styles";
 import { Box, Button, Grid2, InputAdornment, TextField } from "@mui/material";
@@ -21,9 +20,10 @@ import { UserSearchLoader } from "../../../components/UserSearchLoading";
 import InsertEmoticonOutlinedIcon from "@mui/icons-material/InsertEmoticonOutlined";
 import { AlertModal } from "../../../components/AlertModal";
 import { FakeUserRegisterModal } from "../../../components/Modal/FakeUserRegisterModal";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 
 const UsersSettings = () => {
-  const { setBreadcrumbs } = useMainContext();
+  useBreadcrumb("users");
   const { setLoading } = useLoading();
   const [open, setOpen] = useState(false);
   const [openUserFakeModal, setOpenUserFakeModal] = useState(false);
@@ -36,13 +36,6 @@ const UsersSettings = () => {
     userId: number;
     newRole: string;
   } | null>(null);
-
-  useEffect(() => {
-    setBreadcrumbs([
-      { name: "Início", link: "/grupos" },
-      { name: "Perfil", link: "/perfil" },
-    ]);
-  }, []);
 
   const handleSaveNewUser = async (
     data: UserRegisterData

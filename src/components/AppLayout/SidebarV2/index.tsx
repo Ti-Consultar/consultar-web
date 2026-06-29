@@ -50,7 +50,7 @@ import SidebarClose from "../../../assets/icons/sidebar/sidebar-close.svg";
 import SidebarOpen from "../../../assets/icons/sidebar/sidebar-active.svg";
 import SidebarHover from "../../../assets/icons/sidebar/sidebar-closed.svg";
 
-import logoConsultar from "../../../../src/assets/icons/logo_horizontal 1.svg";
+import logoConsultar from "../../../../src/assets/images/logo-mrp.svg";
 
 /* Contexts */
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
@@ -366,7 +366,7 @@ export const Sidebar = () => {
         }}
       >
         {!collapsed && (
-          <img src={logoConsultar} width={120} height={50} alt="Logo" />
+          <img src={logoConsultar} width={200} height={55} alt="Logo" />
         )}
 
         <IconButton

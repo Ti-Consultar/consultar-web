@@ -13,7 +13,6 @@ import { toast } from "sonner";
 import { GroupCard } from "../../components/Card";
 import { Alert, Box, Grid2 } from "@mui/material";
 import { GroupFormData } from "../../types/group";
-import { useMainContext } from "../../contexts/mainContext";
 import { useRefresh } from "../../contexts/refreshContext";
 import { GroupsHeader } from "./Header";
 import { GroupsKPI } from "./GroupsKPI";
@@ -29,6 +28,7 @@ import { filterGroups } from "./utils/group.filter";
 import { GroupsTable } from "./GroupTable";
 import { GroupsEmptyState } from "./EmptyState";
 import { getAuthToken } from "../../utils/authToken";
+import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 
 interface UserData {
   exp: number;
@@ -41,7 +41,7 @@ interface UserData {
 
 const Groups = () => {
   const navigate = useNavigate();
-  const { setBreadcrumbs } = useMainContext();
+  useBreadcrumb("groups");
   const [notificationsRefreshTimestamp] = useRefresh("companies");
 
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -83,10 +83,6 @@ const Groups = () => {
     setOpenInvitationModal,
     setGroupToBeInvited,
   });
-
-  useEffect(() => {
-    setBreadcrumbs([{ name: "Grupos", link: "/grupos" }]);
-  }, []);
 
   useEffect(() => {
     const token = getAuthToken();

@@ -1,19 +1,11 @@
-import { useEffect } from "react";
-import { useMainContext } from "../../../contexts/mainContext";
 import { MainTemplate } from "../../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
 import { SecurityCard } from "./SecurityCard";
+import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 
 
 const ProfileSecurity = () => {
-  const { setBreadcrumbs } = useMainContext();
-
-  useEffect(() => {
-    setBreadcrumbs([
-      { name: "Início", link: "/grupos" },
-      { name: "Perfil", link: "/perfil" },
-    ]);
-  }, []);
+  useBreadcrumb("profile-security");
 
   return (
     <MainTemplate>
