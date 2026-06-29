@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -16,21 +16,17 @@ import {
   DialogActions,
   Button,
   Tooltip,
-  Menu,
-  MenuItem,
-  Checkbox,
-  ListItemText,
-  Divider,
   IconButton,
 } from "@mui/material";
-import InboxIcon from "@mui/icons-material/Inbox";
 import CloseIcon from "@mui/icons-material/Close";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
+import {
+  MonthTableControls,
+  TableEmptyState,
+  useMonthVisibility,
+} from "../../../components/TableControls/MonthTableControls";
 import { StickyCell, StickyHead, StickyHeadFirstCell } from "./styles";
 import { MergedMonth, MonthRaw } from "../../../types/BalancoReclassificado";
 import { Totalizer } from "../../../types/balanco";
@@ -74,10 +70,6 @@ export const BalancoReclassificadoTable = ({
   const [expandedClassifications, setExpandedClassifications] = useState<
     Set<number>
   >(new Set());
-  const [hiddenMonthKeys, setHiddenMonthKeys] = useState<string[]>([]);
-  const [monthMenuAnchor, setMonthMenuAnchor] = useState<null | HTMLElement>(
-    null,
-  );
 
   const MONTH_NUM_BY_NAME: Record<string, number> = {
     January: 1,
@@ -158,40 +150,6 @@ export const BalancoReclassificadoTable = ({
     });
   }, [realizado, orcado, variacao]);
 
-  useEffect(() => {
-    const loadHiddenMonthKeys = () => {
-      try {
-        const raw = localStorage.getItem(HIDDEN_MONTHS_STORAGE_KEY);
-        if (!raw) {
-          setHiddenMonthKeys([]);
-          return;
-        }
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          setHiddenMonthKeys(parsed.filter((key) => typeof key === "string"));
-        }
-      } catch {
-        setHiddenMonthKeys([]);
-      }
-    };
-
-    loadHiddenMonthKeys();
-
-    window.addEventListener("storage", loadHiddenMonthKeys);
-    window.addEventListener(
-      "balanco-reclassificado-months-change",
-      loadHiddenMonthKeys,
-    );
-
-    return () => {
-      window.removeEventListener("storage", loadHiddenMonthKeys);
-      window.removeEventListener(
-        "balanco-reclassificado-months-change",
-        loadHiddenMonthKeys,
-      );
-    };
-  }, []);
-
   const monthOptions = useMemo(
     () =>
       mergedMonths.map((m) => ({
@@ -201,32 +159,19 @@ export const BalancoReclassificadoTable = ({
     [mergedMonths],
   );
 
+  const {
+    hiddenMonthKeys,
+    showAllMonths,
+    hideAllMonths,
+    toggleMonthVisibility,
+  } = useMonthVisibility(HIDDEN_MONTHS_STORAGE_KEY, monthOptions);
+
   const visibleMonths = useMemo(() => {
     const hidden = new Set(hiddenMonthKeys);
     return mergedMonths.filter(
       (m) => !hidden.has(String(m.dateMonth ?? m.id)),
     );
   }, [hiddenMonthKeys, mergedMonths]);
-
-  const persistHiddenMonthKeys = (keys: string[]) => {
-    setHiddenMonthKeys(keys);
-    localStorage.setItem(HIDDEN_MONTHS_STORAGE_KEY, JSON.stringify(keys));
-    window.dispatchEvent(new Event("balanco-reclassificado-months-change"));
-  };
-
-  const toggleMonthVisibility = (monthKey: string) => {
-    const isHidden = hiddenMonthKeys.includes(monthKey);
-    const nextHidden = isHidden
-      ? hiddenMonthKeys.filter((key) => key !== monthKey)
-      : [...hiddenMonthKeys, monthKey];
-
-    persistHiddenMonthKeys(nextHidden);
-  };
-
-  const showAllMonths = () => persistHiddenMonthKeys([]);
-
-  const hideAllMonths = () =>
-    persistHiddenMonthKeys(monthOptions.map((month) => month.key));
 
   const hasDatasFor = (m: MergedMonth, totalizerId: number) => {
     const real = m.realRows.find((x) => x.id === totalizerId);
@@ -265,6 +210,7 @@ export const BalancoReclassificadoTable = ({
   }, [mergedMonths]);
 
   const isEmpty = mergedMonths.length === 0 || allTotalizers.length === 0;
+  const showEmptyState = isEmpty || visibleMonths.length === 0;
 
   const isPercentageRow = (name: string) => name.trim().endsWith("%");
 
@@ -424,77 +370,16 @@ export const BalancoReclassificadoTable = ({
 
   return (
     <>
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 1,
-          mb: 1.5,
-          flexWrap: "wrap",
-        }}
-      >
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<ViewColumnIcon />}
-          onClick={(event) => setMonthMenuAnchor(event.currentTarget)}
-          disabled={!monthOptions.length}
-          sx={{ textTransform: "none", borderRadius: 2 }}
-        >
-          Meses
-        </Button>
-
-        {!isExpandedView && (
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<OpenInFullIcon />}
-            onClick={() => setOpenExpandedModal(true)}
-            disabled={isEmpty}
-            sx={{ textTransform: "none", borderRadius: 2 }}
-          >
-            Expandir
-          </Button>
-        )}
-      </Box>
-
-      <Menu
-        anchorEl={monthMenuAnchor}
-        open={Boolean(monthMenuAnchor)}
-        onClose={() => setMonthMenuAnchor(null)}
-        PaperProps={{
-          sx: {
-            width: 260,
-            maxHeight: 420,
-            borderRadius: 2,
-          },
-        }}
-      >
-        <MenuItem onClick={showAllMonths} dense>
-          <RestartAltIcon fontSize="small" sx={{ mr: 1.5 }} />
-          <ListItemText primary="Mostrar todos os meses" />
-        </MenuItem>
-        <MenuItem onClick={hideAllMonths} dense disabled={!monthOptions.length}>
-          <ViewColumnIcon fontSize="small" sx={{ mr: 1.5 }} />
-          <ListItemText primary="Desmarcar todos" />
-        </MenuItem>
-        <Divider />
-        {monthOptions.map((month) => {
-          const checked = !hiddenMonthKeys.includes(month.key);
-          return (
-            <MenuItem
-              key={month.key}
-              onClick={() => toggleMonthVisibility(month.key)}
-              dense
-            >
-              <Checkbox checked={checked} size="small" />
-              <ListItemText primary={month.label} />
-            </MenuItem>
-          );
-        })}
-      </Menu>
+      <MonthTableControls
+        monthOptions={monthOptions}
+        hiddenMonthKeys={hiddenMonthKeys}
+        onShowAllMonths={showAllMonths}
+        onHideAllMonths={hideAllMonths}
+        onToggleMonth={toggleMonthVisibility}
+        onExpand={() => setOpenExpandedModal(true)}
+        expandDisabled={isEmpty}
+        hideExpand={isExpandedView}
+      />
 
       <TableContainer
         component={Paper}
@@ -506,13 +391,8 @@ export const BalancoReclassificadoTable = ({
           overflow: "auto",
         }}
       >
-        {isEmpty ? (
-          <Box textAlign="center" p={4}>
-            <InboxIcon
-              sx={{ fontSize: 48, color: theme.palette.text.disabled }}
-            />
-            <Typography>Nada a exibir</Typography>
-          </Box>
+        {showEmptyState ? (
+          <TableEmptyState />
         ) : (
           <Table size="small" sx={{ borderCollapse: "collapse" }}>
             <TableHead>
