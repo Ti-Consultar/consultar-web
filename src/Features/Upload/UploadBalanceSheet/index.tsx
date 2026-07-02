@@ -61,6 +61,11 @@ const UploadBalanceSheet = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const getFinancialScope = () => ({
+    groupId: groupId ? Number(groupId) : undefined,
+    companyId: companyid ? Number(companyid) : undefined,
+    subCompanyId: subCompanyId ? Number(subCompanyId) : undefined,
+  });
   const [mappingFromApi, setMappingFromApi] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -96,7 +101,7 @@ const UploadBalanceSheet = () => {
     setLoading(true, "Buscando balancetes...");
     try {
       if (!accountPlanId) return;
-      const response = await getBalancetes(accountPlanId);
+      const response = await getBalancetes(accountPlanId, getFinancialScope());
       if (response?.success === false) {
         toast.error(
           `Erro ao buscar os balancetes, entre em contato com o suporte.`,
@@ -116,8 +121,10 @@ const UploadBalanceSheet = () => {
   useEffect(() => {
     if (accountPlanId) {
       fetchBalancetes();
+    } else {
+      setBalanceteList({ id: 0, balancetes: [] });
     }
-  }, [accountPlanId]);
+  }, [accountPlanId, groupId, companyid, subCompanyId]);
 
   const handleMonthChange = (month: number) => {
     setMonth(month);
@@ -133,7 +140,9 @@ const UploadBalanceSheet = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!accountPlanId || !month || !year) {
+    const scope = getFinancialScope();
+
+    if (!scope.groupId || !month || !year) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
@@ -141,7 +150,9 @@ const UploadBalanceSheet = () => {
     setLoading(true, "Verificando configuração do balancete...");
 
     try {
-      const mappingResponse = await hasBalanceMapping(accountPlanId);
+      const mappingResponse = accountPlanId
+        ? await hasBalanceMapping(accountPlanId)
+        : null;
 
       const hasMapping = mappingResponse?.data === true;
 
@@ -150,6 +161,9 @@ const UploadBalanceSheet = () => {
           state: {
             file,
             accountPlanId,
+            groupId: scope.groupId,
+            companyId: scope.companyId,
+            subCompanyId: scope.subCompanyId,
             month,
             year,
           },
@@ -158,7 +172,10 @@ const UploadBalanceSheet = () => {
       }
 
       const payload: BalancetePayload = {
-        accountPlansId: accountPlanId,
+        accountPlansId: accountPlanId ?? undefined,
+        groupId: scope.groupId,
+        companyId: scope.companyId,
+        subCompanyId: scope.subCompanyId,
         dateMonth: month,
         dateYear: year,
       };
@@ -176,7 +193,7 @@ const UploadBalanceSheet = () => {
 
         if (uploadResponse?.success) {
           toast.success("Arquivo enviado com sucesso!");
-          fetchBalancetes();
+          await fetchBalancetes();
         } else {
           toast.error(
             "Erro ao enviar o balancete. Verifique o arquivo e tente novamente.",

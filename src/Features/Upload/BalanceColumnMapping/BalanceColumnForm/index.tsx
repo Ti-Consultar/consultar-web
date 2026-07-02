@@ -3,14 +3,10 @@ import { Box, Button, TextField, Typography } from "@mui/material";
 import { columnLetterToNumber } from "../../../../utils/formatters/columnLetterToNumber";
 
 type BalanceColumnFormProps = {
-  accountPlanId: number;
   onSubmit: (payload: any) => void;
 };
 
-export const BalanceColumnForm = ({
-  accountPlanId,
-  onSubmit,
-}: BalanceColumnFormProps) => {
+export const BalanceColumnForm = ({ onSubmit }: BalanceColumnFormProps) => {
   const [startRow, setStartRow] = useState(1);
   const [form, setForm] = useState({
     costCenterCol: "A",
@@ -32,7 +28,6 @@ export const BalanceColumnForm = ({
 
   const handleSubmit = () => {
     const payload = {
-      accountPlanId,
       startRow,
       costCenterCol: columnLetterToNumber(form.costCenterCol),
       nameCol: columnLetterToNumber(form.nameCol),

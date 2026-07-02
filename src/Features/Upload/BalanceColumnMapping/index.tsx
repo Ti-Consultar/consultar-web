@@ -32,13 +32,14 @@ const BalanceColumnMapping = () => {
   const navigate = useNavigate();
   const { setLoading } = useLoading();
 
-  const { file, accountPlanId, month, year } = location.state || {};
+  const { file, accountPlanId, groupId, companyId, subCompanyId, month, year } =
+    location.state || {};
 
   const [spreadsheetData, setSpreadsheetData] =
     useState<SpreadsheetData | null>(null);
 
   useEffect(() => {
-    if (!file || !accountPlanId || !month || !year) {
+    if (!file || !groupId || !month || !year) {
       navigate(-1);
       return;
     }
@@ -61,16 +62,19 @@ const BalanceColumnMapping = () => {
     };
 
     reader.readAsArrayBuffer(file);
-  }, [file, accountPlanId, month, year, navigate]);
+  }, [file, groupId, month, year, navigate]);
 
   const handleSubmitMapping = async (mappingPayload: any) => {
-    if (!file || !accountPlanId || !month || !year) return;
+    if (!file || !groupId || !month || !year) return;
 
     setLoading(true, "Salvando configuração e enviando balancete...");
 
     try {
       const createResponse = await submitAccounting({
-        accountPlansId: accountPlanId,
+        accountPlansId: accountPlanId ?? undefined,
+        groupId,
+        companyId,
+        subCompanyId,
         dateMonth: month,
         dateYear: year,
       });
@@ -121,10 +125,7 @@ const BalanceColumnMapping = () => {
           </SpreadsheetContainer>
 
           <FormContainer>
-            <BalanceColumnForm
-              accountPlanId={accountPlanId}
-              onSubmit={handleSubmitMapping}
-            />
+            <BalanceColumnForm onSubmit={handleSubmitMapping} />
           </FormContainer>
         </Box>
       </MainContainer>

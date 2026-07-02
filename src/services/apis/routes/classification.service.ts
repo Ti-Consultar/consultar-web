@@ -3,14 +3,27 @@ import { BondListWrapper } from "../../../types/classification";
 import { axiosInstanceWithToken } from "../config";
 const URL = env.api.mrp;
 
+type ClassificationScope = {
+  groupId?: number | string;
+  companyId?: number | string;
+  subCompanyId?: number | string;
+};
+
+const buildScopeParams = (scope?: ClassificationScope) => ({
+  ...(scope?.groupId ? { groupId: Number(scope.groupId) } : {}),
+  ...(scope?.companyId ? { companyId: Number(scope.companyId) } : {}),
+  ...(scope?.subCompanyId ? { subCompanyId: Number(scope.subCompanyId) } : {}),
+});
+
 export const getClassification = async (
   typeClassification: number,
-  accountPlanId: number
+  accountPlanId: number,
+  scope?: ClassificationScope
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/Classification/accountPlan/${accountPlanId}/typeClassification`,
-      { params: { typeClassification } }
+      { params: { typeClassification, ...buildScopeParams(scope) } }
     );
     return response.data;
   } catch (error) {
@@ -30,10 +43,14 @@ export const getClassificationTemplate = async (typeClassification: number) => {
   }
 };
 
-export const getClassifiedBonds = async (accountPlanId: number) => {
+export const getClassifiedBonds = async (
+  accountPlanId: number,
+  scope?: ClassificationScope
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}/api/Classification/bond-list/${accountPlanId}`
+      `${URL}/api/Classification/bond-list/${accountPlanId}`,
+      { params: buildScopeParams(scope) }
     );
     return response.data;
   } catch (error) {
@@ -94,7 +111,7 @@ export const getBalancoReclassificadoVariation = async (
         params: {
           accountPlanId,
           year,
-          typeClassification
+          typeClassification,
         },
       }
     );
@@ -104,11 +121,14 @@ export const getBalancoReclassificadoVariation = async (
   }
 };
 
-export const validateClassificationModel = async (accountPlanId: number) => {
+export const validateClassificationModel = async (
+  accountPlanId: number,
+  scope?: ClassificationScope
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/Classification/exists`,
-      { params: { accountPlanId } }
+      { params: { accountPlanId, ...buildScopeParams(scope) } }
     );
     return response.data;
   } catch (error) {
@@ -117,8 +137,8 @@ export const validateClassificationModel = async (accountPlanId: number) => {
 };
 
 type SendAccountPlan = {
-  accountPlanId: number;
-};
+  accountPlanId?: number;
+} & ClassificationScope;
 
 export const sendAccountPlanId = async (data: SendAccountPlan) => {
   try {
@@ -134,12 +154,14 @@ export const sendAccountPlanId = async (data: SendAccountPlan) => {
 
 export const sendClassification = async (
   data: BondListWrapper,
-  accountPlanId: number
+  accountPlanId: number,
+  scope?: ClassificationScope
 ) => {
   try {
     const response = await axiosInstanceWithToken.put(
       `${URL}/api/Classification/accountplan/${accountPlanId}/update-bond-list`,
-      data
+      data,
+      { params: buildScopeParams(scope) }
     );
     return response.data;
   } catch (error) {

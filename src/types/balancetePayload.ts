@@ -1,5 +1,8 @@
 export type BalancetePayload = {
-  accountPlansId: number;
+  accountPlansId?: number;
+  groupId: number;
+  companyId?: number;
+  subCompanyId?: number;
   dateMonth: number;
   dateYear: number;
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MainTemplate } from "../../components/AppLayout";
 import { MainContainer, Title } from "./styles";
 import { ClassificationPanel } from "./ClassificationOptions";
@@ -84,6 +84,14 @@ const ClassificationPage = () => {
     companyId: companyid,
     subCompanyId,
   });
+  const classificationScope = useMemo(
+    () => ({
+      groupId,
+      companyId: companyid,
+      subCompanyId,
+    }),
+    [groupId, companyid, subCompanyId]
+  );
 
   const handleSelect = (ids: string[]) => {
     setSelectedKeys(ids);
@@ -111,7 +119,7 @@ const ClassificationPage = () => {
 
   const loadExistingClassifications = async (accountPlanId: number) => {
     try {
-      const response = await getClassifiedBonds(accountPlanId);
+      const response = await getClassifiedBonds(accountPlanId, classificationScope);
       if (response.success) {
         if (
           typeof response.data === "string" &&
@@ -141,7 +149,7 @@ const ClassificationPage = () => {
     try {
       setSkeleton(true);
 
-      const response = await validateClassificationModel(accountPlanId);
+      const response = await validateClassificationModel(accountPlanId, classificationScope);
       const isValid = response.data === true;
 
       setOpen(!isValid);
@@ -149,7 +157,8 @@ const ClassificationPage = () => {
       if (isValid) {
         const classificationResponse = await getClassification(
           selectedTab,
-          accountPlanId
+          accountPlanId,
+          classificationScope
         );
         setClassifications(classificationResponse.data);
       }
@@ -162,7 +171,7 @@ const ClassificationPage = () => {
 
   useEffect(() => {
     loadClassificationsFlow();
-  }, [accountPlanId, selectedTab]);
+  }, [accountPlanId, selectedTab, classificationScope]);
 
   const loadFirstBalancete = async () => {
     try {
@@ -190,7 +199,7 @@ const ClassificationPage = () => {
 
   useEffect(() => {
     loadFirstBalancete();
-  }, [accountPlanId]);
+  }, [accountPlanId, classificationScope]);
 
   const updateBondList = (bondList: BondListItem[]) => {
     const newBondList = { bondList };
@@ -254,6 +263,7 @@ const ClassificationPage = () => {
       if (!accountPlanId) return;
       const response = await sendAccountPlanId({
         accountPlanId: accountPlanId,
+        ...classificationScope,
       });
       if (response.success === true) {
         toast.success("Classificação aplicada");
@@ -300,7 +310,7 @@ const ClassificationPage = () => {
 
       setLoading(true, "Enviando classificação...");
 
-      const response = await sendClassification({ bondList }, accountPlanId);
+      const response = await sendClassification({ bondList }, accountPlanId, classificationScope);
 
       if (response.success === true) {
         toast.success("Classificação enviada com sucesso!");

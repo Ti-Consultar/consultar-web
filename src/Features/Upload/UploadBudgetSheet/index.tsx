@@ -50,6 +50,11 @@ const UploadBudgetSheet = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const getFinancialScope = () => ({
+    groupId: groupId ? Number(groupId) : undefined,
+    companyId: companyid ? Number(companyid) : undefined,
+    subCompanyId: subCompanyId ? Number(subCompanyId) : undefined,
+  });
   const [selectedBalanceteId, setSelectedBalanceteId] = useState<number | null>(
     null
   );
@@ -86,7 +91,7 @@ const UploadBudgetSheet = () => {
     setLoading(true, "Buscando orçamentos...");
     try {
       if (!accountPlanId) return;
-      const response = await getBudgets(accountPlanId);
+      const response = await getBudgets(accountPlanId, getFinancialScope());
       if (response?.success === false) {
         toast.error(
           `Erro ao buscar os orçamentos, entre em contato com o suporte.`
@@ -106,8 +111,10 @@ const UploadBudgetSheet = () => {
   useEffect(() => {
     if (accountPlanId) {
       fetchBudgets();
+    } else {
+      setBalanceteList({ id: 0, balancetes: [] });
     }
-  }, [accountPlanId]);
+  }, [accountPlanId, groupId, companyid, subCompanyId]);
 
   const handleMonthChange = (month: number) => {
     setMonth(month);
@@ -125,13 +132,18 @@ const UploadBudgetSheet = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!accountPlanId || !month || !year) {
+    const scope = getFinancialScope();
+
+    if (!scope.groupId || !month || !year) {
       toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
 
     const payload: BalancetePayload = {
-      accountPlansId: accountPlanId,
+      accountPlansId: accountPlanId ?? undefined,
+      groupId: scope.groupId,
+      companyId: scope.companyId,
+      subCompanyId: scope.subCompanyId,
       dateMonth: month,
       dateYear: year,
     };
@@ -149,7 +161,7 @@ const UploadBudgetSheet = () => {
 
         if (uploadResponse?.success) {
           toast.success("Arquivo enviado com sucesso!");
-          fetchBudgets();
+          await fetchBudgets();
         } else {
           toast.error(
             "Erro ao enviar o orçamento. Verifique o arquivo e tente novamente."

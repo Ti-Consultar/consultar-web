@@ -4,6 +4,18 @@ import { axiosInstanceWithToken } from "../config";
 
 const URL = env.api.mrp;
 
+type FinancialScope = {
+  groupId?: number | string;
+  companyId?: number | string;
+  subCompanyId?: number | string;
+};
+
+const buildScopeParams = (scope?: FinancialScope) => ({
+  ...(scope?.groupId ? { groupId: Number(scope.groupId) } : {}),
+  ...(scope?.companyId ? { companyId: Number(scope.companyId) } : {}),
+  ...(scope?.subCompanyId ? { subCompanyId: Number(scope.subCompanyId) } : {}),
+});
+
 export const submitBudget = async (data: BalancetePayload) => {
   try {
     const response = await axiosInstanceWithToken.post(
@@ -27,10 +39,11 @@ export const getBudget = async (balanceteId: number) => {
   }
 };
 
-export const getBudgets = async (id: number) => {
+export const getBudgets = async (id: number, scope?: FinancialScope) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}/api/Budget/accountplan/${id}`
+      `${URL}/api/Budget/accountplan/${id}`,
+      { params: buildScopeParams(scope) }
     );
     return response.data;
   } catch (error) {

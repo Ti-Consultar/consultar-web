@@ -41,9 +41,8 @@ const UploadAccountPlan = () => {
 
   const { accountPlanId } = useAccountPlanId({
     groupId,
-    companyId: companyid,
-    subCompanyId,
   });
+  const isGroupScope = !companyid && !subCompanyId;
 
   const isSupportedFile = (file: File) =>
     file.name.toLowerCase().endsWith(".xlsx") ||
@@ -80,8 +79,13 @@ const UploadAccountPlan = () => {
       return;
     }
 
+    if (!isGroupScope) {
+      toast.error("A importação do plano de contas deve ser feita no grupo.");
+      return;
+    }
+
     if (!accountPlanId) {
-      toast.error("Plano de contas não encontrado para este contexto.");
+      toast.error("Plano de contas não encontrado para este grupo.");
       return;
     }
 
@@ -127,7 +131,7 @@ const UploadAccountPlan = () => {
             />
             <Title>Envio do Plano de Contas</Title>
             <Subtitle>
-              Suba a planilha do plano de contas para essa empresa.
+              Suba a planilha do plano de contas para este grupo.
             </Subtitle>
           </Box>
           <OptionsContainer>
