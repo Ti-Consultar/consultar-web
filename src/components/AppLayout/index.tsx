@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  EnvironmentBanner,
   ContentContainer,
   DrawerContainer,
   HeaderContainer,
@@ -9,6 +10,7 @@ import {
 import { Header } from "./Header";
 import { Content } from "./Content";
 import { useDrawer } from "../../contexts/DrawerContext";
+import { env } from "../../config/env";
 
 import SidebarV2 from "./SidebarV2";
 
@@ -25,6 +27,12 @@ export const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
         <SidebarV2 />
       </DrawerContainer>
       <ContentWrapper isDrawerOpen={isOpen}>
+        {env.isHomologation && (
+          <EnvironmentBanner role="status" aria-label="Ambiente de homologação">
+            Ambiente de homologação: dados e alterações são destinados a testes
+            e validação.
+          </EnvironmentBanner>
+        )}
         <HeaderContainer>
           <Header />
         </HeaderContainer>

@@ -19,6 +19,10 @@ import { env } from "./config/env.ts";
 
 const Router = env.isElectron ? HashRouter : BrowserRouter;
 
+if (env.isHomologation) {
+  document.title = "MRP - Homologação";
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
