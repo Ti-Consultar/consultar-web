@@ -47,6 +47,11 @@ const CashFlow = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   const metrics = [
     "lucroOperacionalLiquido",
@@ -123,9 +128,18 @@ const CashFlow = () => {
 
     try {
       if (!accountPlanId) return;
-      const response = await getCashFlowVariation(accountPlanId, year);
+      const response = await getCashFlowVariation(
+        accountPlanId,
+        year,
+        financialScope,
+      );
 
-      setRealizado(response.realizado?.cashFlow?.months ?? []);
+      setRealizado(
+        response.realizado?.cashFlow?.months ??
+          response.cashFlow?.months ??
+          response.data?.cashFlow?.months ??
+          [],
+      );
       setOrcado(response.orcado?.cashFlow?.months ?? []);
       setVariacao(response.variacao?.cashFlow?.months ?? []);
     } catch (error) {
@@ -211,7 +225,7 @@ const CashFlow = () => {
 
   useEffect(() => {
     if (accountPlanId) fetchData();
-  }, [accountPlanId, year, tabValue]);
+  }, [accountPlanId, year, tabValue, groupId, companyid, subCompanyId]);
 
   return (
     <MainTemplate>

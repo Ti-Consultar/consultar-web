@@ -46,6 +46,11 @@ const BalancoContabil = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   useEffect(() => {
     setBalanceteData([]);
@@ -63,6 +68,7 @@ const BalancoContabil = () => {
         accountPlanId,
         year,
         tab ?? tabValue,
+        financialScope,
       );
 
       if (response.success && response.data?.months) {

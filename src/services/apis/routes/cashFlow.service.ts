@@ -1,13 +1,21 @@
 import { env } from "../../../config/env";
 import { axiosInstanceWithToken } from "../config";
+import { buildScopeParams } from "./scope";
+import type { FinancialScope } from "./scope";
 const URL = env.api.mrp;
 
-export const getCashFlow = async (accountPlanId: number, year: number) => {
+export const getCashFlow = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}/api/CashFlow`,
+      scope?.groupId ? `${URL}/api/CashFlow/scope` : `${URL}/api/CashFlow`,
       {
-        params: { accountPlanId, year },
+        params: scope?.groupId
+          ? { year, ...buildScopeParams(scope) }
+          : { accountPlanId, year },
       }
     );
     return response.data;
@@ -16,12 +24,18 @@ export const getCashFlow = async (accountPlanId: number, year: number) => {
   }
 };
 
-export const getCashFlowVariation = async (accountPlanId: number, year: number) => {
+export const getCashFlowVariation = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}/variacao`,
+      scope?.groupId ? `${URL}/api/CashFlow/scope` : `${URL}/variacao`,
       {
-        params: { accountPlanId, year },
+        params: scope?.groupId
+          ? { year, ...buildScopeParams(scope) }
+          : { accountPlanId, year },
       }
     );
     return response.data;

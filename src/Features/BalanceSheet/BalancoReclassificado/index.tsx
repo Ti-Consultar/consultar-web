@@ -49,6 +49,11 @@ const BalancoReclassificado = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   const highlightRows = useMemo(() => {
     const ids: Record<number, boolean> = {};
@@ -134,6 +139,7 @@ const BalancoReclassificado = () => {
         accountPlanId,
         year,
         tab,
+        financialScope,
       );
 
       const data = response.data ?? {};

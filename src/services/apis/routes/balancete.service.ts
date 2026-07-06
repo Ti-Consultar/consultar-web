@@ -2,20 +2,10 @@ import { env } from "../../../config/env";
 import { BalancetePayload } from "../../../types/balancetePayload";
 import { ClassificationBalanceteResponse } from "../../../types/balancete";
 import { axiosInstanceWithToken } from "../config";
+import { buildScopeParams } from "./scope";
+import type { FinancialScope } from "./scope";
 
 const URL = env.api.mrp;
-
-type FinancialScope = {
-  groupId?: number | string;
-  companyId?: number | string;
-  subCompanyId?: number | string;
-};
-
-const buildScopeParams = (scope?: FinancialScope) => ({
-  ...(scope?.groupId ? { groupId: Number(scope.groupId) } : {}),
-  ...(scope?.companyId ? { companyId: Number(scope.companyId) } : {}),
-  ...(scope?.subCompanyId ? { subCompanyId: Number(scope.subCompanyId) } : {}),
-});
 
 type ImportAccountingWithMappingParams = {
   balanceteId: number;

@@ -1,24 +1,14 @@
 import { env } from "../../../config/env";
 import { BondListWrapper } from "../../../types/classification";
 import { axiosInstanceWithToken } from "../config";
+import { buildScopeParams } from "./scope";
+import type { FinancialScope } from "./scope";
 const URL = env.api.mrp;
-
-type ClassificationScope = {
-  groupId?: number | string;
-  companyId?: number | string;
-  subCompanyId?: number | string;
-};
-
-const buildScopeParams = (scope?: ClassificationScope) => ({
-  ...(scope?.groupId ? { groupId: Number(scope.groupId) } : {}),
-  ...(scope?.companyId ? { companyId: Number(scope.companyId) } : {}),
-  ...(scope?.subCompanyId ? { subCompanyId: Number(scope.subCompanyId) } : {}),
-});
 
 export const getClassification = async (
   typeClassification: number,
   accountPlanId: number,
-  scope?: ClassificationScope
+  scope?: FinancialScope
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
@@ -45,7 +35,7 @@ export const getClassificationTemplate = async (typeClassification: number) => {
 
 export const getClassifiedBonds = async (
   accountPlanId: number,
-  scope?: ClassificationScope
+  scope?: FinancialScope
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
@@ -61,7 +51,8 @@ export const getClassifiedBonds = async (
 export const getBalancoContabil = async (
   accountPlanId: number,
   year: number,
-  typeClassification: number
+  typeClassification: number,
+  scope?: FinancialScope
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(`${URL}/painel`, {
@@ -69,6 +60,7 @@ export const getBalancoContabil = async (
         accountPlanId,
         year,
         typeClassification,
+        ...buildScopeParams(scope),
       },
     });
     return response.data;
@@ -80,7 +72,8 @@ export const getBalancoContabil = async (
 export const getBalancoReclassificado = async (
   accountPlanId: number,
   year: number,
-  typeClassification: number
+  typeClassification: number,
+  scope?: FinancialScope
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
@@ -90,6 +83,7 @@ export const getBalancoReclassificado = async (
           accountPlanId,
           year,
           typeClassification,
+          ...buildScopeParams(scope),
         },
       }
     );
@@ -102,7 +96,8 @@ export const getBalancoReclassificado = async (
 export const getBalancoReclassificadoVariation = async (
   accountPlanId: number,
   year: number,
-  typeClassification: number
+  typeClassification: number,
+  scope?: FinancialScope
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
@@ -112,6 +107,7 @@ export const getBalancoReclassificadoVariation = async (
           accountPlanId,
           year,
           typeClassification,
+          ...buildScopeParams(scope),
         },
       }
     );
@@ -123,7 +119,7 @@ export const getBalancoReclassificadoVariation = async (
 
 export const validateClassificationModel = async (
   accountPlanId: number,
-  scope?: ClassificationScope
+  scope?: FinancialScope
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
@@ -138,7 +134,7 @@ export const validateClassificationModel = async (
 
 type SendAccountPlan = {
   accountPlanId?: number;
-} & ClassificationScope;
+} & FinancialScope;
 
 export const sendAccountPlanId = async (data: SendAccountPlan) => {
   try {
@@ -155,7 +151,7 @@ export const sendAccountPlanId = async (data: SendAccountPlan) => {
 export const sendClassification = async (
   data: BondListWrapper,
   accountPlanId: number,
-  scope?: ClassificationScope
+  scope?: FinancialScope
 ) => {
   try {
     const response = await axiosInstanceWithToken.put(
