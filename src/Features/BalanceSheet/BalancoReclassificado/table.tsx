@@ -201,10 +201,43 @@ export const BalancoReclassificadoTable = ({
 
   const allTotalizers = useMemo(() => {
     const map = new Map<number, Totalizer>();
-    mergedMonths.forEach((m) => {
-      m.realRows?.forEach((t) => {
-        if (!map.has(t.id)) map.set(t.id, t);
+    const mergeTotalizer = (totalizer: Totalizer) => {
+      const current = map.get(totalizer.id);
+
+      if (!current) {
+        map.set(totalizer.id, {
+          ...totalizer,
+          classifications: [...(totalizer.classifications ?? [])],
+        });
+        return;
+      }
+
+      const classifications = new Map(
+        (current.classifications ?? []).map((classification) => [
+          classification.id,
+          classification,
+        ]),
+      );
+
+      (totalizer.classifications ?? []).forEach((classification) => {
+        const existing = classifications.get(classification.id);
+        if (!existing || (existing.datas?.length ?? 0) === 0) {
+          classifications.set(classification.id, classification);
+        }
       });
+
+      map.set(totalizer.id, {
+        ...current,
+        classifications: Array.from(classifications.values()).sort(
+          (a, b) => a.typeOrder - b.typeOrder,
+        ),
+      });
+    };
+
+    mergedMonths.forEach((m) => {
+      m.realRows?.forEach(mergeTotalizer);
+      m.budgetRows?.forEach(mergeTotalizer);
+      m.varRows?.forEach(mergeTotalizer);
     });
     return Array.from(map.values()).sort((a, b) => a.typeOrder - b.typeOrder);
   }, [mergedMonths]);
@@ -297,30 +330,35 @@ export const BalancoReclassificadoTable = ({
     return c?.value;
   };
 
-  const hasAnyTotalizerValue = (totId: number) => {
-    return mergedMonths.some((m) => {
-      const real = m.realRows.find((x) => x.id === totId)?.totalValue ?? 0;
-      const bud = m.budgetRows.find((x) => x.id === totId)?.totalValue ?? 0;
-      const vari = m.varRows.find((x) => x.id === totId)?.totalValue ?? 0;
+  const hasValue = (value: number | null | undefined) =>
+    value !== undefined && value !== null && value !== 0;
 
+  const getRowsByTotalizer = (m: MergedMonth, totId: number) =>
+    [m.realRows, m.budgetRows, m.varRows]
+      .map((rows) => rows.find((x) => x.id === totId))
+      .filter(Boolean) as Totalizer[];
+
+  const rowHasClassificationContent = (row: Totalizer, clsId?: number) => {
+    return (row.classifications ?? []).some((classification) => {
+      if (clsId !== undefined && classification.id !== clsId) return false;
       return (
-        (real !== 0 && real !== null) ||
-        (bud !== 0 && bud !== null) ||
-        (vari !== 0 && vari !== null)
+        hasValue(classification.value) || (classification.datas?.length ?? 0) > 0
       );
     });
   };
 
-  const hasAnyClassificationValue = (totId: number, clsId: number) => {
+  const hasAnyTotalizerContent = (totId: number) => {
     return mergedMonths.some((m) => {
-      const real = getClassValue(m, totId, clsId, "real") ?? 0;
-      const bud = getClassValue(m, totId, clsId, "bud") ?? 0;
-      const vari = getClassValue(m, totId, clsId, "var") ?? 0;
+      return getRowsByTotalizer(m, totId).some(
+        (row) => hasValue(row.totalValue) || rowHasClassificationContent(row),
+      );
+    });
+  };
 
-      return (
-        (real !== 0 && real !== null) ||
-        (bud !== 0 && bud !== null) ||
-        (vari !== 0 && vari !== null)
+  const hasAnyClassificationContent = (totId: number, clsId: number) => {
+    return mergedMonths.some((m) => {
+      return getRowsByTotalizer(m, totId).some((row) =>
+        rowHasClassificationContent(row, clsId),
       );
     });
   };
@@ -471,7 +509,7 @@ export const BalancoReclassificadoTable = ({
 
             <TableBody>
               {allTotalizers
-                .filter((t) => hasAnyTotalizerValue(t.id))
+                .filter((t) => hasAnyTotalizerContent(t.id))
                 .map((t) => {
                   const hl = !!highlightRows[t.id];
                   const rowBg = hl
@@ -618,7 +656,7 @@ export const BalancoReclassificadoTable = ({
 
                       {/* Classificações */}
                       {(t.classifications ?? [])
-                        .filter((c) => hasAnyClassificationValue(t.id, c.id))
+                        .filter((c) => hasAnyClassificationContent(t.id, c.id))
                         .map((c) => {
                             const isExpanded = expandedClassifications.has(c.id);
                             const canExpand = hasAnyDatas(t.id, c.id);
