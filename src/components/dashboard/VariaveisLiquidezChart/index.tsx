@@ -23,13 +23,22 @@ export const VariaveisLiquidezChart = ({year}: VariaveisLiquidezChartProps) => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   const fetchData = async () => {
     if (!accountPlanId) return;
     if (!year) return;
     try {
       if (!accountPlanId) return;
-      const response = await getLiquidityManagement(accountPlanId, year);
+      const response = await getLiquidityManagement(
+        accountPlanId,
+        year,
+        financialScope,
+      );
       setData(response.liquidityVariables?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
@@ -40,7 +49,7 @@ export const VariaveisLiquidezChart = ({year}: VariaveisLiquidezChartProps) => {
 
   useEffect(() => {
     fetchData();
-  }, [accountPlanId, year]);
+  }, [accountPlanId, year, groupId, companyid, subCompanyId]);
 
   return (
     <Box>

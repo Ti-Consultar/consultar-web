@@ -1,12 +1,18 @@
 import { env } from "../../../config/env";
 import { axiosInstanceWithToken } from "../config";
+import { buildFinancialScopeParams } from "./scope";
+import type { FinancialScope } from "./scope";
 const URL = env.api.mrp;
 
-export const getDashboardData = async (year: number, accountPlanId: number) => {
+export const getDashboardData = async (
+  year: number,
+  accountPlanId: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(`${URL}/api/DashBoard`, {
       params: {
-        accountPlanId,
+        ...buildFinancialScopeParams(accountPlanId, scope),
         year,
       },
     });
@@ -18,14 +24,15 @@ export const getDashboardData = async (year: number, accountPlanId: number) => {
 
 export const getGestaoPrazoMedio = async (
   year: number,
-  accountPlanId: number
+  accountPlanId: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/DashBoard/gestao-prazo-medio`,
       {
         params: {
-          accountPlanId,
+          ...buildFinancialScopeParams(accountPlanId, scope),
           year,
         },
       }

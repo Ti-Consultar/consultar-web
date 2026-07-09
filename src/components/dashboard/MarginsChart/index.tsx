@@ -23,13 +23,18 @@ export const MarginsCharts = ({ year }: MarginsChartsProps) => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   const fetchData = async () => {
     if (!accountPlanId) return;
     try {
       if (!accountPlanId) return;
       if (!year) return;
-      const response = await getProfitability(accountPlanId, year);
+      const response = await getProfitability(accountPlanId, year, financialScope);
       setData(response.profitability?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
@@ -40,7 +45,7 @@ export const MarginsCharts = ({ year }: MarginsChartsProps) => {
 
   useEffect(() => {
     fetchData();
-  }, [accountPlanId, year]);
+  }, [accountPlanId, year, groupId, companyid, subCompanyId]);
 
   return (
     <Box>

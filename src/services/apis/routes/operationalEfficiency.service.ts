@@ -1,16 +1,19 @@
 import { env } from "../../../config/env";
 import { axiosInstanceWithToken } from "../config";
+import { buildFinancialScopeParams } from "./scope";
+import type { FinancialScope } from "./scope";
 const URL = env.api.mrp;
 
 export const getOperationalEfficieny = async (
   accountPlanId: number,
-  year: number
+  year: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/OperationalEfficiency`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -21,13 +24,14 @@ export const getOperationalEfficieny = async (
 
 export const getOperationalEfficienyVariation = async (
   accountPlanId: number,
-  year: number
+  year: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/orcado`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;

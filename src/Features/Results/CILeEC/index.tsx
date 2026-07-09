@@ -45,6 +45,11 @@ const CILeEC = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
   const navigate = useNavigate();
 
   const metrics = [
@@ -153,7 +158,11 @@ const CILeEC = () => {
 
     try {
       if (!accountPlanId) return;
-      const response = await getCILeECWithBudget(accountPlanId, year);
+      const response = await getCILeECWithBudget(
+        accountPlanId,
+        year,
+        financialScope,
+      );
       setData(normalizeCILECMonths(response?.months));
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
@@ -272,7 +281,7 @@ const CILeEC = () => {
       fetchData();
       fetchDropdown();
     }
-  }, [tabValue, year, accountPlanId]);
+  }, [tabValue, year, accountPlanId, groupId, companyid, subCompanyId]);
 
   return (
     <MainTemplate>

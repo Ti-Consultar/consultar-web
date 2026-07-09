@@ -1,13 +1,19 @@
 import { env } from "../../../config/env";
 import { axiosInstanceWithToken } from "../config";
+import { buildFinancialScopeParams } from "./scope";
+import type { FinancialScope } from "./scope";
 const URL = env.api.mrp;
 
-export const getProfitability = async (accountPlanId: number, year: number) => {
+export const getProfitability = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/EconomicIndices/profitability`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -16,12 +22,16 @@ export const getProfitability = async (accountPlanId: number, year: number) => {
   }
 };
 
-export const getProfitabilityBudget = async (accountPlanId: number, year: number) => {
+export const getProfitabilityBudget = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/EconomicIndices/profitability/orcado`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -30,12 +40,16 @@ export const getProfitabilityBudget = async (accountPlanId: number, year: number
   }
 };
 
-export const getRentability = async (accountPlanId: number, year: number) => {
+export const getRentability = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/EconomicIndices/rentability/orcado`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -46,13 +60,14 @@ export const getRentability = async (accountPlanId: number, year: number) => {
 
 export const getReturnExpectation = async (
   accountPlanId: number,
-  year: number
+  year: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/EconomicIndices/return-expectation/orcado`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -61,12 +76,16 @@ export const getReturnExpectation = async (
   }
 };
 
-export const getEbitida = async (accountPlanId: number, year: number) => {
+export const getEbitida = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/EconomicIndices/ebitda`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -75,12 +94,16 @@ export const getEbitida = async (accountPlanId: number, year: number) => {
   }
 };
 
-export const getEbitidaBudget = async (accountPlanId: number, year: number) => {
+export const getEbitidaBudget = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/EconomicIndices/ebitda/variacao`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -89,12 +112,16 @@ export const getEbitidaBudget = async (accountPlanId: number, year: number) => {
   }
 };
 
-export const getNopat = async (accountPlanId: number, year: number) => {
+export const getNopat = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/EconomicIndices/nopat/variacao`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;

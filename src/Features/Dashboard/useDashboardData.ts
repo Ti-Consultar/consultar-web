@@ -39,6 +39,11 @@ export function useDashboardData({
     companyId: companyId,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId,
+    subCompanyId,
+  };
 
   // === CARROSSEL ===
   const next = () => setIndex((i) => i + 1);
@@ -52,11 +57,11 @@ export function useDashboardData({
         setLoading(true, "Carregando dados do dashboard...");
 
         const [panelResp, lp, prazo, din, marg] = await Promise.all([
-          getDashboardData(year, accountPlanId),
-          getLiquidityManagement(accountPlanId, year),
-          getGestaoPrazoMedio(year, accountPlanId),
-          getCapitalDynamics(accountPlanId, year),
-          getProfitability(accountPlanId, year),
+          getDashboardData(year, accountPlanId, financialScope),
+          getLiquidityManagement(accountPlanId, year, financialScope),
+          getGestaoPrazoMedio(year, accountPlanId, financialScope),
+          getCapitalDynamics(accountPlanId, year, financialScope),
+          getProfitability(accountPlanId, year, financialScope),
         ]);
 
         if (Array.isArray(panelResp)) setPanel(panelResp[panelResp.length - 1]);
@@ -73,7 +78,7 @@ export function useDashboardData({
     }
 
     load();
-  }, [accountPlanId, year]);
+  }, [accountPlanId, year, groupId, companyId, subCompanyId]);
 
   return {
     accountPlanId,

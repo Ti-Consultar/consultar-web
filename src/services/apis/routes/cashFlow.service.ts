@@ -1,6 +1,6 @@
 import { env } from "../../../config/env";
 import { axiosInstanceWithToken } from "../config";
-import { buildScopeParams } from "./scope";
+import { buildFinancialScopeParams } from "./scope";
 import type { FinancialScope } from "./scope";
 const URL = env.api.mrp;
 
@@ -14,7 +14,7 @@ export const getCashFlow = async (
       scope?.groupId ? `${URL}/api/CashFlow/scope` : `${URL}/api/CashFlow`,
       {
         params: scope?.groupId
-          ? { year, ...buildScopeParams(scope) }
+          ? { ...buildFinancialScopeParams(accountPlanId, scope), year }
           : { accountPlanId, year },
       }
     );
@@ -31,10 +31,10 @@ export const getCashFlowVariation = async (
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      scope?.groupId ? `${URL}/api/CashFlow/scope` : `${URL}/variacao`,
+      scope?.groupId ? `${URL}/api/CashFlow/scope/variacao` : `${URL}/variacao`,
       {
         params: scope?.groupId
-          ? { year, ...buildScopeParams(scope) }
+          ? { ...buildFinancialScopeParams(accountPlanId, scope), year }
           : { accountPlanId, year },
       }
     );

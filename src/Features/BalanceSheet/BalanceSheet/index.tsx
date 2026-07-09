@@ -22,6 +22,104 @@ import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import YearPicker from "../../../components/Inputs/YearPicker";
 import { useYear } from "../../../contexts/YearContext";
 
+const normalizeBalancoMonths = (months?: any[]): Month[] => {
+  if (!Array.isArray(months)) return [];
+
+  const totalizerIds = new Map<string, number>();
+  const classificationIds = new Map<string, number>();
+  const dataIds = new Map<string, number>();
+
+  const getStableId = (map: Map<string, number>, key: string) => {
+    const current = map.get(key);
+    if (current) return current;
+
+    const next = map.size + 1;
+    map.set(key, next);
+    return next;
+  };
+
+  return months.map((month, monthIndex) => {
+    const monthId = month?.id ?? month?.dateMonth ?? monthIndex + 1;
+    const dateMonth = month?.dateMonth ?? monthIndex + 1;
+
+    return {
+      ...month,
+      id: monthId,
+      name: month?.name || `Mes ${dateMonth}`,
+      dateMonth,
+      monthPainelContabilTotalizer: month?.monthPainelContabilTotalizer
+        ? {
+            ...month.monthPainelContabilTotalizer,
+            totalValue: month.monthPainelContabilTotalizer.totalValue ?? 0,
+          }
+        : null,
+      totalizer: Array.isArray(month?.totalizer)
+        ? month.totalizer.map((totalizer: any, totalizerIndex: number) => {
+            const totalizerKey = [
+              totalizer?.typeOrder ?? totalizerIndex + 1,
+              totalizer?.name ?? "",
+            ].join("|");
+            const totalizerId =
+              totalizer?.id ?? getStableId(totalizerIds, totalizerKey);
+
+            return {
+              ...totalizer,
+              id: totalizerId,
+              typeOrder: totalizer?.typeOrder ?? totalizerIndex + 1,
+              totalValue: totalizer?.totalValue ?? 0,
+              classifications: Array.isArray(totalizer?.classifications)
+                ? totalizer.classifications.map(
+                    (classification: any, classificationIndex: number) => {
+                      const classificationKey = [
+                        totalizerKey,
+                        classification?.typeOrder ?? classificationIndex + 1,
+                        classification?.name ?? "",
+                      ].join("|");
+                      const classificationId =
+                        classification?.id ??
+                        getStableId(classificationIds, classificationKey);
+
+                      return {
+                        ...classification,
+                        id: classificationId,
+                        typeOrder:
+                          classification?.typeOrder ?? classificationIndex + 1,
+                        value: classification?.value ?? 0,
+                        datas: Array.isArray(classification?.datas)
+                          ? classification.datas.map(
+                              (data: any, dataIndex: number) => {
+                                const dataKey = [
+                                  classificationKey,
+                                  data?.typeOrder ?? dataIndex + 1,
+                                  data?.name ?? "",
+                                  data?.costCenter ?? "",
+                                ].join("|");
+
+                                return {
+                                  ...data,
+                                  id: data?.id ?? getStableId(dataIds, dataKey),
+                                  typeOrder: data?.typeOrder ?? dataIndex + 1,
+                                  value: data?.value ?? 0,
+                                };
+                              },
+                            )
+                          : [],
+                      };
+                    },
+                  )
+                : [],
+            };
+          })
+        : [],
+    };
+  });
+};
+
+const getBalancoMonths = (response: any): Month[] =>
+  normalizeBalancoMonths(
+    response?.data?.months ?? response?.months ?? response?.data?.data?.months,
+  );
+
 const BalancoContabil = () => {
   useBreadcrumb("accounting-balance");
 
@@ -71,9 +169,12 @@ const BalancoContabil = () => {
         financialScope,
       );
 
-      if (response.success && response.data?.months) {
-        setBalanceteData(response.data.months);
+      const months = getBalancoMonths(response);
+
+      if (months.length) {
+        setBalanceteData(months);
       } else {
+        setBalanceteData([]);
         toast.warning(
           response.message || "Não encontramos um balanço para esta data.",
         );

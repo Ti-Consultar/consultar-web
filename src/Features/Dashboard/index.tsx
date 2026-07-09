@@ -15,11 +15,13 @@ interface DashboardPageProps {
 export function DashboardPage({ year }: DashboardPageProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const { groupId, companyId, subCompanyId } = useParams<{
+  const { groupId, companyId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyId?: string;
+    companyid?: string;
     subCompanyId?: string;
   }>();
+  const scopedCompanyId = companyId ?? companyid;
   const {
     panel,
     liquidity,
@@ -32,7 +34,7 @@ export function DashboardPage({ year }: DashboardPageProps) {
     setIndex,
   } = useDashboardData({
     groupId,
-    companyId,
+    companyId: scopedCompanyId,
     subCompanyId,
     year,
   });

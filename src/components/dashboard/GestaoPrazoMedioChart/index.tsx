@@ -33,13 +33,22 @@ export const GestaoPrazoMedioDashboard = ({
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   const fetchData = async () => {
     if (!accountPlanId) return;
     if (!year) return;
     try {
       if (!accountPlanId) return;
-      const response = await getGestaoPrazoMedio(year, accountPlanId);
+      const response = await getGestaoPrazoMedio(
+        year,
+        accountPlanId,
+        financialScope,
+      );
       setData(response);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
@@ -50,7 +59,7 @@ export const GestaoPrazoMedioDashboard = ({
 
   useEffect(() => {
     fetchData();
-  }, [accountPlanId, year]);
+  }, [accountPlanId, year, groupId, companyid, subCompanyId]);
 
   return (
     <Box>

@@ -93,6 +93,20 @@ const GestaoLiquidez = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
+
+  const resetDashboardState = () => {
+    setLiquidityVariables([]);
+    setCapitalDynamicsData([]);
+    setGrossCashFlowDashData([]);
+    setTurnoverData([]);
+    setLiquidez([]);
+    setCapitalStructuresData([]);
+  };
 
   useEffect(() => {
     const loadSetting = () => {
@@ -144,12 +158,21 @@ const GestaoLiquidez = () => {
   const fetchData = async () => {
     if (!year || !accountPlanId) return;
 
-    const cacheKey = `tab-${tabValue}-ap-${accountPlanId}-year-${year}`;
+    const cacheKey = [
+      "liquidity-management",
+      `tab-${tabValue}`,
+      `ap-${accountPlanId}`,
+      `g-${groupId || 0}`,
+      `c-${companyid || 0}`,
+      `s-${subCompanyId || 0}`,
+      `year-${year}`,
+    ].join("-");
 
     /**  RESTAURAR DO CACHE  */
     if (apiCache.has(cacheKey)) {
       const cached = apiCache.get(cacheKey);
 
+      resetDashboardState();
       setMonths(cached.months);
       setMetricKeys(cached.metricKeys);
       setMetricLabels(cached.metricLabels);
@@ -171,6 +194,7 @@ const GestaoLiquidez = () => {
 
     /**  FETCH REAL  */
     setLoading(true, "Buscando dados...");
+    resetDashboardState();
 
     try {
       let metrics: string[] = [];
@@ -185,8 +209,8 @@ const GestaoLiquidez = () => {
       switch (tabValue) {
         case 1: {
           [variation, dashboard] = await Promise.all([
-            getLiquidityManagementVariation(accountPlanId, year),
-            getLiquidityManagement(accountPlanId, year),
+            getLiquidityManagementVariation(accountPlanId, year, financialScope),
+            getLiquidityManagement(accountPlanId, year, financialScope),
           ]);
 
           extractedMonths = variation?.months ?? [];
@@ -220,8 +244,8 @@ const GestaoLiquidez = () => {
 
         case 2: {
           [variation, dashboard] = await Promise.all([
-            getCapitalDynamicsVariation(accountPlanId, year),
-            getCapitalDynamics(accountPlanId, year),
+            getCapitalDynamicsVariation(accountPlanId, year, financialScope),
+            getCapitalDynamics(accountPlanId, year, financialScope),
           ]);
 
           extractedMonths = variation?.months ?? [];
@@ -264,8 +288,8 @@ const GestaoLiquidez = () => {
 
         case 3: {
           [variation, dashboard] = await Promise.all([
-            getGrossCashFlowVariation(accountPlanId, year),
-            getGrossCashFlow(accountPlanId, year),
+            getGrossCashFlowVariation(accountPlanId, year, financialScope),
+            getGrossCashFlow(accountPlanId, year, financialScope),
           ]);
           extractedMonths = variation?.months ?? [];
 
@@ -314,8 +338,8 @@ const GestaoLiquidez = () => {
 
         case 4: {
           [variation, dashboard] = await Promise.all([
-            getTurnoverVariation(accountPlanId, year),
-            getTurnover(accountPlanId, year),
+            getTurnoverVariation(accountPlanId, year, financialScope),
+            getTurnover(accountPlanId, year, financialScope),
           ]);
           extractedMonths = variation?.months ?? [];
 
@@ -348,8 +372,8 @@ const GestaoLiquidez = () => {
 
         case 5: {
           [variation, dashboard] = await Promise.all([
-            getLiquidityVariation(accountPlanId, year),
-            getLiquidity(accountPlanId, year),
+            getLiquidityVariation(accountPlanId, year, financialScope),
+            getLiquidity(accountPlanId, year, financialScope),
           ]);
           extractedMonths = variation?.months ?? [];
 
@@ -380,8 +404,8 @@ const GestaoLiquidez = () => {
 
         case 6: {
           [variation, dashboard] = await Promise.all([
-            getCapitalStructureVariation(accountPlanId, year),
-            getCapitalStructure(accountPlanId, year),
+            getCapitalStructureVariation(accountPlanId, year, financialScope),
+            getCapitalStructure(accountPlanId, year, financialScope),
           ]);
           extractedMonths = variation?.months ?? [];
 
@@ -442,6 +466,7 @@ const GestaoLiquidez = () => {
         accountPlanId,
         year,
         selectedMonthNumber,
+        financialScope,
       );
       setLiquidityMonth(response);
     } catch (error) {
@@ -470,13 +495,13 @@ const GestaoLiquidez = () => {
     if (accountPlanId) {
       fetchData();
     }
-  }, [tabValue, year, accountPlanId]);
+  }, [tabValue, year, accountPlanId, groupId, companyid, subCompanyId]);
 
   useEffect(() => {
     if (selectedMonth && accountPlanId && year) {
       fetchFeurietData();
     }
-  }, [selectedMonth, accountPlanId, year]);
+  }, [selectedMonth, accountPlanId, year, groupId, companyid, subCompanyId]);
 
   /**  TABS STYLE  */
   const tabStyle = {

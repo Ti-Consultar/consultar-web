@@ -45,6 +45,11 @@ const EficienciaOperacional = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   const metrics = [
     "receitasLiquidas",
@@ -158,6 +163,7 @@ const EficienciaOperacional = () => {
       const response = await getOperationalEfficienyVariation(
         accountPlanId,
         year,
+        financialScope,
       );
       setData(response?.months);
     } catch (error) {
@@ -258,7 +264,7 @@ const EficienciaOperacional = () => {
       fetchData();
       fetchDropdown();
     }
-  }, [tabValue, year, accountPlanId]);
+  }, [tabValue, year, accountPlanId, groupId, companyid, subCompanyId]);
 
   return (
     <MainTemplate>

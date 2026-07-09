@@ -1,16 +1,19 @@
 import { env } from "../../../config/env";
 import { axiosInstanceWithToken } from "../config";
+import { buildFinancialScopeParams } from "./scope";
+import type { FinancialScope } from "./scope";
 const URL = env.api.mrp;
 
 export const getLiquidityManagement = async (
   accountPlanId: number,
-  year: number
+  year: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/liquidity-management`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -21,13 +24,14 @@ export const getLiquidityManagement = async (
 
 export const getLiquidityManagementVariation = async (
   accountPlanId: number,
-  year: number
+  year: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/liquidity-management/variacao`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -39,13 +43,14 @@ export const getLiquidityManagementVariation = async (
 export const getLiquidityMonth = async (
   accountPlanId: number,
   year: number,
-  month: number
+  month: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/liquidity-management/month`,
       {
-        params: { accountPlanId, year, month },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year, month },
       }
     );
     return response.data;
@@ -56,13 +61,14 @@ export const getLiquidityMonth = async (
 
 export const getCapitalDynamics = async (
   accountPlanId: number,
-  year: number
+  year: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/capital-dynamics`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -73,13 +79,14 @@ export const getCapitalDynamics = async (
 
 export const getCapitalDynamicsVariation = async (
   accountPlanId: number,
-  year: number
+  year: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/capital-dynamics/variacao`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -88,12 +95,16 @@ export const getCapitalDynamicsVariation = async (
   }
 };
 
-export const getTurnover = async (accountPlanId: number, year: number) => {
+export const getTurnover = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/turnover`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -102,12 +113,16 @@ export const getTurnover = async (accountPlanId: number, year: number) => {
   }
 };
 
-export const getTurnoverVariation = async (accountPlanId: number, year: number) => {
+export const getTurnoverVariation = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/turnover/variacao`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -116,12 +131,16 @@ export const getTurnoverVariation = async (accountPlanId: number, year: number) 
   }
 };
 
-export const getLiquidity = async (accountPlanId: number, year: number) => {
+export const getLiquidity = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/liquidity`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -130,12 +149,16 @@ export const getLiquidity = async (accountPlanId: number, year: number) => {
   }
 };
 
-export const getLiquidityVariation = async (accountPlanId: number, year: number) => {
+export const getLiquidityVariation = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/liquidity/variacao`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -144,12 +167,16 @@ export const getLiquidityVariation = async (accountPlanId: number, year: number)
   }
 };
 
-export const getGrossCashFlow = async (accountPlanId: number, year: number) => {
+export const getGrossCashFlow = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/gross-cash-flow`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -158,12 +185,16 @@ export const getGrossCashFlow = async (accountPlanId: number, year: number) => {
   }
 };
 
-export const getGrossCashFlowVariation = async (accountPlanId: number, year: number) => {
+export const getGrossCashFlowVariation = async (
+  accountPlanId: number,
+  year: number,
+  scope?: FinancialScope,
+) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/gross-cash-flow/variacao`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -174,13 +205,14 @@ export const getGrossCashFlowVariation = async (accountPlanId: number, year: num
 
 export const getCapitalStructure = async (
   accountPlanId: number,
-  year: number
+  year: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/capital-structure`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;
@@ -191,13 +223,14 @@ export const getCapitalStructure = async (
 
 export const getCapitalStructureVariation = async (
   accountPlanId: number,
-  year: number
+  year: number,
+  scope?: FinancialScope,
 ) => {
   try {
     const response = await axiosInstanceWithToken.get(
       `${URL}/api/LiquidManagement/capital-structure/variacao`,
       {
-        params: { accountPlanId, year },
+        params: { ...buildFinancialScopeParams(accountPlanId, scope), year },
       }
     );
     return response.data;

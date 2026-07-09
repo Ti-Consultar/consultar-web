@@ -42,6 +42,11 @@ const AgregadoMensal = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   const fetchData = async (fetchYear?: number, fetchMonth?: number) => {
     setLoading(true, "Buscando dados da Árvore de Valor...");
@@ -51,7 +56,12 @@ const AgregadoMensal = () => {
       const y = fetchYear ?? year;
       const m = fetchMonth ?? month;
 
-      const response = await getValueTreeBudget(accountPlanId, m, y);
+      const response = await getValueTreeBudget(
+        accountPlanId,
+        m,
+        y,
+        financialScope,
+      );
       setData(response);
 
       if (!selectedDate && response?.valueTreeYearMonth) {
@@ -89,7 +99,7 @@ const AgregadoMensal = () => {
       fetchData(year, 1);
       fetchDropdown();
     }
-  }, [accountPlanId]);
+  }, [accountPlanId, year, groupId, companyid, subCompanyId]);
 
   return (
     <MainTemplate>

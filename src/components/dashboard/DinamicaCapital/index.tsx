@@ -33,13 +33,22 @@ export const DinamicaCapitalCarousel = ({
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   const fetchData = async () => {
     if (!accountPlanId) return;
     try {
       if (!accountPlanId) return;
       if (!year) return;
-      const response = await getCapitalDynamics(accountPlanId, year);
+      const response = await getCapitalDynamics(
+        accountPlanId,
+        year,
+        financialScope,
+      );
       setData(response.capitalDynamics?.months);
     } catch (error) {
       console.error("Erro ao buscar dados ", error);
@@ -50,7 +59,7 @@ export const DinamicaCapitalCarousel = ({
 
   useEffect(() => {
     fetchData();
-  }, [accountPlanId, year]);
+  }, [accountPlanId, year, groupId, companyid, subCompanyId]);
 
   return (
     <Box>

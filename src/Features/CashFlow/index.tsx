@@ -21,6 +21,48 @@ import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 import { useYear } from "../../contexts/YearContext";
 import YearPicker from "../../components/Inputs/YearPicker";
 
+const cashFlowMonthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+  "ACUMULADO",
+];
+
+const normalizeCashFlowMonths = (months?: any[]) =>
+  Array.isArray(months)
+    ? months.map((month, index) => {
+        const dateMonth = month?.dateMonth ?? index + 1;
+        return {
+          ...month,
+          name: month?.name || cashFlowMonthNames[dateMonth - 1] || `Mes ${index + 1}`,
+          dateMonth,
+        };
+      })
+    : [];
+
+const getCashFlowMonths = (
+  response: any,
+  section: "realizado" | "orcado" | "variacao",
+) => {
+  const directMonths = response?.[section]?.cashFlow?.months;
+  const wrappedMonths = response?.data?.[section]?.cashFlow?.months;
+  const legacyMonths =
+    section === "realizado"
+      ? response?.cashFlow?.months ?? response?.data?.cashFlow?.months
+      : undefined;
+
+  return normalizeCashFlowMonths(directMonths ?? wrappedMonths ?? legacyMonths);
+};
+
 const CashFlow = () => {
   useBreadcrumb("cash-flow");
 
@@ -134,14 +176,9 @@ const CashFlow = () => {
         financialScope,
       );
 
-      setRealizado(
-        response.realizado?.cashFlow?.months ??
-          response.cashFlow?.months ??
-          response.data?.cashFlow?.months ??
-          [],
-      );
-      setOrcado(response.orcado?.cashFlow?.months ?? []);
-      setVariacao(response.variacao?.cashFlow?.months ?? []);
+      setRealizado(getCashFlowMonths(response, "realizado"));
+      setOrcado(getCashFlowMonths(response, "orcado"));
+      setVariacao(getCashFlowMonths(response, "variacao"));
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {

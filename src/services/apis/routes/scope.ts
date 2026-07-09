@@ -10,3 +10,11 @@ export const buildScopeParams = (scope?: FinancialScope) => ({
   ...(scope?.subCompanyId ? { subCompanyId: Number(scope.subCompanyId) } : {}),
 });
 
+export const buildFinancialScopeParams = (
+  accountPlanId: number,
+  scope?: FinancialScope,
+) => ({
+  accountPlanId,
+  ...buildScopeParams(scope),
+});
+

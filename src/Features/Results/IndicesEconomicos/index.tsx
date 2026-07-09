@@ -58,6 +58,11 @@ const IndicesEconomicos = () => {
     companyId: companyid,
     subCompanyId: subCompanyId,
   });
+  const financialScope = {
+    groupId,
+    companyId: companyid,
+    subCompanyId,
+  };
 
   useEffect(() => {
     const loadSetting = () => {
@@ -89,7 +94,11 @@ const IndicesEconomicos = () => {
 
       switch (tabValue) {
         case 1:
-          response = await getProfitabilityBudget(accountPlanId, year);
+          response = await getProfitabilityBudget(
+            accountPlanId,
+            year,
+            financialScope,
+          );
           extractedMonths = response?.profitability?.months ?? [];
           metrics = [
             "margemBruta",
@@ -115,7 +124,7 @@ const IndicesEconomicos = () => {
           break;
 
         case 2:
-          response = await getRentability(accountPlanId, year);
+          response = await getRentability(accountPlanId, year, financialScope);
           extractedMonths = response?.months ?? [];
           metrics = ["roi", "liquidoMensalROE", "liquidoInicioROE"];
           labels = {
@@ -131,7 +140,11 @@ const IndicesEconomicos = () => {
           break;
 
         case 3:
-          response = await getReturnExpectation(accountPlanId, year);
+          response = await getReturnExpectation(
+            accountPlanId,
+            year,
+            financialScope,
+          );
           extractedMonths = response?.months ?? [];
           metrics = ["roic", "ke", "criacaoValor"];
           labels = {
@@ -147,7 +160,7 @@ const IndicesEconomicos = () => {
           break;
 
         case 4:
-          response = await getEbitidaBudget(accountPlanId, year);
+          response = await getEbitidaBudget(accountPlanId, year, financialScope);
           extractedMonths = response?.months ?? [];
           metrics = ["lucroAntesFinanceiro", "depreciacao", "ebitda"];
           labels = {
@@ -159,7 +172,7 @@ const IndicesEconomicos = () => {
           break;
 
         case 5:
-          response = await getNopat(accountPlanId, year);
+          response = await getNopat(accountPlanId, year, financialScope);
           extractedMonths = response?.months ?? [];
           metrics = [
             "lucroOperacionalAntes",
@@ -296,7 +309,7 @@ const IndicesEconomicos = () => {
       fetchData();
       fetchDropdown();
     }
-  }, [tabValue, year, accountPlanId]);
+  }, [tabValue, year, accountPlanId, groupId, companyid, subCompanyId]);
 
   return (
     <MainTemplate>
