@@ -165,7 +165,7 @@ export const editBalanceSheetColumns = async (data: {
 }) => {
   try {
     const response = await axiosInstanceWithToken.put(
-      `${URL}api/Balancete/update-config/balancete`,
+      `${URL}/api/Balancete/update-config/balancete`,
       data
     );
     return response.data;
@@ -216,7 +216,7 @@ export const deleteBalancete = async (id: number) => {
 export const hasBalanceMapping = async (accountPlanId: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}api/Balancete/accountplan/${accountPlanId}/config/exists`
+      `${URL}/api/Balancete/accountplan/${accountPlanId}/config/exists`
     );
     return response.data;
   } catch (error) {
@@ -227,7 +227,7 @@ export const hasBalanceMapping = async (accountPlanId: number) => {
 export const getBalanceSheetConfig = async (accountPlanId: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}api/Balancete/accountplan/${accountPlanId}/config/balancete`
+      `${URL}/api/Balancete/accountplan/${accountPlanId}/config/balancete`
     );
     return response.data;
   } catch (error) {

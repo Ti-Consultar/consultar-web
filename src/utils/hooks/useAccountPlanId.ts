@@ -15,6 +15,8 @@ interface Params {
 export function useAccountPlanId({ groupId, companyId, subCompanyId }: Params) {
   const [accountPlanId, setAccountPlanId] = useState<number | null>(null);
   const [entityName, setEntityName] = useState<string>("");
+  const [accountPlanContextKey, setAccountPlanContextKey] =
+    useState<string>("");
   const navigate = useNavigate();
   const { setLoading } = useLoading();
 
@@ -23,14 +25,26 @@ export function useAccountPlanId({ groupId, companyId, subCompanyId }: Params) {
   }`;
 
   useEffect(() => {
-    if (!groupId) return;
+    if (!groupId) {
+      setAccountPlanId(null);
+      setEntityName("");
+      setAccountPlanContextKey("");
+      return;
+    }
 
     const cached = accountPlanCache.get(cacheKey);
     if (cached) {
       setAccountPlanId(cached.id);
       setEntityName(cached.entityName);
+      setAccountPlanContextKey(cacheKey);
       return;
     }
+
+    setAccountPlanId(null);
+    setEntityName("");
+    setAccountPlanContextKey("");
+
+    let cancelled = false;
 
     const fetchAccountPlanId = async () => {
       try {
@@ -41,6 +55,8 @@ export function useAccountPlanId({ groupId, companyId, subCompanyId }: Params) {
           companyId ? +companyId : undefined,
           subCompanyId ? +subCompanyId : undefined
         );
+
+        if (cancelled) return;
 
         if (response.status === 401) {
           toast.error("Sessão expirada. Faça login novamente.");
@@ -62,8 +78,13 @@ export function useAccountPlanId({ groupId, companyId, subCompanyId }: Params) {
 
         setAccountPlanId(value.id);
         setEntityName(value.entityName);
-      } catch (error: any) {
-        if (error?.response?.status === 401) {
+        setAccountPlanContextKey(cacheKey);
+      } catch (error: unknown) {
+        if (cancelled) return;
+
+        const requestError = error as { response?: { status?: number } };
+
+        if (requestError.response?.status === 401) {
           toast.error("Sessão expirada. Faça login novamente.");
           navigate("/");
           return;
@@ -72,12 +93,17 @@ export function useAccountPlanId({ groupId, companyId, subCompanyId }: Params) {
         console.error("Erro ao buscar Plano de Contas:", error);
         toast.error("Erro ao buscar Plano de Contas.");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchAccountPlanId();
+
+    return () => {
+      cancelled = true;
+      setLoading(false);
+    };
   }, [cacheKey, groupId, companyId, subCompanyId]);
 
-  return { accountPlanId, entityName };
+  return { accountPlanId, entityName, accountPlanContextKey };
 }
