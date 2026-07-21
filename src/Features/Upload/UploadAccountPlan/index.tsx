@@ -133,7 +133,7 @@ const UploadAccountPlan = () => {
       setName(response.name);
 
       if (!debouncedSearch) {
-        setHasAccountPlan(response.totalCount > 0);
+      setHasAccountPlan(response.totalCount > 0 && response.accounts[0].origin === "ExcelUpload");
         setAccountPlanOrigin(response.accounts[0]?.origin);
       }
     } catch (error: unknown) {
