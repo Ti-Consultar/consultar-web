@@ -393,15 +393,18 @@ export const BalancoReclassificadoTable = ({
     classificationTypeOrder: number,
   ) =>
     mergedMonths.some((month) => {
-      const totalizer = findTotalizerByOrder(
-        month.realRows,
-        totalizerTypeOrder,
-      );
-      const classification = findClassificationByOrder(
-        totalizer,
-        classificationTypeOrder,
-      );
-      return (classification?.datas?.length ?? 0) > 0;
+      const rowCollections = showBudgetColumns
+        ? [month.budgetRows, month.realRows, month.varRows]
+        : [month.realRows];
+
+      return rowCollections.some((rows) => {
+        const totalizer = findTotalizerByOrder(rows, totalizerTypeOrder);
+        const classification = findClassificationByOrder(
+          totalizer,
+          classificationTypeOrder,
+        );
+        return (classification?.datas?.length ?? 0) > 0;
+      });
     });
 
   const getUniqueDataNames = (
@@ -411,21 +414,25 @@ export const BalancoReclassificadoTable = ({
     const seen = new Map<string, { name: string; costCenter?: string }>();
 
     mergedMonths.forEach((month) => {
-      const totalizer = findTotalizerByOrder(
-        month.realRows,
-        totalizerTypeOrder,
-      );
-      const classification = findClassificationByOrder(
-        totalizer,
-        classificationTypeOrder,
-      );
-      classification?.datas?.forEach((data) => {
-        if (!seen.has(data.name)) {
-          seen.set(data.name, {
-            name: data.name,
-            costCenter: data.costCenter,
-          });
-        }
+      const rowCollections = showBudgetColumns
+        ? [month.budgetRows, month.realRows, month.varRows]
+        : [month.realRows];
+
+      rowCollections.forEach((rows) => {
+        const totalizer = findTotalizerByOrder(rows, totalizerTypeOrder);
+        const classification = findClassificationByOrder(
+          totalizer,
+          classificationTypeOrder,
+        );
+        classification?.datas?.forEach((data) => {
+          const key = `${data.name}:${data.costCenter ?? ""}`;
+          if (!seen.has(key)) {
+            seen.set(key, {
+              name: data.name,
+              costCenter: data.costCenter,
+            });
+          }
+        });
       });
     });
 
@@ -437,16 +444,27 @@ export const BalancoReclassificadoTable = ({
     totalizerTypeOrder: number,
     classificationTypeOrder: number,
     dataName: string,
+    costCenter: string | undefined,
+    type: "bud" | "real" | "var",
   ): number | undefined => {
+    const rows =
+      type === "real"
+        ? month.realRows
+        : type === "bud"
+          ? month.budgetRows
+          : month.varRows;
     const totalizer = findTotalizerByOrder(
-      month.realRows,
+      rows,
       totalizerTypeOrder,
     );
     const classification = findClassificationByOrder(
       totalizer,
       classificationTypeOrder,
     );
-    return classification?.datas?.find((data) => data.name === dataName)?.value;
+    return classification?.datas?.find(
+      (data) =>
+        data.name === dataName && data.costCenter === costCenter,
+    )?.value;
   };
 
   const getHighlightCellSx = (hl: boolean) =>
@@ -935,7 +953,7 @@ export const BalancoReclassificadoTable = ({
                                 {isExpanded &&
                                   uniqueDataNames.map(({ name, costCenter }) => (
                                     <TableRow
-                                      key={`data-${t.typeOrder}-${c.typeOrder}-${name}`}
+                                      key={`data-${t.typeOrder}-${c.typeOrder}-${name}-${costCenter ?? ""}`}
                                       sx={{
                                         backgroundColor:
                                           theme.palette.action.selected,
@@ -973,33 +991,107 @@ export const BalancoReclassificadoTable = ({
                                           </Typography>
                                         </Tooltip>
                                       </TableCell>
-                                      {visibleMonths.map((m) => (
-                                        <TableCell
-                                          key={`data-${m.id}-${t.typeOrder}-${c.typeOrder}-${name}`}
-                                          align="right"
-                                          sx={{
-                                            border: `1px solid ${theme.palette.divider}`,
-                                          }}
-                                        >
-                                          <Typography
-                                            variant="body2"
-                                            sx={{
-                                              color: theme.palette.text.secondary,
-                                              fontSize: "0.75rem",
-                                            }}
+                                      {visibleMonths.map((m) => {
+                                        const vBud =
+                                          getDataValueByNameForMonth(
+                                            m,
+                                            t.typeOrder,
+                                            c.typeOrder,
+                                            name,
+                                            costCenter,
+                                            "bud",
+                                          );
+                                        const vReal =
+                                          getDataValueByNameForMonth(
+                                            m,
+                                            t.typeOrder,
+                                            c.typeOrder,
+                                            name,
+                                            costCenter,
+                                            "real",
+                                          );
+                                        const vVar =
+                                          getDataValueByNameForMonth(
+                                            m,
+                                            t.typeOrder,
+                                            c.typeOrder,
+                                            name,
+                                            costCenter,
+                                            "var",
+                                          );
+                                        const { arrow, color } = getVarVisual(
+                                          vVar,
+                                          name,
+                                          vReal,
+                                          vBud,
+                                        );
+                                        const detailTextSx = {
+                                          color: theme.palette.text.secondary,
+                                          fontSize: "0.75rem",
+                                        };
+                                        const detailCellSx = {
+                                          border: `1px solid ${theme.palette.divider}`,
+                                        };
+
+                                        return !showBudgetColumns ? (
+                                          <TableCell
+                                            key={`data-${m.id}-${t.typeOrder}-${c.typeOrder}-${name}-${costCenter ?? ""}`}
+                                            align="right"
+                                            sx={detailCellSx}
                                           >
-                                            {formatValue(
-                                              getDataValueByNameForMonth(
-                                                m,
-                                                t.typeOrder,
-                                                c.typeOrder,
-                                                name,
-                                              ),
-                                              name,
-                                            )}
-                                          </Typography>
-                                        </TableCell>
-                                      ))}
+                                            <Typography
+                                              variant="body2"
+                                              sx={detailTextSx}
+                                            >
+                                              {formatValue(vReal, name)}
+                                            </Typography>
+                                          </TableCell>
+                                        ) : (
+                                          <React.Fragment key={m.id}>
+                                            <TableCell
+                                              align="right"
+                                              sx={detailCellSx}
+                                            >
+                                              <Typography
+                                                variant="body2"
+                                                sx={detailTextSx}
+                                              >
+                                                {formatValue(vBud, name)}
+                                              </Typography>
+                                            </TableCell>
+                                            <TableCell
+                                              align="right"
+                                              sx={detailCellSx}
+                                            >
+                                              <Typography
+                                                variant="body2"
+                                                sx={detailTextSx}
+                                              >
+                                                {formatValue(vReal, name)}
+                                              </Typography>
+                                            </TableCell>
+                                            <TableCell
+                                              align="right"
+                                              sx={detailCellSx}
+                                            >
+                                              <Typography
+                                                component="span"
+                                                variant="body2"
+                                                sx={{
+                                                  ...detailTextSx,
+                                                  color,
+                                                  display: "flex",
+                                                  justifyContent: "flex-end",
+                                                  gap: 0.5,
+                                                }}
+                                              >
+                                                {formatValue(vVar, name)}
+                                                {arrow}
+                                              </Typography>
+                                            </TableCell>
+                                          </React.Fragment>
+                                        );
+                                      })}
                                     </TableRow>
                                   ))}
                               </React.Fragment>
