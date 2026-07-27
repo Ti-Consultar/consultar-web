@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -29,13 +29,13 @@ import {
 } from "../../../components/TableControls/MonthTableControls";
 import { StickyCell, StickyHead, StickyHeadFirstCell } from "./styles";
 import { MergedMonth, MonthRaw } from "../../../types/BalancoReclassificado";
-import { Totalizer } from "../../../types/balanco";
+import { FinancialData, Totalizer } from "../../../types/balanco";
 import { monthTranslator } from "../../../utils/formatters/monthTranslator";
 import {
-  getDataValueByNameForMonth as getDataValueByNameForMonthHelper,
-  getUniqueDataNames as getUniqueDataNamesHelper,
-  hasAnyDatas as hasAnyDatasHelper,
-} from "../accordionHelpers";
+  findClassificationByOrder,
+  findTotalizerByOrder,
+  mergeTotalizerRows,
+} from "./tableHierarchy";
 
 const HIDDEN_MONTHS_STORAGE_KEY = "balancoReclassificadoTable.hiddenMonths";
 
@@ -66,9 +66,12 @@ export const BalancoReclassificadoTable = ({
   const [openModal, setOpenModal] = useState(false);
   const [openExpandedModal, setOpenExpandedModal] = useState(false);
   const [selectedTitle, setSelectedTitle] = useState("");
-  const [selectedDetails, setSelectedDetails] = useState<any[]>([]);
+  const [selectedDetails, setSelectedDetails] = useState<FinancialData[]>([]);
+  const [expandedTotalizers, setExpandedTotalizers] = useState<Set<number>>(
+    new Set(),
+  );
   const [expandedClassifications, setExpandedClassifications] = useState<
-    Set<number>
+    Set<string>
   >(new Set());
 
   const MONTH_NUM_BY_NAME: Record<string, number> = {
@@ -126,21 +129,21 @@ export const BalancoReclassificadoTable = ({
       const entry = ensure(m);
       entry.name ||= canonicalName(m);
       entry.totalReal = m.monthPainelContabilTotalizer?.totalValue ?? null;
-      entry.realRows = m.totalizer ?? [];
+      entry.realRows = mergeTotalizerRows(m.totalizer ?? []);
     });
 
     orcado.months.forEach((m) => {
       const entry = ensure(m);
       entry.name ||= canonicalName(m);
       entry.totalBudget = m.monthPainelContabilTotalizer?.totalValue ?? null;
-      entry.budgetRows = m.totalizer ?? [];
+      entry.budgetRows = mergeTotalizerRows(m.totalizer ?? []);
     });
 
     variacao.months.forEach((m) => {
       const entry = ensure(m);
       entry.name ||= canonicalName(m);
       entry.totalVar = m.monthPainelContabilTotalizer?.totalValue ?? null;
-      entry.varRows = m.totalizer ?? [];
+      entry.varRows = mergeTotalizerRows(m.totalizer ?? []);
     });
 
     return Array.from(map.values()).sort((a, b) => {
@@ -173,13 +176,18 @@ export const BalancoReclassificadoTable = ({
     );
   }, [hiddenMonthKeys, mergedMonths]);
 
-  const hasDatasFor = (m: MergedMonth, totalizerId: number) => {
-    const real = m.realRows.find((x) => x.id === totalizerId);
+  useEffect(() => {
+    setExpandedTotalizers(new Set());
+    setExpandedClassifications(new Set());
+  }, [realizado.months, orcado.months, variacao.months, nestedMode]);
+
+  const hasDatasFor = (m: MergedMonth, totalizerTypeOrder: number) => {
+    const real = findTotalizerByOrder(m.realRows, totalizerTypeOrder);
     return !!real?.classifications?.some((c) => (c.datas?.length ?? 0) > 0);
   };
 
   const openTotalsModal = (t: Totalizer, m: MergedMonth) => {
-    const real = m.realRows.find((x) => x.id === t.id);
+    const real = findTotalizerByOrder(m.realRows, t.typeOrder);
     if (!real?.classifications?.length) return;
 
     // junta todas as datas das classificações (só abre se tiver)
@@ -200,46 +208,13 @@ export const BalancoReclassificadoTable = ({
   };
 
   const allTotalizers = useMemo(() => {
-    const map = new Map<number, Totalizer>();
-    const mergeTotalizer = (totalizer: Totalizer) => {
-      const current = map.get(totalizer.id);
-
-      if (!current) {
-        map.set(totalizer.id, {
-          ...totalizer,
-          classifications: [...(totalizer.classifications ?? [])],
-        });
-        return;
-      }
-
-      const classifications = new Map(
-        (current.classifications ?? []).map((classification) => [
-          classification.id,
-          classification,
-        ]),
-      );
-
-      (totalizer.classifications ?? []).forEach((classification) => {
-        const existing = classifications.get(classification.id);
-        if (!existing || (existing.datas?.length ?? 0) === 0) {
-          classifications.set(classification.id, classification);
-        }
-      });
-
-      map.set(totalizer.id, {
-        ...current,
-        classifications: Array.from(classifications.values()).sort(
-          (a, b) => a.typeOrder - b.typeOrder,
-        ),
-      });
-    };
-
-    mergedMonths.forEach((m) => {
-      m.realRows?.forEach(mergeTotalizer);
-      m.budgetRows?.forEach(mergeTotalizer);
-      m.varRows?.forEach(mergeTotalizer);
-    });
-    return Array.from(map.values()).sort((a, b) => a.typeOrder - b.typeOrder);
+    return mergeTotalizerRows(
+      mergedMonths.flatMap((m) => [
+        ...m.realRows,
+        ...m.budgetRows,
+        ...m.varRows,
+      ]),
+    );
   }, [mergedMonths]);
 
   const isEmpty = mergedMonths.length === 0 || allTotalizers.length === 0;
@@ -318,85 +293,161 @@ export const BalancoReclassificadoTable = ({
   };
 
   const getClassValue = (
-    m: any,
-    tot: number,
-    cls: number,
+    m: MergedMonth,
+    totalizerTypeOrder: number,
+    classificationTypeOrder: number,
     type: "bud" | "real" | "var",
   ) => {
     const list =
       type === "real" ? m.realRows : type === "bud" ? m.budgetRows : m.varRows;
-    const row = list.find((x: any) => x.id === tot);
-    const c = row?.classifications?.find((x: any) => x.id === cls);
+    const row = findTotalizerByOrder(list, totalizerTypeOrder);
+    const c = findClassificationByOrder(row, classificationTypeOrder);
     return c?.value;
   };
 
   const hasValue = (value: number | null | undefined) =>
     value !== undefined && value !== null && value !== 0;
 
-  const getRowsByTotalizer = (m: MergedMonth, totId: number) =>
+  const getRowsByTotalizer = (
+    m: MergedMonth,
+    totalizerTypeOrder: number,
+  ) =>
     [m.realRows, m.budgetRows, m.varRows]
-      .map((rows) => rows.find((x) => x.id === totId))
+      .map((rows) => findTotalizerByOrder(rows, totalizerTypeOrder))
       .filter(Boolean) as Totalizer[];
 
-  const rowHasClassificationContent = (row: Totalizer, clsId?: number) => {
+  const rowHasClassificationContent = (
+    row: Totalizer,
+    classificationTypeOrder?: number,
+  ) => {
     return (row.classifications ?? []).some((classification) => {
-      if (clsId !== undefined && classification.id !== clsId) return false;
+      if (
+        classificationTypeOrder !== undefined &&
+        classification.typeOrder !== classificationTypeOrder
+      ) {
+        return false;
+      }
       return (
         hasValue(classification.value) || (classification.datas?.length ?? 0) > 0
       );
     });
   };
 
-  const hasAnyTotalizerContent = (totId: number) => {
+  const hasAnyTotalizerContent = (totalizerTypeOrder: number) => {
     return mergedMonths.some((m) => {
-      return getRowsByTotalizer(m, totId).some(
+      return getRowsByTotalizer(m, totalizerTypeOrder).some(
         (row) => hasValue(row.totalValue) || rowHasClassificationContent(row),
       );
     });
   };
 
-  const hasAnyClassificationContent = (totId: number, clsId: number) => {
+  const hasAnyClassificationContent = (
+    totalizerTypeOrder: number,
+    classificationTypeOrder: number,
+  ) => {
     return mergedMonths.some((m) => {
-      return getRowsByTotalizer(m, totId).some((row) =>
-        rowHasClassificationContent(row, clsId),
+      return getRowsByTotalizer(m, totalizerTypeOrder).some((row) =>
+        rowHasClassificationContent(row, classificationTypeOrder),
       );
     });
   };
 
-  const toggleClassification = (classificationId: number) => {
-    setExpandedClassifications((prev) => {
+  const toggleTotalizer = (totalizerTypeOrder: number) => {
+    setExpandedTotalizers((prev) => {
       const next = new Set(prev);
-      if (next.has(classificationId)) {
-        next.delete(classificationId);
+      if (next.has(totalizerTypeOrder)) {
+        next.delete(totalizerTypeOrder);
       } else {
-        next.add(classificationId);
+        next.add(totalizerTypeOrder);
       }
       return next;
     });
   };
 
-  const hasAnyDatas = (totId: number, clsId: number) =>
-    hasAnyDatasHelper(mergedMonths, totId, clsId, (m) => m.realRows);
+  const classificationKey = (
+    totalizerTypeOrder: number,
+    classificationTypeOrder: number,
+  ) => `${totalizerTypeOrder}:${classificationTypeOrder}`;
+
+  const toggleClassification = (
+    totalizerTypeOrder: number,
+    classificationTypeOrder: number,
+  ) => {
+    const key = classificationKey(
+      totalizerTypeOrder,
+      classificationTypeOrder,
+    );
+    setExpandedClassifications((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const hasAnyDatas = (
+    totalizerTypeOrder: number,
+    classificationTypeOrder: number,
+  ) =>
+    mergedMonths.some((month) => {
+      const totalizer = findTotalizerByOrder(
+        month.realRows,
+        totalizerTypeOrder,
+      );
+      const classification = findClassificationByOrder(
+        totalizer,
+        classificationTypeOrder,
+      );
+      return (classification?.datas?.length ?? 0) > 0;
+    });
 
   const getUniqueDataNames = (
-    totId: number,
-    clsId: number,
-  ): Array<{ name: string; costCenter?: string }> =>
-    getUniqueDataNamesHelper(mergedMonths, totId, clsId, (m) => m.realRows);
+    totalizerTypeOrder: number,
+    classificationTypeOrder: number,
+  ): Array<{ name: string; costCenter?: string }> => {
+    const seen = new Map<string, { name: string; costCenter?: string }>();
+
+    mergedMonths.forEach((month) => {
+      const totalizer = findTotalizerByOrder(
+        month.realRows,
+        totalizerTypeOrder,
+      );
+      const classification = findClassificationByOrder(
+        totalizer,
+        classificationTypeOrder,
+      );
+      classification?.datas?.forEach((data) => {
+        if (!seen.has(data.name)) {
+          seen.set(data.name, {
+            name: data.name,
+            costCenter: data.costCenter,
+          });
+        }
+      });
+    });
+
+    return Array.from(seen.values());
+  };
 
   const getDataValueByNameForMonth = (
     month: MergedMonth,
-    totId: number,
-    clsId: number,
+    totalizerTypeOrder: number,
+    classificationTypeOrder: number,
     dataName: string,
-  ): number | undefined =>
-    getDataValueByNameForMonthHelper(
-      month,
-      totId,
-      clsId,
-      dataName,
-      (m) => m.realRows,
+  ): number | undefined => {
+    const totalizer = findTotalizerByOrder(
+      month.realRows,
+      totalizerTypeOrder,
     );
+    const classification = findClassificationByOrder(
+      totalizer,
+      classificationTypeOrder,
+    );
+    return classification?.datas?.find((data) => data.name === dataName)?.value;
+  };
 
   const getHighlightCellSx = (hl: boolean) =>
     hl
@@ -509,15 +560,27 @@ export const BalancoReclassificadoTable = ({
 
             <TableBody>
               {allTotalizers
-                .filter((t) => hasAnyTotalizerContent(t.id))
+                .filter((t) => hasAnyTotalizerContent(t.typeOrder))
                 .map((t) => {
                   const hl = !!highlightRows[t.id];
                   const rowBg = hl
                     ? theme.palette.grey[300]
                     : theme.palette.background.paper;
+                  const visibleClassifications = (
+                    t.classifications ?? []
+                  ).filter((classification) =>
+                    hasAnyClassificationContent(
+                      t.typeOrder,
+                      classification.typeOrder,
+                    ),
+                  );
+                  const canExpandTotalizer = visibleClassifications.length > 0;
+                  const isTotalizerExpanded = expandedTotalizers.has(
+                    t.typeOrder,
+                  );
 
                   return (
-                    <React.Fragment key={t.id}>
+                    <React.Fragment key={t.typeOrder}>
                       {/* Linha de totalizador */}
                       <TableRow
                         sx={{
@@ -540,40 +603,81 @@ export const BalancoReclassificadoTable = ({
                             },
                           }}
                         >
-                          <Tooltip title={t.name}>
-                            <span
-                              style={{
-                                display: "inline-block",
-                                maxWidth: 210,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {t.name}
-                            </span>
-                          </Tooltip>
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            gap={0.5}
+                            sx={{ minWidth: 0 }}
+                          >
+                            {canExpandTotalizer ? (
+                              <IconButton
+                                size="small"
+                                aria-label={
+                                  isTotalizerExpanded
+                                    ? `Recolher classificações de ${t.name}`
+                                    : `Expandir classificações de ${t.name}`
+                                }
+                                onClick={() => toggleTotalizer(t.typeOrder)}
+                                sx={{
+                                  flexShrink: 0,
+                                  width: 20,
+                                  height: 20,
+                                  border: `1px solid ${theme.palette.divider}`,
+                                  borderRadius: "4px",
+                                  p: 0,
+                                  color: theme.palette.text.secondary,
+                                  "&:hover": {
+                                    backgroundColor: theme.palette.action.hover,
+                                  },
+                                }}
+                              >
+                                {isTotalizerExpanded ? (
+                                  <RemoveIcon sx={{ fontSize: 14 }} />
+                                ) : (
+                                  <AddIcon sx={{ fontSize: 14 }} />
+                                )}
+                              </IconButton>
+                            ) : (
+                              <Box sx={{ width: 20, flexShrink: 0 }} />
+                            )}
+                            <Tooltip title={t.name}>
+                              <span
+                                style={{
+                                  display: "inline-block",
+                                  maxWidth: 210,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {t.name}
+                              </span>
+                            </Tooltip>
+                          </Box>
                         </TableCell>
 
                         {visibleMonths.map((m) =>
                           !showBudgetColumns ? (
                             <TableCell
-                              key={`${m.id}-real-${t.id}`}
+                              key={`${m.id}-real-${t.typeOrder}`}
                               align="right"
                               sx={{
-                                ...(hasDatasFor(m, t.id) ? dataCellHover : {}),
+                                ...(hasDatasFor(m, t.typeOrder)
+                                  ? dataCellHover
+                                  : {}),
                                 border: `1px solid ${theme.palette.divider}`,
                                 ...getHighlightCellSx(hl),
-                                cursor: hasDatasFor(m, t.id)
+                                cursor: hasDatasFor(m, t.typeOrder)
                                   ? "pointer"
                                   : "default",
                               }}
                               onClick={() =>
-                                hasDatasFor(m, t.id) && openTotalsModal(t, m)
+                                hasDatasFor(m, t.typeOrder) &&
+                                openTotalsModal(t, m)
                               }
                             >
                               {formatValue(
-                                m.realRows.find((x) => x.id === t.id)
+                                findTotalizerByOrder(m.realRows, t.typeOrder)
                                   ?.totalValue,
                                 t.name,
                               )}
@@ -589,8 +693,10 @@ export const BalancoReclassificadoTable = ({
                                 }}
                               >
                                 {formatValue(
-                                  m.budgetRows.find((x) => x.id === t.id)
-                                    ?.totalValue,
+                                  findTotalizerByOrder(
+                                    m.budgetRows,
+                                    t.typeOrder,
+                                  )?.totalValue,
                                   t.name,
                                 )}
                               </TableCell>
@@ -604,7 +710,7 @@ export const BalancoReclassificadoTable = ({
                                 }}
                               >
                                 {formatValue(
-                                  m.realRows.find((x) => x.id === t.id)
+                                  findTotalizerByOrder(m.realRows, t.typeOrder)
                                     ?.totalValue,
                                   t.name,
                                 )}
@@ -619,15 +725,20 @@ export const BalancoReclassificadoTable = ({
                                 }}
                               >
                                 {(() => {
-                                  const v = m.varRows.find(
-                                    (x) => x.id === t.id,
+                                  const v = findTotalizerByOrder(
+                                    m.varRows,
+                                    t.typeOrder,
                                   )?.totalValue;
                                   const real =
-                                    m.realRows.find((x) => x.id === t.id)
-                                      ?.totalValue ?? null;
+                                    findTotalizerByOrder(
+                                      m.realRows,
+                                      t.typeOrder,
+                                    )?.totalValue ?? null;
                                   const budget =
-                                    m.budgetRows.find((x) => x.id === t.id)
-                                      ?.totalValue ?? null;
+                                    findTotalizerByOrder(
+                                      m.budgetRows,
+                                      t.typeOrder,
+                                    )?.totalValue ?? null;
                                   const { arrow, color } = getVarVisual(
                                     v,
                                     t.name,
@@ -655,17 +766,24 @@ export const BalancoReclassificadoTable = ({
                       </TableRow>
 
                       {/* Classificações */}
-                      {(t.classifications ?? [])
-                        .filter((c) => hasAnyClassificationContent(t.id, c.id))
-                        .map((c) => {
-                            const isExpanded = expandedClassifications.has(c.id);
-                            const canExpand = hasAnyDatas(t.id, c.id);
+                      {isTotalizerExpanded &&
+                        visibleClassifications.map((c) => {
+                            const key = classificationKey(
+                              t.typeOrder,
+                              c.typeOrder,
+                            );
+                            const isExpanded =
+                              expandedClassifications.has(key);
+                            const canExpand = hasAnyDatas(
+                              t.typeOrder,
+                              c.typeOrder,
+                            );
                             const uniqueDataNames = isExpanded
-                              ? getUniqueDataNames(t.id, c.id)
+                              ? getUniqueDataNames(t.typeOrder, c.typeOrder)
                               : [];
 
                             return (
-                              <React.Fragment key={c.id}>
+                              <React.Fragment key={c.typeOrder}>
                                 <TableRow
                                   sx={{
                                     borderBottom: `1px solid ${theme.palette.divider}`,
@@ -687,8 +805,16 @@ export const BalancoReclassificadoTable = ({
                                       {canExpand ? (
                                         <IconButton
                                           size="small"
+                                          aria-label={
+                                            isExpanded
+                                              ? `Recolher detalhes de ${c.name}`
+                                              : `Expandir detalhes de ${c.name}`
+                                          }
                                           onClick={() =>
-                                            toggleClassification(c.id)
+                                            toggleClassification(
+                                              t.typeOrder,
+                                              c.typeOrder,
+                                            )
                                           }
                                           sx={{
                                             flexShrink: 0,
@@ -732,20 +858,20 @@ export const BalancoReclassificadoTable = ({
                                   {visibleMonths.map((m) => {
                                     const vBud = getClassValue(
                                       m,
-                                      t.id,
-                                      c.id,
+                                      t.typeOrder,
+                                      c.typeOrder,
                                       "bud",
                                     );
                                     const vReal = getClassValue(
                                       m,
-                                      t.id,
-                                      c.id,
+                                      t.typeOrder,
+                                      c.typeOrder,
                                       "real",
                                     );
                                     const vVar = getClassValue(
                                       m,
-                                      t.id,
-                                      c.id,
+                                      t.typeOrder,
+                                      c.typeOrder,
                                       "var",
                                     );
                                     const { arrow, color } = getVarVisual(
@@ -809,7 +935,7 @@ export const BalancoReclassificadoTable = ({
                                 {isExpanded &&
                                   uniqueDataNames.map(({ name, costCenter }) => (
                                     <TableRow
-                                      key={`data-${c.id}-${name}`}
+                                      key={`data-${t.typeOrder}-${c.typeOrder}-${name}`}
                                       sx={{
                                         backgroundColor:
                                           theme.palette.action.selected,
@@ -849,7 +975,7 @@ export const BalancoReclassificadoTable = ({
                                       </TableCell>
                                       {visibleMonths.map((m) => (
                                         <TableCell
-                                          key={`data-${m.id}-${c.id}-${name}`}
+                                          key={`data-${m.id}-${t.typeOrder}-${c.typeOrder}-${name}`}
                                           align="right"
                                           sx={{
                                             border: `1px solid ${theme.palette.divider}`,
@@ -865,8 +991,8 @@ export const BalancoReclassificadoTable = ({
                                             {formatValue(
                                               getDataValueByNameForMonth(
                                                 m,
-                                                t.id,
-                                                c.id,
+                                                t.typeOrder,
+                                                c.typeOrder,
                                                 name,
                                               ),
                                               name,
