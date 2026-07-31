@@ -22,6 +22,20 @@ import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import YearPicker from "../../../components/Inputs/YearPicker";
 import { useYear } from "../../../contexts/YearContext";
+import { DreV2Table } from "../DreV2/table";
+import { getDreV2 } from "../../../services/apis/routes/dreV2.service";
+import { DreV2Data } from "../../../types/dreV2";
+
+const EMPTY_DRE_V2_DATA: DreV2Data = {
+  periods: [],
+  scenarios: [],
+  rows: [],
+};
+
+interface FinancialExportRow {
+  name: string;
+  values: Record<string | number, number | string | undefined>;
+}
 
 const BalancoReclassificado = () => {
   useBreadcrumb("financial-statements");
@@ -32,6 +46,7 @@ const BalancoReclassificado = () => {
   const [realizadoMonths, setRealizadoMonths] = useState<Month[]>([]);
   const [orcadoMonths, setOrcadoMonths] = useState<Month[]>([]);
   const [variacaoMonths, setVariacaoMonths] = useState<Month[]>([]);
+  const [dreV2Data, setDreV2Data] = useState<DreV2Data>(EMPTY_DRE_V2_DATA);
   const [exportOpen, setExportMenuOpen] = useState(false);
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
@@ -121,15 +136,25 @@ const BalancoReclassificado = () => {
   }, []);
 
   const handleSearch = async (explicitTab?: number): Promise<void> => {
+    const tab = explicitTab ?? tabValue;
+
     try {
-      setLoading(true, "Buscando Balanço Contábil");
+      setLoading(
+        true,
+        tab === 3 ? "Buscando DRE" : "Buscando Balanço Contábil",
+      );
 
       if (!accountPlanId) {
         toast.warning("Plano de contas não encontrado");
         return;
       }
 
-      const tab = explicitTab ?? tabValue;
+      if (tab === 3) {
+        const response = await getDreV2(accountPlanId, year);
+        setDreV2Data(response.data ?? EMPTY_DRE_V2_DATA);
+        return;
+      }
+
       const response = await getBalancoReclassificadoVariation(
         accountPlanId,
         year,
@@ -142,6 +167,7 @@ const BalancoReclassificado = () => {
       setVariacaoMonths(data.variacao?.months ?? []);
     } catch (err) {
       console.error(err);
+      if (tab === 3) setDreV2Data(EMPTY_DRE_V2_DATA);
       toast.error("Ocorreu um erro ao tentar buscar os dados");
     } finally {
       setLoading(false);
@@ -160,17 +186,22 @@ const BalancoReclassificado = () => {
 
     // Colunas: "Conta / Classificação" + cada mês
     const columns = [
-      { label: "Conta / Classificação", accessor: (row: any) => row.name },
+      {
+        label: "Conta / Classificação",
+        accessor: (row: FinancialExportRow) => row.name,
+      },
       ...months.map((m) => ({
         label: monthTranslator[m.name] ?? m.name,
-        accessor: (row: any) => row.values[m.id] ?? "-",
+        accessor: (row: FinancialExportRow) => row.values[m.id] ?? "-",
       })),
     ];
     // Linhas
-    const rows: any[] = [];
+    const rows: FinancialExportRow[] = [];
 
     const addRow = (name: string, values: Record<number, number | string>) => {
-      rows.push({ name, values });
+      const row: FinancialExportRow = { name, values };
+      rows.push(row);
+      return row;
     };
 
     // Itera os meses
@@ -180,8 +211,7 @@ const BalancoReclassificado = () => {
         // Linha do totalizador
         let existing = rows.find((r) => r.name === tot.name);
         if (!existing) {
-          addRow(tot.name, {});
-          existing = rows.find((r) => r.name === tot.name);
+          existing = addRow(tot.name, {});
         }
         existing.values[month.id] = tot.totalValue;
 
@@ -189,8 +219,7 @@ const BalancoReclassificado = () => {
         tot.classifications?.forEach((cls) => {
           let existingCls = rows.find((r) => r.name === `   ${cls.name}`);
           if (!existingCls) {
-            addRow(`   ${cls.name}`, {});
-            existingCls = rows.find((r) => r.name === `   ${cls.name}`);
+            existingCls = addRow(`   ${cls.name}`, {});
           }
           existingCls.values[month.id] = cls.value;
         });
@@ -202,9 +231,9 @@ const BalancoReclassificado = () => {
           (r) => r.name === month.monthPainelContabilTotalizer.name,
         );
         if (!existingTotGeral) {
-          addRow(month.monthPainelContabilTotalizer.name, {});
-          existingTotGeral = rows.find(
-            (r) => r.name === month.monthPainelContabilTotalizer.name,
+          existingTotGeral = addRow(
+            month.monthPainelContabilTotalizer.name,
+            {},
           );
         }
         existingTotGeral.values[month.id] =
@@ -215,13 +244,43 @@ const BalancoReclassificado = () => {
     return { columns, rows };
   };
 
+  const buildDreV2ExportData = () => {
+    const periods = [...dreV2Data.periods].sort(
+      (a, b) => a.displayOrder - b.displayOrder,
+    );
+    const columns = [
+      {
+        label: "Conta / Classificação",
+        accessor: (row: FinancialExportRow) => row.name,
+      },
+      ...periods.map((period) => ({
+        label: period.label,
+        accessor: (row: FinancialExportRow) =>
+          row.values[period.key] ?? "-",
+      })),
+    ];
+    const rows = [...dreV2Data.rows]
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((row) => ({
+        name: `${"   ".repeat(row.level)}${row.name}`,
+        values: row.values.realizado ?? {},
+      }));
+
+    return { columns, rows };
+  };
+
   const handleExport = (format: string) => {
-    if (!realizadoMonths.length) {
+    const hasData =
+      tabValue === 3 ? dreV2Data.rows.length > 0 : realizadoMonths.length > 0;
+    if (!hasData) {
       toast.warning("Nenhum dado para exportar");
       return;
     }
 
-    const { columns, rows } = buildExportData(realizadoMonths);
+    const { columns, rows } =
+      tabValue === 3
+        ? buildDreV2ExportData()
+        : buildExportData(realizadoMonths);
 
     switch (format) {
       case "PDF":
@@ -265,7 +324,7 @@ const BalancoReclassificado = () => {
   return (
     <MainTemplate>
       <MainContainer>
-        <Title>Demonstrações Financeiras</Title>
+        <Title>Demonstrações Contábeis</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
           <Box
             sx={{
@@ -310,7 +369,7 @@ const BalancoReclassificado = () => {
                 }}
               />
               <Tab
-                label="Demonstrações Financeiras"
+                label="DRE"
                 value={3}
                 sx={{
                   color: "var(--neutral-700)",
@@ -362,15 +421,23 @@ const BalancoReclassificado = () => {
           </Box>
 
           <Container>
-            <BalancoReclassificadoTable
-              realizado={{ months: realizadoMonths }}
-              orcado={{ months: orcadoMonths }}
-              variacao={{ months: variacaoMonths }}
-              showBudgetColumns={showBudgetColumns}
-              highlightRows={highlightRows}
-              nestedMode={tabValue === 3 ? "DRE" : "NONE"}
-              metricNature={metricNature}
-            />
+            {tabValue === 3 ? (
+              <DreV2Table
+                data={dreV2Data}
+                showBudgetColumns={showBudgetColumns}
+                metricNature={metricNature}
+              />
+            ) : (
+              <BalancoReclassificadoTable
+                realizado={{ months: realizadoMonths }}
+                orcado={{ months: orcadoMonths }}
+                variacao={{ months: variacaoMonths }}
+                showBudgetColumns={showBudgetColumns}
+                highlightRows={highlightRows}
+                nestedMode="NONE"
+                metricNature={metricNature}
+              />
+            )}
           </Container>
         </Paper>
       </MainContainer>

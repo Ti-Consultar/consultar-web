@@ -85,7 +85,7 @@ export const HoverableTableRow = styled(TableRow) <{ isSection?: boolean }>`
 export const StickyHead = {
   position: "sticky" as const,
   top: 0,
-  backgroundColor: theme.palette.grey[200],
+  backgroundColor: theme.palette.grey[100],
   zIndex: Z.head,
   fontWeight: "bold",
 };
