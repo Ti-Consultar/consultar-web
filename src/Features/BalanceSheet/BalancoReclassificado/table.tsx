@@ -36,6 +36,12 @@ import {
   findTotalizerByOrder,
   mergeTotalizerRows,
 } from "./tableHierarchy";
+import {
+  DEFAULT_DRE_TOTALIZER_PRESENTATION,
+  DRE_CLASSIFIABLE_PRESENTATION,
+  getDreRowPresentation,
+  sortDreTotalizers,
+} from "./dreRowPresentation";
 
 const HIDDEN_MONTHS_STORAGE_KEY = "balancoReclassificadoTable.hiddenMonths";
 
@@ -216,6 +222,14 @@ export const BalancoReclassificadoTable = ({
       ]),
     );
   }, [mergedMonths]);
+
+  const displayedTotalizers = useMemo(
+    () =>
+      nestedMode === "DRE"
+        ? sortDreTotalizers(allTotalizers)
+        : allTotalizers,
+    [allTotalizers, nestedMode],
+  );
 
   const isEmpty = mergedMonths.length === 0 || allTotalizers.length === 0;
   const showEmptyState = isEmpty || visibleMonths.length === 0;
@@ -467,14 +481,6 @@ export const BalancoReclassificadoTable = ({
     )?.value;
   };
 
-  const getHighlightCellSx = (hl: boolean) =>
-    hl
-      ? {
-          borderTop: `2px solid ${theme.palette.grey[500]}`,
-          borderBottom: `2px solid ${theme.palette.grey[500]}`,
-        }
-      : {};
-
   return (
     <>
       <MonthTableControls
@@ -577,13 +583,21 @@ export const BalancoReclassificadoTable = ({
             </TableHead>
 
             <TableBody>
-              {allTotalizers
+              {displayedTotalizers
                 .filter((t) => hasAnyTotalizerContent(t.typeOrder))
                 .map((t) => {
-                  const hl = !!highlightRows[t.id];
-                  const rowBg = hl
-                    ? theme.palette.grey[300]
-                    : theme.palette.background.paper;
+                  const drePresentation =
+                    nestedMode === "DRE"
+                      ? (getDreRowPresentation(t.name) ??
+                        DEFAULT_DRE_TOTALIZER_PRESENTATION)
+                      : undefined;
+                  const hl =
+                    nestedMode !== "DRE" && !!highlightRows[t.id];
+                  const rowBg =
+                    drePresentation?.backgroundColor ??
+                    (hl ? "#E8F1FF" : "#FAFCFE");
+                  const displayName =
+                    drePresentation?.displayName ?? t.name;
                   const visibleClassifications = (
                     t.classifications ?? []
                   ).filter((classification) =>
@@ -592,10 +606,12 @@ export const BalancoReclassificadoTable = ({
                       classification.typeOrder,
                     ),
                   );
-                  const canExpandTotalizer = visibleClassifications.length > 0;
-                  const isTotalizerExpanded = expandedTotalizers.has(
-                    t.typeOrder,
-                  );
+                  const canExpandTotalizer =
+                    visibleClassifications.length > 0 &&
+                    (drePresentation?.expandable ?? true);
+                  const isTotalizerExpanded =
+                    canExpandTotalizer &&
+                    expandedTotalizers.has(t.typeOrder);
 
                   return (
                     <React.Fragment key={t.typeOrder}>
@@ -604,20 +620,27 @@ export const BalancoReclassificadoTable = ({
                         sx={{
                           background: rowBg,
                           borderBottom: `1px solid ${theme.palette.divider}`,
+                          "& > .MuiTableCell-root": {
+                            backgroundColor: rowBg,
+                            fontWeight:
+                              drePresentation?.fontWeight ?? 700,
+                            fontStyle:
+                              drePresentation?.fontStyle ?? "normal",
+                          },
                         }}
                       >
                         <TableCell
                           sx={{
                             ...StickyCell,
-                            fontWeight: hl ? "bold" : 400,
+                            fontWeight:
+                              drePresentation?.fontWeight ?? "bold",
+                            fontStyle:
+                              drePresentation?.fontStyle ?? "normal",
                             color: hl ? theme.palette.text.primary : "inherit",
                             background: rowBg,
                             border: `1px solid ${theme.palette.divider}`,
-                            ...getHighlightCellSx(hl),
                             "&:hover": {
-                              backgroundColor: hl
-                                ? theme.palette.grey[400]
-                                : theme.palette.grey[200],
+                              backgroundColor: theme.palette.grey[200],
                             },
                           }}
                         >
@@ -625,7 +648,10 @@ export const BalancoReclassificadoTable = ({
                             display="flex"
                             alignItems="center"
                             gap={0.5}
-                            sx={{ minWidth: 0 }}
+                            sx={{
+                              minWidth: 0,
+                              ml: drePresentation?.marginLeft ?? 0,
+                            }}
                           >
                             {canExpandTotalizer ? (
                               <IconButton
@@ -656,19 +682,28 @@ export const BalancoReclassificadoTable = ({
                                 )}
                               </IconButton>
                             ) : (
-                              <Box sx={{ width: 20, flexShrink: 0 }} />
+                              <Box
+                                sx={{
+                                  width:
+                                    (nestedMode === "DRE" &&
+                                      drePresentation?.role !== "TOTALIZER") ||
+                                    hl
+                                      ? 0
+                                      : 20,
+                                  flexShrink: 0,
+                                }}
+                              />
                             )}
-                            <Tooltip title={t.name}>
+                            <Tooltip title={displayName}>
                               <span
                                 style={{
                                   display: "inline-block",
-                                  maxWidth: 210,
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",
                                   whiteSpace: "nowrap",
                                 }}
                               >
-                                {t.name}
+                                {displayName}
                               </span>
                             </Tooltip>
                           </Box>
@@ -680,16 +715,19 @@ export const BalancoReclassificadoTable = ({
                               key={`${m.id}-real-${t.typeOrder}`}
                               align="right"
                               sx={{
-                                ...(hasDatasFor(m, t.typeOrder)
+                                ...(canExpandTotalizer &&
+                                hasDatasFor(m, t.typeOrder)
                                   ? dataCellHover
                                   : {}),
                                 border: `1px solid ${theme.palette.divider}`,
-                                ...getHighlightCellSx(hl),
-                                cursor: hasDatasFor(m, t.typeOrder)
+                                cursor:
+                                  canExpandTotalizer &&
+                                  hasDatasFor(m, t.typeOrder)
                                   ? "pointer"
                                   : "default",
                               }}
                               onClick={() =>
+                                canExpandTotalizer &&
                                 hasDatasFor(m, t.typeOrder) &&
                                 openTotalsModal(t, m)
                               }
@@ -697,7 +735,7 @@ export const BalancoReclassificadoTable = ({
                               {formatValue(
                                 findTotalizerByOrder(m.realRows, t.typeOrder)
                                   ?.totalValue,
-                                t.name,
+                                displayName,
                               )}
                             </TableCell>
                           ) : (
@@ -707,7 +745,6 @@ export const BalancoReclassificadoTable = ({
                                 sx={{
                                   ...dataCellHover,
                                   border: `1px solid ${theme.palette.divider}`,
-                                  ...getHighlightCellSx(hl),
                                 }}
                               >
                                 {formatValue(
@@ -715,7 +752,7 @@ export const BalancoReclassificadoTable = ({
                                     m.budgetRows,
                                     t.typeOrder,
                                   )?.totalValue,
-                                  t.name,
+                                  displayName,
                                 )}
                               </TableCell>
 
@@ -724,13 +761,12 @@ export const BalancoReclassificadoTable = ({
                                 sx={{
                                   ...dataCellHover,
                                   border: `1px solid ${theme.palette.divider}`,
-                                  ...getHighlightCellSx(hl),
                                 }}
                               >
                                 {formatValue(
                                   findTotalizerByOrder(m.realRows, t.typeOrder)
                                     ?.totalValue,
-                                  t.name,
+                                  displayName,
                                 )}
                               </TableCell>
 
@@ -739,7 +775,6 @@ export const BalancoReclassificadoTable = ({
                                 sx={{
                                   ...dataCellHover,
                                   border: `1px solid ${theme.palette.divider}`,
-                                  ...getHighlightCellSx(hl),
                                 }}
                               >
                                 {(() => {
@@ -759,7 +794,7 @@ export const BalancoReclassificadoTable = ({
                                     )?.totalValue ?? null;
                                   const { arrow, color } = getVarVisual(
                                     v,
-                                    t.name,
+                                    displayName,
                                     real,
                                     budget,
                                   );
@@ -772,7 +807,7 @@ export const BalancoReclassificadoTable = ({
                                         gap: 4,
                                       }}
                                     >
-                                      {formatValue(v, t.name)}
+                                      {formatValue(v, displayName)}
                                       {arrow}
                                     </span>
                                   );
@@ -805,12 +840,19 @@ export const BalancoReclassificadoTable = ({
                                 <TableRow
                                   sx={{
                                     borderBottom: `1px solid ${theme.palette.divider}`,
+                                    backgroundColor:
+                                      DRE_CLASSIFIABLE_PRESENTATION.backgroundColor,
+                                    "& > .MuiTableCell-root": {
+                                      backgroundColor:
+                                        DRE_CLASSIFIABLE_PRESENTATION.backgroundColor,
+                                    },
                                   }}
                                 >
                                   <TableCell
                                     sx={{
                                       ...StickyCell,
-                                      pl: 4,
+                                      backgroundColor:
+                                        DRE_CLASSIFIABLE_PRESENTATION.backgroundColor,
                                       border: `1px solid ${theme.palette.divider}`,
                                     }}
                                   >
@@ -818,7 +860,10 @@ export const BalancoReclassificadoTable = ({
                                       display="flex"
                                       alignItems="center"
                                       gap={0.5}
-                                      sx={{ minWidth: 0 }}
+                                      sx={{
+                                        minWidth: 0,
+                                        ml: DRE_CLASSIFIABLE_PRESENTATION.marginLeft,
+                                      }}
                                     >
                                       {canExpand ? (
                                         <IconButton
@@ -861,7 +906,6 @@ export const BalancoReclassificadoTable = ({
                                         <span
                                           style={{
                                             display: "inline-block",
-                                            maxWidth: 210,
                                             overflow: "hidden",
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
@@ -955,8 +999,10 @@ export const BalancoReclassificadoTable = ({
                                     <TableRow
                                       key={`data-${t.typeOrder}-${c.typeOrder}-${name}-${costCenter ?? ""}`}
                                       sx={{
-                                        backgroundColor:
-                                          theme.palette.action.selected,
+                                        backgroundColor: "#FFFFFF",
+                                        "& > .MuiTableCell-root": {
+                                          backgroundColor: "#FFFFFF",
+                                        },
                                       }}
                                     >
                                       <TableCell
@@ -964,13 +1010,11 @@ export const BalancoReclassificadoTable = ({
                                         scope="row"
                                         sx={{
                                           ...StickyCell,
-                                          backgroundColor:
-                                            theme.palette.action.selected,
+                                          backgroundColor: "#FFFFFF",
                                           whiteSpace: "nowrap",
                                           overflow: "hidden",
                                           textOverflow: "ellipsis",
                                           maxWidth: 220,
-                                          pl: 5,
                                           border: `1px solid ${theme.palette.divider}`,
                                         }}
                                       >
@@ -985,6 +1029,7 @@ export const BalancoReclassificadoTable = ({
                                             sx={{
                                               color: theme.palette.text.secondary,
                                               fontSize: "0.75rem",
+                                              ml: 3,
                                             }}
                                           >
                                             {name}
@@ -1104,12 +1149,19 @@ export const BalancoReclassificadoTable = ({
 
             {visibleMonths[0]?.totalReal !== null && (
               <TableBody>
-                <TableRow sx={{ backgroundColor: theme.palette.grey[200] }}>
+                <TableRow
+                  sx={{
+                    backgroundColor: "#E8F1FF",
+                    "& > .MuiTableCell-root": {
+                      backgroundColor: "#E8F1FF",
+                    },
+                  }}
+                >
                   <TableCell
                     sx={{
                       ...StickyCell,
                       fontWeight: "bold",
-                      backgroundColor: theme.palette.grey[200],
+                      backgroundColor: "#E8F1FF",
                     }}
                   >
                     {realizado.months[0]?.monthPainelContabilTotalizer?.name ??
