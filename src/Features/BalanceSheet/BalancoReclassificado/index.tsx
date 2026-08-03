@@ -1,30 +1,50 @@
-import { useEffect, useState, useMemo } from "react";
-import { MainTemplate } from "../../../components/AppLayout";
-import { Container, MainContainer, Title } from "./styles";
-import { Box, Tabs, Tab, Paper } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Paper,
+  Tab,
+  Tabs,
+} from "@mui/material";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate, useParams } from "react-router";
-import { useLoading } from "../../../contexts/LoadingProvider";
-import { getBalancoReclassificadoVariation } from "../../../services/apis/routes/classification.service";
 import { toast } from "sonner";
-import { Month } from "../../../types/balanco";
-import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
-import { ExportDialog } from "../../../components/ExportModal";
-import { useExportUtils } from "../../../utils/hooks/useExportUtils";
-import { monthTranslator } from "../../../utils/formatters/monthTranslator";
+import { MainTemplate } from "../../../components/AppLayout";
 import { ExportButton } from "../../../components/Button/ExportButton";
 import { BudgetToggleButton } from "../../../components/Button/TableOptions";
-import { metricNature } from "./metricNature";
-import { BalancoReclassificadoTable } from "./table";
+import { ExportDialog } from "../../../components/ExportModal";
 import CompanyNavigationDropdown from "../../../components/Inputs/CompanyNavigationDropdown";
-import { CompanyResponse } from "../../../types/companyDropdown";
+import { TableValueVisualization } from "../../../components/Inputs/TableValueVisualization";
+import YearPicker from "../../../components/Inputs/YearPicker";
+import { useLoading } from "../../../contexts/LoadingProvider";
+import { useYear } from "../../../contexts/YearContext";
 import { getDropdownNavigation } from "../../../services/apis/routes/companies.service";
+import { getDreV2 } from "../../../services/apis/routes/dreV2.service";
+import { getReclassifiedBalanceSheetV2 } from "../../../services/apis/routes/reclassifiedBalanceSheetV2.service";
+import type { CompanyResponse } from "../../../types/companyDropdown";
+import type { DreV2Data } from "../../../types/dreV2";
+import type {
+  ReclassifiedBalanceSheetData,
+  ReclassifiedBalanceSheetRow,
+} from "../../../types/reclassifiedBalanceSheetV2";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
-import YearPicker from "../../../components/Inputs/YearPicker";
-import { useYear } from "../../../contexts/YearContext";
+import { useExportUtils } from "../../../utils/hooks/useExportUtils";
 import { DreV2Table } from "../DreV2/table";
-import { getDreV2 } from "../../../services/apis/routes/dreV2.service";
-import { DreV2Data } from "../../../types/dreV2";
+import { metricNature } from "./metricNature";
+import { ReclassifiedBalanceSheetTables } from "./ReclassifiedBalanceSheetTables";
+import {
+  EMPTY_RECLASSIFIED_BALANCE_SHEET_DATA,
+  FINANCIAL_STATEMENT_TABS,
+  deriveReclassifiedRows,
+  getScenarioColumns,
+  sortByDisplayOrder,
+} from "./reclassifiedBalanceSheet.utils";
+import { Container, MainContainer, Title } from "./styles";
 
 const EMPTY_DRE_V2_DATA: DreV2Data = {
   periods: [],
@@ -34,7 +54,7 @@ const EMPTY_DRE_V2_DATA: DreV2Data = {
 
 interface FinancialExportRow {
   name: string;
-  values: Record<string | number, number | string | undefined>;
+  values: Record<string, number | string | undefined>;
 }
 
 const BalancoReclassificado = () => {
@@ -43,235 +63,216 @@ const BalancoReclassificado = () => {
   const [tabValue, setTabValue] = useState<number>(1);
   const { year, setYear } = useYear();
   const { setLoading } = useLoading();
-  const [realizadoMonths, setRealizadoMonths] = useState<Month[]>([]);
-  const [orcadoMonths, setOrcadoMonths] = useState<Month[]>([]);
-  const [variacaoMonths, setVariacaoMonths] = useState<Month[]>([]);
+  const [reclassifiedData, setReclassifiedData] =
+    useState<ReclassifiedBalanceSheetData>(
+      EMPTY_RECLASSIFIED_BALANCE_SHEET_DATA,
+    );
   const [dreV2Data, setDreV2Data] = useState<DreV2Data>(EMPTY_DRE_V2_DATA);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [exportOpen, setExportMenuOpen] = useState(false);
+  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
+  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
+    null,
+  );
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
     subCompanyId?: string;
   }>();
-  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
-  const [showBudgetColumns, setShowBudgetColumns] = useState(false);
   const navigate = useNavigate();
-  const [dropdownData, setDropdownData] = useState<CompanyResponse | null>(
-    null,
-  );
+  const { exportPDF, exportCSV, exportExcel, exportPPTX } = useExportUtils();
   const { accountPlanId, entityName } = useAccountPlanId({
     groupId,
     companyId: companyid,
-    subCompanyId: subCompanyId,
+    subCompanyId,
   });
+  const requestSequence = useRef(0);
+  const setLoadingRef = useRef(setLoading);
 
-  const highlightRows = useMemo(() => {
-    const ids: Record<number, boolean> = {};
+  const periods = useMemo(
+    () => sortByDisplayOrder(reclassifiedData.periods ?? []),
+    [reclassifiedData.periods],
+  );
+  const scenarios = useMemo(
+    () => sortByDisplayOrder(reclassifiedData.scenarios ?? []),
+    [reclassifiedData.scenarios],
+  );
+  const { assetRows, liabilityRows, balanceDifferenceRow } = useMemo(
+    () => deriveReclassifiedRows(reclassifiedData.rows ?? []),
+    [reclassifiedData.rows],
+  );
 
-    const nomesParaDestacar = [
-      "Ativo Financeiro",
-      "Ativo Operacional",
-      "Ativo Não Circulante",
-      "Ativo Fixo",
-      "Passivo Financeiro",
-      "Passivo Operacional",
-      "Outros Ativos Operacionais Total",
-      "Passivo Não Circulante",
-      "Outros Passivos Operacionais Total",
-      "Patrimônio Liquido",
-      "Receita Operacional Bruta",
-      "(-) Deduções da Receita Bruta",
-      "(=) Receita Líquida de Vendas",
-      "Lucro Bruto",
-      "Margem Bruta %",
-      "Margem Contribuição",
-      "Margem Contribuição %",
-      "(-) Despesas Operacionais",
-      "Lucro Operacional",
-      "Margem Operacional %",
-      "Lucro Antes do Resultado Financeiro",
-      "Margem LAJIR %",
-      "Resultado do Exercício Antes do Imposto",
-      "Margem LAIR %",
-      "Lucro Líquido do Periodo",
-      "Margem Líquida %",
-      "EBITDA",
-      "Margem EBITDA %",
-      "NOPAT",
-      "Margem NOPAT %",
-      "Outros Resultados"
-    ];
-
-    realizadoMonths.forEach((month) => {
-      month.totalizer.forEach((tot) => {
-        if (nomesParaDestacar.includes(tot.name)) {
-          ids[tot.id] = true;
-        }
-      });
-    });
-
-    return ids;
-  }, [realizadoMonths]);
-
-  const fetchDropdown = async () => {
-    try {
-      if (!groupId) return;
-      const response = await getDropdownNavigation(Number(groupId));
-      setDropdownData(response);
-    } catch {
-      console.error("Erro ao buscar dropdown");
-    }
-  };
+  useEffect(() => {
+    setLoadingRef.current = setLoading;
+  }, [setLoading]);
 
   useEffect(() => {
     const loadSetting = () => {
-      const savedSetting = localStorage.getItem("showBudgetColumns");
-      setShowBudgetColumns(savedSetting === "true");
+      setShowBudgetColumns(
+        localStorage.getItem("showBudgetColumns") === "true",
+      );
     };
-
     loadSetting();
-
     window.addEventListener("storage", loadSetting);
     return () => window.removeEventListener("storage", loadSetting);
   }, []);
 
-  const handleSearch = async (explicitTab?: number): Promise<void> => {
-    const tab = explicitTab ?? tabValue;
-
-    try {
-      setLoading(
-        true,
-        tab === 3 ? "Buscando DRE" : "Buscando Balanço Contábil",
-      );
-
-      if (!accountPlanId) {
-        toast.warning("Plano de contas não encontrado");
-        return;
+  useEffect(() => {
+    if (!groupId) return;
+    let cancelled = false;
+    const fetchDropdown = async () => {
+      try {
+        const response = await getDropdownNavigation(Number(groupId));
+        if (!cancelled) setDropdownData(response);
+      } catch (error) {
+        console.error("Erro ao buscar dropdown:", error);
       }
+    };
+    void fetchDropdown();
+    return () => {
+      cancelled = true;
+    };
+  }, [groupId]);
 
-      if (tab === 3) {
-        const response = await getDreV2(accountPlanId, year);
-        setDreV2Data(response.data ?? EMPTY_DRE_V2_DATA);
-        return;
-      }
-
-      const response = await getBalancoReclassificadoVariation(
-        accountPlanId,
-        year,
-        tab,
-      );
-
-      const data = response.data ?? {};
-      setRealizadoMonths(data.realizado?.months ?? []);
-      setOrcadoMonths(data.orcado?.months ?? []);
-      setVariacaoMonths(data.variacao?.months ?? []);
-    } catch (err) {
-      console.error(err);
-      if (tab === 3) setDreV2Data(EMPTY_DRE_V2_DATA);
-      toast.error("Ocorreu um erro ao tentar buscar os dados");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!accountPlanId) {
+      setLoadError(null);
+      setReclassifiedData(EMPTY_RECLASSIFIED_BALANCE_SHEET_DATA);
+      setDreV2Data(EMPTY_DRE_V2_DATA);
+      return;
     }
-  };
 
-  const handleChangeTab = (
-    _event: React.SyntheticEvent,
-    newValue: number,
-  ): void => {
-    setTabValue(newValue);
-  };
+    const currentRequest = ++requestSequence.current;
+    const fetchData = async () => {
+      setLoadError(null);
+      setLoadingRef.current(
+        true,
+        tabValue === 3 ? "Buscando DRE" : "Buscando Balanço Contábil",
+      );
 
-  const buildExportData = (months: Month[]) => {
-    if (!months.length) return { columns: [], rows: [] };
+      if (tabValue === 3) {
+        setDreV2Data(EMPTY_DRE_V2_DATA);
+      } else {
+        setReclassifiedData(EMPTY_RECLASSIFIED_BALANCE_SHEET_DATA);
+      }
 
-    // Colunas: "Conta / Classificação" + cada mês
-    const columns = [
-      {
-        label: "Conta / Classificação",
-        accessor: (row: FinancialExportRow) => row.name,
-      },
-      ...months.map((m) => ({
-        label: monthTranslator[m.name] ?? m.name,
-        accessor: (row: FinancialExportRow) => row.values[m.id] ?? "-",
-      })),
-    ];
-    // Linhas
-    const rows: FinancialExportRow[] = [];
+      try {
+        if (tabValue === 3) {
+          const response = await getDreV2(accountPlanId, year);
+          if (requestSequence.current !== currentRequest) return;
+          setDreV2Data(response.data ?? EMPTY_DRE_V2_DATA);
+          return;
+        }
 
-    const addRow = (name: string, values: Record<number, number | string>) => {
-      const row: FinancialExportRow = { name, values };
-      rows.push(row);
-      return row;
+        const response = await getReclassifiedBalanceSheetV2({
+          accountPlanId,
+          year,
+          groupId: groupId ? Number(groupId) : undefined,
+          companyId: companyid ? Number(companyid) : undefined,
+          subCompanyId: subCompanyId ? Number(subCompanyId) : undefined,
+        });
+        if (requestSequence.current !== currentRequest) return;
+        setReclassifiedData(
+          response.data ?? EMPTY_RECLASSIFIED_BALANCE_SHEET_DATA,
+        );
+      } catch (error) {
+        if (requestSequence.current !== currentRequest) return;
+        console.error("Erro ao buscar demonstrações contábeis:", error);
+        setLoadError("Ocorreu um erro ao tentar buscar os dados.");
+        toast.error("Ocorreu um erro ao tentar buscar os dados");
+      } finally {
+        if (requestSequence.current === currentRequest) {
+          setLoadingRef.current(false);
+        }
+      }
     };
 
-    // Itera os meses
-    months.forEach((month) => {
-      // Totalizadores do mês
-      month.totalizer?.forEach((tot) => {
-        // Linha do totalizador
-        let existing = rows.find((r) => r.name === tot.name);
-        if (!existing) {
-          existing = addRow(tot.name, {});
-        }
-        existing.values[month.id] = tot.totalValue;
-
-        // Classificações
-        tot.classifications?.forEach((cls) => {
-          let existingCls = rows.find((r) => r.name === `   ${cls.name}`);
-          if (!existingCls) {
-            existingCls = addRow(`   ${cls.name}`, {});
-          }
-          existingCls.values[month.id] = cls.value;
-        });
-      });
-
-      // Total geral do mês
-      if (month.monthPainelContabilTotalizer) {
-        let existingTotGeral = rows.find(
-          (r) => r.name === month.monthPainelContabilTotalizer.name,
-        );
-        if (!existingTotGeral) {
-          existingTotGeral = addRow(
-            month.monthPainelContabilTotalizer.name,
-            {},
-          );
-        }
-        existingTotGeral.values[month.id] =
-          month.monthPainelContabilTotalizer.totalValue;
+    void fetchData();
+    return () => {
+      if (requestSequence.current === currentRequest) {
+        requestSequence.current += 1;
+        setLoadingRef.current(false);
       }
-    });
-
-    return { columns, rows };
-  };
+    };
+  }, [
+    accountPlanId,
+    companyid,
+    groupId,
+    subCompanyId,
+    tabValue,
+    year,
+  ]);
 
   const buildDreV2ExportData = () => {
-    const periods = [...dreV2Data.periods].sort(
-      (a, b) => a.displayOrder - b.displayOrder,
-    );
+    const exportPeriods = sortByDisplayOrder(dreV2Data.periods);
     const columns = [
       {
         label: "Conta / Classificação",
         accessor: (row: FinancialExportRow) => row.name,
       },
-      ...periods.map((period) => ({
+      ...exportPeriods.map((period) => ({
         label: period.label,
         accessor: (row: FinancialExportRow) =>
           row.values[period.key] ?? "-",
       })),
     ];
-    const rows = [...dreV2Data.rows]
-      .sort((a, b) => a.displayOrder - b.displayOrder)
-      .map((row) => ({
-        name: `${"   ".repeat(row.level)}${row.name}`,
-        values: row.values.realizado ?? {},
-      }));
-
+    const rows = sortByDisplayOrder(dreV2Data.rows).map((row) => ({
+      name: `${"   ".repeat(row.level)}${row.name}`,
+      values: row.values.realizado ?? {},
+    }));
     return { columns, rows };
+  };
+
+  const buildReclassifiedExportData = () => {
+    const exportScenarios = getScenarioColumns(scenarios, showBudgetColumns);
+    const columns = [
+      {
+        label: "Conta / Classificação",
+        accessor: (row: FinancialExportRow) => row.name,
+      },
+      ...periods.flatMap((period) =>
+        exportScenarios.map((scenario) => {
+          const key = `${scenario.key}:${period.key}`;
+          return {
+            label: showBudgetColumns
+              ? `${period.label} - ${scenario.label}`
+              : period.label,
+            accessor: (row: FinancialExportRow) => row.values[key] ?? "-",
+          };
+        }),
+      ),
+    ];
+
+    const statementRows = (
+      title: string,
+      rows: ReclassifiedBalanceSheetRow[],
+    ): FinancialExportRow[] => [
+      { name: title, values: {} },
+      ...rows.map((row) => ({
+        name: `${"   ".repeat(row.level ?? 0)}${row.name}`,
+        values: Object.fromEntries(
+          periods.flatMap((period) =>
+            exportScenarios.map((scenario) => [
+              `${scenario.key}:${period.key}`,
+              row.values?.[scenario.key]?.[period.key],
+            ]),
+          ),
+        ),
+      })),
+    ];
+
+    return {
+      columns,
+      rows: [
+        ...statementRows("ATIVO", assetRows),
+        ...statementRows("PASSIVO", liabilityRows),
+      ],
+    };
   };
 
   const handleExport = (format: string) => {
     const hasData =
-      tabValue === 3 ? dreV2Data.rows.length > 0 : realizadoMonths.length > 0;
+      tabValue === 3 ? dreV2Data.rows.length > 0 : reclassifiedData.rows.length > 0;
     if (!hasData) {
       toast.warning("Nenhum dado para exportar");
       return;
@@ -280,52 +281,35 @@ const BalancoReclassificado = () => {
     const { columns, rows } =
       tabValue === 3
         ? buildDreV2ExportData()
-        : buildExportData(realizadoMonths);
-
+        : buildReclassifiedExportData();
+    const fileName = `demonstracoes-${entityName}-${year}`;
     switch (format) {
       case "PDF":
-        exportPDF(
-          rows,
-          columns,
-          `demonstracoes-${entityName}-${year}`,
-          "landscape",
-        );
+        exportPDF(rows, columns, fileName, "landscape");
         break;
       case "CSV":
-        exportCSV(
-          rows,
-          columns,
-          `demonstracoes-${entityName}-${year}`,
-        );
+        exportCSV(rows, columns, fileName);
         break;
       case "EXCEL":
-        exportExcel(
-          rows,
-          columns,
-          `demonstracoes-${entityName}-${year}`,
-        );
+        exportExcel(rows, columns, fileName);
         break;
       case "PPT":
-        exportPPTX(
-          rows,
-          columns,
-          `demonstracoes-${entityName}-${year}`,
-        );
+        exportPPTX(rows, columns, fileName);
         break;
     }
   };
 
-  useEffect(() => {
-    if (!accountPlanId) return;
-    handleSearch(tabValue);
-    fetchDropdown();
-  }, [tabValue, year, accountPlanId, groupId, companyid, subCompanyId]);
+  const selectedId = subCompanyId
+    ? Number(subCompanyId)
+    : companyid
+      ? Number(companyid)
+      : Number(groupId);
 
   return (
     <MainTemplate>
       <MainContainer>
-        <Title>Demonstrações Contábeis</Title>
         <Paper elevation={0} sx={{ borderRadius: 3, p: 2 }}>
+          <Title>Demonstrações Contábeis</Title>
           <Box
             sx={{
               borderBottom: "1px solid",
@@ -336,8 +320,8 @@ const BalancoReclassificado = () => {
           >
             <Tabs
               value={tabValue}
-              onChange={handleChangeTab}
-              aria-label="Tabs Ativo/Passivo"
+              onChange={(_event, value: number) => setTabValue(value)}
+              aria-label="Abas de demonstrações contábeis"
               textColor="primary"
               indicatorColor="primary"
               sx={{
@@ -346,54 +330,31 @@ const BalancoReclassificado = () => {
                 },
               }}
             >
-              <Tab
-                label="Ativo"
-                value={1}
-                sx={{
-                  color: "var(--neutral-700)",
-                  fontWeight: "bold",
-                  "&.Mui-selected": {
+              {FINANCIAL_STATEMENT_TABS.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  label={tab.label}
+                  value={tab.value}
+                  sx={{
                     color: "var(--neutral-700)",
-                  },
-                }}
-              />
-              <Tab
-                label="Passivo"
-                value={2}
-                sx={{
-                  color: "var(--neutral-700)",
-                  fontWeight: "bold",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)",
-                  },
-                }}
-              />
-              <Tab
-                label="DRE"
-                value={3}
-                sx={{
-                  color: "var(--neutral-700)",
-                  fontWeight: "bold",
-                  "&.Mui-selected": {
-                    color: "var(--neutral-700)",
-                  },
-                }}
-              />
+                    fontWeight: "bold",
+                    "&.Mui-selected": { color: "var(--neutral-700)" },
+                  }}
+                />
+              ))}
             </Tabs>
           </Box>
 
-          <Box display="flex" justifyContent={"space-between"}>
-            <Box display="flex" gap={2} alignItems="center" mb={2}>
+          <Box display="flex" justifyContent="space-between" gap={2}>
+            <Box display="flex" gap={2} alignItems="center" mb={2} flexWrap="wrap">
               {dropdownData && (
-                <Box sx={{ width: "30%" }}>
+                <Box sx={{ minWidth: 260 }}>
                   <CompanyNavigationDropdown
                     data={dropdownData.data}
-                    selectedId={subCompanyId ? Number(subCompanyId) : companyid ? Number(companyid) : Number(groupId)}
+                    selectedId={selectedId}
                     onChange={({ id, type, parentId }) => {
                       if (type === "group")
-                        return navigate(
-                          `/grupos/${id}/demonstracoes-contabeis`,
-                        );
+                        return navigate(`/grupos/${id}/demonstracoes-contabeis`);
                       if (type === "filial")
                         return navigate(
                           `/grupos/${groupId}/empresas/${id}/demonstracoes-contabeis`,
@@ -406,36 +367,39 @@ const BalancoReclassificado = () => {
                   />
                 </Box>
               )}
-
-              <YearPicker year={year} onChange={(year) => setYear(year)} />
-
+              <YearPicker year={year} onChange={setYear} />
               <TableValueVisualization />
               <ExportButton onClick={() => setExportMenuOpen(true)} />
             </Box>
-            <div>
-              <BudgetToggleButton
-                showBudgetColumns={showBudgetColumns}
-                setShowBudgetColumns={setShowBudgetColumns}
-              />
-            </div>
+            <BudgetToggleButton
+              showBudgetColumns={showBudgetColumns}
+              setShowBudgetColumns={setShowBudgetColumns}
+            />
           </Box>
 
           <Container>
-            {tabValue === 3 ? (
+            {loadError ? (
+              <Alert severity="error" sx={{ width: "100%" }}>
+                {loadError}
+              </Alert>
+            ) : !accountPlanId ? (
+              <Alert severity="warning" sx={{ width: "100%" }}>
+                Plano de contas não encontrado.
+              </Alert>
+            ) : tabValue === 3 ? (
               <DreV2Table
                 data={dreV2Data}
                 showBudgetColumns={showBudgetColumns}
                 metricNature={metricNature}
               />
             ) : (
-              <BalancoReclassificadoTable
-                realizado={{ months: realizadoMonths }}
-                orcado={{ months: orcadoMonths }}
-                variacao={{ months: variacaoMonths }}
+              <ReclassifiedBalanceSheetTables
+                assetRows={assetRows}
+                liabilityRows={liabilityRows}
+                balanceDifferenceRow={balanceDifferenceRow}
+                periods={periods}
+                scenarios={scenarios}
                 showBudgetColumns={showBudgetColumns}
-                highlightRows={highlightRows}
-                nestedMode="NONE"
-                metricNature={metricNature}
               />
             )}
           </Container>

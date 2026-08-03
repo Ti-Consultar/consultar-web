@@ -37,6 +37,7 @@ import {
   StickyHead,
   StickyHeadFirstCell,
 } from "../BalancoReclassificado/styles";
+import { getDreClassificationExpansionCodes } from "./expansion";
 
 const HIDDEN_PERIODS_STORAGE_KEY = "dreV2Table.hiddenPeriods";
 const SCENARIO_ORDER = ["orcado", "realizado", "variacao"];
@@ -282,6 +283,13 @@ export const DreV2Table = ({
     () => getVisibleRows(data.rows ?? [], dataPeriodKeys, expandedRows),
     [data.rows, dataPeriodKeys, expandedRows],
   );
+  const classificationExpansionCodes = useMemo(
+    () => getDreClassificationExpansionCodes(data.rows ?? []),
+    [data.rows],
+  );
+  const areAllClassificationsExpanded =
+    classificationExpansionCodes.length > 0 &&
+    classificationExpansionCodes.every((code) => expandedRows.has(code));
 
   useEffect(() => {
     setExpandedRows(new Set());
@@ -298,6 +306,14 @@ export const DreV2Table = ({
       else next.add(rowCode);
       return next;
     });
+  };
+
+  const toggleAllClassifications = () => {
+    setExpandedRows(
+      areAllClassificationsExpanded
+        ? new Set()
+        : new Set(classificationExpansionCodes),
+    );
   };
 
   const getValue = (
@@ -392,7 +408,43 @@ export const DreV2Table = ({
                     border: `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  Descrição
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={0.5}
+                  >
+                    <Tooltip
+                      title={
+                        areAllClassificationsExpanded
+                          ? "Recolher todas as classificações"
+                          : "Expandir todas as classificações"
+                      }
+                    >
+                      <IconButton
+                        size="small"
+                        aria-label={
+                          areAllClassificationsExpanded
+                            ? "Recolher todas as classificações"
+                            : "Expandir todas as classificações"
+                        }
+                        onClick={toggleAllClassifications}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          border: `1px solid ${theme.palette.divider}`,
+                          borderRadius: 1,
+                          p: 0,
+                        }}
+                      >
+                        {areAllClassificationsExpanded ? (
+                          <RemoveIcon sx={{ fontSize: 14 }} />
+                        ) : (
+                          <AddIcon sx={{ fontSize: 14 }} />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                    <span>Descrição</span>
+                  </Box>
                 </TableCell>
                 {visiblePeriods.map((period) => (
                   <TableCell
