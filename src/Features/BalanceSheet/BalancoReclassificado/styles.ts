@@ -24,13 +24,13 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem;
 `;
 
 export const Title = styled.h2`
-  font-size: 24px;
+  font-size: 20px;
   color: var(--neutral-700);
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 `;
 
 export const StickyTableCell = styled(TableCell) <{
