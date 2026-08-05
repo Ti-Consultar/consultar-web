@@ -31,6 +31,16 @@ import {
   getUniqueDataNames as getUniqueDataNamesHelper,
   hasAnyDatas as hasAnyDatasHelper,
 } from "../accordionHelpers";
+import {
+  FINANCIAL_STICKY_FIRST_CELL_SX,
+  FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
+  FINANCIAL_TABLE_COLORS,
+  FINANCIAL_TABLE_HOVER_SX,
+  getFinancialColumnHoverSx,
+  getFinancialMonthHeaderSx,
+  getFinancialValueCellSx,
+  useFinancialTableHover,
+} from "../financialTableStyles";
 
 // Type definitions
 interface FinancialData {
@@ -91,6 +101,10 @@ const BalancoContabilTable = ({
     Set<number>
   >(new Set());
   const { valueMode } = useValueDisplay();
+  const { isColumnHovered, tableHoverProps } = useFinancialTableHover();
+
+  const getMonthKey = (month: Month) =>
+    String(month.dateMonth ?? month.id);
 
   const monthOptions = useMemo(
     () =>
@@ -140,27 +154,6 @@ const BalancoContabilTable = ({
       }
       return next;
     });
-  };
-
-  const stickyCellBase = {
-    position: "sticky" as const,
-    left: 0,
-    backgroundColor: theme.palette.background.paper,
-    zIndex: 1,
-    borderRight: `1px solid ${theme.palette.divider}`,
-  };
-
-  const stickyHeaderStyle = {
-    position: "sticky" as const,
-    top: 0,
-    backgroundColor: theme.palette.grey[200],
-    zIndex: 2,
-  };
-
-  const stickyHeaderFirstCellStyle = {
-    ...stickyHeaderStyle,
-    left: 0,
-    zIndex: 3,
   };
 
   const formatValue = (name: string, value: number): string => {
@@ -276,22 +269,33 @@ const BalancoContabilTable = ({
         </Box>
       ) : (
         <Table
+          {...tableHoverProps}
           size="small"
           aria-label="financial table"
-          sx={{ minWidth: 650 }}
+          sx={{
+            borderCollapse: "collapse",
+            minWidth: "max-content",
+            ...FINANCIAL_TABLE_HOVER_SX,
+          }}
         >
           <TableHead>
             <TableRow>
               <TableCell
-                sx={{ ...stickyHeaderFirstCellStyle, minWidth: 250 }}
-              />
+                sx={{
+                  ...FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
+                  border: `1px solid ${theme.palette.divider}`,
+                  height: 40,
+                }}
+              >
+                Descrição
+              </TableCell>
               {visibleMonths.map((month: Month) => (
                 <TableCell
                   key={month.id}
-                  align="right"
-                  sx={{ ...stickyHeaderStyle, minWidth: 120 }}
+                  align="center"
+                  sx={getFinancialMonthHeaderSx(false)}
                 >
-                  <Typography variant="subtitle2" fontWeight="bold">
+                  <Typography variant="subtitle2" fontWeight={700}>
                     {monthTranslatorUtil(month.name)}
                   </Typography>
                 </TableCell>
@@ -304,8 +308,12 @@ const BalancoContabilTable = ({
               .map((totalizer: Totalizer) => {
                 const isHighlighted = !!highlightRows[totalizer.id];
                 const rowBg = isHighlighted
-                  ? theme.palette.action.hover
-                  : theme.palette.grey[100];
+                  ? FINANCIAL_TABLE_COLORS.total
+                  : FINANCIAL_TABLE_COLORS.subtotal;
+                const rowWeight = isHighlighted ? 700 : 600;
+                const rowBorderTop = isHighlighted
+                  ? `2px solid ${FINANCIAL_TABLE_COLORS.strongBorder}`
+                  : undefined;
 
                 return (
                   <React.Fragment key={totalizer.id}>
@@ -315,8 +323,11 @@ const BalancoContabilTable = ({
                         component="th"
                         scope="row"
                         sx={{
-                          ...stickyCellBase,
+                          ...FINANCIAL_STICKY_FIRST_CELL_SX,
                           backgroundColor: rowBg,
+                          border: `1px solid ${theme.palette.divider}`,
+                          borderTop: rowBorderTop,
+                          fontWeight: rowWeight,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -328,7 +339,11 @@ const BalancoContabilTable = ({
                           arrow
                           placement="top-start"
                         >
-                          <Typography variant="body2" fontWeight="bold" noWrap>
+                          <Typography
+                            variant="body2"
+                            fontWeight={rowWeight}
+                            noWrap
+                          >
                             {totalizer.name}
                           </Typography>
                         </Tooltip>
@@ -341,9 +356,20 @@ const BalancoContabilTable = ({
                           <TableCell
                             key={`${month.id}-${totalizer.id}`}
                             align="right"
-                            sx={{ backgroundColor: rowBg }}
+                            sx={{
+                              ...getFinancialValueCellSx(
+                                "realizado",
+                                false,
+                                rowBg,
+                              ),
+                              borderTop: rowBorderTop,
+                              fontWeight: rowWeight,
+                            }}
                           >
-                            <Typography variant="body2" fontWeight="bold">
+                            <Typography
+                              variant="body2"
+                              fontWeight={rowWeight}
+                            >
                               {monthTotalizer?.totalValue !== undefined
                                 ? formatValue(
                                     monthTotalizer.name,
@@ -384,9 +410,11 @@ const BalancoContabilTable = ({
                                 component="th"
                                 scope="row"
                                 sx={{
-                                  ...stickyCellBase,
+                                  ...FINANCIAL_STICKY_FIRST_CELL_SX,
                                   backgroundColor:
-                                    theme.palette.background.paper,
+                                    FINANCIAL_TABLE_COLORS.actual,
+                                  border: `1px solid ${theme.palette.divider}`,
+                                  fontWeight: 600,
                                   whiteSpace: "nowrap",
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",
@@ -436,7 +464,7 @@ const BalancoContabilTable = ({
                                     <Typography
                                       variant="body2"
                                       noWrap
-                                      sx={{ minWidth: 0 }}
+                                      sx={{ minWidth: 0, fontWeight: 600 }}
                                     >
                                       {classification.name}
                                     </Typography>
@@ -454,10 +482,27 @@ const BalancoContabilTable = ({
 
                                 return (
                                   <TableCell
+                                    data-financial-hover-cell="true"
+                                    data-financial-column={`${getMonthKey(month)}:realizado`}
                                     key={`${month.id}-${classification.id}`}
                                     align="right"
+                                    sx={{
+                                      ...getFinancialValueCellSx(
+                                        "realizado",
+                                        false,
+                                      ),
+                                      fontWeight: 600,
+                                      ...getFinancialColumnHoverSx(
+                                        isColumnHovered(
+                                          `${getMonthKey(month)}:realizado`,
+                                        ),
+                                      ),
+                                    }}
                                   >
-                                    <Typography variant="body2">
+                                    <Typography
+                                      variant="body2"
+                                      fontWeight={600}
+                                    >
                                       {monthClassification
                                         ? formatValue(
                                             classification.name,
@@ -477,16 +522,18 @@ const BalancoContabilTable = ({
                                   key={`data-${classification.id}-${name}`}
                                   sx={{
                                     backgroundColor:
-                                      theme.palette.action.selected,
+                                      FINANCIAL_TABLE_COLORS.actual,
                                   }}
                                 >
                                   <TableCell
                                     component="th"
                                     scope="row"
                                     sx={{
-                                      ...stickyCellBase,
+                                      ...FINANCIAL_STICKY_FIRST_CELL_SX,
                                       backgroundColor:
-                                        theme.palette.action.selected,
+                                        FINANCIAL_TABLE_COLORS.actual,
+                                      border: `1px solid ${theme.palette.divider}`,
+                                      fontWeight: 400,
                                       whiteSpace: "nowrap",
                                       overflow: "hidden",
                                       textOverflow: "ellipsis",
@@ -523,8 +570,22 @@ const BalancoContabilTable = ({
                                     );
                                     return (
                                       <TableCell
+                                        data-financial-hover-cell="true"
+                                        data-financial-column={`${getMonthKey(month)}:realizado`}
                                         key={`data-${month.id}-${classification.id}-${name}`}
                                         align="right"
+                                        sx={{
+                                          ...getFinancialValueCellSx(
+                                            "realizado",
+                                            false,
+                                          ),
+                                          fontWeight: 400,
+                                          ...getFinancialColumnHoverSx(
+                                            isColumnHovered(
+                                              `${getMonthKey(month)}:realizado`,
+                                            ),
+                                          ),
+                                        }}
                                       >
                                         <Typography
                                           variant="body2"
@@ -552,13 +613,18 @@ const BalancoContabilTable = ({
 
             {/* Total do Painel Contábil */}
             {months[0]?.monthPainelContabilTotalizer && (
-              <TableRow sx={{ backgroundColor: theme.palette.grey[200] }}>
+              <TableRow
+                sx={{ backgroundColor: FINANCIAL_TABLE_COLORS.total }}
+              >
                 <TableCell
                   component="th"
                   scope="row"
                   sx={{
-                    ...stickyCellBase,
-                    backgroundColor: theme.palette.grey[200],
+                    ...FINANCIAL_STICKY_FIRST_CELL_SX,
+                    backgroundColor: FINANCIAL_TABLE_COLORS.total,
+                    border: `1px solid ${theme.palette.divider}`,
+                    borderTop: `2px solid ${FINANCIAL_TABLE_COLORS.strongBorder}`,
+                    fontWeight: 700,
                   }}
                 >
                   <Typography variant="subtitle2" fontWeight="bold">
@@ -566,7 +632,19 @@ const BalancoContabilTable = ({
                   </Typography>
                 </TableCell>
                 {visibleMonths.map((month: Month) => (
-                  <TableCell key={`total-${month.id}`} align="right">
+                  <TableCell
+                    key={`total-${month.id}`}
+                    align="right"
+                    sx={{
+                      ...getFinancialValueCellSx(
+                        "realizado",
+                        false,
+                        FINANCIAL_TABLE_COLORS.total,
+                      ),
+                      borderTop: `2px solid ${FINANCIAL_TABLE_COLORS.strongBorder}`,
+                      fontWeight: 700,
+                    }}
+                  >
                     <Typography variant="subtitle2" fontWeight="bold">
                       {month.monthPainelContabilTotalizer
                         ? formatValue(

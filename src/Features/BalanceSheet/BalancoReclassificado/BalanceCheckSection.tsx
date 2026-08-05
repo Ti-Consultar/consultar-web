@@ -27,7 +27,13 @@ import {
   getScenarioColumns,
   sortByDisplayOrder,
 } from "./reclassifiedBalanceSheet.utils";
-import { StickyCell, StickyHead, StickyHeadFirstCell } from "./styles";
+import {
+  FINANCIAL_STICKY_FIRST_CELL_SX,
+  FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
+  getFinancialMetricHeaderSx,
+  getFinancialMonthHeaderSx,
+  getFinancialValueCellSx,
+} from "../financialTableStyles";
 
 interface BalanceCheckSectionProps {
   row?: ReclassifiedBalanceSheetRow;
@@ -96,13 +102,20 @@ export const BalanceCheckSection = ({
           elevation={0}
           sx={{ mt: 1.5, borderRadius: 3, overflow: "auto" }}
         >
-          <Table size="small" sx={{ borderCollapse: "collapse" }}>
+          <Table
+            size="small"
+            sx={{
+              borderCollapse: "collapse",
+              minWidth: "max-content",
+            }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
-                    ...StickyHeadFirstCell,
+                    ...FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
                     border: `1px solid ${theme.palette.divider}`,
+                    height: 40,
                   }}
                 >
                   Descrição
@@ -113,14 +126,13 @@ export const BalanceCheckSection = ({
                     align="center"
                     colSpan={scenarioColumns.length}
                     sx={{
-                      ...StickyHead,
-                      border: `1px solid ${theme.palette.divider}`,
+                      ...getFinancialMonthHeaderSx(showBudgetColumns),
                     }}
                   >
                     <Tooltip
                       title={period.type === "accumulated" ? "Year to Date" : ""}
                     >
-                      <b>{period.label}</b>
+                      <span>{period.label}</span>
                     </Tooltip>
                   </TableCell>
                 ))}
@@ -129,18 +141,21 @@ export const BalanceCheckSection = ({
                 <TableRow>
                   <TableCell
                     sx={{
-                      ...StickyHeadFirstCell,
+                      ...FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
                       border: `1px solid ${theme.palette.divider}`,
+                      top: 40,
                     }}
                   />
                   {visiblePeriods.flatMap((period) =>
-                    scenarioColumns.map((scenario) => (
+                    scenarioColumns.map((scenario, scenarioIndex) => (
                       <TableCell
                         key={`${period.key}-${scenario.key}`}
                         align="right"
                         sx={{
-                          ...StickyHead,
-                          border: `1px solid ${theme.palette.divider}`,
+                          ...getFinancialMetricHeaderSx(
+                            showBudgetColumns &&
+                              scenarioIndex === scenarioColumns.length - 1,
+                          ),
                         }}
                       >
                         {scenario.label}
@@ -154,7 +169,7 @@ export const BalanceCheckSection = ({
               <TableRow>
                 <TableCell
                   sx={{
-                    ...StickyCell,
+                    ...FINANCIAL_STICKY_FIRST_CELL_SX,
                     border: `1px solid ${theme.palette.divider}`,
                     fontWeight: 700,
                   }}
@@ -162,7 +177,7 @@ export const BalanceCheckSection = ({
                   {row?.name ?? "Diferença do Balanço"}
                 </TableCell>
                 {visiblePeriods.flatMap((period) =>
-                  scenarioColumns.map((scenario) => {
+                  scenarioColumns.map((scenario, scenarioIndex) => {
                     const value =
                       row?.values?.[scenario.key]?.[period.key] ?? null;
                     const status = getBalanceCheckStatus(value);
@@ -176,7 +191,13 @@ export const BalanceCheckSection = ({
                       <TableCell
                         key={`${period.key}-${scenario.key}`}
                         align="right"
-                        sx={{ border: `1px solid ${theme.palette.divider}` }}
+                        sx={{
+                          ...getFinancialValueCellSx(
+                            scenario.key,
+                            showBudgetColumns &&
+                              scenarioIndex === scenarioColumns.length - 1,
+                          ),
+                        }}
                       >
                         <Tooltip title={statusText(value)}>
                           <Typography
