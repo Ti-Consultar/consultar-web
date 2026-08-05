@@ -20,6 +20,17 @@ import {
   TableEmptyState,
   useMonthVisibility,
 } from "../../components/TableControls/MonthTableControls";
+import {
+  FINANCIAL_STICKY_FIRST_CELL_SX,
+  FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
+  FINANCIAL_TABLE_COLORS,
+  FINANCIAL_TABLE_HOVER_SX,
+  getFinancialColumnHoverSx,
+  getFinancialMetricHeaderSx,
+  getFinancialMonthHeaderSx,
+  getFinancialValueCellSx,
+  useFinancialTableHover,
+} from "../BalanceSheet/financialTableStyles";
 
 interface MonthView {
   [key: string]: number;
@@ -90,6 +101,10 @@ export const ResultsTableVariation = ({
   const [dragging, setDragging] = useState(false);
   const [openExpandedModal, setOpenExpandedModal] = useState(false);
   const { valueMode } = useValueDisplay();
+  const { isColumnHovered, tableHoverProps } = useFinancialTableHover();
+
+  const getMonthKey = (month: MonthData) =>
+    String(month.dateMonth ?? month.name);
 
   const translatedMonths: MonthData[] = useMemo(() => {
     // Conjunto de chaves que são MÉTRICAS válidas
@@ -232,14 +247,6 @@ export const ResultsTableVariation = ({
     };
   }, [dragging]);
 
-  const baseCellStyle = {
-    borderLeft: "1px solid #e0e0e0",
-    transition: "background-color 0.15s ease",
-    "&:hover": {
-      backgroundColor: "#d6e9e0ff",
-    },
-  };
-
   const hasAnyMetricValue = (metric: string) => {
     return translatedMonths.some((month) => {
       const real = month.realizado?.[metric];
@@ -254,14 +261,36 @@ export const ResultsTableVariation = ({
     });
   };
 
-  const renderValueCells = (month: MonthData, metric: string) => {
+  const renderValueCells = (
+    month: MonthData,
+    metric: string,
+    isSubtotal: boolean,
+  ) => {
+    const monthKey = getMonthKey(month);
+    const subtotalBackground = isSubtotal
+      ? FINANCIAL_TABLE_COLORS.subtotal
+      : undefined;
+
     if (!showBudgetColumns) {
       const value = getMetricValue(month, metric, "realizado");
+      const columnKey = `${monthKey}:realizado`;
       return (
         <TableCell
+          data-financial-hover-cell={!isSubtotal}
+          data-financial-column={columnKey}
           key={`${month.name}-${metric}`}
           align="right"
-          sx={baseCellStyle}
+          sx={{
+            ...getFinancialValueCellSx(
+              "realizado",
+              false,
+              subtotalBackground,
+            ),
+            fontWeight: isSubtotal ? 600 : 400,
+            ...getFinancialColumnHoverSx(
+              !isSubtotal && isColumnHovered(columnKey),
+            ),
+          }}
         >
           {value}
         </TableCell>
@@ -273,33 +302,65 @@ export const ResultsTableVariation = ({
     const variacao = getMetricValue(month, metric, "variacao");
 
     return (
-      <>
+      <React.Fragment key={`${monthKey}-${metric}`}>
         <TableCell
+          data-financial-hover-cell={!isSubtotal}
+          data-financial-column={`${monthKey}:orcado`}
           key={`${month.name}-${metric}-orcado`}
           align="right"
-          sx={baseCellStyle}
+          sx={{
+            ...getFinancialValueCellSx(
+              "orcado",
+              false,
+              subtotalBackground,
+            ),
+            fontWeight: isSubtotal ? 600 : 400,
+            ...getFinancialColumnHoverSx(
+              !isSubtotal && isColumnHovered(`${monthKey}:orcado`),
+            ),
+          }}
         >
           {orcado}
         </TableCell>
         <TableCell
+          data-financial-hover-cell={!isSubtotal}
+          data-financial-column={`${monthKey}:realizado`}
           key={`${month.name}-${metric}-real`}
           align="right"
-          sx={baseCellStyle}
+          sx={{
+            ...getFinancialValueCellSx(
+              "realizado",
+              false,
+              subtotalBackground,
+            ),
+            fontWeight: isSubtotal ? 600 : 400,
+            ...getFinancialColumnHoverSx(
+              !isSubtotal && isColumnHovered(`${monthKey}:realizado`),
+            ),
+          }}
         >
           {real}
         </TableCell>
         <TableCell
+          data-financial-hover-cell={!isSubtotal}
+          data-financial-column={`${monthKey}:variacao`}
           key={`${month.name}-${metric}-var`}
           align="right"
           sx={{
-            ...baseCellStyle,
-            minWidth: 110,
-            whiteSpace: "nowrap",
+            ...getFinancialValueCellSx(
+              "variacao",
+              true,
+              subtotalBackground,
+            ),
+            fontWeight: isSubtotal ? 600 : 400,
+            ...getFinancialColumnHoverSx(
+              !isSubtotal && isColumnHovered(`${monthKey}:variacao`),
+            ),
           }}
         >
           {variacao}
         </TableCell>
-      </>
+      </React.Fragment>
     );
   };
 
@@ -341,16 +402,22 @@ export const ResultsTableVariation = ({
       {showEmptyState ? (
         <TableEmptyState />
       ) : (
-      <Table size="small" sx={{ width: "100%" }}>
+      <Table
+        {...tableHoverProps}
+        size="small"
+        sx={{
+          borderCollapse: "collapse",
+          minWidth: "max-content",
+          ...FINANCIAL_TABLE_HOVER_SX,
+        }}
+      >
         <TableHead>
           <TableRow>
             <TableCell
               sx={{
-                fontWeight: "bold",
-                backgroundColor: "#f5f5f5",
-                position: "sticky",
-                left: 0,
-                zIndex: 2,
+                ...FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
+                border: "1px solid #e0e0e0",
+                height: 40,
                 width: colWidth,
                 minWidth: colWidth,
                 maxWidth: colWidth,
@@ -375,15 +442,10 @@ export const ResultsTableVariation = ({
 
             {visibleMonths.map((month) => (
               <TableCell
-                key={month.name}
+                key={getMonthKey(month)}
                 align="center"
                 colSpan={showBudgetColumns ? 3 : 1}
-                sx={{
-                  fontWeight: "bold",
-                  backgroundColor: "#f5f5f5",
-                  borderLeft: "1px solid #e0e0e0",
-                  whiteSpace: "nowrap",
-                }}
+                sx={getFinancialMonthHeaderSx(showBudgetColumns)}
               >
                 {month.translatedName}
               </TableCell>
@@ -394,38 +456,31 @@ export const ResultsTableVariation = ({
             <TableRow>
               <TableCell
                 sx={{
-                  backgroundColor: "#fafafa",
-                  position: "sticky",
-                  left: 0,
-                  zIndex: 1,
+                  ...FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
+                  border: "1px solid #e0e0e0",
+                  top: 40,
+                  width: colWidth,
+                  minWidth: colWidth,
+                  maxWidth: colWidth,
                 }}
               ></TableCell>
               {visibleMonths.map((month) => (
-                <React.Fragment key={`${month.name}-sub`}>
+                <React.Fragment key={`${getMonthKey(month)}-sub`}>
                   <TableCell
                     align="right"
-                    sx={{
-                      fontWeight: "bold",
-                      borderRight: "1px solid #e0e0e0",
-                      borderLeft: "1px solid #e0e0e0",
-                    }}
+                    sx={getFinancialMetricHeaderSx(false)}
                   >
                     Orçado
                   </TableCell>
                   <TableCell
                     align="right"
-                    sx={{
-                      fontWeight: "bold",
-                      borderRight: "1px solid #e0e0e0",
-                    }}
+                    sx={getFinancialMetricHeaderSx(false)}
                   >
                     Realizado
                   </TableCell>
                   <TableCell
                     align="right"
-                    sx={{
-                      fontWeight: "bold",
-                    }}
+                    sx={getFinancialMetricHeaderSx(true)}
                   >
                     Variação
                   </TableCell>
@@ -446,18 +501,16 @@ export const ResultsTableVariation = ({
                 <TableRow>
                   <TableCell
                     sx={{
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: "#fafafa",
-                      fontWeight: "bold",
+                      ...FINANCIAL_STICKY_FIRST_CELL_SX,
+                      backgroundColor: FINANCIAL_TABLE_COLORS.subtotal,
+                      fontWeight: 600,
                       width: colWidth,
                       minWidth: colWidth,
                       maxWidth: colWidth,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
-                      borderRight: "1px solid #e0e0e0",
+                      border: "1px solid #e0e0e0",
                     }}
                   >
                     <Tooltip
@@ -479,8 +532,8 @@ export const ResultsTableVariation = ({
                       visibleMonths.length * (showBudgetColumns ? 3 : 1) || 1
                     }
                     sx={{
-                      backgroundColor: "#fafafa",
-                      borderLeft: "1px solid #e0e0e0",
+                      backgroundColor: FINANCIAL_TABLE_COLORS.subtotal,
+                      border: "1px solid #e0e0e0",
                       p: 0,
                     }}
                   />
@@ -492,19 +545,25 @@ export const ResultsTableVariation = ({
                     <TableRow
                       key={`${groupKey}-${metric}`}
                       sx={{
-                        backgroundColor: isHighlighted ? "#f5f5f5" : undefined,
+                        backgroundColor: isHighlighted
+                          ? FINANCIAL_TABLE_COLORS.subtotal
+                          : undefined,
                       }}
                     >
                       <TableCell
                         sx={{
-                          position: "sticky",
-                          left: 0,
-                          backgroundColor: isHighlighted ? "#f5f5f5" : "#fff",
-                          fontWeight: isHighlighted ? "bold" : 500,
-                          maxWidth: 180,
+                          ...FINANCIAL_STICKY_FIRST_CELL_SX,
+                          backgroundColor: isHighlighted
+                            ? FINANCIAL_TABLE_COLORS.subtotal
+                            : FINANCIAL_TABLE_COLORS.actual,
+                          fontWeight: isHighlighted ? 600 : 400,
+                          width: colWidth,
+                          minWidth: colWidth,
+                          maxWidth: colWidth,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
+                          border: "1px solid #e0e0e0",
                         }}
                       >
                         <Tooltip title={metricLabels[metric] || metric}>
@@ -513,7 +572,7 @@ export const ResultsTableVariation = ({
                       </TableCell>
 
                       {visibleMonths.map((month) =>
-                        renderValueCells(month, metric),
+                        renderValueCells(month, metric, isHighlighted),
                       )}
                     </TableRow>
                   );
@@ -531,19 +590,25 @@ export const ResultsTableVariation = ({
                 <TableRow
                   key={metric}
                   sx={{
-                    backgroundColor: isHighlighted ? "#f5f5f5" : undefined,
+                    backgroundColor: isHighlighted
+                      ? FINANCIAL_TABLE_COLORS.subtotal
+                      : undefined,
                   }}
                 >
                   <TableCell
                     sx={{
-                      position: "sticky",
-                      left: 0,
-                      backgroundColor: isHighlighted ? "#f5f5f5" : "#fff",
-                      fontWeight: isHighlighted ? "bold" : 500,
-                      maxWidth: 180,
+                      ...FINANCIAL_STICKY_FIRST_CELL_SX,
+                      backgroundColor: isHighlighted
+                        ? FINANCIAL_TABLE_COLORS.subtotal
+                        : FINANCIAL_TABLE_COLORS.actual,
+                      fontWeight: isHighlighted ? 600 : 400,
+                      width: colWidth,
+                      minWidth: colWidth,
+                      maxWidth: colWidth,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
+                      border: "1px solid #e0e0e0",
                     }}
                   >
                     <Tooltip title={metricLabels[metric] || metric}>
@@ -552,7 +617,7 @@ export const ResultsTableVariation = ({
                   </TableCell>
 
                   {visibleMonths.map((month) =>
-                    renderValueCells(month, metric),
+                    renderValueCells(month, metric, isHighlighted),
                   )}
                 </TableRow>
               );

@@ -7,7 +7,11 @@ export type ReclassifiedScenarioKey =
 
 export type ReclassifiedStatementKey = "asset" | "liability";
 
-export type ReclassifiedRowType = "section" | "total" | "validation";
+export type ReclassifiedRowType =
+  | "section"
+  | "classification"
+  | "total"
+  | "validation";
 
 export interface ReclassifiedPeriod {
   key: string;
@@ -32,8 +36,17 @@ export interface ReclassifiedStatement {
 }
 
 export interface ReclassifiedRowSource {
-  sourceType: "legacyGroup" | "legacyTotalizer" | "calculated";
-  sourceId: number | null;
+  sourceType:
+    | "legacyGroup"
+    | "legacyTotalizer"
+    | "totalizer"
+    | "classification"
+    | "generalTotal"
+    | "calculated";
+  sourceId?: number | null;
+  totalizerId?: number | null;
+  classificationId?: number | null;
+  sourceParentTotalizerId?: number | null;
 }
 
 export type ReclassifiedPeriodValues = Partial<Record<string, number>>;
@@ -47,6 +60,9 @@ export interface ReclassifiedClassificationData {
   name: string;
   value: number;
   costCenter?: string;
+  initialValue?: number;
+  creditValue?: number;
+  debitValue?: number;
 }
 
 export interface ReclassifiedClassificationDetail {
@@ -71,7 +87,14 @@ export interface ReclassifiedComponentTotalizer {
 export type ReclassifiedDetailsData = Partial<
   Record<
     ReclassifiedScenarioKey,
-    Partial<Record<string, ReclassifiedComponentTotalizer[]>>
+    Partial<
+      Record<
+        string,
+        Array<
+          ReclassifiedComponentTotalizer | ReclassifiedClassificationData
+        >
+      >
+    >
   >
 >;
 

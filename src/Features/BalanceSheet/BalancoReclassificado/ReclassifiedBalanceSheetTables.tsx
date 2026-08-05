@@ -6,7 +6,13 @@ import {
   DialogTitle,
   IconButton,
 } from "@mui/material";
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+  type UIEventHandler,
+} from "react";
 import {
   MonthTableControls,
   useMonthVisibility,
@@ -30,7 +36,70 @@ interface ReclassifiedBalanceSheetTablesProps {
   periods: ReclassifiedPeriod[];
   scenarios: ReclassifiedScenario[];
   showBudgetColumns?: boolean;
+  hiddenPeriodsStorageKey?: string;
+  expandedTitle?: string;
 }
+
+const SynchronizedStatementTables = ({
+  assetRows,
+  liabilityRows,
+  balanceDifferenceRow,
+  periods,
+  scenarios,
+  showBudgetColumns,
+  hiddenPeriodKeys,
+  isExpandedView,
+}: ReclassifiedBalanceSheetTablesProps & {
+  hiddenPeriodKeys: string[];
+  isExpandedView: boolean;
+}) => {
+  const assetContainerRef = useRef<HTMLDivElement>(null);
+  const liabilityContainerRef = useRef<HTMLDivElement>(null);
+
+  const synchronizeScroll = (
+    targetRef: RefObject<HTMLDivElement | null>,
+  ): UIEventHandler<HTMLDivElement> =>
+    (event) => {
+      const target = targetRef.current;
+      if (target && target.scrollLeft !== event.currentTarget.scrollLeft) {
+        target.scrollLeft = event.currentTarget.scrollLeft;
+      }
+    };
+
+  return (
+    <Box display="flex" flexDirection="column" width="100%" gap={2.5}>
+      <ReclassifiedStatementTable
+        title="ATIVO"
+        rows={assetRows}
+        periods={periods}
+        scenarios={scenarios}
+        showBudgetColumns={showBudgetColumns}
+        hiddenPeriodKeys={hiddenPeriodKeys}
+        isExpandedView={isExpandedView}
+        containerRef={assetContainerRef}
+        onHorizontalScroll={synchronizeScroll(liabilityContainerRef)}
+      />
+      <ReclassifiedStatementTable
+        title="PASSIVO"
+        rows={liabilityRows}
+        periods={periods}
+        scenarios={scenarios}
+        showBudgetColumns={showBudgetColumns}
+        hiddenPeriodKeys={hiddenPeriodKeys}
+        isExpandedView={isExpandedView}
+        containerRef={liabilityContainerRef}
+        onHorizontalScroll={synchronizeScroll(assetContainerRef)}
+      />
+      <BalanceCheckSection
+        row={balanceDifferenceRow}
+        periods={periods}
+        scenarios={scenarios}
+        showBudgetColumns={showBudgetColumns}
+        hiddenPeriodKeys={hiddenPeriodKeys}
+      />
+    </Box>
+  );
+};
 
 export const ReclassifiedBalanceSheetTables = ({
   assetRows,
@@ -39,6 +108,8 @@ export const ReclassifiedBalanceSheetTables = ({
   periods,
   scenarios,
   showBudgetColumns = false,
+  hiddenPeriodsStorageKey = HIDDEN_PERIODS_STORAGE_KEY,
+  expandedTitle = "BP Reclassificado",
 }: ReclassifiedBalanceSheetTablesProps) => {
   const [isExpandedViewOpen, setIsExpandedViewOpen] = useState(false);
   const sortedPeriods = useMemo(
@@ -58,7 +129,7 @@ export const ReclassifiedBalanceSheetTables = ({
     showAllMonths,
     hideAllMonths,
     toggleMonthVisibility,
-  } = useMonthVisibility(HIDDEN_PERIODS_STORAGE_KEY, monthOptions);
+  } = useMonthVisibility(hiddenPeriodsStorageKey, monthOptions);
 
   const isEmpty =
     periods.length === 0 ||
@@ -78,33 +149,16 @@ export const ReclassifiedBalanceSheetTables = ({
   );
 
   const tables = (isExpandedView = false) => (
-    <Box display="flex" flexDirection="column" width="100%" gap={2.5}>
-      <ReclassifiedStatementTable
-        title="ATIVO"
-        rows={assetRows}
-        periods={sortedPeriods}
-        scenarios={scenarios}
-        showBudgetColumns={showBudgetColumns}
-        hiddenPeriodKeys={hiddenMonthKeys}
-        isExpandedView={isExpandedView}
-      />
-      <ReclassifiedStatementTable
-        title="PASSIVO"
-        rows={liabilityRows}
-        periods={sortedPeriods}
-        scenarios={scenarios}
-        showBudgetColumns={showBudgetColumns}
-        hiddenPeriodKeys={hiddenMonthKeys}
-        isExpandedView={isExpandedView}
-      />
-      <BalanceCheckSection
-        row={balanceDifferenceRow}
-        periods={sortedPeriods}
-        scenarios={scenarios}
-        showBudgetColumns={showBudgetColumns}
-        hiddenPeriodKeys={hiddenMonthKeys}
-      />
-    </Box>
+    <SynchronizedStatementTables
+      assetRows={assetRows}
+      liabilityRows={liabilityRows}
+      balanceDifferenceRow={balanceDifferenceRow}
+      periods={sortedPeriods}
+      scenarios={scenarios}
+      showBudgetColumns={showBudgetColumns}
+      hiddenPeriodKeys={hiddenMonthKeys}
+      isExpandedView={isExpandedView}
+    />
   );
 
   return (
@@ -134,9 +188,9 @@ export const ReclassifiedBalanceSheetTables = ({
             fontWeight: 700,
           }}
         >
-          BP Reclassificado
+          {expandedTitle}
           <IconButton
-            aria-label="Fechar BP reclassificado expandido"
+            aria-label={`Fechar ${expandedTitle} expandido`}
             onClick={() => setIsExpandedViewOpen(false)}
             size="small"
           >

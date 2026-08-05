@@ -33,10 +33,16 @@ import {
   DreV2Scenario,
 } from "../../../types/dreV2";
 import {
-  StickyCell,
-  StickyHead,
-  StickyHeadFirstCell,
-} from "../BalancoReclassificado/styles";
+  FINANCIAL_STICKY_FIRST_CELL_SX,
+  FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
+  FINANCIAL_TABLE_HOVER_SX,
+  FINANCIAL_TABLE_COLORS,
+  getFinancialColumnHoverSx,
+  getFinancialMetricHeaderSx,
+  getFinancialMonthHeaderSx,
+  getFinancialValueCellSx,
+  useFinancialTableHover,
+} from "../financialTableStyles";
 import { getDreClassificationExpansionCodes } from "./expansion";
 
 const HIDDEN_PERIODS_STORAGE_KEY = "dreV2Table.hiddenPeriods";
@@ -56,7 +62,7 @@ interface DreV2TableProps {
 
 interface RowPresentation {
   backgroundColor: string;
-  fontWeight: 400 | 700;
+  fontWeight: 400 | 600 | 700;
   fontStyle: "normal" | "italic";
   marginLeft: number;
 }
@@ -74,8 +80,8 @@ const sortByDisplayOrder = <T extends { displayOrder: number }>(rows: T[]) =>
 const getRowPresentation = (row: DreV2Row): RowPresentation => {
   if (row.rowType === "subtotal") {
     return {
-      backgroundColor: "#E8F1FF",
-      fontWeight: 700,
+      backgroundColor: FINANCIAL_TABLE_COLORS.subtotal,
+      fontWeight: 600,
       fontStyle: "normal",
       marginLeft: row.level * 1.5,
     };
@@ -83,7 +89,7 @@ const getRowPresentation = (row: DreV2Row): RowPresentation => {
 
   if (row.rowType === "percentage") {
     return {
-      backgroundColor: "#FAFCFE",
+      backgroundColor: FINANCIAL_TABLE_COLORS.actual,
       fontWeight: 400,
       fontStyle: "italic",
       marginLeft: Math.max(3, row.level * 1.5),
@@ -92,7 +98,7 @@ const getRowPresentation = (row: DreV2Row): RowPresentation => {
 
   if (row.rowType === "classification" || row.rowType === "adjustment") {
     return {
-      backgroundColor: "#FAFCFE",
+      backgroundColor: FINANCIAL_TABLE_COLORS.actual,
       fontWeight: 400,
       fontStyle: "normal",
       marginLeft: row.level * 1.5,
@@ -100,8 +106,8 @@ const getRowPresentation = (row: DreV2Row): RowPresentation => {
   }
 
   return {
-    backgroundColor: "#FAFCFE",
-    fontWeight: 700,
+    backgroundColor: FINANCIAL_TABLE_COLORS.actual,
+    fontWeight: 600,
     fontStyle: "normal",
     marginLeft: row.level * 1.5,
   };
@@ -246,6 +252,7 @@ export const DreV2Table = ({
 }: DreV2TableProps) => {
   const theme = useTheme();
   const { valueMode } = useValueDisplay();
+  const { isColumnHovered, tableHoverProps } = useFinancialTableHover();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [openExpandedModal, setOpenExpandedModal] = useState(false);
 
@@ -399,13 +406,22 @@ export const DreV2Table = ({
         {showEmptyState ? (
           <TableEmptyState />
         ) : (
-          <Table size="small" sx={{ borderCollapse: "collapse" }}>
+          <Table
+            {...tableHoverProps}
+            size="small"
+            sx={{
+              borderCollapse: "collapse",
+              minWidth: "max-content",
+              ...FINANCIAL_TABLE_HOVER_SX,
+            }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
-                    ...StickyHeadFirstCell,
+                    ...FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
                     border: `1px solid ${theme.palette.divider}`,
+                    height: 40,
                   }}
                 >
                   <Box
@@ -452,16 +468,15 @@ export const DreV2Table = ({
                     align="center"
                     colSpan={scenarioColumns.length}
                     sx={{
-                      ...StickyHead,
-                      border: `1px solid ${theme.palette.divider}`,
+                      ...getFinancialMonthHeaderSx(showBudgetColumns),
                     }}
                   >
                     {period.type === "accumulated" ? (
                       <Tooltip title="Year to Date">
-                        <b>{period.label}</b>
+                        <span>{period.label}</span>
                       </Tooltip>
                     ) : (
-                      <b>{period.label}</b>
+                      <span>{period.label}</span>
                     )}
                   </TableCell>
                 ))}
@@ -471,18 +486,20 @@ export const DreV2Table = ({
                 <TableRow>
                   <TableCell
                     sx={{
-                      ...StickyHeadFirstCell,
+                      ...FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
                       border: `1px solid ${theme.palette.divider}`,
+                      top: 40,
                     }}
                   />
                   {visiblePeriods.flatMap((period) =>
-                    scenarioColumns.map((scenario) => (
+                    scenarioColumns.map((scenario, scenarioIndex) => (
                       <TableCell
                         key={`${period.key}-${scenario.key}`}
                         align="right"
                         sx={{
-                          ...StickyHead,
-                          border: `1px solid ${theme.palette.divider}`,
+                          ...getFinancialMetricHeaderSx(
+                            scenarioIndex === scenarioColumns.length - 1,
+                          ),
                         }}
                       >
                         {scenario.label}
@@ -515,7 +532,6 @@ export const DreV2Table = ({
                         backgroundColor: presentation.backgroundColor,
                         borderBottom: `1px solid ${theme.palette.divider}`,
                         "& > .MuiTableCell-root": {
-                          backgroundColor: presentation.backgroundColor,
                           fontWeight: presentation.fontWeight,
                           fontStyle: presentation.fontStyle,
                         },
@@ -523,7 +539,7 @@ export const DreV2Table = ({
                     >
                     <TableCell
                       sx={{
-                        ...StickyCell,
+                        ...FINANCIAL_STICKY_FIRST_CELL_SX,
                         backgroundColor: presentation.backgroundColor,
                         border: `1px solid ${theme.palette.divider}`,
                       }}
@@ -581,7 +597,7 @@ export const DreV2Table = ({
                     </TableCell>
 
                     {visiblePeriods.flatMap((period) =>
-                      scenarioColumns.map((scenario) => {
+                      scenarioColumns.map((scenario, scenarioIndex) => {
                         const value = getValue(row, scenario.key, period.key);
                         const variationVisual =
                           scenario.key === "variacao"
@@ -590,9 +606,29 @@ export const DreV2Table = ({
 
                         return (
                           <TableCell
+                            data-financial-hover-cell={
+                              row.rowType !== "subtotal"
+                            }
+                            data-financial-column={`${period.key}:${scenario.key}`}
                             key={`${row.code}-${period.key}-${scenario.key}`}
                             align="right"
-                            sx={{ border: `1px solid ${theme.palette.divider}` }}
+                            sx={{
+                              ...getFinancialValueCellSx(
+                                scenario.key,
+                                showBudgetColumns &&
+                                  scenarioIndex === scenarioColumns.length - 1,
+                                row.rowType === "subtotal"
+                                  ? presentation.backgroundColor
+                                  : undefined,
+                              ),
+                              fontWeight: presentation.fontWeight,
+                              ...getFinancialColumnHoverSx(
+                                row.rowType !== "subtotal" &&
+                                  isColumnHovered(
+                                    `${period.key}:${scenario.key}`,
+                                  ),
+                              ),
+                            }}
                           >
                             <span
                               style={{
@@ -618,16 +654,13 @@ export const DreV2Table = ({
                           key={`${row.code}-${detail.key}`}
                           sx={{
                             backgroundColor: "#FFFFFF",
-                            "& > .MuiTableCell-root": {
-                              backgroundColor: "#FFFFFF",
-                            },
                           }}
                         >
                           <TableCell
                             component="th"
                             scope="row"
                             sx={{
-                              ...StickyCell,
+                              ...FINANCIAL_STICKY_FIRST_CELL_SX,
                               backgroundColor: "#FFFFFF",
                               whiteSpace: "nowrap",
                               overflow: "hidden",
@@ -656,7 +689,7 @@ export const DreV2Table = ({
                           </TableCell>
 
                           {visiblePeriods.flatMap((period) =>
-                            scenarioColumns.map((scenario) => {
+                            scenarioColumns.map((scenario, scenarioIndex) => {
                               const value =
                                 detail.values[scenario.key]?.[period.key]
                                   ?.value;
@@ -674,10 +707,22 @@ export const DreV2Table = ({
 
                               return (
                                 <TableCell
+                                  data-financial-hover-cell="true"
+                                  data-financial-column={`${period.key}:${scenario.key}`}
                                   key={`${row.code}-${detail.key}-${period.key}-${scenario.key}`}
                                   align="right"
                                   sx={{
-                                    border: `1px solid ${theme.palette.divider}`,
+                                    ...getFinancialValueCellSx(
+                                      scenario.key,
+                                      showBudgetColumns &&
+                                        scenarioIndex ===
+                                          scenarioColumns.length - 1,
+                                    ),
+                                    ...getFinancialColumnHoverSx(
+                                      isColumnHovered(
+                                        `${period.key}:${scenario.key}`,
+                                      ),
+                                    ),
                                   }}
                                 >
                                   <Typography

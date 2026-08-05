@@ -14,7 +14,14 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useState,
+  type Ref,
+  type UIEventHandler,
+} from "react";
 import { TableEmptyState } from "../../../components/TableControls/MonthTableControls";
 import { useValueDisplay } from "../../../contexts/ValueDisplayContext";
 import type {
@@ -32,7 +39,17 @@ import {
   getScenarioColumns,
   sortByDisplayOrder,
 } from "./reclassifiedBalanceSheet.utils";
-import { StickyCell, StickyHead, StickyHeadFirstCell } from "./styles";
+import {
+  FINANCIAL_STICKY_FIRST_CELL_SX,
+  FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
+  FINANCIAL_TABLE_HOVER_SX,
+  FINANCIAL_TABLE_COLORS,
+  getFinancialColumnHoverSx,
+  getFinancialMetricHeaderSx,
+  getFinancialMonthHeaderSx,
+  getFinancialValueCellSx,
+  useFinancialTableHover,
+} from "../financialTableStyles";
 
 interface ReclassifiedStatementTableProps {
   title: string;
@@ -42,13 +59,24 @@ interface ReclassifiedStatementTableProps {
   showBudgetColumns?: boolean;
   hiddenPeriodKeys: string[];
   isExpandedView?: boolean;
+  containerRef?: Ref<HTMLDivElement>;
+  onHorizontalScroll?: UIEventHandler<HTMLDivElement>;
 }
 
 const getRowPresentation = (row: ReclassifiedBalanceSheetRow) => {
-  const isSection = row.rowType === "section";
+  if (row.rowType === "total") {
+    return {
+      backgroundColor: FINANCIAL_TABLE_COLORS.total,
+      fontWeight: 700,
+      borderTop: `2px solid ${FINANCIAL_TABLE_COLORS.strongBorder}`,
+      marginLeft: (row.level ?? 0) * 1.5,
+    } as const;
+  }
+
   return {
-    backgroundColor: isSection ? "#FAFCFE" : "#FAFCFE",
-    fontWeight: 700,
+    backgroundColor: FINANCIAL_TABLE_COLORS.actual,
+    fontWeight: row.rowType === "section" ? 600 : 400,
+    borderTop: undefined,
     marginLeft: (row.level ?? 0) * 1.5,
   } as const;
 };
@@ -90,9 +118,12 @@ export const ReclassifiedStatementTable = ({
   showBudgetColumns = false,
   hiddenPeriodKeys,
   isExpandedView = false,
+  containerRef,
+  onHorizontalScroll,
 }: ReclassifiedStatementTableProps) => {
   const theme = useTheme();
   const { valueMode } = useValueDisplay();
+  const { isColumnHovered, tableHoverProps } = useFinancialTableHover();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [expandedDetailRows, setExpandedDetailRows] = useState<Set<string>>(
     new Set(),
@@ -126,13 +157,22 @@ export const ReclassifiedStatementTable = ({
       ),
     [rows],
   );
-  const expandableRowCodes = useMemo(
-    () =>
-      rows
-        .filter(canExpandReclassifiedRow)
-        .map((row) => row.code),
-    [rows],
-  );
+  const classificationExpansionRowCodes = useMemo(() => {
+    const parentCodes = new Set(
+      rows.flatMap((row) => (row.parentCode ? [row.parentCode] : [])),
+    );
+
+    return rows
+      .filter(
+        (row) =>
+          canExpandReclassifiedRow(row) &&
+          (parentCodes.has(row.code) ||
+            (detailsByRow.get(row.code) ?? []).some(
+              (detail) => detail.kind === "totalizer",
+            )),
+      )
+      .map((row) => row.code);
+  }, [detailsByRow, rows]);
   const totalizerExpansionKeys = useMemo(
     () =>
       rows.flatMap((row) =>
@@ -147,10 +187,13 @@ export const ReclassifiedStatementTable = ({
     [detailsByRow, rows],
   );
   const hasGlobalExpansionTargets =
-    expandableRowCodes.length > 0 || totalizerExpansionKeys.length > 0;
+    classificationExpansionRowCodes.length > 0 ||
+    totalizerExpansionKeys.length > 0;
   const areAllClassificationsExpanded =
     hasGlobalExpansionTargets &&
-    expandableRowCodes.every((code) => expandedRows.has(code)) &&
+    classificationExpansionRowCodes.every((code) =>
+      expandedRows.has(code),
+    ) &&
     totalizerExpansionKeys.every((key) => expandedDetailRows.has(key));
 
   useEffect(() => {
@@ -183,7 +226,7 @@ export const ReclassifiedStatementTable = ({
       return;
     }
 
-    setExpandedRows(new Set(expandableRowCodes));
+    setExpandedRows(new Set(classificationExpansionRowCodes));
     setExpandedDetailRows(new Set(totalizerExpansionKeys));
   };
 
@@ -195,21 +238,22 @@ export const ReclassifiedStatementTable = ({
     const detailKey = `${parentCode}:${detail.key}`;
     const isExpanded = expandedDetailRows.has(detailKey);
     const isTotalizer = detail.kind === "totalizer";
+    const isClassification = detail.kind === "classification";
     const isData = detail.kind === "data";
     const backgroundColor = isTotalizer
-      ? theme.palette.grey[50]
+      ? FINANCIAL_TABLE_COLORS.subtotal
       : theme.palette.background.paper;
+    const detailFontWeight = isTotalizer || isClassification ? 600 : 400;
     return (
       <Fragment key={detailKey}>
         <TableRow
           sx={{
             backgroundColor,
-            "& > .MuiTableCell-root": { backgroundColor },
           }}
         >
           <TableCell
             sx={{
-              ...StickyCell,
+              ...FINANCIAL_STICKY_FIRST_CELL_SX,
               border: `1px solid ${theme.palette.divider}`,
               backgroundColor,
             }}
@@ -243,7 +287,7 @@ export const ReclassifiedStatementTable = ({
                   noWrap
                   sx={{
                     fontSize: isData ? "0.72rem" : "0.75rem",
-                    fontWeight: isTotalizer ? 700 : isData ? 400 : 500,
+                    fontWeight: detailFontWeight,
                     color: isData ? "text.secondary" : "text.primary",
                   }}
                 >
@@ -253,17 +297,31 @@ export const ReclassifiedStatementTable = ({
             </Box>
           </TableCell>
           {visiblePeriods.flatMap((period) =>
-            scenarioColumns.map((scenario) => (
+            scenarioColumns.map((scenario, scenarioIndex) => (
               <TableCell
+                data-financial-hover-cell={!isTotalizer}
+                data-financial-column={`${period.key}:${scenario.key}`}
                 key={`${detailKey}-${period.key}-${scenario.key}`}
                 align="right"
-                sx={{ border: `1px solid ${theme.palette.divider}` }}
+                sx={{
+                  ...getFinancialValueCellSx(
+                    scenario.key,
+                    showBudgetColumns &&
+                      scenarioIndex === scenarioColumns.length - 1,
+                    isTotalizer ? backgroundColor : undefined,
+                  ),
+                  fontWeight: detailFontWeight,
+                  ...getFinancialColumnHoverSx(
+                    !isTotalizer &&
+                      isColumnHovered(`${period.key}:${scenario.key}`),
+                  ),
+                }}
               >
                 <Typography
                   variant="body2"
                   sx={{
                     fontSize: isData ? "0.72rem" : "0.75rem",
-                    fontWeight: isTotalizer ? 700 : 400,
+                    fontWeight: detailFontWeight,
                     color: isData ? "text.secondary" : "text.primary",
                   }}
                 >
@@ -321,6 +379,8 @@ export const ReclassifiedStatementTable = ({
         />
       </Box>
       <TableContainer
+        ref={containerRef}
+        onScroll={onHorizontalScroll}
         component={Paper}
         elevation={0}
         sx={{
@@ -334,13 +394,22 @@ export const ReclassifiedStatementTable = ({
         {showEmptyState ? (
           <TableEmptyState />
         ) : (
-          <Table size="small" sx={{ borderCollapse: "collapse" }}>
+          <Table
+            {...tableHoverProps}
+            size="small"
+            sx={{
+              borderCollapse: "collapse",
+              minWidth: "max-content",
+              ...FINANCIAL_TABLE_HOVER_SX,
+            }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
-                    ...StickyHeadFirstCell,
+                    ...FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
                     border: `1px solid ${theme.palette.divider}`,
+                    height: 40,
                   }}
                 >
                   <Box
@@ -387,14 +456,13 @@ export const ReclassifiedStatementTable = ({
                     align="center"
                     colSpan={scenarioColumns.length}
                     sx={{
-                      ...StickyHead,
-                      border: `1px solid ${theme.palette.divider}`,
+                      ...getFinancialMonthHeaderSx(showBudgetColumns),
                     }}
                   >
                     <Tooltip
                       title={period.type === "accumulated" ? "Year to Date" : ""}
                     >
-                      <b>{period.label}</b>
+                      <span>{period.label}</span>
                     </Tooltip>
                   </TableCell>
                 ))}
@@ -403,18 +471,20 @@ export const ReclassifiedStatementTable = ({
                 <TableRow>
                   <TableCell
                     sx={{
-                      ...StickyHeadFirstCell,
+                      ...FINANCIAL_STICKY_HEAD_FIRST_CELL_SX,
                       border: `1px solid ${theme.palette.divider}`,
+                      top: 40,
                     }}
                   />
                   {visiblePeriods.flatMap((period) =>
-                    scenarioColumns.map((scenario) => (
+                    scenarioColumns.map((scenario, scenarioIndex) => (
                       <TableCell
                         key={`${period.key}-${scenario.key}`}
                         align="right"
                         sx={{
-                          ...StickyHead,
-                          border: `1px solid ${theme.palette.divider}`,
+                          ...getFinancialMetricHeaderSx(
+                            scenarioIndex === scenarioColumns.length - 1,
+                          ),
                         }}
                       >
                         {scenario.label}
@@ -437,16 +507,17 @@ export const ReclassifiedStatementTable = ({
                       sx={{
                         backgroundColor: presentation.backgroundColor,
                         "& > .MuiTableCell-root": {
-                          backgroundColor: presentation.backgroundColor,
                           fontWeight: presentation.fontWeight,
+                          borderTop: presentation.borderTop,
                         },
                       }}
                     >
                       <TableCell
                         sx={{
-                          ...StickyCell,
+                          ...FINANCIAL_STICKY_FIRST_CELL_SX,
                           backgroundColor: presentation.backgroundColor,
                           border: `1px solid ${theme.palette.divider}`,
+                          borderTop: presentation.borderTop,
                         }}
                       >
                         <Box
@@ -483,11 +554,29 @@ export const ReclassifiedStatementTable = ({
                         </Box>
                       </TableCell>
                       {visiblePeriods.flatMap((period) =>
-                        scenarioColumns.map((scenario) => (
+                        scenarioColumns.map((scenario, scenarioIndex) => (
                           <TableCell
+                            data-financial-hover-cell={row.rowType !== "total"}
+                            data-financial-column={`${period.key}:${scenario.key}`}
                             key={`${row.code}-${period.key}-${scenario.key}`}
                             align="right"
-                            sx={{ border: `1px solid ${theme.palette.divider}` }}
+                            sx={{
+                              ...getFinancialValueCellSx(
+                                scenario.key,
+                                showBudgetColumns &&
+                                  scenarioIndex === scenarioColumns.length - 1,
+                                row.rowType === "total"
+                                  ? presentation.backgroundColor
+                                  : undefined,
+                              ),
+                              borderTop: presentation.borderTop,
+                              ...getFinancialColumnHoverSx(
+                                row.rowType !== "total" &&
+                                  isColumnHovered(
+                                    `${period.key}:${scenario.key}`,
+                                  ),
+                              ),
+                            }}
                           >
                             {formatReclassifiedCurrency(
                               row.values?.[scenario.key]?.[period.key] ?? null,

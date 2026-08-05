@@ -70,7 +70,6 @@ const entityKey = (
     ReclassifiedClassificationData,
     "id" | "typeOrder" | "name" | "costCenter"
   >,
-  _index: number,
 ) => {
   const normalizedName = entity.name.trim().toLocaleLowerCase("pt-BR");
   if (entity.typeOrder !== undefined) {
@@ -85,6 +84,7 @@ export const buildReclassifiedDetailRows = (
   if (!data) return [];
 
   const totalizerRows = new Map<string, ReclassifiedDetailRow>();
+  const directDetailRows = new Map<string, ReclassifiedDetailRow>();
   const classificationRowsByTotalizer = new Map<
     string,
     Map<string, ReclassifiedDetailRow>
@@ -96,9 +96,24 @@ export const buildReclassifiedDetailRows = (
 
   scenarioKeys.forEach((scenarioKey) => {
     Object.entries(data[scenarioKey] ?? {}).forEach(
-      ([periodKey, totalizers]) => {
-        (totalizers ?? []).forEach((totalizer, totalizerIndex) => {
-          const totalizerKey = entityKey(totalizer, totalizerIndex);
+      ([periodKey, details]) => {
+        (details ?? []).forEach((detail) => {
+          if (!("totalValue" in detail)) {
+            const detailKey = entityKey(detail);
+            const detailRow = getOrCreateRow(
+              directDetailRows,
+              detailKey,
+              detail.name,
+              "data",
+              false,
+              detail.costCenter,
+            );
+            setValue(detailRow, scenarioKey, periodKey, detail.value);
+            return;
+          }
+
+          const totalizer = detail;
+          const totalizerKey = entityKey(totalizer);
           const totalizerRow = getOrCreateRow(
             totalizerRows,
             totalizerKey,
@@ -118,10 +133,9 @@ export const buildReclassifiedDetailRows = (
             classificationRowsByTotalizer.get(totalizerKey) ??
             new Map<string, ReclassifiedDetailRow>();
           (totalizer.classifications ?? []).forEach(
-            (classification, classificationIndex) => {
+            (classification) => {
               const classificationKey = `${totalizerKey}:${entityKey(
                 classification,
-                classificationIndex,
               )}`;
               const classificationData =
                 classification.datas ?? classification.data ?? [];
@@ -143,10 +157,9 @@ export const buildReclassifiedDetailRows = (
               const dataRows =
                 dataRowsByClassification.get(classificationKey) ??
                 new Map<string, ReclassifiedDetailRow>();
-              classificationData.forEach((detail, detailIndex) => {
+              classificationData.forEach((detail) => {
                 const key = `${classificationKey}:${entityKey(
                   detail,
-                  detailIndex,
                 )}`;
                 const dataRow = getOrCreateRow(
                   dataRows,
@@ -181,5 +194,8 @@ export const buildReclassifiedDetailRows = (
     );
   });
 
-  return Array.from(totalizerRows.values());
+  return [
+    ...Array.from(totalizerRows.values()),
+    ...Array.from(directDetailRows.values()),
+  ];
 };
