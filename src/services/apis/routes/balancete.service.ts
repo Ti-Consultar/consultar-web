@@ -1,6 +1,10 @@
 import { env } from "../../../config/env";
 import { BalancetePayload } from "../../../types/balancetePayload";
 import { ClassificationBalanceteResponse } from "../../../types/balancete";
+import {
+  TrialBalanceViewerQuery,
+  TrialBalanceViewerResponse,
+} from "../../../types/trialBalanceViewer";
 import { axiosInstanceWithToken } from "../config";
 
 const URL = env.api.mrp;
@@ -37,6 +41,19 @@ export const getBalancete = async (balanceteId: number) => {
   } catch (error) {
     throw error;
   }
+};
+
+export const getTrialBalanceViewerRows = async (
+  trialBalanceId: number,
+  params: TrialBalanceViewerQuery,
+  signal?: AbortSignal,
+): Promise<TrialBalanceViewerResponse> => {
+  const response = await axiosInstanceWithToken.get<TrialBalanceViewerResponse>(
+    `${URL}/api/v2/trial-balances/${trialBalanceId}/viewer/rows`,
+    { params, signal },
+  );
+
+  return response.data;
 };
 
 export const getBalanceteByDate = async (

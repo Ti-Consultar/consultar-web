@@ -165,8 +165,8 @@ export const AppRoutes = () => {
           <Route key={path} path={path} element={<UploadBalanceSheet />} />
         ))}
 
-        {/* Balancete Data */}
-        {withScopes("balancetes/:balanceteId").map((path) => (
+        {/* Visualizador de Balancete */}
+        {withScopes("balancetes/:trialBalanceId").map((path) => (
           <Route key={path} path={path} element={<BalanceSheetData />} />
         ))}
 
