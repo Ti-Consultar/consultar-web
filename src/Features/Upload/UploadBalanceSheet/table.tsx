@@ -17,7 +17,7 @@ import {
   Button,
 } from "@mui/material";
 import { useState, useMemo } from "react";
-import { Balancetes } from "../../../types/balancete";
+import { Balancete, Balancetes } from "../../../types/balancete";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/pt-br";
@@ -30,7 +30,7 @@ dayjs.locale("pt-br");
 
 interface AccountingTableProps {
   data: Balancetes;
-  onRowClick?: (id: number) => void;
+  onRowClick?: (balancete: Balancete) => void;
   onDelete?: (id: number) => void;
   hasBalanceSheets?: boolean;
   onEditConfig: () => void;
@@ -225,53 +225,57 @@ export const BalanceSheetUploadTable = ({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map(({ id, dateMonth, dateYear, dateCreate }) => (
-                <TableRow
-                  key={id}
-                  hover
-                  onClick={() => onRowClick?.(id)}
-                  sx={{ cursor: onRowClick ? "pointer" : "default" }}
-                >
-                  <TableCell
-                    sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
-                  >
-                    {formatDate(dateMonth, dateYear)}
-                  </TableCell>
+              paginatedData.map((balancete) => {
+                const { id, dateMonth, dateYear, dateCreate } = balancete;
 
-                  {!isMobile && (
-                    <TableCell>
-                      <Chip
-                        label={"enviado"}
-                        color="primary"
-                        variant="outlined"
-                      />
+                return (
+                  <TableRow
+                    key={id}
+                    hover
+                    onClick={() => onRowClick?.(balancete)}
+                    sx={{ cursor: onRowClick ? "pointer" : "default" }}
+                  >
+                    <TableCell
+                      sx={{ fontWeight: 550, color: "var(--neutral-500)" }}
+                    >
+                      {formatDate(dateMonth, dateYear)}
                     </TableCell>
-                  )}
 
-                  <TableCell
-                    sx={{
-                      fontWeight: 550,
-                      color: "var(--neutral-500)",
-                    }}
-                  >
-                    {dayjs(dateCreate).format("D [de] MMMM [de] YYYY")}
-                  </TableCell>
+                    {!isMobile && (
+                      <TableCell>
+                        <Chip
+                          label={"enviado"}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                    )}
 
-                  <TableCell align="center">
-                    <Tooltip title="Excluir balancete">
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete?.(id);
-                        }}
-                        color="error"
-                      >
-                        <DeleteOutlineRoundedIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))
+                    <TableCell
+                      sx={{
+                        fontWeight: 550,
+                        color: "var(--neutral-500)",
+                      }}
+                    >
+                      {dayjs(dateCreate).format("D [de] MMMM [de] YYYY")}
+                    </TableCell>
+
+                    <TableCell align="center">
+                      <Tooltip title="Excluir balancete">
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete?.(id);
+                          }}
+                          color="error"
+                        >
+                          <DeleteOutlineRoundedIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

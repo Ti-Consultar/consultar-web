@@ -14,6 +14,7 @@ type RouteParams = {
   companyid?: string;
   subCompanyId?: string;
   balanceteId?: string;
+  trialBalanceId?: string;
 };
 
 const mapBreadcrumbItem = (
@@ -26,8 +27,14 @@ const mapBreadcrumbItem = (
 
 export function useBreadcrumb(routeKey: BreadcrumbRouteKey) {
   const { setBreadcrumbs } = useMainContext();
-  const { groupId, companyId, companyid, subCompanyId, balanceteId } =
-    useParams<RouteParams>();
+  const {
+    groupId,
+    companyId,
+    companyid,
+    subCompanyId,
+    balanceteId,
+    trialBalanceId,
+  } = useParams<RouteParams>();
 
   useEffect(() => {
     let isMounted = true;
@@ -39,7 +46,7 @@ export function useBreadcrumb(routeKey: BreadcrumbRouteKey) {
           groupId,
           companyId: companyId ?? companyid,
           subCompanyId,
-          balanceteId,
+          balanceteId: trialBalanceId ?? balanceteId,
         });
 
         if (!isMounted) return;
@@ -62,6 +69,7 @@ export function useBreadcrumb(routeKey: BreadcrumbRouteKey) {
     companyid,
     subCompanyId,
     balanceteId,
+    trialBalanceId,
     setBreadcrumbs,
   ]);
 }

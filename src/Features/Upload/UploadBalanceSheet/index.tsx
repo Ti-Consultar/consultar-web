@@ -26,11 +26,15 @@ import {
 import { BalancetePayload } from "../../../types/balancetePayload";
 import { MainTemplate } from "../../../components/AppLayout";
 import { BalanceSheetUploadTable } from "./table";
-import { Balancetes } from "../../../types/balancete";
+import { Balancete, Balancetes } from "../../../types/balancete";
 import { AlertModal } from "../../../components/AlertModal";
 import { useAccountPlanId } from "../../../utils/hooks/useAccountPlanId";
 import { useBreadcrumb } from "../../../utils/hooks/useBreadcrumb";
 import { BalanceColumnMappingModal } from "../BalanceColumnMapping/BalanceColumnMappingModal";
+import {
+  buildTrialBalanceLocationState,
+  buildTrialBalanceViewerPath,
+} from "../../ChartAccounts/BalanceSheetData/viewer.utils";
 
 const UploadBalanceSheet = () => {
   const location = useLocation();
@@ -64,12 +68,10 @@ const UploadBalanceSheet = () => {
   const [mappingFromApi, setMappingFromApi] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const handleRowClick = (balanceteId: number) => {
-    const basePath = location.pathname.replace(
-      /\/arquivos\/upload\/balancete$/,
-      "",
-    );
-    navigate(`${basePath}/balancetes/${balanceteId}`);
+  const handleRowClick = (balancete: Balancete) => {
+    navigate(buildTrialBalanceViewerPath(location.pathname, balancete.id), {
+      state: buildTrialBalanceLocationState(balancete),
+    });
   };
 
   const handleDeleteBalancete = async (id: number) => {
