@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLoading } from "../../contexts/LoadingProvider";
+import { useYear } from "../../contexts/YearContext";
 import {
   getDashboardData,
+  getDashboardLatestPeriod,
   getGestaoPrazoMedio,
 } from "../../services/apis/routes/dashboard.service";
 import {
@@ -27,6 +29,8 @@ export function useDashboardData({
   year,
 }: useDashboardDataProps) {
   const { setLoading } = useLoading();
+  const { setYear } = useYear();
+  const currentYearRef = useRef(year);
 
   const [panel, setPanel] = useState<DashboardPanelData | null>(null);
   const [liquidity, setLiquidity] = useState<any[]>([]);
@@ -34,6 +38,9 @@ export function useDashboardData({
   const [dinamica, setDinamica] = useState<any[]>([]);
   const [margins, setMargins] = useState<any[]>([]);
   const [index, setIndex] = useState(0);
+  const [initializedAccountPlanId, setInitializedAccountPlanId] = useState<
+    number | null
+  >(null);
   const { accountPlanId } = useAccountPlanId({
     groupId,
     companyId: companyId,
@@ -44,10 +51,45 @@ export function useDashboardData({
   const next = () => setIndex((i) => i + 1);
   const prev = () => setIndex((i) => i - 1);
 
+  currentYearRef.current = year;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setInitializedAccountPlanId(null);
+
+    async function initializePeriod() {
+      if (!accountPlanId) return;
+
+      let initialYear = currentYearRef.current;
+
+      try {
+        const latestPeriod = await getDashboardLatestPeriod(accountPlanId);
+
+        if (Number.isInteger(latestPeriod.year)) {
+          initialYear = latestPeriod.year;
+        }
+      } catch (error) {
+        console.error("Erro ao carregar o último período do dashboard", error);
+      }
+
+      if (cancelled) return;
+
+      setYear(initialYear);
+      setInitializedAccountPlanId(accountPlanId);
+    }
+
+    initializePeriod();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accountPlanId, setYear]);
+
   // === FETCH DAS MÉTRICAS ===
   useEffect(() => {
     async function load() {
-      if (!accountPlanId) return;
+      if (!accountPlanId || initializedAccountPlanId !== accountPlanId) return;
       try {
         setLoading(true, "Carregando dados do dashboard...");
 
@@ -73,7 +115,7 @@ export function useDashboardData({
     }
 
     load();
-  }, [accountPlanId, year]);
+  }, [accountPlanId, initializedAccountPlanId, year]);
 
   return {
     accountPlanId,

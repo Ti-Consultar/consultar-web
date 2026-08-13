@@ -12,6 +12,16 @@ interface DashboardPageProps {
   year: number;
 }
 
+function formatPeriod(month: number, year: number) {
+  if (!Number.isInteger(month) || month < 1 || month > 12) return undefined;
+
+  const abbreviatedMonth = new Intl.DateTimeFormat("pt-BR", {
+    month: "short",
+  }).format(new Date(year, month - 1, 1));
+
+  return `${abbreviatedMonth.charAt(0).toUpperCase()}${abbreviatedMonth.slice(1)} ${year}`;
+}
+
 export function DashboardPage({ year }: DashboardPageProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -36,6 +46,7 @@ export function DashboardPage({ year }: DashboardPageProps) {
     subCompanyId,
     year,
   });
+  const panelPeriod = panel ? formatPeriod(panel.dateMonth, year) : undefined;
 
   return (
     <MainContainer>
@@ -54,18 +65,21 @@ export function DashboardPage({ year }: DashboardPageProps) {
           title="Receita Líquida"
           value={panel?.receitaLiquida}
           variation={panel?.variacaoReceitaLiquida}
+          period={panelPeriod}
           currency
         />
         <KpiCard
           title="Margem Bruta"
           value={panel?.margemBruta}
           variation={panel?.variacaoMargemBruta}
+          period={panelPeriod}
           percent
         />
         <KpiCard
           title="Margem Líquida"
           value={panel?.margemLiquida}
           variation={panel?.variacaoMargemLiquida}
+          period={panelPeriod}
           percent
         />
       </Box>

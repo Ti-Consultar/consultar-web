@@ -7,7 +7,8 @@ interface KpiCardInterface {
   value?: number;
   variation?: number;
   percent?: boolean;
-  currency?: boolean
+  currency?: boolean;
+  period?: string;
 }
 
 export const KpiCard = ({
@@ -16,6 +17,7 @@ export const KpiCard = ({
   variation = 0,
   percent = false,
   currency = false,
+  period,
 }: KpiCardInterface) => {
   function formatCurrencyBR(value: number, currency: boolean = false): string {
     if (currency) {
@@ -59,6 +61,11 @@ export const KpiCard = ({
           }
         />
       </Box>
+      {period && (
+        <Typography color="text.secondary" fontSize="0.875rem">
+          {period}
+        </Typography>
+      )}
     </CardContainer>
   );
 };
