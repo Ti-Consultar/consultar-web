@@ -46,6 +46,9 @@ import UploadIconFilled from "../../../assets/icons/sidebarv2/mrp-file-upload-fi
 import BarChartIcon from "../../../assets/icons/sidebarv2/mrp-chart-bar.svg";
 import BarChartIconFilled from "../../../assets/icons/sidebarv2/mrp-chart-bar-filled.svg";
 
+import BreakEvenIcon from "../../../assets/icons/mrp-break-even.svg";
+import BreakEvenIconFilled from "../../../assets/icons/mrp-break-even-filled.svg";
+
 import SidebarClose from "../../../assets/icons/sidebar/sidebar-close.svg";
 import SidebarOpen from "../../../assets/icons/sidebar/sidebar-active.svg";
 import SidebarHover from "../../../assets/icons/sidebar/sidebar-closed.svg";
@@ -316,6 +319,14 @@ export const Sidebar = () => {
                 title: "Fluxo de Caixa",
                 icon: { default: FluxoIcon, filled: FluxoIconFilled },
                 path: buildNestedUrl(params, "fluxo-caixa"),
+              },
+              {
+                title: "Ponto de Equilíbrio",
+                icon: {
+                  default: BreakEvenIcon,
+                  filled: BreakEvenIconFilled,
+                },
+                path: buildNestedUrl(params, "ponto-equilibrio"),
               },
               {
                 title: "Árvore de Valor",

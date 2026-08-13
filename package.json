@@ -24,7 +24,7 @@
     "desktop:win:prod": "set \"BUILD_ENV=production\" && npm run build:electron:prod && electron-builder --config electron-builder.config.cjs --win",
     "desktop:linux": "npm run build:electron:prod && electron-builder --config electron-builder.config.cjs --linux",
     "desktop:mac": "npm run build:electron:prod && electron-builder --config electron-builder.config.cjs --mac",
-    "test": "node --test src/Features/BalanceSheet/BalancoReclassificado/*.test.ts src/Features/ChartAccounts/BalanceSheetData/*.test.ts",
+    "test": "node --test src/Features/BalanceSheet/BalancoReclassificado/*.test.ts src/Features/BreakEven/*.test.ts src/Features/ChartAccounts/BalanceSheetData/*.test.ts",
     "lint": "eslint .",
     "validate": "npm run typecheck && npm run build:homolog && npm run build:prod",
     "preview": "vite preview",

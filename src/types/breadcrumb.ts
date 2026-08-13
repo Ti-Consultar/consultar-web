@@ -35,6 +35,7 @@ export type BreadcrumbRouteKey =
   | "economic-indices"
   | "cil-ec"
   | "operational-efficiency"
+  | "break-even"
   | "cash-flow"
   | "eva"
   | "profile-info"
