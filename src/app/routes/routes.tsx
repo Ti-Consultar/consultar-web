@@ -74,6 +74,9 @@ const Params = lazy(() => import("../../Features/Params"));
 /* Fluxo de Caixa */
 const CashFlow = lazy(() => import("../../Features/CashFlow"));
 
+/* Ponto de Equilíbrio */
+const BreakEven = lazy(() => import("../../Features/BreakEven"));
+
 /* FEVA */
 const AgregadoMensal = lazy(() => import("../../Features/ValueTree/EVA"));
 
@@ -232,6 +235,11 @@ export const AppRoutes = () => {
         {/* Fluxo de Caixa */}
         {withScopes("fluxo-caixa").map((path) => (
           <Route key={path} path={path} element={<CashFlow />} />
+        ))}
+
+        {/* Ponto de Equilíbrio */}
+        {withScopes("ponto-equilibrio").map((path) => (
+          <Route key={path} path={path} element={<BreakEven />} />
         ))}
 
         {/* FEVA */}
