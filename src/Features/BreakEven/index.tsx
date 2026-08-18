@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { MainTemplate } from "../../components/AppLayout";
 import CompanyNavigationDropdown from "../../components/Inputs/CompanyNavigationDropdown";
 import { MonthDateInput } from "../../components/Inputs/DateInput/MonthDateInput";
+import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
 import YearPicker from "../../components/Inputs/YearPicker";
 import { useYear } from "../../contexts/YearContext";
 import {
@@ -307,6 +308,7 @@ const BreakEvenPage = () => {
                 requestScopeChange(() => setMonth(nextDate.month() + 1));
               }}
             />
+            <TableValueVisualization />
           </FiltersRow>
 
           {loadError && !data ? (

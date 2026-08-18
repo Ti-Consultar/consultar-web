@@ -38,6 +38,9 @@ test("aplica a regra de sinal informada pelo backend", () => {
 test("formata números sem sinal de moeda e percentual na escala correta", () => {
   assert.equal(formatBreakEvenNumber(1002904.36), "1.002.904,36");
   assert.equal(formatBreakEvenNumber(-69355.97), "(69.355,97)");
+  assert.equal(formatBreakEvenNumber(1002904.36, "MILHAR"), "1.002,90");
+  assert.equal(formatBreakEvenNumber(1002904.36, "MILHARES"), "1,00");
+  assert.equal(formatBreakEvenNumber(-69355.97, "MILHAR"), "(69,36)");
   assert.equal(formatBreakEvenPercentage(0.399546), "39,95%");
 });
 

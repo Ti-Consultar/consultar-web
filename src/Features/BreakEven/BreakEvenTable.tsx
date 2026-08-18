@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useValueDisplay } from "../../contexts/ValueDisplayContext";
 import type { BreakEvenRow } from "../../types/breakEven";
 import { formatBreakEvenValue, sortBreakEvenRows } from "./breakEven.utils";
 import { SimulationCell } from "./SimulationCell";
@@ -26,8 +27,11 @@ const BreakEvenTableComponent = ({
   disabled,
   onSimulationChange,
   onValidityChange,
-}: BreakEvenTableProps) => (
-  <TableFrame>
+}: BreakEvenTableProps) => {
+  const { valueMode } = useValueDisplay();
+
+  return (
+    <TableFrame>
     <FinancialTable aria-label="DRE do ponto de equilíbrio">
       <thead>
         <tr>
@@ -62,17 +66,26 @@ const BreakEvenTableComponent = ({
                 ) : null}
               </NumericCell>
               <NumericCell $dimmed={dimmed}>
-                {formatBreakEvenValue(row.projectedValue, row.valueType)}
+                {formatBreakEvenValue(
+                  row.projectedValue,
+                  row.valueType,
+                  valueMode,
+                )}
               </NumericCell>
               <NumericCell $dimmed={dimmed}>
-                {formatBreakEvenValue(row.breakEvenValue, row.valueType)}
+                {formatBreakEvenValue(
+                  row.breakEvenValue,
+                  row.valueType,
+                  valueMode,
+                )}
               </NumericCell>
             </TableRow>
           );
         })}
       </tbody>
     </FinancialTable>
-  </TableFrame>
-);
+    </TableFrame>
+  );
+};
 
 export const BreakEvenTable = memo(BreakEvenTableComponent);

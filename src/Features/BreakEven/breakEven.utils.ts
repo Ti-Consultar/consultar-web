@@ -21,10 +21,25 @@ const humanPercentageFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 4,
 });
 
-export const formatBreakEvenNumber = (value: number): string => {
+export type BreakEvenValueMode = "TOTAL" | "MILHAR" | "MILHARES";
+
+const scaleBreakEvenNumber = (
+  value: number,
+  valueMode: BreakEvenValueMode,
+): number => {
+  if (valueMode === "MILHAR") return value / 1_000;
+  if (valueMode === "MILHARES") return value / 1_000_000;
+  return value;
+};
+
+export const formatBreakEvenNumber = (
+  value: number,
+  valueMode: BreakEvenValueMode = "TOTAL",
+): string => {
   if (!Number.isFinite(value)) return "—";
-  const absolute = numberFormatter.format(Math.abs(value));
-  return value < 0 ? `(${absolute})` : absolute;
+  const scaledValue = scaleBreakEvenNumber(value, valueMode);
+  const absolute = numberFormatter.format(Math.abs(scaledValue));
+  return scaledValue < 0 ? `(${absolute})` : absolute;
 };
 
 export const formatBreakEvenPercentage = (value: number): string =>
@@ -33,10 +48,11 @@ export const formatBreakEvenPercentage = (value: number): string =>
 export const formatBreakEvenValue = (
   value: number,
   valueType: BreakEvenRow["valueType"],
+  valueMode: BreakEvenValueMode = "TOTAL",
 ): string =>
   valueType === "percentage"
     ? formatBreakEvenPercentage(value)
-    : formatBreakEvenNumber(value);
+    : formatBreakEvenNumber(value, valueMode);
 
 export const formatHumanPercentage = (decimalValue: number): string =>
   humanPercentageFormatter.format(decimalValue * 100);
