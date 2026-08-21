@@ -18,11 +18,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { MainTemplate } from "../../components/AppLayout";
+import { ExportButton } from "../../components/Button/ExportButton";
 import CompanyNavigationDropdown from "../../components/Inputs/CompanyNavigationDropdown";
 import { MonthDateInput } from "../../components/Inputs/DateInput/MonthDateInput";
 import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
 import YearPicker from "../../components/Inputs/YearPicker";
 import { useYear } from "../../contexts/YearContext";
+import { useValueDisplay } from "../../contexts/ValueDisplayContext";
 import {
   getBreakEvenV2,
   simulateBreakEvenV2,
@@ -37,6 +39,10 @@ import type {
 import type { CompanyResponse } from "../../types/companyDropdown";
 import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 import { BreakEvenTable } from "./BreakEvenTable";
+import {
+  exportBreakEvenToExcel,
+  resolveBreakEvenEntityName,
+} from "./breakEven.export";
 import {
   applySimulationSignRule,
   createBreakEvenDraft,
@@ -62,6 +68,7 @@ const BreakEvenPage = () => {
   const navigate = useNavigate();
   useBreadcrumb("break-even");
   const { year: contextYear, setYear: setContextYear } = useYear();
+  const { valueMode } = useValueDisplay();
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
     companyid?: string;
@@ -257,8 +264,32 @@ const BreakEvenPage = () => {
     : companyid
       ? Number(companyid)
       : Number(groupId);
+  const entityName = resolveBreakEvenEntityName(
+    dropdownData?.data,
+    selectedId,
+  );
   const dimmed = status !== "clean";
   const hasInvalidFields = invalidFields.size > 0;
+
+  const handleExportExcel = () => {
+    if (!data || !draft) {
+      toast.warning("Nenhum dado para exportar.");
+      return;
+    }
+    if (hasInvalidFields) {
+      toast.warning("Corrija os percentuais inválidos antes de exportar.");
+      return;
+    }
+
+    exportBreakEvenToExcel({
+      data,
+      draft,
+      entityName,
+      month,
+      year,
+      valueMode,
+    });
+  };
 
   return (
     <MainTemplate>
@@ -309,6 +340,7 @@ const BreakEvenPage = () => {
               }}
             />
             <TableValueVisualization />
+            <ExportButton onClick={handleExportExcel} />
           </FiltersRow>
 
           {loadError && !data ? (

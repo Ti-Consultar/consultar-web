@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import * as XLSX from "xlsx";
 import type { BreakEvenData, BreakEvenRow } from "../../types/breakEven";
 import {
   applySimulationSignRule,
@@ -10,6 +11,12 @@ import {
   parseHumanPercentage,
   sortBreakEvenRows,
 } from "./breakEven.utils.ts";
+import {
+  buildBreakEvenExportFileName,
+  buildBreakEvenWorksheet,
+  resolveBreakEvenEntityName,
+} from "./breakEven.export.ts";
+import type { GroupData } from "../../types/companyDropdown.ts";
 
 test("converte o percentual humano para a escala decimal da API", () => {
   assert.equal(parseHumanPercentage("10"), 0.1);
@@ -87,4 +94,76 @@ test("ordena linhas exclusivamente pelos metadados de exibição", () => {
   ] as BreakEvenRow[];
 
   assert.deepEqual(sortBreakEvenRows(rows).map((row) => row.code), ["A", "C", "B"]);
+});
+
+test("monta a planilha do PE com fator, cabeçalhos e formatos numéricos", () => {
+  const data = {
+    factor: 0.05,
+    rows: [
+      {
+        code: "REVENUE",
+        name: "Receita Operacional",
+        displayOrder: 1,
+        level: 0,
+        canSimulate: true,
+        simulationPercentage: 0.1,
+        valueType: "currency",
+        projectedValue: 1_250_000,
+        breakEvenValue: -950_000,
+      },
+      {
+        code: "MARGIN",
+        name: "Margem",
+        displayOrder: 2,
+        level: 1,
+        canSimulate: false,
+        simulationPercentage: null,
+        valueType: "percentage",
+        projectedValue: 0.4,
+        breakEvenValue: 0.35,
+      },
+    ],
+  } as BreakEvenData;
+
+  const worksheet = buildBreakEvenWorksheet({
+    data,
+    draft: { factor: 0.08, simulations: { REVENUE: 0.12 } },
+    valueMode: "MILHAR",
+  });
+
+  assert.equal(worksheet.A1.v, "Fator global");
+  assert.equal(worksheet.B1.v, 0.08);
+  assert.equal(worksheet.B1.z, "0.00%;(0.00%)");
+  assert.deepEqual(
+    [worksheet.A3.v, worksheet.B3.v, worksheet.C3.v, worksheet.D3.v],
+    ["DRE", "Simulação", "Projetado", "PE"],
+  );
+  assert.equal(worksheet.B4.v, 0.12);
+  assert.equal(worksheet.C4.v, 1250);
+  assert.equal(worksheet.D4.v, -950);
+  assert.equal(worksheet.D4.z, "#,##0.00;\\(#,##0.00\\)");
+  assert.equal(XLSX.utils.format_cell(worksheet.D4), "(950.00)");
+  assert.equal(worksheet.B5, undefined);
+  assert.equal(worksheet.C5.v, 0.4);
+  assert.equal(worksheet.C5.z, "0.00%;(0.00%)");
+});
+
+test("resolve a empresa e gera o nome do arquivo no padrão solicitado", () => {
+  const group = {
+    id: 10,
+    name: "Grupo Principal",
+    filiais: [
+      {
+        id: 20,
+        name: "Empresa / SP",
+        subCompanies: [{ id: 30, name: "Unidade Sul" }],
+      },
+    ],
+  } as GroupData;
+
+  assert.equal(resolveBreakEvenEntityName(group, 30), "Unidade Sul");
+  assert.equal(
+    buildBreakEvenExportFileName("Empresa / SP", 8, 2026),
+    "Ponto-equilibrio-Empresa-SP-Agosto-2026",
+  );
 });
