@@ -16,10 +16,10 @@ export const getCashFlow = async (accountPlanId: number, year: number) => {
   }
 };
 
-export const getCashFlowVariation = async (accountPlanId: number, year: number) => {
+export const getCashFlowRolling = async (accountPlanId: number, year: number) => {
   try {
     const response = await axiosInstanceWithToken.get(
-      `${URL}/variacao`,
+      `${URL}/rolling`,
       {
         params: { accountPlanId, year },
       }

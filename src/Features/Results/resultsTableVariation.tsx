@@ -51,7 +51,7 @@ interface ResultsTableProps {
   metricLabels: Record<string, string>;
   nestedMetrics?: Record<string, string[]>;
   enableValueMode?: boolean;
-  metricTypes?: Record<string, "number" | "percent" | "indicator">;
+  metricTypes?: Record<string, "number" | "percent" | "indicator" | "days">;
   highlightRows?: Record<string, boolean>;
   showBudgetColumns?: boolean;
   metricNature?: Record<string, "receita" | "despesa">;
@@ -193,6 +193,11 @@ export const ResultsTableVariation = ({
       const formattedPercent =
         Math.abs(value).toFixed(2).replace(".", ",") + "%";
       return value < 0 ? `(${formattedPercent})` : formattedPercent;
+    }
+
+    if (metricTypes[metricKey] === "days") {
+      const formatted = Math.round(Math.abs(value)).toLocaleString("pt-BR");
+      return value < 0 ? `(${formatted})` : formatted;
     }
 
     if (metricTypes[metricKey] === "indicator") {

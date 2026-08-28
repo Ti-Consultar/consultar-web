@@ -5,8 +5,9 @@ import { useLoading } from "../../contexts/LoadingProvider";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { MainTemplate } from "../../components/AppLayout";
-import { getCashFlowVariation } from "../../services/apis/routes/cashFlow.service";
+import { getCashFlowRolling } from "../../services/apis/routes/cashFlow.service";
 import { CashFlowTable } from "./table";
+import type { CashFlowAnnual, CashFlowMonth } from "./table";
 import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
 import { ExportDialog } from "../../components/ExportModal";
 import { useExportUtils } from "../../utils/hooks/useExportUtils";
@@ -21,14 +22,25 @@ import { useBreadcrumb } from "../../utils/hooks/useBreadcrumb";
 import { useYear } from "../../contexts/YearContext";
 import YearPicker from "../../components/Inputs/YearPicker";
 
+interface CashFlowExportRow {
+  name: string;
+  values: Record<string, number | string>;
+}
+
+interface CashFlowExportColumn {
+  label: string;
+  accessor: (row: CashFlowExportRow) => number | string;
+}
+
 const CashFlow = () => {
   useBreadcrumb("cash-flow");
 
   const [tabValue] = useState<number>(1);
   const { year, setYear } = useYear();
-  const [realizado, setRealizado] = useState<any[]>([]);
-  const [orcado, setOrcado] = useState<any[]>([]);
-  const [variacao, setVariacao] = useState<any[]>([]);
+  const [realizado, setRealizado] = useState<CashFlowMonth[]>([]);
+  const [orcado, setOrcado] = useState<CashFlowMonth[]>([]);
+  const [variacao, setVariacao] = useState<CashFlowMonth[]>([]);
+  const [annual, setAnnual] = useState<CashFlowAnnual | null>(null);
   const { setLoading } = useLoading();
   const { groupId, companyid, subCompanyId } = useParams<{
     groupId: string;
@@ -123,11 +135,12 @@ const CashFlow = () => {
 
     try {
       if (!accountPlanId) return;
-      const response = await getCashFlowVariation(accountPlanId, year);
+      const response = await getCashFlowRolling(accountPlanId, year);
 
       setRealizado(response.realizado?.cashFlow?.months ?? []);
       setOrcado(response.orcado?.cashFlow?.months ?? []);
       setVariacao(response.variacao?.cashFlow?.months ?? []);
+      setAnnual(response.annual ?? null);
     } catch (error) {
       console.error("Erro ao buscar dados da aba:", error);
     } finally {
@@ -145,23 +158,28 @@ const CashFlow = () => {
     }
   };
 
-  const buildExportData = (months: any[]) => {
+  const buildExportData = (
+    months: CashFlowMonth[],
+  ): { columns: CashFlowExportColumn[]; rows: CashFlowExportRow[] } => {
     if (!months.length) return { columns: [], rows: [] };
 
     // Colunas: Conta + meses
     const columns = [
-      { label: "Conta", accessor: (row: any) => row.name },
+      { label: "Conta", accessor: (row: CashFlowExportRow) => row.name },
       ...months.map((m) => ({
         label: monthTranslator[m.name] ?? m.name,
-        accessor: (row: any) => row.values[m.name] ?? "-",
+        accessor: (row: CashFlowExportRow) => row.values[m.name] ?? "-",
       })),
     ];
 
     // Linhas: cada chave do objeto vira uma linha
-    const rows: any[] = [];
+    const rows: CashFlowExportRow[] = [];
 
     Object.keys(metricLabels).forEach((field) => {
-      const row: any = { name: metricLabels[field], values: {} };
+      const row: CashFlowExportRow = {
+        name: metricLabels[field],
+        values: {},
+      };
       months.forEach((m) => {
         row.values[m.name] = m[field] ?? "-";
       });
@@ -265,6 +283,7 @@ const CashFlow = () => {
             realizadoMonths={realizado}
             budgetMonths={orcado}
             variationMonths={variacao}
+            annual={annual}
             showBudgetColumns={showBudgetColumns}
           />
         </Paper>

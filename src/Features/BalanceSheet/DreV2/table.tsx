@@ -29,8 +29,8 @@ import {
   DreV2Data,
   DreV2DetailItem,
   DreV2Period,
+  DreV2PeriodColumn,
   DreV2Row,
-  DreV2Scenario,
 } from "../../../types/dreV2";
 import {
   FINANCIAL_STICKY_FIRST_CELL_SX,
@@ -46,12 +46,6 @@ import {
 import { getDreClassificationExpansionCodes } from "./expansion";
 
 const HIDDEN_PERIODS_STORAGE_KEY = "dreV2Table.hiddenPeriods";
-const SCENARIO_ORDER = ["orcado", "realizado", "variacao"];
-const DEFAULT_SCENARIOS: DreV2Scenario[] = [
-  { key: "realizado", label: "Realizado", displayOrder: 1 },
-  { key: "orcado", label: "Orçado", displayOrder: 2 },
-  { key: "variacao", label: "Variação", displayOrder: 3 },
-];
 
 interface DreV2TableProps {
   data: DreV2Data;
@@ -113,30 +107,16 @@ const getRowPresentation = (row: DreV2Row): RowPresentation => {
   };
 };
 
-const getScenarioColumns = (
-  scenarios: DreV2Scenario[],
+const getPeriodColumns = (
+  period: DreV2Period,
   showBudgetColumns: boolean,
-) => {
-  const sortedScenarios = sortByDisplayOrder(scenarios);
-  const defaultByKey = new Map(
-    DEFAULT_SCENARIOS.map((scenario) => [scenario.key, scenario]),
-  );
-  const byKey = new Map(
-    sortedScenarios.map((scenario) => [scenario.key, scenario]),
-  );
+): DreV2PeriodColumn[] => {
+  const columns = sortByDisplayOrder(period.columns ?? []);
+  if (showBudgetColumns) return columns;
 
-  if (!showBudgetColumns) {
-    return [byKey.get("realizado") ?? defaultByKey.get("realizado")!];
-  }
-
-  const legacyOrder = SCENARIO_ORDER.map(
-    (key) => byKey.get(key) ?? defaultByKey.get(key)!,
-  );
-  const additionalScenarios = sortedScenarios.filter(
-    (scenario) => !SCENARIO_ORDER.includes(scenario.key),
-  );
-
-  return [...legacyOrder, ...additionalScenarios];
+  const primaryKey = period.type === "rolling" ? "rolling" : "realizado";
+  const primaryColumn = columns.find((column) => column.key === primaryKey);
+  return primaryColumn ? [primaryColumn] : columns.slice(0, 1);
 };
 
 const getDetailKey = (detail: DreV2DetailItem) =>
@@ -145,13 +125,13 @@ const getDetailKey = (detail: DreV2DetailItem) =>
 const getDetailRows = (
   row: DreV2Row,
   periods: DreV2Period[],
-  scenarios: DreV2Scenario[],
+  showBudgetColumns: boolean,
 ): DreV2DetailViewRow[] => {
   const detailRows = new Map<string, DreV2DetailViewRow>();
 
-  scenarios.forEach((scenario) => {
-    periods.forEach((period) => {
-      const details = row.details.data?.[scenario.key]?.[period.key] ?? [];
+  periods.forEach((period) => {
+    getPeriodColumns(period, showBudgetColumns).forEach((column) => {
+      const details = row.details.data?.[column.key]?.[period.key] ?? [];
       details.forEach((detail) => {
         const key = getDetailKey(detail);
         const detailRow = detailRows.get(key) ?? {
@@ -160,9 +140,9 @@ const getDetailRows = (
           costCenter: detail.costCenter,
           values: {},
         };
-        const scenarioValues = detailRow.values[scenario.key] ?? {};
-        scenarioValues[period.key] = detail;
-        detailRow.values[scenario.key] = scenarioValues;
+        const columnValues = detailRow.values[column.key] ?? {};
+        columnValues[period.key] = detail;
+        detailRow.values[column.key] = columnValues;
         detailRows.set(key, detailRow);
       });
     });
@@ -191,13 +171,13 @@ const getVisibleRows = (
     Object.values(row.values ?? {}).some((scenarioValues) =>
       periodKeys.some((periodKey) => {
         const value = scenarioValues?.[periodKey];
-        return typeof value === "number" && value !== 0;
+        return typeof value === "number";
       }),
     ) ||
     Object.values(row.details.data ?? {}).some((scenarioDetails) =>
       periodKeys.some((periodKey) =>
         (scenarioDetails?.[periodKey] ?? []).some(
-          (detail) => detail.value !== 0,
+          (detail) => detail.value !== null && detail.value !== undefined,
         ),
       ),
     );
@@ -257,12 +237,11 @@ export const DreV2Table = ({
   const [openExpandedModal, setOpenExpandedModal] = useState(false);
 
   const periods = useMemo(
-    () => sortByDisplayOrder(data.periods ?? []),
+    () =>
+      sortByDisplayOrder(data.periods ?? []).sort(
+        (a, b) => Number(a.type === "rolling") - Number(b.type === "rolling"),
+      ),
     [data.periods],
-  );
-  const scenarioColumns = useMemo(
-    () => getScenarioColumns(data.scenarios ?? [], showBudgetColumns),
-    [data.scenarios, showBudgetColumns],
   );
   const monthOptions = useMemo(
     () => periods.map((period) => ({ key: period.key, label: period.label })),
@@ -276,15 +255,14 @@ export const DreV2Table = ({
   } = useMonthVisibility(HIDDEN_PERIODS_STORAGE_KEY, monthOptions);
   const visiblePeriods = useMemo(() => {
     const hiddenPeriods = new Set(hiddenMonthKeys);
-    return periods.filter((period) => !hiddenPeriods.has(period.key));
-  }, [hiddenMonthKeys, periods]);
+    return periods.filter(
+      (period) =>
+        !hiddenPeriods.has(period.key) &&
+        getPeriodColumns(period, showBudgetColumns).length > 0,
+    );
+  }, [hiddenMonthKeys, periods, showBudgetColumns]);
   const dataPeriodKeys = useMemo(() => {
-    const monthlyPeriodKeys = periods
-      .filter((period) => period.type === "month")
-      .map((period) => period.key);
-    return monthlyPeriodKeys.length
-      ? monthlyPeriodKeys
-      : periods.map((period) => period.key);
+    return periods.map((period) => period.key);
   }, [periods]);
   const { visibleRows, childrenByParent } = useMemo(
     () => getVisibleRows(data.rows ?? [], dataPeriodKeys, expandedRows),
@@ -304,7 +282,7 @@ export const DreV2Table = ({
 
   const isEmpty = periods.length === 0 || visibleRows.length === 0;
   const showEmptyState =
-    isEmpty || visiblePeriods.length === 0 || scenarioColumns.length === 0;
+    isEmpty || visiblePeriods.length === 0;
 
   const toggleRow = (rowCode: string) => {
     setExpandedRows((current) => {
@@ -327,10 +305,10 @@ export const DreV2Table = ({
     row: DreV2Row,
     scenarioKey: string,
     periodKey: string,
-  ) => row.values?.[scenarioKey]?.[periodKey];
+  ) => row.values?.[scenarioKey]?.[periodKey] ?? null;
 
   const formatValue = (value: number | null | undefined, row: DreV2Row) => {
-    if (value === undefined || value === null || value === 0) return "-";
+    if (value === undefined || value === null) return "-";
     if (row.valueType === "percentage") {
       return `${value.toLocaleString("pt-BR", {
         minimumFractionDigits: 1,
@@ -348,15 +326,15 @@ export const DreV2Table = ({
   };
 
   const getVariationVisualForValues = (
-    variation: number | undefined,
-    actual: number | undefined,
-    budget: number | undefined,
+    variation: number | null | undefined,
+    actual: number | null | undefined,
+    budget: number | null | undefined,
     name: string,
   ) => {
     if (
-      variation === undefined ||
-      actual === undefined ||
-      budget === undefined ||
+      variation == null ||
+      actual == null ||
+      budget == null ||
       variation === 0
     ) {
       return { arrow: "", color: "inherit" };
@@ -375,7 +353,11 @@ export const DreV2Table = ({
   const getVariationVisual = (row: DreV2Row, period: DreV2Period) =>
     getVariationVisualForValues(
       getValue(row, "variacao", period.key),
-      getValue(row, "realizado", period.key),
+      getValue(
+        row,
+        period.type === "rolling" ? "rolling" : "realizado",
+        period.key,
+      ),
       getValue(row, "orcado", period.key),
       row.name,
     );
@@ -466,12 +448,14 @@ export const DreV2Table = ({
                   <TableCell
                     key={period.key}
                     align="center"
-                    colSpan={scenarioColumns.length}
+                    colSpan={getPeriodColumns(period, showBudgetColumns).length}
                     sx={{
                       ...getFinancialMonthHeaderSx(showBudgetColumns),
                     }}
                   >
-                    {period.type === "accumulated" ? (
+                    {period.type === "rolling" && !showBudgetColumns ? (
+                      <span>Rolling</span>
+                    ) : period.type === "accumulated" ? (
                       <Tooltip title="Year to Date">
                         <span>{period.label}</span>
                       </Tooltip>
@@ -492,19 +476,21 @@ export const DreV2Table = ({
                     }}
                   />
                   {visiblePeriods.flatMap((period) =>
-                    scenarioColumns.map((scenario, scenarioIndex) => (
-                      <TableCell
-                        key={`${period.key}-${scenario.key}`}
-                        align="right"
-                        sx={{
-                          ...getFinancialMetricHeaderSx(
-                            scenarioIndex === scenarioColumns.length - 1,
-                          ),
-                        }}
-                      >
-                        {scenario.label}
-                      </TableCell>
-                    )),
+                    getPeriodColumns(period, showBudgetColumns).map(
+                      (column, columnIndex, columns) => (
+                        <TableCell
+                          key={`${period.key}-${column.key}`}
+                          align="right"
+                          sx={{
+                            ...getFinancialMetricHeaderSx(
+                              columnIndex === columns.length - 1,
+                            ),
+                          }}
+                        >
+                          {column.label}
+                        </TableCell>
+                      ),
+                    ),
                   )}
                 </TableRow>
               )}
@@ -518,7 +504,7 @@ export const DreV2Table = ({
                 const detailRows = getDetailRows(
                   row,
                   periods,
-                  scenarioColumns,
+                  showBudgetColumns,
                 );
                 const hasDetails = detailRows.length > 0;
                 const canExpand =
@@ -597,26 +583,27 @@ export const DreV2Table = ({
                     </TableCell>
 
                     {visiblePeriods.flatMap((period) =>
-                      scenarioColumns.map((scenario, scenarioIndex) => {
-                        const value = getValue(row, scenario.key, period.key);
-                        const variationVisual =
-                          scenario.key === "variacao"
-                            ? getVariationVisual(row, period)
-                            : { arrow: "", color: "inherit" };
+                      getPeriodColumns(period, showBudgetColumns).map(
+                        (column, columnIndex, columns) => {
+                          const value = getValue(row, column.key, period.key);
+                          const variationVisual =
+                            column.key === "variacao"
+                              ? getVariationVisual(row, period)
+                              : { arrow: "", color: "inherit" };
 
-                        return (
-                          <TableCell
+                          return (
+                            <TableCell
                             data-financial-hover-cell={
                               row.rowType !== "subtotal"
                             }
-                            data-financial-column={`${period.key}:${scenario.key}`}
-                            key={`${row.code}-${period.key}-${scenario.key}`}
+                            data-financial-column={`${period.key}:${column.key}`}
+                            key={`${row.code}-${period.key}-${column.key}`}
                             align="right"
                             sx={{
                               ...getFinancialValueCellSx(
-                                scenario.key,
+                                column.key,
                                 showBudgetColumns &&
-                                  scenarioIndex === scenarioColumns.length - 1,
+                                  columnIndex === columns.length - 1,
                                 row.rowType === "subtotal"
                                   ? presentation.backgroundColor
                                   : undefined,
@@ -625,7 +612,7 @@ export const DreV2Table = ({
                               ...getFinancialColumnHoverSx(
                                 row.rowType !== "subtotal" &&
                                   isColumnHovered(
-                                    `${period.key}:${scenario.key}`,
+                                    `${period.key}:${column.key}`,
                                   ),
                               ),
                             }}
@@ -641,9 +628,10 @@ export const DreV2Table = ({
                               {formatValue(value, row)}
                               {variationVisual.arrow}
                             </span>
-                          </TableCell>
-                        );
-                      }),
+                            </TableCell>
+                          );
+                        },
+                      ),
                     )}
                     </TableRow>
 
@@ -689,38 +677,41 @@ export const DreV2Table = ({
                           </TableCell>
 
                           {visiblePeriods.flatMap((period) =>
-                            scenarioColumns.map((scenario, scenarioIndex) => {
-                              const value =
-                                detail.values[scenario.key]?.[period.key]
-                                  ?.value;
-                              const variationVisual =
-                                scenario.key === "variacao"
-                                  ? getVariationVisualForValues(
+                            getPeriodColumns(period, showBudgetColumns).map(
+                              (column, columnIndex, columns) => {
+                                const value =
+                                  detail.values[column.key]?.[period.key]
+                                    ?.value;
+                                const variationVisual =
+                                  column.key === "variacao"
+                                    ? getVariationVisualForValues(
                                       detail.values.variacao?.[period.key]
                                         ?.value,
-                                      detail.values.realizado?.[period.key]
-                                        ?.value,
+                                      detail.values[
+                                        period.type === "rolling"
+                                          ? "rolling"
+                                          : "realizado"
+                                      ]?.[period.key]?.value,
                                       detail.values.orcado?.[period.key]?.value,
                                       detail.name,
-                                    )
-                                  : { arrow: "", color: "inherit" };
+                                      )
+                                    : { arrow: "", color: "inherit" };
 
-                              return (
-                                <TableCell
+                                return (
+                                  <TableCell
                                   data-financial-hover-cell="true"
-                                  data-financial-column={`${period.key}:${scenario.key}`}
-                                  key={`${row.code}-${detail.key}-${period.key}-${scenario.key}`}
+                                  data-financial-column={`${period.key}:${column.key}`}
+                                  key={`${row.code}-${detail.key}-${period.key}-${column.key}`}
                                   align="right"
                                   sx={{
                                     ...getFinancialValueCellSx(
-                                      scenario.key,
+                                      column.key,
                                       showBudgetColumns &&
-                                        scenarioIndex ===
-                                          scenarioColumns.length - 1,
+                                        columnIndex === columns.length - 1,
                                     ),
                                     ...getFinancialColumnHoverSx(
                                       isColumnHovered(
-                                        `${period.key}:${scenario.key}`,
+                                        `${period.key}:${column.key}`,
                                       ),
                                     ),
                                   }}
@@ -730,7 +721,7 @@ export const DreV2Table = ({
                                     variant="body2"
                                     sx={{
                                       color:
-                                        scenario.key === "variacao"
+                                        column.key === "variacao"
                                           ? variationVisual.color
                                           : theme.palette.text.secondary,
                                       fontSize: "0.75rem",
@@ -742,9 +733,10 @@ export const DreV2Table = ({
                                     {formatValue(value, row)}
                                     {variationVisual.arrow}
                                   </Typography>
-                                </TableCell>
-                              );
-                            }),
+                                  </TableCell>
+                                );
+                              },
+                            ),
                           )}
                         </TableRow>
                       ))}

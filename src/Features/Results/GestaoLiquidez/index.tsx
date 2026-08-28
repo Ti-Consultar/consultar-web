@@ -56,7 +56,7 @@ const GestaoLiquidez = () => {
   const [months, setMonths] = useState<any[]>([]);
 
   const [metricTypes, setMetricTypes] = useState<
-    Record<string, "number" | "percent" | "indicator">
+    Record<string, "number" | "percent" | "indicator" | "days">
   >({});
   const [metricKeys, setMetricKeys] = useState<string[]>([]);
   const [metricLabels, setMetricLabels] = useState<Record<string, string>>({});
@@ -175,7 +175,10 @@ const GestaoLiquidez = () => {
     try {
       let metrics: string[] = [];
       let labels: Record<string, string> = {};
-      let types: Record<string, "number" | "percent" | "indicator"> = {};
+      let types: Record<
+        string,
+        "number" | "percent" | "indicator" | "days"
+      > = {};
       let extractedMonths: any[] = [];
 
       let dashboard: any = null;
@@ -242,11 +245,11 @@ const GestaoLiquidez = () => {
             cicloFinanceiroNCG: "Ciclo Financeiro NCG",
           };
           types = {
-            pme: "indicator",
-            pmr: "indicator",
-            pmp: "indicator",
-            cicloFinanceiroDasOperacoesPrincipais: "indicator",
-            cicloFinanceiroNCG: "indicator",
+            pme: "days",
+            pmr: "days",
+            pmp: "days",
+            cicloFinanceiroDasOperacoesPrincipais: "days",
+            cicloFinanceiroNCG: "days",
           };
 
           const localData = dashboard?.capitalDynamics?.months ?? [];
