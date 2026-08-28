@@ -24,6 +24,12 @@ type CapitalDynamicsProps = {
   data: CapitalMonth[];
 };
 
+const formatDays = (value: number) => {
+  const formatted = Math.round(Math.abs(value)).toLocaleString("pt-BR");
+  const accountingValue = value < 0 ? `(${formatted})` : formatted;
+  return `${accountingValue} dias`;
+};
+
 export const CapitalDynamicsChart: React.FC<CapitalDynamicsProps> = ({
   data,
 }) => {
@@ -59,7 +65,7 @@ export const CapitalDynamicsChart: React.FC<CapitalDynamicsProps> = ({
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
         <YAxis tick={false} />
-        <Tooltip formatter={(value: number) => value.toFixed(2)} />
+        <Tooltip formatter={(value: number) => formatDays(value)} />
         <Legend />
 
         <Line

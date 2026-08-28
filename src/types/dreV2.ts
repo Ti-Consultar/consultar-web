@@ -1,4 +1,10 @@
-export type DreV2PeriodType = "month" | "accumulated";
+export type DreV2PeriodType = "month" | "accumulated" | "rolling";
+
+export interface DreV2PeriodColumn {
+  key: string;
+  label: string;
+  displayOrder: number;
+}
 
 export interface DreV2Period {
   key: string;
@@ -7,6 +13,7 @@ export interface DreV2Period {
   month: number | null;
   type: DreV2PeriodType;
   displayOrder: number;
+  columns: DreV2PeriodColumn[];
 }
 
 export interface DreV2Scenario {

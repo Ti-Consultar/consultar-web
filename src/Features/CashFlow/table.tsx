@@ -32,16 +32,31 @@ import {
   useFinancialTableHover,
 } from "../BalanceSheet/financialTableStyles";
 
-interface CashFlowMonth {
+export interface CashFlowMonth {
   name: string;
   dateMonth: number;
-  [key: string]: number | string;
+  [key: string]: number | string | null;
+}
+
+export interface CashFlowAnnualColumn {
+  key: string;
+  label: string;
+  displayOrder: number;
+  value: unknown;
+}
+
+export interface CashFlowAnnual {
+  year: number;
+  type: string;
+  displayOrder: number;
+  columns: CashFlowAnnualColumn[];
 }
 
 interface CashFlowTableProps {
   realizadoMonths: CashFlowMonth[];
   budgetMonths: CashFlowMonth[];
   variationMonths: CashFlowMonth[];
+  annual?: CashFlowAnnual | null;
   metricKeys: string[];
   metricLabels: Record<string, string>;
   highlightedMetrics?: string[];
@@ -70,6 +85,7 @@ export const CashFlowTable = ({
   realizadoMonths,
   budgetMonths,
   variationMonths,
+  annual,
   metricKeys,
   metricLabels,
   highlightedMetrics = [],
@@ -85,14 +101,34 @@ export const CashFlowTable = ({
   const getMonthKey = (month: CashFlowMonth) =>
     String(month.dateMonth ?? month.name);
 
-  const translatedMonths: CashFlowMonth[] = useMemo(
-    () =>
-      realizadoMonths.map((month) => ({
+  const translatedMonths: CashFlowMonth[] = useMemo(() => {
+    const periods = new Map<number, CashFlowMonth>();
+    [realizadoMonths, budgetMonths, variationMonths].forEach((months) => {
+      months.forEach((month) => {
+        if (month.dateMonth < 1 || month.dateMonth > 13) return;
+        if (!periods.has(month.dateMonth)) periods.set(month.dateMonth, month);
+      });
+    });
+
+    return Array.from(periods.values())
+      .sort((a, b) => a.dateMonth - b.dateMonth)
+      .map((month) => ({
         ...month,
-        translatedName: monthNameToPTBR[month.name] || month.name,
-      })),
-    [realizadoMonths],
-  );
+        translatedName:
+          monthNameToPTBR[month.name] ||
+          (month.dateMonth === 13 ? "Acumulado" : month.name),
+      }));
+  }, [budgetMonths, realizadoMonths, variationMonths]);
+
+  const rollingAnnual = annual?.type === "rolling" ? annual : null;
+  const annualColumns = useMemo(() => {
+    const columns = [...(rollingAnnual?.columns ?? [])].sort(
+      (a, b) => a.displayOrder - b.displayOrder,
+    );
+    if (showBudgetColumns) return columns;
+    const rolling = columns.find((column) => column.key === "rolling");
+    return rolling ? [rolling] : [];
+  }, [rollingAnnual, showBudgetColumns]);
 
   const monthOptions = useMemo(
     () =>
@@ -119,7 +155,6 @@ export const CashFlowTable = ({
 
   const formatValue = (label: string, value: number | undefined): string => {
     if (value === undefined || value === null) return "-";
-    if (value === 0) return "-";
 
     let adjusted = value;
     if (valueMode === "MILHAR") adjusted /= 1000;
@@ -138,48 +173,45 @@ export const CashFlowTable = ({
     return Math.trunc(adjusted).toLocaleString("pt-BR");
   };
 
-  const findMonth = (
-    list: CashFlowMonth[],
-    name: string,
-    dateMonth: number,
-  ) => {
-    // Tenta encontrar pelo nome
-    let month = list.find((m) => m.name === name);
+  const findMonth = (list: CashFlowMonth[], dateMonth: number) =>
+    list.find((month) => month.dateMonth === dateMonth) ?? null;
 
-    // Se não encontrou pelo nome, tenta pelo número do mês
-    if (!month) {
-      month = list.find((m) => m.dateMonth === dateMonth);
-    }
+  const getAnnualMetricValue = (
+    column: CashFlowAnnualColumn,
+    metric: string,
+  ): number | null => {
+    if (!column.value || typeof column.value !== "object") return null;
+    const value = column.value as Record<string, unknown>;
+    const directValue = value[metric];
+    if (typeof directValue === "number") return directValue;
 
-    // Só retorna o acumulado se o mês também for "ACUMULADO"
-    // (ou se quiser explicitamente que o acumulado substitua o último)
-    if (!month && name === "ACUMULADO") {
-      month = list.find((m) => m.dateMonth === 13);
-    }
-
-    return month;
+    const cashFlow = value.cashFlow;
+    if (!cashFlow || typeof cashFlow !== "object") return null;
+    const nestedValue = (cashFlow as Record<string, unknown>)[metric];
+    return typeof nestedValue === "number" ? nestedValue : null;
   };
 
   const hasAnyMetricValue = (metric: string) => {
-    return translatedMonths.some((month) => {
-      const real = month[metric] as number | undefined;
+    return visibleMonths.some((month) => {
+      const real = findMonth(realizadoMonths, month.dateMonth)?.[metric] as
+        | number
+        | undefined;
 
-      const budgetMonth = findMonth(budgetMonths, month.name, month.dateMonth);
-      const variationMonth = findMonth(
-        variationMonths,
-        month.name,
-        month.dateMonth,
-      );
+      const budgetMonth = findMonth(budgetMonths, month.dateMonth);
+      const variationMonth = findMonth(variationMonths, month.dateMonth);
 
       const budget = budgetMonth?.[metric] as number | undefined;
       const variation = variationMonth?.[metric] as number | undefined;
 
       return (
-        (real !== undefined && real !== null && real !== 0) ||
-        (budget !== undefined && budget !== null && budget !== 0) ||
-        (variation !== undefined && variation !== null && variation !== 0)
+        (real !== undefined && real !== null) ||
+        (budget !== undefined && budget !== null) ||
+        (variation !== undefined && variation !== null)
       );
-    });
+    }) ||
+      annualColumns.some(
+        (column) => getAnnualMetricValue(column, metric) !== null,
+      );
   };
 
   const renderValueCells = (
@@ -187,7 +219,11 @@ export const CashFlowTable = ({
     metric: string,
     isSubtotal: boolean,
   ) => {
-    const realValue = formatValue(metric, month[metric] as number);
+    const realMonth = findMonth(realizadoMonths, month.dateMonth);
+    const realValue = formatValue(
+      metric,
+      realMonth?.[metric] as number | undefined,
+    );
     const monthKey = getMonthKey(month);
     const subtotalBackground = isSubtotal
       ? FINANCIAL_TABLE_COLORS.subtotal
@@ -218,12 +254,8 @@ export const CashFlowTable = ({
       );
     }
 
-    const budgetMonth = findMonth(budgetMonths, month.name, month.dateMonth);
-    const variationMonth = findMonth(
-      variationMonths,
-      month.name,
-      month.dateMonth,
-    );
+    const budgetMonth = findMonth(budgetMonths, month.dateMonth);
+    const variationMonth = findMonth(variationMonths, month.dateMonth);
 
     const budgetValue = formatValue(
       metric,
@@ -294,6 +326,40 @@ export const CashFlowTable = ({
     );
   };
 
+  const renderAnnualCells = (metric: string, isSubtotal: boolean) => {
+    const subtotalBackground = isSubtotal
+      ? FINANCIAL_TABLE_COLORS.subtotal
+      : undefined;
+
+    return annualColumns.map((column, columnIndex) => {
+      const columnKey = `annual:${column.key}`;
+      return (
+        <TableCell
+          data-financial-hover-cell={!isSubtotal}
+          data-financial-column={columnKey}
+          key={`${column.key}-${metric}`}
+          align="right"
+          sx={{
+            ...getFinancialValueCellSx(
+              column.key,
+              showBudgetColumns && columnIndex === annualColumns.length - 1,
+              subtotalBackground,
+            ),
+            fontWeight: isSubtotal ? 600 : 400,
+            ...getFinancialColumnHoverSx(
+              !isSubtotal && isColumnHovered(columnKey),
+            ),
+          }}
+        >
+          {formatValue(
+            metric,
+            getAnnualMetricValue(column, metric) ?? undefined,
+          )}
+        </TableCell>
+      );
+    });
+  };
+
   const handleMouseDown = () => setDragging(true);
   const handleMouseMove = (e: MouseEvent) => {
     if (dragging) {
@@ -314,8 +380,7 @@ export const CashFlowTable = ({
   }, [dragging]);
 
   const showEmptyState =
-    translatedMonths.length === 0 ||
-    visibleMonths.length === 0 ||
+    (visibleMonths.length === 0 && annualColumns.length === 0) ||
     !metricKeys.some((metric) => hasAnyMetricValue(metric));
 
   return (
@@ -327,7 +392,9 @@ export const CashFlowTable = ({
         onHideAllMonths={hideAllMonths}
         onToggleMonth={toggleMonthVisibility}
         onExpand={() => setOpenExpandedModal(true)}
-        expandDisabled={!translatedMonths.length}
+        expandDisabled={
+          translatedMonths.length === 0 && annualColumns.length === 0
+        }
         hideExpand={isExpandedView}
       />
 
@@ -387,6 +454,16 @@ export const CashFlowTable = ({
                 {m.translatedName}
               </TableCell>
             ))}
+            {rollingAnnual && annualColumns.length > 0 && (
+              <TableCell
+                key={`annual-${rollingAnnual.year}`}
+                align="center"
+                colSpan={annualColumns.length}
+                sx={getFinancialMonthHeaderSx(showBudgetColumns)}
+              >
+                {showBudgetColumns ? String(rollingAnnual.year) : "Rolling"}
+              </TableCell>
+            )}
           </TableRow>
 
           {showBudgetColumns && (
@@ -422,6 +499,17 @@ export const CashFlowTable = ({
                     Variação
                   </TableCell>
                 </React.Fragment>
+              ))}
+              {annualColumns.map((column, columnIndex) => (
+                <TableCell
+                  key={`annual-${column.key}`}
+                  align="right"
+                  sx={getFinancialMetricHeaderSx(
+                    columnIndex === annualColumns.length - 1,
+                  )}
+                >
+                  {column.label}
+                </TableCell>
               ))}
             </TableRow>
           )}
@@ -465,6 +553,7 @@ export const CashFlowTable = ({
                   {visibleMonths.map((month) =>
                     renderValueCells(month, metric, highlighted),
                   )}
+                  {renderAnnualCells(metric, highlighted)}
                 </TableRow>
               );
             })}
@@ -512,6 +601,7 @@ export const CashFlowTable = ({
               realizadoMonths={realizadoMonths}
               budgetMonths={budgetMonths}
               variationMonths={variationMonths}
+              annual={annual}
               metricKeys={metricKeys}
               metricLabels={metricLabels}
               highlightedMetrics={highlightedMetrics}
