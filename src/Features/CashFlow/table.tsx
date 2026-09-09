@@ -15,6 +15,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import React, { useMemo, useState } from "react";
 import { useValueDisplay } from "../../contexts/ValueDisplayContext";
+import { getAnnualMetricValue } from "./cashFlow.utils";
 import {
   MonthTableControls,
   TableEmptyState,
@@ -175,21 +176,6 @@ export const CashFlowTable = ({
 
   const findMonth = (list: CashFlowMonth[], dateMonth: number) =>
     list.find((month) => month.dateMonth === dateMonth) ?? null;
-
-  const getAnnualMetricValue = (
-    column: CashFlowAnnualColumn,
-    metric: string,
-  ): number | null => {
-    if (!column.value || typeof column.value !== "object") return null;
-    const value = column.value as Record<string, unknown>;
-    const directValue = value[metric];
-    if (typeof directValue === "number") return directValue;
-
-    const cashFlow = value.cashFlow;
-    if (!cashFlow || typeof cashFlow !== "object") return null;
-    const nestedValue = (cashFlow as Record<string, unknown>)[metric];
-    return typeof nestedValue === "number" ? nestedValue : null;
-  };
 
   const hasAnyMetricValue = (metric: string) => {
     return visibleMonths.some((month) => {

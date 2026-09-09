@@ -8,6 +8,7 @@ import { MainTemplate } from "../../components/AppLayout";
 import { getCashFlowRolling } from "../../services/apis/routes/cashFlow.service";
 import { CashFlowTable } from "./table";
 import type { CashFlowAnnual, CashFlowMonth } from "./table";
+import { buildCashFlowExportData } from "./cashFlow.utils";
 import { TableValueVisualization } from "../../components/Inputs/TableValueVisualization";
 import { ExportDialog } from "../../components/ExportModal";
 import { useExportUtils } from "../../utils/hooks/useExportUtils";
@@ -195,12 +196,21 @@ const CashFlow = () => {
   }, [groupId, companyid, subCompanyId]);
 
   const handleExport = (format: string) => {
-    if (!realizado.length) {
+    const { columns, rows } = format === "EXCEL"
+      ? buildCashFlowExportData({
+          realizado,
+          orcado,
+          variacao,
+          annual,
+          metricKeys: metrics,
+          metricLabels,
+        })
+      : buildExportData(realizado);
+
+    if (!rows.length) {
       toast.warning("Nenhum dado para exportar");
       return;
     }
-
-    const { columns, rows } = buildExportData(realizado);
 
     switch (format) {
       case "PDF":
